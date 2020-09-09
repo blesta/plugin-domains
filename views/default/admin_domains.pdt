@@ -1,0 +1,22 @@
+        <?php
+        echo $this->Html->ifSet($message);
+
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminDomains.index.boxtitle', true), ['id'=>'admin_domains'], $this->Html->ifSet($render_section, null));
+        $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/index/', ['id' => 'index']);
+        ?>
+
+        <div class="col-md-12">
+            <p>This is a very simple action page, created by the extension generator.  The content
+                of this file can be modified at <?php echo PLUGINDIR . 'domain_manager' . DS . 'views' . DS . 'default' . DS . 'admin_domains_index.pdt';?>.
+                Included here is a basic form that can be submitted and is handled by the index() method in <?php echo PLUGINDIR . 'domain_manager' . DS . 'controllers' . DS . 'admin_domains.php';?>
+            </p>
+            <div class="button_row">
+                <button class="btn btn-default pull-right">
+                    <i class="fa fa-edit"></i> <?php $this->_('AdminDomains.index.submit');?>
+                </button>
+            </div>
+        </div>
+        <?php
+        $this->Form->end();
+        $this->Widget->end();

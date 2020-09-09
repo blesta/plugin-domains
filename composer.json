@@ -1,0 +1,14 @@
+{"name": "blesta/domain_manager",
+    "description": "Used to handle various aspects of domain management and sales",
+    "license": "proprietary",
+    "type": "blesta-plugin",
+    "require": {
+        "blesta/composer-installer": "~1.0"
+    },
+    "authors": [
+        {
+            "name": "Blesta",
+            "url": "https://www.blesta.com"
+        }
+    ]
+}

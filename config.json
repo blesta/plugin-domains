@@ -1,0 +1,11 @@
+{
+    "version": "1.0.0",
+    "name": "DomainManagerPlugin.name",
+    "description": "DomainManagerPlugin.description",
+    "authors": [
+        {
+            "name": "Blesta",
+            "url": "https://www.blesta.com"
+        }
+    ]
+}
