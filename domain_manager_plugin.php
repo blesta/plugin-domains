@@ -291,13 +291,6 @@ class DomainManagerPlugin extends Plugin
     public function getPermissions()
     {
         return [
-            // Domains
-            [
-                'group_alias' => 'domain_manager.admin_domains',
-                'name' => Language::_('DomainManagerPlugin.permission.admin_domains', true),
-                'alias' => 'domain_manager.admin_domains',
-                'action' => '*',
-            ],
             // Browse Domains
             [
                 'group_alias' => 'domain_manager.admin_domains',

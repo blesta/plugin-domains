@@ -1,1 +1,3 @@
+# Ignore external vendor code
+/vendor/
 /nbproject/private/

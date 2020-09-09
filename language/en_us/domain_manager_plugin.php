@@ -27,3 +27,11 @@ $lang['DomainManagerPlugin.widget_client_home.main'] = 'Domains';
 
 // Plugin Cards
 $lang['DomainManagerPlugin.card_client.getDomainCount'] = 'Domains';
+
+// Permission Groups
+$lang['DomainManagerPlugin.permission.admin_domains'] = 'Domains';
+$lang['DomainManagerPlugin.permission.admin_domains.browse'] = 'Browse Domains';
+$lang['DomainManagerPlugin.permission.admin_domains.tlds'] = 'TLD Pricing';
+$lang['DomainManagerPlugin.permission.admin_domains.registrars'] = 'Registrars';
+$lang['DomainManagerPlugin.permission.admin_domains.whois'] = 'Whois';
+$lang['DomainManagerPlugin.permission.admin_domains.configuration'] = 'Configuration';

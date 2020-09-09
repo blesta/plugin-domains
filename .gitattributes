@@ -1,0 +1,3 @@
+# Files should use line-feed characters for end-of-line
+*.pdt text eol=lf
+*.php text eol=lf
