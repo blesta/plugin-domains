@@ -186,6 +186,16 @@ class DomainManagerTlds extends DomainManagerModel
     }
 
     /**
+     * Gets a list TLDs to include with Blesta by default
+     *
+     * @return array A list of TLDs
+     */
+    public function getDefaultTlds()
+    {
+        return ['com', 'net', 'org'];
+    }
+
+    /**
      * Returns all validation rules for adding/editing extensions
      *
      * @param array $vars An array of input key/value pairs
