@@ -7,7 +7,7 @@ Used to handle various aspects of domain management and sales
 1. You can install the plugin via composer:
 
     ```
-    composer require parent_repository/domain_manager
+    composer require blesta/domain_manager
     ```
 
 2. OR upload the source code to a /plugins/domain_manager/ directory within
