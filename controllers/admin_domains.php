@@ -26,4 +26,12 @@ class AdminDomains extends DomainManagerController
             isset($this->get['sort']) ? true : (isset($this->get[1]) || isset($this->get[0]) ? false : null)
         );
     }
+
+    /**
+     * Returns the view for tld pricing
+     */
+    public function tlds() {
+        $this->uses(['DomainManager.DomainManagerTlds']);
+        $this->set('tlds', $this->DomainManagerTlds->getAll());
+    }
 }

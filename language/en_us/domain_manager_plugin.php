@@ -8,9 +8,9 @@ $lang['DomainManagerPlugin.description'] = 'Used to handle various aspects of do
 
 
 // Change Password
-$lang['DomainManager.tab_change_password'] = 'Change Password';
-$lang['DomainManager.tab_change_password.header'] = 'Change Password';
-$lang['DomainManager.tab_change_password.submit'] = 'Submit';
+$lang['DomainManagerPlugin.tab_change_password'] = 'Change Password';
+$lang['DomainManagerPlugin.tab_change_password.header'] = 'Change Password';
+$lang['DomainManagerPlugin.tab_change_password.submit'] = 'Submit';
 
 // Cron Tasks
 $lang['DomainManagerPlugin.getCronTasks.domain_synchronization'] = 'Domain Synchronization';
@@ -21,7 +21,12 @@ $lang['DomainManagerPlugin.getCronTasks.domain_renewal_reminders'] = 'Send Renew
 $lang['DomainManagerPlugin.getCronTasks.domain_renewal_reminders_description'] = 'Send email reminders for domains that are drawing close to their renewal date';
 
 // Plugin Actions
-$lang['DomainManagerPlugin.nav_primary_staff.main'] = 'Browse Domains';
+$lang['DomainManagerPlugin.nav_primary_staff.main'] = 'Domains';
+$lang['DomainManagerPlugin.nav_primary_staff.browse'] = 'Browse Domains';
+$lang['DomainManagerPlugin.nav_primary_staff.tlds'] = 'TLD Pricing';
+$lang['DomainManagerPlugin.nav_primary_staff.registrars'] = 'Registrars';
+$lang['DomainManagerPlugin.nav_primary_staff.whois'] = 'Whois';
+$lang['DomainManagerPlugin.nav_primary_staff.configuration'] = 'Configuration';
 $lang['DomainManagerPlugin.widget_staff_home.main'] = 'Domains';
 $lang['DomainManagerPlugin.widget_client_home.main'] = 'Domains';
 
