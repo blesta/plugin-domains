@@ -35,3 +35,17 @@ $lang['DomainManagerPlugin.permission.admin_domains.tlds'] = 'TLD Pricing';
 $lang['DomainManagerPlugin.permission.admin_domains.registrars'] = 'Registrars';
 $lang['DomainManagerPlugin.permission.admin_domains.whois'] = 'Whois';
 $lang['DomainManagerPlugin.permission.admin_domains.configuration'] = 'Configuration';
+
+// TLD Package Group Details
+$lang['DomainManagerPlugin.tld.name'] = 'TLDs Pricing Packages';
+$lang['DomainManagerPlugin.tld_package_group.description'] = 'A package group for hiding and managing all the TLD pricing packages';
+
+// TLD Addons
+$lang['DomainManagerPlugin.email_forwarding.name'] = 'Email Forwarding';
+$lang['DomainManagerPlugin.email_forwarding.description'] = 'Email Forwarding';
+$lang['DomainManagerPlugin.dns_management.name'] = 'DNS Management';
+$lang['DomainManagerPlugin.dns_management.description'] = 'DNS Management';
+$lang['DomainManagerPlugin.id_protection.name'] = 'ID Protection';
+$lang['DomainManagerPlugin.id_protection.description'] = 'ID Protection';
+$lang['DomainManagerPlugin.enabled'] = 'Enabled';
+

@@ -100,7 +100,7 @@ class DomainManagerTlds extends DomainManagerModel
         $this->Input->setRules($this->getRules($vars));
 
         if ($this->Input->validates($vars)) {
-            $fields = ['tld','package_id','dns_management','email_forwarding','id_protection'];
+            $fields = ['tld', 'package_id', 'dns_management', 'email_forwarding', 'id_protection'];
             $this->Record->insert('domain_manager_tlds', $vars, $fields);
 
             return $this->Record->lastInsertId();
@@ -192,7 +192,7 @@ class DomainManagerTlds extends DomainManagerModel
      */
     public function getDefaultTlds()
     {
-        return ['com', 'net', 'org'];
+        return ['.com', '.net', '.org'];
     }
 
     /**
