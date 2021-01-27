@@ -36,8 +36,9 @@ class AdminDomains extends DomainManagerController
             ? json_decode($vars['domain_manager_spotlight_tlds'], true)
             : [];
         if (!empty($this->post)) {
+            // Leave the spotlight tlds out for now as we don't intend to include them in the initial release
             $accepted_settings = [
-                'domain_manager_spotlight_tlds',
+//                'domain_manager_spotlight_tlds',
                 'domain_manager_package_group',
                 'domain_manager_dns_management_option_group',
                 'domain_manager_email_forwarding_option_group',
@@ -47,7 +48,10 @@ class AdminDomains extends DomainManagerController
                 $this->post['domain_manager_spotlight_tlds'] = [];
             }
             $this->post['domain_manager_spotlight_tlds'] = json_encode($this->post['domain_manager_spotlight_tlds']);
-            $this->Companies->setSettings($company_id, array_intersect_key($this->post, array_flip($accepted_settings)));
+            $this->Companies->setSettings(
+                $company_id,
+                array_intersect_key($this->post, array_flip($accepted_settings))
+            );
 
             $this->flashMessage(
                 'message',

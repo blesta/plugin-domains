@@ -38,7 +38,7 @@
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_spotlight_tlds');?></div></span><br/>
                         <?php
                         foreach ($this->Html->ifSet($tlds, []) as $tld) {
-                            $this->Form->fieldCheckbox('domain_manager_spotlight_tlds[' . $tld->tld . ']', '1', $this->Html->ifSet($vars['domain_manager_spotlight_tlds'][$tld->tld]) === '1', ['id' => 'spotlight_tld_' . $tld->tld, 'class' => 'inline']);
+                            $this->Form->fieldCheckbox('domain_manager_spotlight_tlds[' . $tld->tld . ']', '1', $this->Html->ifSet($vars['domain_manager_spotlight_tlds'][$tld->tld]) === '1', ['id' => 'spotlight_tld_' . $tld->tld, 'class' => 'inline', 'disabled' => 'disabled']);
                             $this->Form->label($tld->tld, 'spotlight_tld_' . $tld->tld, ['class' => 'inline']);
                         }
                         ?>

@@ -116,7 +116,7 @@ class DomainManagerPlugin extends Plugin
      * Adds a package and database TLD for each of the default TLDs
      *
      * @param int $company_id The ID of the company for which to add TLD packages
-     * @param int $package_group_id The ID of the TLDTLD package group
+     * @param int $package_group_id The ID of the TLD package group
      * @param array $languages A list of objects, each representing a language for which to add a name and description
      * @param array $currencies A list of objects, each representing a currency for which to add a pricing
      */
@@ -255,7 +255,7 @@ class DomainManagerPlugin extends Plugin
      */
     public function uninstall($plugin_id, $last_instance)
     {
-        Loader::loadModels($this, ['CronTasks', 'Companies', 'Currencies', 'Languages', 'PluginManager']);
+        Loader::loadModels($this, ['CronTasks']);
 
         // Fetch the cron tasks for this plugin
         $cron_tasks = $this->getCronTasks();
