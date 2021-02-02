@@ -40,7 +40,7 @@ class AdminDomains extends DomainManagerController
             'asc',
             ['type' => 'registrar']
         );
-        $available_registrars = $this->ModuleManager->getAvailable(Configure::get('Blesta.company_id'), 'Registrar');
+        $available_registrars = $this->ModuleManager->getAvailable(Configure::get('Blesta.company_id'), 'registrar');
 
         // Get installed module details when available
         $registrars = [];
