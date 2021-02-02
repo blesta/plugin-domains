@@ -21,7 +21,12 @@ $lang['DomainManagerPlugin.getCronTasks.domain_renewal_reminders'] = 'Send Renew
 $lang['DomainManagerPlugin.getCronTasks.domain_renewal_reminders_description'] = 'Send email reminders for domains that are drawing close to their renewal date';
 
 // Plugin Actions
-$lang['DomainManagerPlugin.nav_primary_staff.main'] = 'Browse Domains';
+$lang['DomainManagerPlugin.nav_primary_staff.main'] = 'Domains';
+$lang['DomainManagerPlugin.nav_primary_staff.browse'] = 'Browse Domains';
+$lang['DomainManagerPlugin.nav_primary_staff.tlds'] = 'TLD Pricing';
+$lang['DomainManagerPlugin.nav_primary_staff.registrars'] = 'Registrars';
+$lang['DomainManagerPlugin.nav_primary_staff.whois'] = 'Whois';
+$lang['DomainManagerPlugin.nav_primary_staff.configuration'] = 'Configuration';
 $lang['DomainManagerPlugin.widget_staff_home.main'] = 'Domains';
 $lang['DomainManagerPlugin.widget_client_home.main'] = 'Domains';
 
