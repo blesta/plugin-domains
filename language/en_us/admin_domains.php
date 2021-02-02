@@ -10,7 +10,7 @@ $lang['AdminDomains.index.submit'] = 'index';
 
 
 $lang['AdminDomains.registrars.text_none'] = 'There are no available registrars.';
-$lang['AdminDomains.registrars.boxtitle_registrars'] = 'Registrars';
+$lang['AdminDomains.registrars.boxtitle_registrars'] = 'Domain Manager - Registrars';
 $lang['AdminDomains.registrars.text_author'] = 'Author:';
 $lang['AdminDomains.registrars.text_author_url'] = 'Author URL';
 $lang['AdminDomains.registrars.text_version'] = '(ver %1$s)'; // %1$s is the module's version number
