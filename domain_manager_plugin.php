@@ -226,7 +226,7 @@ class DomainManagerPlugin extends Plugin
                 'editable' => 1,
                 'values' => [
                     [
-                        'name' => Language::_('DomainManagerPlugin.enabled'),
+                        'name' => Language::_('DomainManagerPlugin.enabled', true),
                         'value' => 1,
                     ]
                 ],
