@@ -11,11 +11,12 @@ class DomainManagerTlds extends DomainManagerModel
      *
      * @param array $filters A list of filters for the query
      *
-     *  - tld
-     *  - package_id
-     *  - dns_management
-     *  - email_forwarding
-     *  - id_protection
+     *  - tld The TLD
+     *  - company_id The ID of the company for which this TLD is available
+     *  - package_id The package to be used for pricing and sale of this TLD
+     *  - dns_management Whether DNS management is included for the TLDs
+     *  - email_forwarding Whether email forwarding is included for the TLDs
+     *  - id_protection Whether ID protection is included for the TLDs
      * @param int $page The page number of results to fetch
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
@@ -38,11 +39,12 @@ class DomainManagerTlds extends DomainManagerModel
      *
      * @param array $filters A list of filters for the query
      *
-     *  - tld
-     *  - package_id
-     *  - dns_management
-     *  - email_forwarding
-     *  - id_protection
+     *  - tld The TLD
+     *  - company_id The ID of the company for which this TLD is available
+     *  - package_id The package to be used for pricing and sale of this TLD
+     *  - dns_management Whether DNS management is included for the TLDs
+     *  - email_forwarding Whether email forwarding is included for the TLDs
+     *  - id_protection Whether ID protection is included for the TLDs
      * @return int The total number of TLDs for the given filters
      */
     public function getListCount(array $filters = [])
@@ -55,11 +57,12 @@ class DomainManagerTlds extends DomainManagerModel
      *
      * @param array $filters A list of filters for the query
      *
-     *  - tld
-     *  - package_id
-     *  - dns_management
-     *  - email_forwarding
-     *  - id_protection
+     *  - tld The TLD
+     *  - company_id The ID of the company for which this TLD is available
+     *  - package_id The package to be used for pricing and sale of this TLD
+     *  - dns_management Whether DNS management is included for the TLDs
+     *  - email_forwarding Whether email forwarding is included for the TLDs
+     *  - id_protection Whether ID protection is included for the TLDs
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
@@ -88,11 +91,12 @@ class DomainManagerTlds extends DomainManagerModel
      *
      * @param array $vars An array of input data including:
      *
-     *  - tld The tld
-     *  - package_id The package to be used for pricing and sale of this tld
-     *  - dns_management Whether to include DNS management for this tld
-     *  - email_forwarding Whether to include email forwarding for this tld
-     *  - id_protection Whether to include ID protection for this tld
+     *  - tld The TLD
+     *  - company_id The ID of the company for which this TLD is available
+     *  - package_id The ID of the package to be used for pricing and sale of this TLD
+     *  - dns_management Whether to include DNS management for this TLD
+     *  - email_forwarding Whether to include email forwarding for this TLD
+     *  - id_protection Whether to include ID protection for this TLD
      * @return int The identifier of the record that was created, void on error
      */
     public function add(array $vars)
@@ -100,7 +104,7 @@ class DomainManagerTlds extends DomainManagerModel
         $this->Input->setRules($this->getRules($vars));
 
         if ($this->Input->validates($vars)) {
-            $fields = ['tld','package_id','dns_management','email_forwarding','id_protection'];
+            $fields = ['tld', 'company_id', 'package_id', 'dns_management', 'email_forwarding', 'id_protection'];
             $this->Record->insert('domain_manager_tlds', $vars, $fields);
 
             return $this->Record->lastInsertId();
@@ -113,10 +117,10 @@ class DomainManagerTlds extends DomainManagerModel
      * @param int $tld The identifier of the TLD to edit
      * @param array $vars An array of input data including:
      *
-     *  - package_id The package to be used for pricing and sale of this tld
-     *  - dns_management Whether to include DNS management for this tld
-     *  - email_forwarding Whether to include email forwarding for this tld
-     *  - id_protection Whether to include ID protection for this tld
+     *  - package_id The package to be used for pricing and sale of this TLD
+     *  - dns_management Whether to include DNS management for this TLD
+     *  - email_forwarding Whether to include email forwarding for this TLD
+     *  - id_protection Whether to include ID protection for this TLD
      * @return int The identifier of the TLD that was updated, void on error
      */
     public function edit($tld, array $vars)
@@ -126,7 +130,7 @@ class DomainManagerTlds extends DomainManagerModel
         $this->Input->setRules($this->getRules($vars, true));
 
         if ($this->Input->validates($vars)) {
-            $fields = ['tld','package_id','dns_management','email_forwarding','id_protection'];
+            $fields = ['tld', 'package_id', 'dns_management', 'email_forwarding', 'id_protection'];
             $this->Record->where('tld', '=', $tld)->update('domain_manager_tlds', $vars, $fields);
 
             return $tld;
@@ -151,11 +155,12 @@ class DomainManagerTlds extends DomainManagerModel
      *
      * @param array $filters A list of filters for the query
      *
-     *  - tld The tld
-     *  - package_id The package to be used for pricing and sale of this tld
-     *  - dns_management Whether to include DNS management for this tld
-     *  - email_forwarding Whether to include email forwarding for this tld
-     *  - id_protection Whether to include ID protection for this tld
+     *  - tld The TLD
+     *  - company_id The ID of the company for which this TLD is available
+     *  - package_id The package to be used for pricing and sale of this TLD
+     *  - dns_management Whether DNS management is included for the TLDs
+     *  - email_forwarding Whether email forwarding is included for the TLDs
+     *  - id_protection Whether ID protection is included for the TLDs
      * @return Record A partially built query
      */
     private function getTlds(array $filters = [])
@@ -192,7 +197,7 @@ class DomainManagerTlds extends DomainManagerModel
      */
     public function getDefaultTlds()
     {
-        return ['com', 'net', 'org'];
+        return ['.com', '.net', '.org'];
     }
 
     /**
@@ -200,11 +205,11 @@ class DomainManagerTlds extends DomainManagerModel
      *
      * @param array $vars An array of input key/value pairs
      *
-     *  - tld The tld
-     *  - package_id The package to be used for pricing and sale of this tld
-     *  - dns_management Whether to include DNS management for this tld
-     *  - email_forwarding Whether to include email forwarding for this tld
-     *  - id_protection Whether to include ID protection for this tld
+     *  - tld The TLD
+     *  - package_id The package to be used for pricing and sale of this TLD
+     *  - dns_management Whether to include DNS management for this TLD
+     *  - email_forwarding Whether to include email forwarding for this TLD
+     *  - id_protection Whether to include ID protection for this TLD
      * @param bool $edit True if this if an edit, false otherwise
      * @return array An array of validation rules
      */
@@ -222,8 +227,15 @@ class DomainManagerTlds extends DomainManagerModel
             'package_id' => [
                 'valid' => [
                     'if_set' => $edit,
-                    'rule' => 'is_numeric',
-                    'message' => Language::_('DomainManagerTlds.!error.package_id.valid', true)
+                    'rule' => [[$this, 'validateExists'], 'id', 'packages'],
+                    'message' => Language::_('DomainManagerTlds.!error.package_id.exists', true)
+                ]
+            ],
+            'company_id' => [
+                'valid' => [
+                    'if_set' => $edit,
+                    'rule' => [[$this, 'validateExists'], 'id', 'companies'],
+                    'message' => Language::_('DomainManagerTlds.!error.company_id.exists', true)
                 ]
             ],
             'dns_management' => [

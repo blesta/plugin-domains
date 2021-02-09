@@ -22,10 +22,13 @@ class DomainManagerPlugin extends Plugin
      */
     public function install($plugin_id)
     {
+        Loader::loadModels($this, ['Companies', 'Currencies', 'Languages', 'PluginManager']);
+
         try {
             // domain_manager_tlds
             $this->Record
                 ->setField('tld', ['type' => 'VARCHAR', 'size' => "64"])
+                ->setField('company_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
                 ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
                 ->setField('dns_management', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setField('email_forwarding', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
@@ -38,10 +41,209 @@ class DomainManagerPlugin extends Plugin
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
             return;
         }
+        $plugin = $this->PluginManager->get($plugin_id);
 
         // Add cron tasks for this plugin
         $this->addCronTasks($this->getCronTasks());
 
+        $company_id = $plugin ? $plugin->company_id : Configure::get('Blesta.company_id');
+        $languages = $this->Languages->getAll($company_id);
+        $currencies = $this->Currencies->getAll($company_id);
+
+        // Add the TLD package group
+        $package_group_id = $this->addTldPackageGroup($company_id, $languages);
+
+        // Add a package for each default TLD and add the TLD to the database
+        $this->addTldPackages($company_id, $package_group_id, $languages, $currencies);
+
+        // Add a config option and option group for each TLD addon
+        $this->addTldAddonConfigOptions($company_id, $currencies);
+
+        // Set an empty array for the list of spotlight TLDs
+        if (!($setting = $this->Companies->getSetting($company_id, 'domain_manager_spotlight_tlds'))) {
+            $this->Companies->setSetting($company_id, 'domain_manager_spotlight_tlds', json_encode([]));
+        }
+    }
+
+    /**
+     * Add a package group for hiding and managing TLDs
+     *
+     * @param int $company_id The ID of the company for which to add the package group
+     * @param array $languages A list of objects, each representing a language for which to add a name and description
+     * @return int The ID of the package group
+     */
+    private function addTldPackageGroup($company_id, array $languages)
+    {
+        Loader::loadModels($this, ['PackageGroups']);
+        // Don't create a new TLD package group if it is already set
+        if (!($package_group_setting = $this->Companies->getSetting($company_id, 'domain_manager_package_group'))
+            || !($package_group = $this->PackageGroups->get($package_group_setting->value))
+        ) {
+            // Assemble the parameters for adding the TLD package group
+            $params = [
+                'company_id' => $company_id,
+                'type' => 'standard',
+                'hidden' => '1',
+                'names' => [],
+                'descriptions' => [],
+                'allow_upgrades' => 0
+            ];
+
+            // Add name and description for each language
+            foreach ($languages as $language) {
+                $params['names'][] = [
+                    'lang' => $language->code,
+                    'name' => Language::_('DomainManagerPlugin.tld_package_group.name', true)
+                ];
+                $params['descriptions'][] = [
+                    'lang' => $language->code,
+                    'description' => Language::_('DomainManagerPlugin.tld_package_group.description', true)
+                ];
+            }
+
+            // Add the TLD package group
+            $package_group_id = $this->PackageGroups->add($params);
+
+            $this->Companies->setSetting($company_id, 'domain_manager_package_group', $package_group_id);
+        } else {
+            $package_group_id = $package_group->id;
+        }
+
+        return $package_group_id;
+    }
+
+    /**
+     * Adds a package and database TLD for each of the default TLDs
+     *
+     * @param int $company_id The ID of the company for which to add TLD packages
+     * @param int $package_group_id The ID of the TLD package group
+     * @param array $languages A list of objects, each representing a language for which to add a name and description
+     * @param array $currencies A list of objects, each representing a currency for which to add a pricing
+     */
+    private function addTldPackages($company_id, $package_group_id, array $languages, array $currencies)
+    {
+        Loader::loadModels($this, ['ModuleManager', 'Packages', 'DomainManager.DomainManagerTlds']);
+
+        // Get the none module for this company
+        $none_modules = $this->ModuleManager->getByClass('none', $company_id);
+
+        // Create a package for each tld and add it to the database
+        $default_tlds = $this->DomainManagerTlds->getDefaultTlds();
+        $tld_packages_setting = $this->Companies->getSetting($company_id, 'domain_manager_tld_packages');
+        $tld_packages = ($tld_packages_setting ? json_decode($tld_packages_setting->value, true) : []);
+        foreach ($default_tlds as $default_tld) {
+            // Skip package creation for this TLD if there is already a package assigned to it
+            if (array_key_exists($default_tld, $tld_packages)
+                && ($package = $this->Packages->get($tld_packages[$default_tld]))
+            ) {
+                $tld_params = ['tld' => $default_tld, 'company_id' => $company_id, 'package_id' => $package->id];
+                $this->DomainManagerTlds->add($tld_params);
+                continue;
+            }
+
+            $package_params = [
+                'module_id' => (!empty($none_modules) && is_array($none_modules) ? $none_modules[0]->id : null),
+                'names' => [],
+                'descriptions' => [],
+                'hidden' => '1',
+                'company_id' => $company_id,
+                'pricing' => [],
+                'groups' => [$package_group_id]
+            ];
+
+            // Add a pricing for terms 1-10 years for each currency
+            foreach ($currencies as $currency) {
+                for ($i = 1; $i <= 10; $i++) {
+                    $package_params['pricing'][] = ['term' => $i, 'period' => 'year', 'currency' => $currency->code];
+                }
+            }
+
+            // Add a package name and email content for each language
+            foreach ($languages as $language) {
+                $package_params['names'][] = [
+                    'lang' => $language->code,
+                    'name' => $language->code
+                ];
+                $package_params['email_content'][] = [
+                    'lang' => $language->code,
+                    'html' => '',
+                    'text' => ''
+                ];
+            }
+
+            // Add the package for this TLD
+            $package_id = $this->Packages->add($package_params);
+
+            // Add this TLD to the database
+            $tld_params = ['tld' => $default_tld, 'company_id' => $company_id, 'package_id' => $package_id];
+            $this->DomainManagerTlds->add($tld_params);
+
+            $tld_packages[$default_tld] = $package_id;
+        }
+    }
+
+    /**
+     * Adds a config option group and setting for each TLD addon
+     *
+     * @param int $company_id The ID of the company for which to add TLD config options
+     * @param array $currencies A list of objects, each representing a currency for which to add a pricing
+     */
+    private function addTldAddonConfigOptions($company_id, array $currencies)
+    {
+        Loader::loadModels($this, ['PackageOptions', 'PackageOptionGroups']);
+
+        $tld_addons = ['email_forwarding', 'dns_management', 'id_protection'];
+        foreach ($tld_addons as $tld_addon) {
+            $setting = $this->Companies->getSetting($company_id, 'domain_manager_' . $tld_addon . '_option_group');
+            // Skip option group creation for this tld and if there is already a group assigned to it
+            if ($setting && ($option_group = $this->PackageOptionGroups->get($setting->value))) {
+                continue;
+            }
+
+            // Create the params for the config option group
+            $option_group_params = [
+                'company_id' => $company_id,
+                'name' => Language::_('DomainManagerPlugin.' . $tld_addon . '.name', true),
+                'description' => Language::_('DomainManagerPlugin.' . $tld_addon . '.description', true),
+            ];
+            // Add the config option group
+            $option_group_id = $this->PackageOptionGroups->add($option_group_params);
+
+            // Set the company setting
+            $this->Companies->setSetting(
+                $company_id,
+                'domain_manager_' . $tld_addon . '_option_group',
+                $option_group_id
+            );
+
+            // Create the params for the config option
+            $option_params = [
+                'company_id' => $company_id,
+                'label' => Language::_('DomainManagerPlugin.' . $tld_addon . '.name', true),
+                'name' => $tld_addon,
+                'type' => 'checkbox',
+                'addable' => 1,
+                'editable' => 1,
+                'values' => [
+                    [
+                        'name' => Language::_('DomainManagerPlugin.enabled', true),
+                        'value' => 1,
+                    ]
+                ],
+                'pricing' => [],
+                'groups' => [$option_group_id]
+            ];
+
+            // Add a pricing for terms 1-10 years for each currency
+            foreach ($currencies as $currency) {
+                for ($i = 0; $i < 10; $i++) {
+                    $option_params['pricing'][] = ['term' => $i, 'period' => 'year', 'currency' => $currency->code];
+                }
+            }
+
+            // Add the config option for the TLD addon
+            $this->PackageOptions->add($option_params);
+        }
     }
 
     /**
@@ -84,6 +286,10 @@ class DomainManagerPlugin extends Plugin
                 $this->CronTasks->deleteTaskRun($cron_task_run->task_run_id);
             }
         }
+
+        // We intentionally do not remove packages, config options, etc. as that would cause a whole host of problems.
+        // Instead we leave all these things in place including the company settings so that the domain can be easily
+        // uninstalled and re-installed
     }
 
     /**
