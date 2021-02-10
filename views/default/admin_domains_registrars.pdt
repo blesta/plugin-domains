@@ -1,0 +1,95 @@
+
+        <?php echo $this->Html->ifSet($message);?>
+        <?php
+        $this->Widget->clear();
+        $this->Widget->create(
+            $this->_('AdminDomains.registrars.boxtitle_registrars', true),
+            ['id' => 'admin_domain_registrars'],
+            $this->Html->ifSet($render_section, null)
+        );
+        ?>
+        <div class="inner pad" id="registrars">
+            <?php
+            $num_registrars = count($this->Html->ifSet($registrars, []));
+            if ($num_registrars > 0) {
+                for ($i = 0; $i < $num_registrars; $i++) {
+                ?>
+                <div class="itemlist<?php echo ($i == $num_registrars - 1) ? ' last' : ''; ?>">
+                    <div class="logo<?php echo ($this->Html->ifSet($registrars[$i]->installed) ? '' : ' installed'); ?>">
+                        <span><img src="<?php $this->Html->_($registrars[$i]->logo);?>" /></span>
+                    </div>
+                    <ul>
+                        <li><strong><?php $this->Html->_($registrars[$i]->name);?></strong> <?php $this->_('AdminDomains.registrars.text_version', false, $this->Html->safe($this->Html->ifSet($registrars[$i]->installed_version, $registrars[$i]->version)));?></li>
+                        <li>
+                            <?php $this->_('AdminDomains.registrars.text_author');?>
+                            <?php
+                            foreach ((array)$this->Html->ifSet($registrars[$i]->authors, []) as $index => $author) {
+                            ?>
+                            <a href="<?php $this->Html->_($author['url']);?>"><?php $this->Html->_($author['name']);?></a><?php echo isset($registrars[$i]->authors[$index + 1]) ? ',' : '';?>
+                            <?php
+                            }
+                            ?>
+                        </li>
+                        <li><?php echo nl2br($this->Html->_($registrars[$i]->description, true))?></li>
+                    </ul>
+                    <div class="button_row_inline">
+                        <?php
+                        if (!$this->Html->ifSet($registrars[$i]->installed, true)) {
+                        ?>
+                            <?php
+                            $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/installregistrar/' . $this->Html->ifSet($registrars[$i]->class) . '/', ['class' => 'disable-on-submit']);
+                            $this->Form->fieldHidden('id', $this->Html->ifSet($registrars[$i]->class));
+                            $this->Form->fieldSubmit('save', $this->_('AdminDomains.registrars.btn_install', true), ['class' => 'btn btn-primary pull-right']);
+                            $this->Form->end();
+                            ?>
+                        <?php
+                        } else {
+                            $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/uninstallregistrar');
+                            $this->Form->fieldHidden('id', $this->Html->ifSet($registrars[$i]->id));
+                            ?>
+                                <a class="btn btn-danger pull-right manage" href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/uninstallregistrar/' . $this->Html->_($registrars[$i]->id, true) . '/';?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.registrars.confirm_uninstall', true));?>"><?php $this->_('AdminDomains.registrars.btn_uninstall');?></a>
+                            <?php
+                            $this->Form->end();
+
+                            if ($this->Html->ifSet($registrars[$i]->version) == $this->Html->ifSet($registrars[$i]->installed_version)) {
+                            ?>
+                                <a class="btn btn-default pull-right" href="<?php echo $this->base_uri . 'settings/company/modules/manage/' . $this->Html->_($registrars[$i]->id, true) . '/';?>"><?php $this->_('AdminDomains.registrars.btn_manage');?></a>
+                            <?php
+                            } else {
+                            ?>
+                                <?php
+                                $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/upgraderegistrar/' . $this->Html->ifSet($registrars[$i]->id) . '/', ['class' => 'disable-on-submit']);
+                                $this->Form->fieldHidden('id', $this->Html->ifSet($registrars[$i]->id));
+                                $this->Form->fieldSubmit('save', $this->_('AdminDomains.registrars.btn_upgrade', true), ['class' => 'btn btn-primary pull-right']);
+                                $this->Form->end();
+                                ?>
+                            <?php
+                            }
+                        }
+                        ?>
+                    </div>
+                    <div class="clear"></div>
+                </div>
+                <?php
+                }
+            } else {
+                // No registrars available
+                ?>
+                <div class="empty_section">
+                    <div class="empty_box">
+                        <?php $this->_('AdminDomains.registrars.text_none');?>
+                    </div>
+                </div>
+                <?php
+            }
+            ?>
+        </div>
+        <?php $this->Widget->end();?>
+
+<?php
+$this->Javascript->setInline("
+    $(document).ready(function() {
+        // Handle confirmation on delete action
+        $('#registrars a.manage[rel]').blestaModalConfirm({base_url: '" . $this->base_uri . "', close: '" . $this->_('AppController.modal.text_close', true) . "', submit: true});
+    });
+");
