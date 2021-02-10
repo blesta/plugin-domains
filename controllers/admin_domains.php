@@ -114,6 +114,11 @@ class AdminDomains extends DomainManagerController
             $this->flashMessage('message', Language::_('AdminDomains.!success.registrar_upgraded', true));
         }
         $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/registrars/');
+    }
+
+    /**
+     * Fetches the view for the configuration page
+     */
     public function configuration()
     {
         $this->uses(['Companies', 'PackageGroups', 'PackageOptionGroups', 'DomainManager.DomainManagerTlds']);
