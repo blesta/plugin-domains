@@ -21,7 +21,7 @@ $lang['DomainManagerPlugin.getCronTasks.domain_renewal_reminders'] = 'Send Renew
 $lang['DomainManagerPlugin.getCronTasks.domain_renewal_reminders_description'] = 'Send email reminders for domains that are drawing close to their renewal date';
 
 // Plugin Actions
-$lang['DomainManagerPlugin.nav_primary_staff.main'] = 'Domains';
+$lang['DomainManagerPlugin.nav_primary_staff.main'] = 'Browse Domains';
 $lang['DomainManagerPlugin.nav_primary_staff.browse'] = 'Browse Domains';
 $lang['DomainManagerPlugin.nav_primary_staff.tlds'] = 'TLD Pricing';
 $lang['DomainManagerPlugin.nav_primary_staff.registrars'] = 'Registrars';
@@ -40,3 +40,17 @@ $lang['DomainManagerPlugin.permission.admin_domains.tlds'] = 'TLD Pricing';
 $lang['DomainManagerPlugin.permission.admin_domains.registrars'] = 'Registrars';
 $lang['DomainManagerPlugin.permission.admin_domains.whois'] = 'Whois';
 $lang['DomainManagerPlugin.permission.admin_domains.configuration'] = 'Configuration';
+
+// TLD Package Group Details
+$lang['DomainManagerPlugin.tld_package_group.name'] = 'TLDs Pricing Packages';
+$lang['DomainManagerPlugin.tld_package_group.description'] = 'A package group for hiding and managing all the TLD pricing packages';
+
+// TLD Addons
+$lang['DomainManagerPlugin.email_forwarding.name'] = 'Email Forwarding';
+$lang['DomainManagerPlugin.email_forwarding.description'] = 'Email Forwarding';
+$lang['DomainManagerPlugin.dns_management.name'] = 'DNS Management';
+$lang['DomainManagerPlugin.dns_management.description'] = 'DNS Management';
+$lang['DomainManagerPlugin.id_protection.name'] = 'ID Protection';
+$lang['DomainManagerPlugin.id_protection.description'] = 'ID Protection';
+$lang['DomainManagerPlugin.enabled'] = 'Enabled';
+
