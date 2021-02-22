@@ -1,5 +1,5 @@
-
 <?php
+use Blesta\Core\Util\Filters\ServiceFilters;
 /**
  * Domain Manager admin_domains controller
  *
@@ -23,6 +23,106 @@ class AdminDomains extends DomainManagerController
      */
     public function index()
     {
+        $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/browse/');
+    }
+
+    /**
+     * Fetches the view for the domain list
+     */
+    public function browse()
+    {
+        $this->uses(['Companies', 'ModuleManager', 'Services']);
+
+        // Set filters from post input
+        $post_filters = [];
+        if (isset($this->post['filters'])) {
+            $post_filters = $this->post['filters'];
+            unset($this->post['filters']);
+
+            foreach($post_filters as $filter => $value) {
+                if (empty($value)) {
+                    unset($post_filters[$filter]);
+                }
+            }
+        }
+
+        $package_group_id = $this->Companies->getSetting(
+            Configure::get('Blesta.company_id'),
+            'domain_manager_package_group'
+        );
+        $post_filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
+
+        $status = (isset($this->get[1]) ? $this->get[1] : 'active');
+        $page = (isset($this->get[2]) ? (int)$this->get[2] : 1);
+        $sort = (isset($this->get['sort']) ? $this->get['sort'] : 'date_added');
+        $order = (isset($this->get['order']) ? $this->get['order'] : 'desc');
+
+        // Get only parent services
+        $services = $this->Services->getList(null, $status, $page, [$sort => $order], false, $post_filters);
+        $total_results = $this->Services->getListCount(null, $status, false, null, $post_filters);
+
+        // Set the number of services of each type, not including children
+        $status_count = [
+            'active' => $this->Services->getStatusCount(null, 'active', false, $post_filters),
+            'canceled' => $this->Services->getStatusCount(null, 'canceled', false, $post_filters),
+            'pending' => $this->Services->getStatusCount(null, 'pending', false, $post_filters),
+            'suspended' => $this->Services->getStatusCount(null, 'suspended', false, $post_filters),
+            'in_review' => $this->Services->getStatusCount(null, 'in_review', false, $post_filters),
+            'scheduled_cancellation' => $this->Services->getStatusCount(
+                null,
+                'scheduled_cancellation',
+                false,
+                $post_filters
+            ),
+        ];
+
+        // Set the expected service renewal price
+        $modules = [];
+        foreach ($services as $service) {
+            $module_id = $service->package->module_id;
+            if (!isset($modules[$module_id])) {
+                $modules[$module_id] = $this->ModuleManager->initModule($module_id);
+            }
+            $service->renewal_price = $this->Services->getRenewalPrice($service->id);
+            $service->expiration_date = $modules[$module_id]->
+                getExpirationDate($service->name, 'Y-m-d H:i:s', $service->module_row_id);
+            $service->registrar = $modules[$module_id]->getName();
+        }
+
+        // Set the input field filters for the widget
+        $service_filters = new ServiceFilters();
+        $this->set(
+            'filters',
+            $service_filters->getFilters(
+                [
+                    'language' => Configure::get('Blesta.language'),
+                    'company_id' => Configure::get('Blesta.company_id'),
+                    'module_type' => 'registrar'
+                ],
+                $post_filters
+            )
+        );
+
+        $this->set('filter_vars', $post_filters);
+        $this->set('status', $status);
+        $this->set('domains', $services);
+        $this->set('status_count', $status_count);
+        $this->set('widget_state', isset($this->widgets_state['services']) ? $this->widgets_state['services'] : null);
+        $this->set('sort', $sort);
+        $this->set('order', $order);
+        $this->set('negate_order', ($order == 'asc' ? 'desc' : 'asc'));
+        // Overwrite default pagination settings
+        $settings = array_merge(
+            Configure::get('Blesta.pagination'),
+            [
+                'total_results' => $total_results,
+                'uri' => $this->base_uri . 'plugin/domain_manager/admin_domains/browse/',
+                'params' => ['sort' => $sort, 'order' => $order]
+            ]
+        );
+        $this->setPagination($this->get, $settings);
+
+
         return $this->renderAjaxWidgetIfAsync(
             isset($this->get['sort']) ? true : (isset($this->get[1]) || isset($this->get[0]) ? false : null)
         );
