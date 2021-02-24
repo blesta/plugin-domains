@@ -2,12 +2,12 @@
 echo $this->Html->ifSet($message);
 
 $links = [
-    ['name' => $this->_('AdminDomains.browse.category_active', true) . ' <span>(' . $this->Html->_($status_count['active'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'active' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'billing/services/active/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_pending', true) . ' <span>(' . $this->Html->_($status_count['pending'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'pending' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'billing/services/pending/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_suspended', true) . ' <span>(' . $this->Html->_($status_count['suspended'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'suspended' ? true : false), 'highlight' => true, 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'billing/services/suspended/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_canceled', true) . ' <span>(' . $this->Html->_($status_count['canceled'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'canceled' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'billing/services/canceled/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_scheduled_cancellation', true) . ' <span>(' . $this->Html->_($status_count['scheduled_cancellation'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'scheduled_cancellation' ? true : false), 'highlight' => true, 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'billing/services/scheduled_cancellation/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_in_review', true) . ' <span>(' . $this->Html->_($status_count['in_review'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'in_review' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'billing/services/in_review/'), 'class' => 'ajax']]
+    ['name' => $this->_('AdminDomains.browse.category_active', true) . ' <span>(' . $this->Html->_($status_count['active'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'active' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/active/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_pending', true) . ' <span>(' . $this->Html->_($status_count['pending'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'pending' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/pending/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_suspended', true) . ' <span>(' . $this->Html->_($status_count['suspended'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'suspended' ? true : false), 'highlight' => true, 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/suspended/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_canceled', true) . ' <span>(' . $this->Html->_($status_count['canceled'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'canceled' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/canceled/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_scheduled_cancellation', true) . ' <span>(' . $this->Html->_($status_count['scheduled_cancellation'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'scheduled_cancellation' ? true : false), 'highlight' => true, 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/scheduled_cancellation/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_in_review', true) . ' <span>(' . $this->Html->_($status_count['in_review'], true) . ')</span>', 'current' => ($this->Html->ifSet($status) == 'in_review' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/in_review/'), 'class' => 'ajax']]
 ];
 
 $this->Widget->clear();
@@ -15,8 +15,8 @@ $this->Widget->setLinks($links);
 
 $this->Widget->setFilters(isset($filters) ? $filters : [], $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/' . (isset($status) ? $status : null)), !empty($filter_vars));
 $this->Widget->setAjaxFiltering();
-$this->Widget->create($this->_('AdminDomains.browse.boxtitle_browse', true), ['id' => 'admin_domains_browse'], isset($render_section) ?: []);
-$this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/browse/', ['id' => 'browse_domains']);
+$this->Widget->create($this->_('AdminDomains.browse.boxtitle_browse', true), ['id' => 'admin_domains_browse'], isset($render_section) ? $render_section : []);
+$this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/browse/', ['id' => 'browse_domains', 'class' => 'disable-on-submit']);
 ?>
     <?php
     if (!empty($domains)) {
@@ -25,13 +25,13 @@ $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/brows
         <thead>
             <tr class="heading_row">
                 <td></td>
-                <td><?php $this->_('AdminDomains.browse.heading_domain');?></td>
-                <td><?php $this->_('AdminDomains.browse.heading_client');?></td>
-                <td><?php $this->_('AdminDomains.browse.heading_registrar');?></td>
-                <td><?php $this->_('AdminDomains.browse.heading_price');?></td>
-                <td><?php $this->_('AdminDomains.browse.heading_registration');?></td>
-                <td><?php $this->_('AdminDomains.browse.heading_expiration');?></td>
-                <td><?php $this->_('AdminDomains.browse.heading_renew');?></td>
+                <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/' . $this->Html->ifSet($status) . '/?sort=name&order=' . ($sort == 'name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'name' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_domain');?></a></span></td>
+                <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/' . $this->Html->ifSet($status) . '/?sort=client_first_name&order=' . ($sort == 'client_first_name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'client_first_name' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_client');?></a></span></td>
+                <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/' . $this->Html->ifSet($status) . '/?sort=registrar&order=' . ($sort == 'registrar' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'registrar' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_registrar');?></a></span></td>
+                <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/' . $this->Html->ifSet($status) . '/?sort=renewal_price&order=' . ($sort == 'renewal_price' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'renewal_price' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_price');?></a></span></td>
+                <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/' . $this->Html->ifSet($status) . '/?sort=date_added&order=' . ($sort == 'date_added' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_added' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_registration');?></a></span></td>
+                <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/' . $this->Html->ifSet($status) . '/?sort=expiration_date&order=' . ($sort == 'expiration_date' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'expiration_date' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_expiration');?></a></span></td>
+                <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/browse/' . $this->Html->ifSet($status) . '/?sort=date_cancelled&order=' . ($sort == 'date_cancelled' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_cancelled' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_renew');?></a></span></td>
                 <td><?php $this->_('AdminDomains.browse.heading_options');?></td>
             </tr>
         </thead>
@@ -91,10 +91,48 @@ $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/brows
     <?php
     } else {
     ?>
-    <p><?php $this->_('AdminDomains.browse.text_none');?></p>
+    <div class="empty_section">
+        <div class="empty_box">
+            <?php $this->_('AdminDomains.browse.text_none');?>
+        </div>
+    </div>
     <?php
     }
     ?>
 <?php
 $this->Form->end();
+// Delete pending services
+if (in_array($this->Html->ifSet($status), ['pending', 'canceled', 'in_review'])) {
+    $this->Form->create($this->base_uri . 'clients/deleteservice/', ['id' => 'delete_service']);
+    $this->Form->fieldHidden('client_id', '', ['id' => 'delete_service_client_id']);
+    $this->Form->fieldHidden('id', '', ['id' => 'delete_service_service_id']);
+    $this->Form->fieldHidden('redirect_uri', $this->base_uri . 'plugin/domain_manager/admin_domains/browse/' . $this->Html->ifSet($status) . '/');
+    $this->Form->end();
+}
 $this->Widget->end();
+?>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $(this).blestaBindToolTips();
+
+        $(".service_info a,.service_info input", this).click(function(e) {
+            e.stopPropagation();
+        });
+        $(".service_info").click(function() {
+            $(this).blestaUpdateRow("<?php echo $this->Html->_($this->base_uri, true) . 'billing/serviceinfo/';?>/" + $(this).next("tr").attr("id").split("_")[1], ".subtable");
+        });
+
+        // Handle confirmation
+        $('#browse_domains a.manage[rel]').blestaModalConfirm({base_url: '<?php echo $this->base_uri;?>', close: '<?php $this->_('AppController.modal.text_close');?>'});
+
+        $('#browse_domains a.manage.submit[rel]').click(function() {
+            var service_id = $(this).attr('data-service-id');
+            $('#delete_service_client_id').val($(this).attr('data-client-id'));
+            $('#delete_service_service_id').val(service_id);
+        });
+        $('#browse_domains a.manage.submit[rel]').each(function() {
+            $(this).blestaModalConfirm({base_url: '<?php echo $this->base_uri;?>', close: '<?php $this->_('AppController.modal.text_close');?>', submit: true, form: $('#delete_service')});
+        });
+    });
+</script>
