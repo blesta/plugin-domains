@@ -3,6 +3,7 @@ $lang['AdminDomains.!success.registrar_upgraded'] = 'The module was successfully
 $lang['AdminDomains.!success.registrar_installed'] = 'The module was successfully installed.';
 $lang['AdminDomains.!success.registrar_uninstalled'] = 'The module was successfully uninstalled.';
 $lang['AdminDomains.!success.configuration_updated'] = 'The Domain Manager configuration has been updated!';
+$lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
 
 $lang['AdminDomains.index.page_title'] = 'Domain Manager - AdminDomains';
 
@@ -25,6 +26,8 @@ $lang['AdminDomains.browse.confirm_delete'] = 'Are you sure you want to delete t
 $lang['AdminDomains.browse.text_none'] = 'There are no registered domains.';
 $lang['AdminDomains.browse.text_yes'] = 'Yes';
 $lang['AdminDomains.browse.text_no'] = 'No';
+$lang['AdminDomains.browse.on'] = 'On';
+$lang['AdminDomains.browse.off'] = 'Off';
 
 $lang['AdminDomains.browse.category_active'] = 'Active';
 $lang['AdminDomains.browse.category_canceled'] = 'Canceled';
@@ -32,6 +35,11 @@ $lang['AdminDomains.browse.category_suspended'] = 'Suspended';
 $lang['AdminDomains.browse.category_pending'] = 'Pending';
 $lang['AdminDomains.browse.category_in_review'] = 'In Review';
 $lang['AdminDomains.browse.category_scheduled_cancellation'] = 'Scheduled';
+$lang['AdminDomains.browse.field_actionsubmit'] = 'Submit';
+
+
+$lang['AdminDomains.getdomainactions.change_auto_renewal'] = 'Change Auto Renewal';
+
 
 $lang['AdminDomains.registrars.boxtitle_registrars'] = 'Domain Manager - Registrars';
 $lang['AdminDomains.registrars.text_author'] = 'Author:';
