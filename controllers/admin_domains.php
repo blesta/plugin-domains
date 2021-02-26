@@ -1,5 +1,6 @@
 
 <?php
+use Iodev\Whois\Factory;
 /**
  * Domain Manager admin_domains controller
  *
@@ -114,6 +115,22 @@ class AdminDomains extends DomainManagerController
             $this->flashMessage('message', Language::_('AdminDomains.!success.registrar_upgraded', true));
         }
         $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/registrars/');
+    }
+
+    /**
+     * Fetches the view for the whois page
+     */
+    public function whois()
+    {
+        $whois = Factory::get()->createWhois();
+        if (!empty($this->post)) {
+            $domain_info = [
+                'text' => $whois->lookupDomain($this->post['domain'])->text,
+                'available' => $whois->isDomainAvailable($this->post['domain'])
+            ];
+        }
+        $this->set('vars', $this->post);
+        $this->set('domain_info', isset($domain_info) ? $domain_info : []);
     }
 
     /**
