@@ -384,10 +384,51 @@ class DomainManagerPlugin extends Plugin
                 break;
             case 'domain_term_change':
                 // Perform necessary actions
+                $this->cronDomainTermChange();
                 break;
             case 'domain_renewal_reminders':
                 // Perform necessary actions
                 break;
+        }
+    }
+
+    /**
+     * Performs the domain term change cron task
+     */
+    private function cronDomainTermChange()
+    {
+        Loader::loadModels($this, ['DomainManager.DomainManagerTlds', 'Companies', 'Services']);
+        Loader::loadHelpers($this, ['Form']);
+
+        $company_id = Configure::get('Blesta.company_id');
+        $settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
+        if (!isset($settings['domain_manager_package_group'])) {
+            return;
+        }
+
+        // Find all domain services that do not have a 1 year pricing term
+        $services = $this->Services->getAll(
+            ['date_added' => 'DESC'],
+            true,
+            [
+                'package_group_id' => $settings['domain_manager_package_group'],
+                'excluded_pricing_term' => 1,
+                'pricing_period' => 'year'
+            ]
+        );
+
+        // Update the term for each service that is not on a 1 year pricing term
+        foreach ($services as $service) {
+            foreach ($service->package->pricing as $pricing) {
+                // Find the 1 year pricing for the current package and update the service to use it
+                if ($pricing->term == 1
+                    && $pricing->period == 'year'
+                    && $service->package_pricing->currency == $pricing->currency
+                ) {
+                    $this->Services->edit($service->id, ['pricing_id' => $pricing->id]);
+                    break;
+                }
+            }
         }
     }
 
