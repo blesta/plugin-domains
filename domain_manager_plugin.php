@@ -396,7 +396,7 @@ class DomainManagerPlugin extends Plugin
      */
     private function synchronizeDomains()
     {
-        Loader::loadModels($this, ['Companies', 'Services']);
+        Loader::loadModels($this, ['Companies', 'ModuleManager', 'Services']);
         Loader::loadHelpers($this, ['Form']);
 
         $company_id = Configure::get('Blesta.company_id');
@@ -427,7 +427,7 @@ class DomainManagerPlugin extends Plugin
             }
 
             // Get the expiration date of this service from the registrar
-            $expiration_date = $modules[$module_id]->getExpirationDate($domain, 'c', $service->module_row_id);
+            $renew_date = $modules[$module_id]->getExpirationDate($domain, 'c', $service->module_row_id);
 
 //            TODO
 //            Get tld renewal buffer in some way
