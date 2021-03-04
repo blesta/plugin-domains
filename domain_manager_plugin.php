@@ -380,7 +380,7 @@ class DomainManagerPlugin extends Plugin
     {
         switch ($key) {
             case 'domain_synchronization':
-                // Perform necessary actions
+                $this->synchronizeDomains();
                 break;
             case 'domain_term_change':
                 // Perform necessary actions
@@ -388,6 +388,57 @@ class DomainManagerPlugin extends Plugin
             case 'domain_renewal_reminders':
                 // Perform necessary actions
                 break;
+        }
+    }
+
+    /**
+     * Performs the domain synchronization cron task
+     */
+    private function synchronizeDomains()
+    {
+        Loader::loadModels($this, ['Companies', 'Services']);
+        Loader::loadHelpers($this, ['Form']);
+
+        $company_id = Configure::get('Blesta.company_id');
+        $settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
+        if (!isset($settings['domain_manager_package_group'])) {
+            return;
+        }
+
+        // Find all domain services
+        $services = $this->Services->getAll(
+            ['date_added' => 'DESC'],
+            true,
+            ['package_group_id' => $settings['domain_manager_package_group']]
+        );
+
+        // Set the service renew date based on the expiration date retreived from the module
+        $modules = [];
+        foreach ($services as $service) {
+            $module_id = $service->package->module_id;
+            if (!isset($modules[$module_id])) {
+                $modules[$module_id] = $this->ModuleManager->initModule($module_id);
+            }
+
+            // Get the domain name from the module
+            $domain = $service->name;
+            if (method_exists($modules[$module_id], 'getServiceDomain')) {
+                $domain = $modules[$module_id]->getServiceDomain($service);
+            }
+
+            // Get the expiration date of this service from the registrar
+            $expiration_date = $modules[$module_id]->getExpirationDate($domain, 'c', $service->module_row_id);
+
+//            TODO
+//            Get tld renewal buffer in some way
+//            if (!empty(renwal buffer)) {
+//                $renew_date = $this->Services->Date->modify($renew_date, renwal buffer . ' days', 'c');
+//            }
+
+            // If the expiration date is different than the date renews
+            if (strtotime($renew_date) != strtotime($service->date_renews)) {
+                $this->Services->edit($service->id, ['date_renews' => $renew_date]);
+            }
         }
     }
 
