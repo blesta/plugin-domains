@@ -121,7 +121,9 @@ class AdminDomains extends DomainManagerController
      */
     public function configuration()
     {
-        $this->uses(['Companies', 'PackageGroups', 'PackageOptionGroups', 'DomainManager.DomainManagerTlds']);
+        $this->uses(
+            ['Companies', 'EmailGroups', 'PackageGroups', 'PackageOptionGroups', 'DomainManager.DomainManagerTlds']
+        );
         $company_id = Configure::get('Blesta.company_id');
         $vars = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
         $vars['domain_manager_spotlight_tlds'] = isset($vars['domain_manager_spotlight_tlds'])
@@ -164,5 +166,38 @@ class AdminDomains extends DomainManagerController
             'package_option_groups',
             $this->Form->collapseObjectArray($this->PackageOptionGroups->getAll($company_id), 'name', 'id')
         );
+        $this->set('first_reminder_days', $this->getDays(26, 35));
+        $this->set('second_reminder_days', $this->getDays(4, 10));
+        $this->set('expiration_notice_days', $this->getDays(1, 5));
+        $this->set('first_reminder_template', $this->EmailGroups->getByAction('DomainManager.domain_renewal_1'));
+        $this->set('second_reminder_template', $this->EmailGroups->getByAction('DomainManager.domain_renewal_2'));
+        $this->set('expiration_notice_template', $this->EmailGroups->getByAction('DomainManager.domain_expiration'));
+    }
+
+    /**
+     * Fetch days
+     *
+     * @param int $min_days
+     * @param int $max_days
+     * @return array
+     */
+    private function getDays($min_days, $max_days)
+    {
+        $days = [
+            '' => Language::_('AdminDomains.getDays.never', true)
+        ];
+        for ($i = $min_days; $i <= $max_days; $i++) {
+            $days[$i] = Language::_(
+                'AdminDomains.getDays.text_day'
+                . (
+                    $i === 1
+                    ? ''
+                    : 's'
+                ),
+                true,
+                $i
+            );
+        }
+        return $days;
     }
 }
