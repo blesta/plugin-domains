@@ -1,0 +1,81 @@
+        <?php
+        echo $this->Html->ifSet($message);
+
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminDomains.tlds.boxtitle_tld_pricing', true), ['id' => 'admin_domains_configuration'], $this->Html->ifSet($render_section, null));
+        ?>
+
+        <div class="inner">
+            <?php
+            if (!empty($tlds)) {
+            ?>
+            <table class="table" id="tlds">
+                <tr class="heading_row">
+                    <td class="icon"></td>
+                    <td><span><?php $this->_('AdminDomains.tlds.heading_tld');?></span></td>
+                    <td><span><?php $this->_('AdminDomains.tlds.heading_dns_management');?></span></td>
+                    <td><span><?php $this->_('AdminDomains.tlds.heading_email_forwarding');?></span></td>
+                    <td><span><?php $this->_('AdminDomains.tlds.heading_id_protection');?></span></td>
+                    <td><span><?php $this->_('AdminDomains.tlds.heading_epp_code');?></span></td>
+                    <td><span><?php $this->_('AdminDomains.tlds.heading_module');?></span></td>
+                    <td class="last"><span><?php $this->_('AdminDomains.tlds.heading_options');?></span></td>
+                </tr>
+                <?php
+                // Display all clients
+                foreach ($tlds as $i => $tld) {
+                ?>
+                <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?>>
+                    <td class="icon center"><i class="fa <?php echo ($tld->package->status !== 'inactive' ? 'fa-check' : 'fa-times');?>"></i></td>
+                    <td><?php echo $this->Html->safe($tld->tld);?></td>
+                    <td><i class="fa <?php echo ($tld->dns_management == 1 ? 'fa-check' : 'fa-ban');?>"></i></td>
+                    <td><i class="fa <?php echo ($tld->email_forwarding == 1 ? 'fa-check' : 'fa-ban');?>"></i></td>
+                    <td><i class="fa <?php echo ($tld->id_protection == 1 ? 'fa-check' : 'fa-ban');?>"></i></td>
+                    <td><i class="fa <?php echo ($tld->epp_code == 1 ? 'fa-check' : 'fa-ban');?>"></i></td>
+                    <td><?php echo $this->Html->safe($tld->module->name);?></td>
+                    <td>
+                        <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/';?>"><?php $this->_('AdminDomains.tlds.option_edit');?></a>,
+
+                        <?php
+                        if ($tld->package->status == 'inactive') {
+                        ?>
+                            <?php
+                            $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/enabletld/');
+                            $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
+                            ?>
+                            <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/enabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true));?>"><?php $this->_('AdminDomains.tlds.option_enable');?></a>
+                            <?php
+                            $this->Form->end();
+                            ?>
+                        <?php
+                        } else {
+                        ?>
+                            <?php
+                            $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/disabletld/');
+                            $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
+                            ?>
+                            <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/disabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true));?>"><?php $this->_('AdminDomains.tlds.option_disable');?></a>
+                            <?php
+                            $this->Form->end();
+                            ?>
+                        <?php
+                        }
+                        ?>
+                    </td>
+                </tr>
+                <?php
+                }
+                ?>
+            </table>
+            <?php
+            }
+            ?>
+        </div>
+        <?php
+        $this->Widget->end();
+        ?>
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Handle confirmation
+        $('#tlds a.manage[rel]').blestaModalConfirm({base_url: '<?php echo $this->base_uri;?>', close: '<?php $this->_('AppController.modal.text_close');?>', submit: true});
+    });
+</script>

@@ -1,0 +1,327 @@
+        <?php
+        echo $this->Html->ifSet($message);
+
+        $link_buttons = [
+            [
+                'icon' => 'fas fa-plus',
+                'name' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true),
+                'attributes' => [
+                    'title' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true),
+                    'href' => '#',
+                    'id' => 'add_tld'
+                ]
+            ]
+        ];
+
+        $this->Widget->clear();
+        $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css', ['id' => 'domain_manager_styles']);
+        $this->Widget->setLinkButtons($link_buttons);
+        $this->Widget->create($this->_('AdminDomains.tlds.boxtitle_tld_pricing', true), ['id' => 'admin_domains_configuration'], $this->Html->ifSet($render_section, null));
+
+        $this->Form->create(null, ['id' => 'tlds']);
+        ?>
+            <?php
+            if (!empty($tlds)) {
+            ?>
+            <table class="table option_table">
+                <thead>
+                    <tr class="heading_row">
+                        <td class="icon"></td>
+                        <td class="icon"></td>
+                        <td><span><?php $this->_('AdminDomains.tlds.heading_tld');?></span></td>
+                        <td><span><?php $this->_('AdminDomains.tlds.heading_dns_management');?></span></td>
+                        <td><span><?php $this->_('AdminDomains.tlds.heading_email_forwarding');?></span></td>
+                        <td><span><?php $this->_('AdminDomains.tlds.heading_id_protection');?></span></td>
+                        <td><span><?php $this->_('AdminDomains.tlds.heading_epp_code');?></span></td>
+                        <td><span><?php $this->_('AdminDomains.tlds.heading_module');?></span></td>
+                        <td class="last"><span><?php $this->_('AdminDomains.tlds.heading_options');?></span></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    // Display all clients
+                    foreach ($tlds as $i => $tld) {
+                    ?>
+                    <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
+                        <td class="icon center" style="width:17px;"><i class="fas fa-arrows-alt movable"></i></td>
+                        <td class="icon center"><i class="fas <?php echo ($tld->package->status !== 'inactive') ? 'fa-check' : 'fa-times';?>"></i></td>
+                        <td class="small"><?php echo $this->Html->safe($tld->tld);?></td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][dns_management]', '1', ((isset($tld->dns_management) ? $tld->dns_management : '0') == '1'), ['id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_dns_management']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][email_forwarding]', '1', ((isset($tld->email_forwarding) ? $tld->email_forwarding : '0') == '1'), ['id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_email_forwarding']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][id_protection]', '1', ((isset($tld->id_protection) ? $tld->id_protection : '0') == '1'), ['id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_id_protection']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][epp_code]', '1', ((isset($tld->epp_code) ? $tld->epp_code : '0') == '1'), ['id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_epp_code']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldSelect('tlds[' . $tld->tld . '][module]', (isset($modules) ? $modules : []), (isset($tld->module->id) ? $tld->module->id : ''));
+                            ?>
+                        </td>
+                        <td>
+                            <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/';?>" class="modal"><?php $this->_('AdminDomains.tlds.option_edit');?></a>,
+
+                            <?php
+                            if ($tld->package->status == 'inactive') {
+                            ?>
+                                <?php
+                                $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/enabletld/');
+                                $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
+                                ?>
+                                <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/enabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true));?>"><?php $this->_('AdminDomains.tlds.option_enable');?></a>
+                                <?php
+                                $this->Form->end();
+                                ?>
+                            <?php
+                            } else {
+                            ?>
+                                <?php
+                                $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/disabletld/');
+                                $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
+                                ?>
+                                <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/disabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true));?>"><?php $this->_('AdminDomains.tlds.option_disable');?></a>
+                                <?php
+                                $this->Form->end();
+                                ?>
+                            <?php
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+                </tbody>
+                <tfoot>
+                    <tr id="add_tld_row">
+                        <td class="icon center"></td>
+                        <td class="icon center">
+                            <a href="#" class="close"><i class="fas fa-times"></i></a>
+                        </td>
+                        <td class="small">
+                            <?php
+                            $this->Form->fieldText('add_tld[tld]', '', ['class' => 'stretch', 'id' => 'tld_tld']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('add_tld[dns_management]', '1', '0', ['id' => 'tld_dns_management']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('add_tld[email_forwarding]', '1', '0', ['id' => 'tld_email_forwarding']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('add_tld[id_protection]', '1', '0', ['id' => 'tld_id_protection']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('add_tld[epp_code]', '1', '0', ['id' => 'tld_epp_code']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldSelect('add_tld[module]', $modules, null, ['id' => 'tld_module']);
+                            ?>
+                        </td>
+                        <td>
+                            <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/addtld/';?>"><?php $this->_('AdminDomains.tlds.option_add');?></a>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+            <?php
+            }
+            ?>
+        <?php
+        $this->Form->end();
+        $this->Widget->end();
+        ?>
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Handle confirmation
+        $('#tlds table a.manage[rel]').blestaModalConfirm({base_url: '<?php echo $this->base_uri;?>', close: '<?php $this->_('AppController.modal.text_close');?>', submit: true});
+
+        // Allow sort of TLDs
+        var options = {
+            // Sort items on the list
+            update: function(event, ui) {
+                var params = {
+                    _csrf_token: "<?php echo $this->Form->getCsrfToken();?>"
+                }
+
+                $(this).blestaRequest(
+                    "POST",
+                    '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/sorttlds/');?>',
+                    $(this).sortable("serialize") + "&" + $.param(params),
+                    // Success
+                    null,
+                    // Error
+                    null,
+                    {dataType: 'json'}
+                );
+            }
+        };
+        $('table.table tbody').blestaSortable(false, options);
+        $('table.table').on('mouseenter', 'tbody tr',
+            function() {
+                $('.movable', this).show();
+                updatePriceRows();
+            }
+        );
+        $('table.table').on('mouseleave', 'tbody tr',
+            function() {
+                $('.movable', this).hide();
+                updatePriceRows();
+            }
+        );
+
+        // Update zebra-stripe rows
+        function updatePriceRows() {
+            var i = 0;
+            $('table.table tbody tr').each(function() {
+                if (i++%2 == 1) {
+                    $(this).addClass('odd_row');
+                } else {
+                    $(this).removeClass('odd_row');
+                }
+            });
+        }
+
+        // Update TLDs
+        $('#tlds table.table tbody input, #tlds table.table tbody select').change(function() {
+            $(this).closest("form").blestaRequest(
+                "POST",
+                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/updatetlds/');?>',
+                $(this).closest("form").serialize("serialize"),
+                // Success
+                null,
+                // Error
+                null,
+                {dataType: 'json'}
+            );
+        });
+
+        // Toggle "Add TLD" row
+        function toggleAddTldRow() {
+            $('#add_tld_row').toggle();
+            $('#add_tld_row input').val('');
+            $('#add_tld_row select').val('');
+            $('#add_tld_row input[type="checkbox"]').prop('checked', false);
+        }
+        $('#add_tld').click(function() {
+            toggleAddTldRow();
+        });
+        $('#add_tld_row a.close').click(function() {
+            toggleAddTldRow();
+        });
+
+        // Add new TLD
+        $('#add_tld_row a').click(function(event) {
+            event.preventDefault();
+
+            // Get TLD
+            var tld = $('#add_tld_row input[name="add_tld[tld]"]').val();
+            if (tld.substring(0, 1) !== '.') {
+                tld = '.' + tld;
+            }
+
+            // Add new TLD
+            var post_url = $(this).attr('href');
+            $(this).closest("form").blestaRequest(
+                "POST",
+                post_url,
+                $(this).closest("form").serialize("serialize"),
+                function(response) {
+                    var tld_row = $('#tlds tbody tr:last').clone();
+
+                    // Show errors
+                    if (response.hasOwnProperty('error')) {
+                        $('#admin_domains_configuration').parent().find('.error_section').remove();
+                        $('#admin_domains_configuration').parent().prepend(response.error);
+
+                        return false;
+                    }
+
+                    // Show messages
+                    if (response.hasOwnProperty('message')) {
+                        $('#admin_domains_configuration').parent().find('.error_section').remove();
+                        $('#admin_domains_configuration').parent().prepend(response.message);
+                    }
+
+                    $(tld_row).find('.small').text(tld);
+
+                    // Set checkboxes
+                    var fields = [];
+                    $('#tlds tbody tr:last td input').each(function() {
+                        if ($(this).is(":checkbox")) {
+                            var name = $(this).attr('name').split("[");
+                            var field = (name[name.length - 1]).replace(']','');
+
+                            fields.push(field);
+                        }
+                    });
+
+                    fields.forEach(function(field) {
+                        $(tld_row).find('input[id$=' + field + ']')
+                            .removeAttr('name')
+                            .attr('name', 'tlds[' + tld + '][' + field + ']')
+                            .removeAttr('id')
+                            .attr('id', 'tlds' + tld.replace('.', '_') + '_' + field);
+                        if ($('#add_tld_row input[name="add_tld[' + field + ']"]').is(":checked")) {
+                            $(tld_row).find('#tlds' + tld.replace('.', '_') + '_' + field).prop('checked', true);
+                        }
+                    });
+
+                    // Add new row
+                    $(tld_row).prop('id', 'tlds_' + response.package_id);
+                    $(tld_row).find('.icon:last .fas').removeClass('fa-times').addClass('fa-check');
+                    $('#tlds tbody').append(tld_row);
+
+                    toggleAddTldRow();
+                    updatePriceRows();
+                },
+                null,
+                {dataType: 'json'}
+            );
+        });
+
+        // Load pricing modal
+        $('#tlds a.modal').click(function(event) {
+            event.preventDefault();
+
+            var modal_url = $(this).attr('href');
+            var modal_width = Math.max((window.innerWidth / 4) * 3, 400);
+
+            $('#tlds').blestaModal({
+                close: '<?php $this->_('AppController.modal.text_close');?>',
+                url: modal_url,
+                onShow: function (event, api) {
+                    var qtip = $('#' + api._id);
+
+                    qtip.addClass('common_box_modal');
+                    qtip.find('.qtip-content').removeClass('qtip-content');
+                },
+                min_width: modal_width,
+                max_width: modal_width
+            });
+        });
+    });
+</script>

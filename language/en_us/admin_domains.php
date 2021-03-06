@@ -3,6 +3,9 @@ $lang['AdminDomains.!success.registrar_upgraded'] = 'The module was successfully
 $lang['AdminDomains.!success.registrar_installed'] = 'The module was successfully installed.';
 $lang['AdminDomains.!success.registrar_uninstalled'] = 'The module was successfully uninstalled.';
 $lang['AdminDomains.!success.configuration_updated'] = 'The Domain Manager configuration has been updated!';
+$lang['AdminDomains.!success.tld_disabled'] = 'The TLD was successfully disabled!';
+$lang['AdminDomains.!success.tld_enabled'] = 'The TLD was successfully enabled!';
+$lang['AdminDomains.!success.tld_added'] = 'The TLD was successfully added!';
 
 $lang['AdminDomains.index.page_title'] = 'Domain Manager - AdminDomains';
 
@@ -36,3 +39,21 @@ $lang['AdminDomains.configuration.tooltip_dns_management_option_group'] = 'The c
 $lang['AdminDomains.configuration.tooltip_email_forwarding_option_group'] = 'The configurable option group used to control whether a domain will have email forwarding services.';
 $lang['AdminDomains.configuration.tooltip_id_protection_option_group'] = 'The configurable option group used to control whether a domain will have ID protection services.';
 $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that we may highlight on order forms through the Order Plugin.  This feature is not yet supported';
+
+
+$lang['AdminDomains.tlds.boxtitle_tld_pricing'] = 'Domain Manager - TLD Pricing';
+$lang['AdminDomains.tlds.categorylink_tldsadd'] = 'Add TLD';
+$lang['AdminDomains.tlds.heading_tld'] = 'TLD';
+$lang['AdminDomains.tlds.heading_dns_management'] = 'DNS Management';
+$lang['AdminDomains.tlds.heading_email_forwarding'] = 'Email Forwarding';
+$lang['AdminDomains.tlds.heading_id_protection'] = 'ID Protection';
+$lang['AdminDomains.tlds.heading_epp_code'] = 'EPP Code';
+$lang['AdminDomains.tlds.heading_module'] = 'Module';
+$lang['AdminDomains.tlds.heading_options'] = 'Options';
+
+$lang['AdminDomains.tlds.option_edit'] = 'Edit';
+$lang['AdminDomains.tlds.option_disable'] = 'Disable';
+$lang['AdminDomains.tlds.option_enable'] = 'Enable';
+$lang['AdminDomains.tlds.option_add'] = 'Add';
+$lang['AdminDomains.tlds.confirm_disable'] = 'Are you sure you want to disable this TLD?';
+$lang['AdminDomains.tlds.confirm_enable'] = 'Are you sure you want to enable this TLD?';

@@ -1,0 +1,37 @@
+#tlds td.small {
+    width: 130px;
+}
+
+#tlds tr td {
+    height: 22px;
+}
+
+#tlds tfoot tr td {
+    border-top: 2px solid #e1e1e1;
+    background: #f5f5f5;
+}
+
+#tlds tfoot tr td a.close {
+    color: #656565;
+}
+
+#tlds #add_tld_row {
+    display: none;
+}
+
+.common_box_modal {
+    border: 0px;
+    background: transparent;
+}
+
+.common_box_modal .qtip-titlebar {
+    display: none;
+}
+
+.common_box_modal .common_box {
+    margin: 0px;
+}
+
+.common_box_modal .common_box .shadow {
+    display: none;
+}

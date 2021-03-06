@@ -1,6 +1,6 @@
 <?php
 /**
- * domain_manager_tlds Management
+ * Domain Manager TLDs Management Model
  *
  * @link https://www.blesta.com Blesta
  */
@@ -24,7 +24,7 @@ class DomainManagerTlds extends DomainManagerModel
     public function getList(
         array $filters = [],
         $page = 1,
-        array $order = ['tld' => 'desc']
+        array $order = ['order' => 'asc']
     ) {
         $tlds = $this->getTlds($filters)
             ->order($order)
@@ -68,7 +68,7 @@ class DomainManagerTlds extends DomainManagerModel
      */
     public function getAll(
         array $filters = [],
-        array $order = ['tld' => 'desc']
+        array $order = ['order' => 'asc']
     ) {
         $tlds = $this->getTlds($filters)->order($order)->fetchAll();
 
@@ -83,7 +83,24 @@ class DomainManagerTlds extends DomainManagerModel
      */
     public function get($tld)
     {
-        return $this->getTlds(['tld' => $tld])->fetch();
+        return $this->getTlds([
+            'tld' => $tld,
+            'company_id' => Configure::get('Blesta.company_id')
+        ])->fetch();
+    }
+
+    /**
+     * Fetches a TLD by the given package id
+     *
+     * @param int $package_id The Package ID belonging to the TLD to fetch
+     * @return mixed A stdClass object representing the TLD, false if no such record exists
+     */
+    public function getByPackage($package_id)
+    {
+        return $this->getTlds([
+            'package_id' => $package_id,
+            'company_id' => Configure::get('Blesta.company_id')
+        ])->fetch();
     }
 
     /**
@@ -92,23 +109,164 @@ class DomainManagerTlds extends DomainManagerModel
      * @param array $vars An array of input data including:
      *
      *  - tld The TLD
-     *  - company_id The ID of the company for which this TLD is available
-     *  - package_id The ID of the package to be used for pricing and sale of this TLD
+     *  - company_id The ID of the company for which this TLD is available (optional)
+     *  - package_id The ID of the package to be used for pricing and sale of this TLD (optional)
+     *  - package_group_id The ID of the TLDs package group (optional)
+     *  - module_id The ID of the registrar module to be used for this TLD (optional)
      *  - dns_management Whether to include DNS management for this TLD
      *  - email_forwarding Whether to include email forwarding for this TLD
      *  - id_protection Whether to include ID protection for this TLD
-     * @return int The identifier of the record that was created, void on error
+     *  - epp_code Whether to include EPP Code for this TLD
+     * @return array An array containing the TLD
      */
     public function add(array $vars)
     {
+        Loader::loadModels($this, ['ModuleManager', 'Packages']);
+
+        // Set company id
+        if (!isset($vars['company_id'])) {
+            $vars['company_id'] = Configure::get('Blesta.company_id');
+        }
+
         $this->Input->setRules($this->getRules($vars));
 
         if ($this->Input->validates($vars)) {
-            $fields = ['tld', 'company_id', 'package_id', 'dns_management', 'email_forwarding', 'id_protection'];
+            // Update the package if a package id and module id is provided
+            if (isset($vars['package_id']) && isset($vars['module_id'])) {
+                $this->Record->where('id', '=', $vars['package_id'])
+                    ->update('packages', ['module_id' => $vars['module_id']]);
+            }
+
+            // Create a new package, if a package id is not provided
+            if (!isset($vars['package_id'])) {
+                if (isset($vars['module_id'])) {
+                    $module = $this->ModuleManager->get($vars['module_id']);
+                }
+
+                // If a module id is not provided, use the None module by default
+                if (!isset($vars['module_id'])) {
+                    if (!$this->ModuleManager->isInstalled('none', $vars['company_id'])) {
+                        $this->ModuleManager->add(['class' => 'none', 'company_id' => $vars['company_id']]);
+                    }
+
+                    if (($none_module = $this->ModuleManager->getByClass('none', $vars['company_id']))) {
+                        $module = isset($none_module[0]) ? $none_module[0] : null;
+                    }
+                }
+
+                if (is_null($module)) {
+                    return;
+                }
+
+                // Create the package
+                $params = [
+                    'tld' => $vars['tld'],
+                    'module_id' => $module->id,
+                    'company_id' => $vars['company_id']
+                ];
+
+                if (isset($vars['package_group_id'])) {
+                    $params['package_group_id'] = $vars['package_group_id'];
+                }
+                $package_id = $this->createPackage($params);
+                $vars['package_id'] = $package_id;
+
+                if (empty($package_id)) {
+                    return;
+                }
+            }
+
+            $fields = ['tld', 'company_id', 'package_id', 'dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
             $this->Record->insert('domain_manager_tlds', $vars, $fields);
 
-            return $this->Record->lastInsertId();
+            return $vars;
         }
+    }
+
+    /**
+     * Creates a package for a given TLD
+     *
+     * @param array $vars An array of input data including:
+     *
+     *  - tld The TLD of the package
+     *  - module_id The ID of the registrar module for this package
+     *  - package_group_id The ID of the TLDs package group (optional)
+     *  - company_id The ID of the company for which the TLD of this package is available (optional)
+     * @return int The ID of the TLD package
+     */
+    private function createPackage(array $vars)
+    {
+        Loader::loadModels($this, ['Currencies', 'Languages', 'Companies']);
+
+        // Set company id
+        if (!isset($vars['company_id'])) {
+            $vars['company_id'] = Configure::get('Blesta.company_id');
+        }
+
+        // Set package group id
+        if (!isset($vars['package_group_id'])) {
+            $domain_manager_package_group = $this->Companies->getSetting(
+                $vars['company_id'],
+                'domain_manager_package_group'
+            );
+            $vars['package_group_id'] = isset($domain_manager_package_group->value)
+                ? $domain_manager_package_group->value
+                : null;
+        }
+
+        // Fetch all company currencies
+        $currencies = $this->Currencies->getAll($vars['company_id']);
+
+        // Fetch all company languages
+        $languages = $this->Languages->getAll($vars['company_id']);
+
+        // Create package
+        $package_params = [
+            'module_id' => $vars['module_id'],
+            'names' => [],
+            'descriptions' => [],
+            'hidden' => '1',
+            'company_id' => $vars['company_id'],
+            'pricing' => [],
+            'groups' => [$vars['package_group_id']]
+        ];
+
+        // Add a pricing for terms 1-10 years for each currency
+        foreach ($currencies as $currency) {
+            for ($i = 1; $i <= 10; $i++) {
+                $package_params['pricing'][] = ['term' => $i, 'period' => 'year', 'currency' => $currency->code];
+            }
+        }
+
+        // Add a package name and email content for each language
+        foreach ($languages as $language) {
+            $package_params['names'][] = [
+                'lang' => $language->code,
+                'name' => $vars['tld']
+            ];
+            $package_params['email_content'][] = [
+                'lang' => $language->code,
+                'html' => '',
+                'text' => ''
+            ];
+        }
+
+        // Set the default module row, if any
+        // TODO
+
+        // Set TLD to the package meta
+        // TODO
+
+        // Add the package for this TLD
+        $package_id = $this->Packages->add($package_params);
+
+        if (($errors = $this->Packages->errors())) {
+            $this->Input->setErrors($errors);
+
+            return;
+        }
+
+        return $package_id;
     }
 
     /**
@@ -117,21 +275,39 @@ class DomainManagerTlds extends DomainManagerModel
      * @param int $tld The identifier of the TLD to edit
      * @param array $vars An array of input data including:
      *
-     *  - package_id The package to be used for pricing and sale of this TLD
+     *  - package_id The ID of the package to be used for pricing and sale of this TLD
+     *  - module_id The ID of the registrar module to be used for this TLD
      *  - dns_management Whether to include DNS management for this TLD
      *  - email_forwarding Whether to include email forwarding for this TLD
      *  - id_protection Whether to include ID protection for this TLD
+     *  - epp_code Whether to include EPP Code for this TLD
      * @return int The identifier of the TLD that was updated, void on error
      */
     public function edit($tld, array $vars)
     {
-
         $vars['tld'] = $tld;
         $this->Input->setRules($this->getRules($vars, true));
 
         if ($this->Input->validates($vars)) {
-            $fields = ['tld', 'package_id', 'dns_management', 'email_forwarding', 'id_protection'];
-            $this->Record->where('tld', '=', $tld)->update('domain_manager_tlds', $vars, $fields);
+            // Update module
+            Loader::loadModels($this, ['Packages', 'ModuleManager']);
+
+            if (
+                ($module = $this->ModuleManager->get($vars['module_id']))
+                && ($package = $this->PAckages->get($vars['package_id']))
+            ) {
+                $this->Record->where('id', '=', $package->package_id)
+                    ->update('packages', ['module_id' => $module->id]);
+
+                // Update module row
+                // TODO
+            }
+
+            // Update TLD
+            $fields = ['tld', 'package_id', 'dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
+            $this->Record->where('tld', '=', $tld)
+                ->where('company_id', '=', Configure::get('Blesta.company_id'))
+                ->update('domain_manager_tlds', $vars, $fields);
 
             return $tld;
         }
@@ -147,7 +323,50 @@ class DomainManagerTlds extends DomainManagerModel
         // Delete a TLD
         $this->Record->from('domain_manager_tlds')->
             where('domain_manager_tlds.tld', '=', $tld)->
+            where('domain_manager_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
             delete();
+    }
+
+    /**
+     * Enables the given TLD
+     *
+     * @param int $tld The identifier of the TLD to enable
+     */
+    public function enable($tld)
+    {
+        // Get TLD
+        $tld = $this->get($tld);
+
+        $this->Record->where('id', '=', $tld->package_id)
+            ->update('packages', ['status' => 'active']);
+    }
+
+    /**
+     * Disables the given TLD
+     *
+     * @param int $tld The identifier of the TLD to disable
+     */
+    public function disable($tld)
+    {
+        // Get TLD
+        $tld = $this->get($tld);
+
+        $this->Record->where('id', '=', $tld->package_id)
+            ->update('packages', ['status' => 'inactive']);
+    }
+
+    /**
+     * Sort the TLDs
+     *
+     * @param array $tlds A key => value array, where the key is the order of
+     *  the TLD and the value the ID of the package belonging to the TLD
+     */
+    public function sortTlds(array $tlds = [])
+    {
+        foreach($tlds as $order => $package_id) {
+            $this->Record->where('package_id', '=', $package_id)
+                ->update('domain_manager_tlds', ['order' => $order]);
+        }
     }
 
     /**
@@ -169,6 +388,10 @@ class DomainManagerTlds extends DomainManagerModel
 
         if (isset($filters['tld'])) {
             $this->Record->where('domain_manager_tlds.tld', '=', $filters['tld']);
+        }
+
+        if (isset($filters['company_id'])) {
+            $this->Record->where('domain_manager_tlds.company_id', '=', $filters['company_id']);
         }
 
         if (isset($filters['package_id'])) {
@@ -222,17 +445,52 @@ class DomainManagerTlds extends DomainManagerModel
                     'rule' => 'isEmpty',
                     'negate' => true,
                     'message' => Language::_('DomainManagerTlds.!error.tld.empty', true)
+                ],
+                'exists' => [
+                    'if_set' => $edit,
+                    'rule' => function($tld) {
+                        $parent = new stdClass();
+                        Loader::loadComponents($parent, ['Record']);
+
+                        $count = $this->Record->select()
+                            ->from('domain_manager_tlds')
+                            ->where('tld', '=', $tld)
+                            ->where('company_id', '=', Configure::get('Blesta.company_id'))
+                            ->numResults();
+
+                        return !($count > 0);
+                    },
+                    'message' => Language::_('DomainManagerTlds.!error.tld.exists', true)
+                ],
+                'length' => [
+                    'if_set' => true,
+                    'rule' => ['minLength', 3],
+                    'message' => Language::_('DomainManagerTlds.!error.tld.length', true)
                 ]
             ],
             'package_id' => [
-                'valid' => [
-                    'if_set' => $edit,
+                'exists' => [
+                    'if_set' => true,
                     'rule' => [[$this, 'validateExists'], 'id', 'packages'],
                     'message' => Language::_('DomainManagerTlds.!error.package_id.exists', true)
                 ]
             ],
+            'package_group_id' => [
+                'exists' => [
+                    'if_set' => true,
+                    'rule' => [[$this, 'validateExists'], 'id', 'package_groups'],
+                    'message' => Language::_('DomainManagerTlds.!error.package_group_id.exists', true)
+                ]
+            ],
+            'module_id' => [
+                'exists' => [
+                    'if_set' => true,
+                    'rule' => [[$this, 'validateExists'], 'id', 'modules'],
+                    'message' => Language::_('DomainManagerTlds.!error.module_id.exists', true)
+                ]
+            ],
             'company_id' => [
-                'valid' => [
+                'exists' => [
                     'if_set' => $edit,
                     'rule' => [[$this, 'validateExists'], 'id', 'companies'],
                     'message' => Language::_('DomainManagerTlds.!error.company_id.exists', true)
@@ -257,6 +515,14 @@ class DomainManagerTlds extends DomainManagerModel
                     'if_set' => true,
                     'rule' => ['in_array', [0, 1]],
                     'message' => Language::_('DomainManagerTlds.!error.id_protection.valid', true)
+                ]
+            ]
+            ,
+            'epp_code' => [
+                'valid' => [
+                    'if_set' => true,
+                    'rule' => ['in_array', [0, 1]],
+                    'message' => Language::_('DomainManagerTlds.!error.epp_code.valid', true)
                 ]
             ]
         ];
