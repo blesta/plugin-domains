@@ -6,6 +6,7 @@ $lang['AdminDomains.!success.configuration_updated'] = 'The Domain Manager confi
 $lang['AdminDomains.!success.tld_disabled'] = 'The TLD was successfully disabled!';
 $lang['AdminDomains.!success.tld_enabled'] = 'The TLD was successfully enabled!';
 $lang['AdminDomains.!success.tld_added'] = 'The TLD was successfully added!';
+$lang['AdminDomains.!success.tld_updated'] = 'The TLD was successfully updated!';
 
 
 $lang['AdminDomains.registrars.text_none'] = 'There are no available registrars.';
@@ -53,6 +54,14 @@ $lang['AdminDomains.tlds.option_add'] = 'Add';
 $lang['AdminDomains.tlds.confirm_disable'] = 'Are you sure you want to disable this TLD?';
 $lang['AdminDomains.tlds.confirm_enable'] = 'Are you sure you want to enable this TLD?';
 
-
 $lang['AdminDomains.pricing.boxtitle_edit_tld'] = 'Update TLD %1$s'; // %1$s is the TLD
+$lang['AdminDomains.pricing.tab_pricing'] = 'Pricing';
+$lang['AdminDomains.pricing.tab_nameservers'] = 'Name Servers';
+$lang['AdminDomains.pricing.heading_term'] = 'Term';
+$lang['AdminDomains.pricing.heading_register_price'] = 'Register Price';
+$lang['AdminDomains.pricing.heading_renew_price'] = 'Renew Price';
+$lang['AdminDomains.pricing.heading_transfer_price'] = 'Transfer Price';
+$lang['AdminDomains.pricing.heading_setup_fee'] = 'Setup Fee';
+$lang['AdminDomains.pricing.heading_cancel_fee'] = 'Cancel Fee';
+$lang['AdminDomains.pricing.field_nameserver'] = 'Name Server %1$s'; // %1$s is the name server
 $lang['AdminDomains.pricing.field_update'] = 'Update';

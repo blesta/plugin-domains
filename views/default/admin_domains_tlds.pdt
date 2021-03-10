@@ -154,6 +154,7 @@
         $this->Form->end();
         $this->Widget->end();
         ?>
+
 <script type="text/javascript">
     $(document).ready(function() {
         // Handle confirmation
@@ -305,17 +306,19 @@
         });
 
         // Load pricing modal
-        $('#tlds a.modal').blestaModal({
-            close: '<?php $this->_('AppController.modal.text_close');?>',
-            url: $(this).attr('href'),
-            onShow: function (event, api) {
-                var qtip = $('#' + api._id);
+        $('#tlds a.modal').each(function() {
+            $(this).blestaModal({
+                close: '<?php $this->_('AppController.modal.text_close');?>',
+                url: $(this).attr('href'),
+                onShow: function (event, api) {
+                    var qtip = $('#' + api._id);
 
-                qtip.addClass('common_box_modal');
-                qtip.find('.qtip-content').removeClass('qtip-content');
-            },
-            min_width: Math.max((window.innerWidth / 4) * 3, 400),
-            max_width: Math.max((window.innerWidth / 4) * 3, 400)
+                    qtip.addClass('common_box_modal');
+                    qtip.find('.qtip-content').removeClass('qtip-content');
+                },
+                min_width: Math.max((window.innerWidth / 4) * 3, 400),
+                max_width: Math.max((window.innerWidth / 4) * 3, 400)
+            });
         });
     });
 </script>

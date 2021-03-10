@@ -1,90 +1,133 @@
         <?php
         echo $this->Html->ifSet($message);
 
-        $tabs = [];
-        foreach ((isset($currencies) ? $currencies : []) as $currency) {
-            $tabs[] = [
-                'name' => $currency,
-                'current' => ($currency == (isset($default_currency) ? $default_currency : '')),
+        $tabs = [
+            [
+                'name' => $this->_('AdminDomains.pricing.tab_pricing', true),
+                'current' => true,
                 'attributes' => [
-                    'id' => $currency,
-                    'class' => 'currency_tab'
+                    'class' => 'pricing'
                 ]
-            ];
-        }
+            ],
+            [
+                'name' => $this->_('AdminDomains.pricing.tab_nameservers', true),
+                'current' => false,
+                'attributes' => [
+                    'class' => 'nameservers'
+                ]
+            ]
+        ];
 
         $this->Widget->clear();
         $this->Widget->setTabs($tabs);
         $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, $tld->tld), ['id' => 'edit_tld' . str_replace('.', '_', $tld->tld)], $this->Html->ifSet($render_section, null));
+
+        $this->Form->create(null, ['id' => 'edit_tld']);
         ?>
 
         <div class="inner">
-            <?php
-            foreach ((isset($currencies) ? $currencies : []) as $currency) {
-            ?>
-                <div class="tab" id="currency_<?php echo $this->Html->safe($currency);?>">
-                    <table class="table option_table">
-                        <thead>
-                            <tr class="heading_row">
-                                <td class="icon center"></td>
-                                <td><span><?php $this->_('AdminDomains.pricing.heading_term');?></span></td>
-                                <td><span><?php $this->_('AdminDomains.pricing.heading_register_price');?></span></td>
-                                <td><span><?php $this->_('AdminDomains.pricing.heading_renew_price');?></span></td>
-                                <td><span><?php $this->_('AdminDomains.pricing.heading_transfer_price');?></span></td>
-                                <td><span><?php $this->_('AdminDomains.pricing.heading_setup_fee');?></span></td>
-                                <td class="last"><span><?php $this->_('AdminDomains.pricing.heading_cancel_fee');?></span></td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $i = 0;
-                            foreach ($package->pricing as $pricing) {
-                                if ($pricing->currency == $currency) {
-                            ?>
-                                <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
-                                    <td class="icon center">
+            <div class="main_tab" id="tab_pricing">
+                <div class="tab_content">
+                    <ul class="tabs">
+                        <?php
+                        foreach ((isset($currencies) ? $currencies : []) as $currency) {
+                        ?>
+                        <li<?php echo ($currency == (isset($default_currency) ? $default_currency : '')) ? ' class="current"' : '';?>>
+                            <a href="#"><?php echo $this->Html->safe($currency);?></a>
+                        </li>
+                        <?php
+                        }
+                        ?>
+                    </ul>
+                    <div class="inner_content">
+                        <?php
+                        foreach ((isset($currencies) ? $currencies : []) as $currency) {
+                        ?>
+                            <div>
+                                <table class="table option_table">
+                                    <thead>
+                                        <tr class="heading_row">
+                                            <td class="icon center"></td>
+                                            <td><span><?php $this->_('AdminDomains.pricing.heading_term');?></span></td>
+                                            <td><span><?php $this->_('AdminDomains.pricing.heading_register_price');?></span></td>
+                                            <td><span><?php $this->_('AdminDomains.pricing.heading_renew_price');?></span></td>
+                                            <td><span><?php $this->_('AdminDomains.pricing.heading_transfer_price');?></span></td>
+                                            <td><span><?php $this->_('AdminDomains.pricing.heading_setup_fee');?></span></td>
+                                            <td class="last"><span><?php $this->_('AdminDomains.pricing.heading_cancel_fee');?></span></td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
                                         <?php
-                                        $this->Form->fieldCheckbox('pricing[' . $pricing->id . ']', '1', '0', ['id' => 'tld_id_protection']);
+                                        $i = 0;
+                                        foreach ($package->pricing as $pricing) {
+                                            if ($pricing->currency == $currency) {
                                         ?>
-                                    </td>
-                                    <td><?php echo $pricing->term; ?> <?php echo $pricing->period; ?></td>
-                                    <td>
+                                            <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
+                                                <td class="icon center">
+                                                    <?php
+                                                    $this->Form->fieldCheckbox('pricing[' . $pricing->id . '][enabled]', '1', (isset($pricing->enabled) ? $pricing->enabled : false));
+                                                    ?>
+                                                </td>
+                                                <td><?php echo $pricing->term; ?> <?php echo $pricing->period; ?></td>
+                                                <td>
+                                                    <?php
+                                                    $this->Form->fieldText('pricing[' . $pricing->id . '][price]', $this->CurrencyFormat->format($pricing->price, $pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    $this->Form->fieldText('pricing[' . $pricing->id . '][price_renews]', $this->CurrencyFormat->format($pricing->price_renews, $pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    $this->Form->fieldText('pricing[' . $pricing->id . '][price_transfer]', $this->CurrencyFormat->format($pricing->price_transfer, $pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    $this->Form->fieldText('pricing[' . $pricing->id . '][setup_fee]', $this->CurrencyFormat->format($pricing->setup_fee, $pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    $this->Form->fieldText('pricing[' . $pricing->id . '][cancel_fee]', $this->CurrencyFormat->format($pricing->cancel_fee, $pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
+                                                    ?>
+                                                </td>
+                                            </tr>
                                         <?php
-                                        $this->Form->fieldText('pricing[' . $pricing->id . ']', $pricing->price, ['class' => 'stretch']);
+                                                $i++;
+                                            }
+                                        }
                                         ?>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        $this->Form->fieldText('pricing[' . $pricing->id . ']', $pricing->price_renews, ['class' => 'stretch']);
-                                        ?>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        $this->Form->fieldText('pricing[' . $pricing->id . ']', $pricing->price_transfer, ['class' => 'stretch']);
-                                        ?>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        $this->Form->fieldText('pricing[' . $pricing->id . ']', $pricing->setup_fee, ['class' => 'stretch']);
-                                        ?>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        $this->Form->fieldText('pricing[' . $pricing->id . ']', $pricing->cancel_fee, ['class' => 'stretch']);
-                                        ?>
-                                    </td>
-                                </tr>
-                            <?php
-                                    $i++;
-                                }
-                            }
-                            ?>
-                        </tbody>
-                    </table>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php
+                        }
+                        ?>
+                    </div>
                 </div>
-            <?php
-            }
-            ?>
+            </div>
+
+            <div class="main_tab" id="tab_nameservers">
+                <div class="pad">
+                    <ul>
+                        <?php
+                        for ($i = 1; $i <= 4; $i++) {
+                        ?>
+                        <li>
+                            <?php
+                            $this->Form->label($this->_('AdminDomains.pricing.field_nameserver', true, $i), 'ns' . $i);
+                            $this->Form->fieldText('ns[]', null, ['id' => 'ns' . $i, 'class' => 'block']);
+                            ?>
+                        </li>
+                        <?php
+                        }
+                        ?>
+                    </ul>
+                </div>
+            </div>
 
             <div class="button_row">
                 <?php
@@ -94,44 +137,70 @@
             </div>
         </div>
         <?php
+        $this->Form->end();
         $this->Widget->end();
         ?>
+
 <script type="text/javascript">
     $(document).ready(function() {
         // Set tabs
         function hideAllTabs() {
-            <?php
-            foreach ($currencies as $currency) {
-            ?>
-            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #currency_<?php echo $this->Html->safe($currency);?>').hide();
-            <?php
-            }
-            ?>
+            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .main_tab').hide();
+            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .tabs_nav').hide();
         }
 
         hideAllTabs();
-        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .tabs_nav').hide();
-        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #currency_<?php echo $this->Html->safe($default_currency);?>').show();
+        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .main_tab').first().show();
+        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .tab_slider ul li').on('click', function() {
+            var tab = $(this).find('a').attr('class');
 
-        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .tab_slider ul li').on('click', function () {
             $('.tab_slider ul li').removeClass('current');
             $(this).addClass('current');
+
+            hideAllTabs();
+            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .main_tab#tab_' + tab).show();
         });
 
-        <?php
-        foreach ($currencies as $currency) {
-        ?>
-        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .currency_tab#<?php echo $this->Html->safe($currency);?>').on('click', function () {
-            hideAllTabs();
-            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #currency_<?php echo $this->Html->safe($currency);?>').show();
-        });
-        <?php
-        }
-        ?>
+        // Set secondary tabs
+        $('div.tab_content').blestaTabbedContent();
 
         // Close modal
-        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .btn.close').on('click', function () {
+        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .btn.close').on('click', function() {
             $(this).closest('.qtip').find('.qtip-close').click();
+        });
+
+        // Update TLD
+        $('form').on('submit', function(event) {
+            event.preventDefault();
+
+            $(this).blestaRequest(
+                "POST",
+                $(this).attr('action'),
+                $(this).serialize("serialize"),
+                function(response) {
+                    // Show errors
+                    if (response.hasOwnProperty('error')) {
+                        var parent = $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').parents().find('#body_container .gap_row');
+
+                        parent.find('.error_section').remove();
+                        parent.prepend(response.error);
+
+                        return false;
+                    }
+
+                    // Show messages
+                    if (response.hasOwnProperty('message')) {
+                        var parent = $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').parents().find('#body_container .gap_row');
+
+                        parent.find('.error_section').remove();
+                        parent.prepend(response.message);
+                    }
+
+                    $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').closest('.qtip').find('.qtip-close').click();
+                },
+                null,
+                {dataType: 'json'}
+            );
         });
     });
 </script>

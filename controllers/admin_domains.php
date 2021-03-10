@@ -390,7 +390,7 @@ class AdminDomains extends DomainManagerController
     public function pricing()
     {
         $this->uses(['Packages', 'Currencies', 'DomainManager.DomainManagerTlds']);
-        $this->helpers(['Form']);
+        $this->helpers(['Form', 'CurrencyFormat']);
 
         // Fetch the package belonging to this TLD
         if (
@@ -400,6 +400,43 @@ class AdminDomains extends DomainManagerController
             || !($tld = $this->DomainManagerTlds->getByPackage($this->get[0]))
         ) {
             $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+        }
+
+        if (!empty($this->post)) {
+            $tld = $this->DomainManagerTlds->getByPackage($this->get[0]);
+
+            // Update nameservers
+            if (!empty($this->post['ns'])) {
+                $this->DomainManagerTlds->edit($tld->tld, ['ns' => $this->post['ns']]);
+            }
+
+            // Update pricing
+            if (!empty($this->post['pricing'])) {
+                $this->DomainManagerTlds->updatePricing($tld->tld, $this->post['pricing']);
+            }
+
+            if (($errors = $this->DomainManagerTlds->errors())) {
+                echo json_encode([
+                    'error' => $this->setMessage(
+                        'error',
+                        $errors,
+                        true,
+                        null,
+                        false
+                    )
+                ]);
+            } else {
+                $tld->message = $this->setMessage(
+                    'message',
+                    Language::_('AdminDomains.!success.tld_updated', true),
+                    true,
+                    null,
+                    false
+                );
+                echo json_encode($tld);
+            }
+
+            return false;
         }
 
         // Get company settings

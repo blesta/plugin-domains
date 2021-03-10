@@ -336,15 +336,15 @@ class DomainManagerTlds extends DomainManagerModel
     public function edit($tld, array $vars)
     {
         $vars['tld'] = $tld;
+        $tld = $this->get($vars['tld']);
+
         $this->Input->setRules($this->getRules($vars, true));
 
         if ($this->Input->validates($vars)) {
             // Update module
             Loader::loadModels($this, ['Packages', 'ModuleManager']);
 
-            if (($module = $this->ModuleManager->get($vars['module_id']))) {
-                $tld = $this->get($vars['tld']);
-
+            if (isset($vars['module_id']) && ($module = $this->ModuleManager->get($vars['module_id']))) {
                 // Get module row
                 $module_row = null;
                 if (!empty($module->rows)) {
@@ -360,8 +360,10 @@ class DomainManagerTlds extends DomainManagerModel
                 }
                 $this->Record->where('id', '=', $tld->package_id)
                     ->update('packages', $fields);
+            }
 
-                // Set the nameservers to the package meta
+            // Update name servers
+            if (isset($vars['ns'])) {
                 $fields = [
                     'package_id' => $tld->package_id,
                     'key' => 'ns',
@@ -378,7 +380,56 @@ class DomainManagerTlds extends DomainManagerModel
                 ->where('company_id', '=', Configure::get('Blesta.company_id'))
                 ->update('domain_manager_tlds', $vars, $fields);
 
-            return $tld;
+            return $vars['tld'];
+        }
+    }
+
+    /**
+     * Updates the pricing of a TLD
+     *
+     * @param int $tld The identifier of the TLD to edit
+     * @param array $pricing A key => value array, where the key is the pricing ID
+     *  and the value the pricing row
+     */
+    public function updatePricing($tld, array $pricing)
+    {
+        Loader::loadModels($this, ['Pricings']);
+        Loader::loadHelpers($this, ['CurrencyFormat']);
+
+        $tld = $this->get($tld);
+
+        if (!empty($pricing)) {
+            foreach ($pricing as $pricing_id => $pricing_row) {
+                $package_pricing = $this->Record->select()
+                    ->from('package_pricing')
+                    ->where('pricing_id', '=', $pricing_id)
+                    ->fetch();
+
+                if ($package_pricing->package_id == $tld->package_id) {
+                    $old_pricing = $this->Pricings->get($pricing_id);
+
+                    // Format row
+                    foreach ($pricing_row as $key => $value) {
+                        if (empty($value)) {
+                            unset($pricing_row[$key]);
+                            continue;
+                        }
+
+                        $pricing_row[$key] = $this->CurrencyFormat->format(
+                            $value,
+                            $old_pricing->currency,
+                            ['prefix' => false, 'suffix' => false, 'with_separator' => false, 'code' => false, 'decimals' => 4]
+                        );
+                    }
+
+                    if (isset($old_pricing->enabled)) {
+                        $pricing_row['enabled'] = isset($pricing_row['enabled']) ? $pricing_row['enabled'] : '0';
+                    }
+
+                    $this->Record->where('id', '=', $pricing_id)
+                        ->update('pricings', $pricing_row);
+                }
+            }
         }
     }
 
