@@ -457,7 +457,7 @@ class AdminDomains extends DomainManagerController
         }
 
         // Get TLD package
-        $package = $this->Packages->get($this->get[0]);
+        $package = $this->Packages->get($this->get[0], true);
         $tld = $this->DomainManagerTlds->getByPackage($this->get[0]);
 
         echo $this->partial(
