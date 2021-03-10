@@ -43,7 +43,7 @@
                     foreach ($tlds as $i => $tld) {
                     ?>
                     <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
-                        <td class="icon center" style="width:17px;"><i class="fas fa-arrows-alt movable"></i></td>
+                        <td class="icon center"><i class="fas fa-arrows-alt movable"></i></td>
                         <td class="icon center"><i class="fas <?php echo ($tld->package->status !== 'inactive') ? 'fa-check' : 'fa-times';?>"></i></td>
                         <td class="small"><?php echo $this->Html->safe($tld->tld);?></td>
                         <td>
@@ -68,7 +68,7 @@
                         </td>
                         <td>
                             <?php
-                            $this->Form->fieldSelect('tlds[' . $tld->tld . '][module]', (isset($modules) ? $modules : []), (isset($tld->module->id) ? $tld->module->id : ''));
+                            $this->Form->fieldSelect('tlds[' . $tld->tld . '][module]', (isset($modules) ? $modules : []), (isset($tld->module->id) ? $tld->module->id : ''), ['id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_module']);
                             ?>
                         </td>
                         <td>
@@ -113,32 +113,32 @@
                         </td>
                         <td class="small">
                             <?php
-                            $this->Form->fieldText('add_tld[tld]', '', ['class' => 'stretch', 'id' => 'tld_tld']);
+                            $this->Form->fieldText('add_tld[tld]', '', ['class' => 'stretch', 'id' => 'add_tld_tld']);
                             ?>
                         </td>
                         <td>
                             <?php
-                            $this->Form->fieldCheckbox('add_tld[dns_management]', '1', '0', ['id' => 'tld_dns_management']);
+                            $this->Form->fieldCheckbox('add_tld[dns_management]', '1', '0', ['id' => 'add_tld_dns_management']);
                             ?>
                         </td>
                         <td>
                             <?php
-                            $this->Form->fieldCheckbox('add_tld[email_forwarding]', '1', '0', ['id' => 'tld_email_forwarding']);
+                            $this->Form->fieldCheckbox('add_tld[email_forwarding]', '1', '0', ['id' => 'add_tld_email_forwarding']);
                             ?>
                         </td>
                         <td>
                             <?php
-                            $this->Form->fieldCheckbox('add_tld[id_protection]', '1', '0', ['id' => 'tld_id_protection']);
+                            $this->Form->fieldCheckbox('add_tld[id_protection]', '1', '0', ['id' => 'add_tld_id_protection']);
                             ?>
                         </td>
                         <td>
                             <?php
-                            $this->Form->fieldCheckbox('add_tld[epp_code]', '1', '0', ['id' => 'tld_epp_code']);
+                            $this->Form->fieldCheckbox('add_tld[epp_code]', '1', '0', ['id' => 'add_tld_epp_code']);
                             ?>
                         </td>
                         <td>
                             <?php
-                            $this->Form->fieldSelect('add_tld[module]', $modules, null, ['id' => 'tld_module']);
+                            $this->Form->fieldSelect('add_tld[module]', $modules, null, ['id' => 'add_tld_module']);
                             ?>
                         </td>
                         <td>
@@ -207,10 +207,10 @@
 
         // Update TLDs
         $('#tlds table.table tbody input, #tlds table.table tbody select').change(function() {
-            $(this).closest("form").blestaRequest(
+            $(this).closest('form').blestaRequest(
                 "POST",
                 '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/updatetlds/');?>',
-                $(this).closest("form").serialize("serialize"),
+                $(this).closest('form').serialize('serialize'),
                 // Success
                 null,
                 // Error
@@ -270,23 +270,24 @@
 
                     // Set checkboxes
                     var fields = [];
-                    $('#tlds tbody tr:last td input').each(function() {
-                        if ($(this).is(":checkbox")) {
-                            var name = $(this).attr('name').split("[");
-                            var field = (name[name.length - 1]).replace(']','');
-
-                            fields.push(field);
-                        }
+                    $('#tlds tbody tr:last td input, #tlds tbody tr:last td select').each(function() {
+                        var name = $(this).attr('name').split("[");
+                        var field = (name[name.length - 1]).replace(']','');
+                        fields.push(field);
                     });
 
                     fields.forEach(function(field) {
-                        $(tld_row).find('input[id$=' + field + ']')
+                        $(tld_row).find('*[id$=' + field + ']')
                             .removeAttr('name')
                             .attr('name', 'tlds[' + tld + '][' + field + ']')
                             .removeAttr('id')
                             .attr('id', 'tlds' + tld.replace('.', '_') + '_' + field);
-                        if ($('#add_tld_row input[name="add_tld[' + field + ']"]').is(":checked")) {
+
+                        if ($('#add_tld_' + field).is(":checked") && $('#add_tld_' + field).is(":checkbox")) {
                             $(tld_row).find('#tlds' + tld.replace('.', '_') + '_' + field).prop('checked', true);
+                        } else {
+                            var value = $('#add_tld_' + field).val();
+                            $(tld_row).find('#tlds' + tld.replace('.', '_') + '_' + field).val(value);
                         }
                     });
 
@@ -304,24 +305,17 @@
         });
 
         // Load pricing modal
-        $('#tlds a.modal').click(function(event) {
-            event.preventDefault();
+        $('#tlds a.modal').blestaModal({
+            close: '<?php $this->_('AppController.modal.text_close');?>',
+            url: $(this).attr('href'),
+            onShow: function (event, api) {
+                var qtip = $('#' + api._id);
 
-            var modal_url = $(this).attr('href');
-            var modal_width = Math.max((window.innerWidth / 4) * 3, 400);
-
-            $('#tlds').blestaModal({
-                close: '<?php $this->_('AppController.modal.text_close');?>',
-                url: modal_url,
-                onShow: function (event, api) {
-                    var qtip = $('#' + api._id);
-
-                    qtip.addClass('common_box_modal');
-                    qtip.find('.qtip-content').removeClass('qtip-content');
-                },
-                min_width: modal_width,
-                max_width: modal_width
-            });
+                qtip.addClass('common_box_modal');
+                qtip.find('.qtip-content').removeClass('qtip-content');
+            },
+            min_width: Math.max((window.innerWidth / 4) * 3, 400),
+            max_width: Math.max((window.innerWidth / 4) * 3, 400)
         });
     });
 </script>

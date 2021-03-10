@@ -6,17 +6,23 @@
     height: 22px;
 }
 
-#tlds tfoot tr td {
+#tlds #add_tld_row {
+    display: none;
+}
+
+#tlds .icon {
+    width: 17px;
+    min-width: 17px;
+    max-width: 17px;
+}
+
+.table tfoot tr td {
     border-top: 2px solid #e1e1e1;
     background: #f5f5f5;
 }
 
-#tlds tfoot tr td a.close {
+.table tfoot tr td a.close {
     color: #656565;
-}
-
-#tlds #add_tld_row {
-    display: none;
 }
 
 .common_box_modal {
@@ -34,4 +40,12 @@
 
 .common_box_modal .common_box .shadow {
     display: none;
+}
+
+.tabs_content .tab {
+    display: none;
+}
+
+.tab_slider ul li:hover {
+    cursor: pointer;
 }

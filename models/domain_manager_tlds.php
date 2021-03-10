@@ -108,7 +108,8 @@ class DomainManagerTlds extends DomainManagerModel
      *
      * @param array $vars An array of input data including:
      *
-     *  - tld The TLD
+     *  - tld The TLD to add
+     *  - ns A numerically indexed array, containing the nameservers for the given TLD
      *  - company_id The ID of the company for which this TLD is available (optional)
      *  - package_id The ID of the package to be used for pricing and sale of this TLD (optional)
      *  - package_group_id The ID of the TLDs package group (optional)
@@ -168,6 +169,10 @@ class DomainManagerTlds extends DomainManagerModel
                 if (isset($vars['package_group_id'])) {
                     $params['package_group_id'] = $vars['package_group_id'];
                 }
+                if (isset($vars['ns'])) {
+                    $params['ns'] = $vars['ns'];
+                }
+
                 $package_id = $this->createPackage($params);
                 $vars['package_id'] = $package_id;
 
@@ -176,7 +181,26 @@ class DomainManagerTlds extends DomainManagerModel
                 }
             }
 
-            $fields = ['tld', 'company_id', 'package_id', 'dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
+            // Set the TLD order
+            $vars['order'] = 0;
+            $last_tld = $this->getTlds(['company_id' => $vars['company_id']])
+                ->order(['package_id' => 'desc'])
+                ->fetch();
+
+            if (isset($last_tld->order)) {
+                $vars['order'] = (int) $last_tld->order + 1;
+            }
+
+            $fields = [
+                'tld',
+                'company_id',
+                'package_id',
+                'order',
+                'dns_management',
+                'email_forwarding',
+                'id_protection',
+                'epp_code'
+            ];
             $this->Record->insert('domain_manager_tlds', $vars, $fields);
 
             return $vars;
@@ -189,6 +213,7 @@ class DomainManagerTlds extends DomainManagerModel
      * @param array $vars An array of input data including:
      *
      *  - tld The TLD of the package
+     *  - ns A numerically indexed array, containing the nameservers for the given TLD
      *  - module_id The ID of the registrar module for this package
      *  - package_group_id The ID of the TLDs package group (optional)
      *  - company_id The ID of the company for which the TLD of this package is available (optional)
@@ -251,12 +276,6 @@ class DomainManagerTlds extends DomainManagerModel
             ];
         }
 
-        // Set the default module row, if any
-        // TODO
-
-        // Set TLD to the package meta
-        // TODO
-
         // Add the package for this TLD
         $package_id = $this->Packages->add($package_params);
 
@@ -264,6 +283,36 @@ class DomainManagerTlds extends DomainManagerModel
             $this->Input->setErrors($errors);
 
             return;
+        }
+
+        // Set TLD to the package meta
+        $fields = [
+            'package_id' => $package_id,
+            'key' => 'tlds',
+            'value' => serialize([$vars['tld']]),
+            'serialized' => '1'
+        ];
+        $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+            ->insert('package_meta', $fields);
+
+        // Set the nameservers to the package meta
+        $fields = [
+            'package_id' => $package_id,
+            'key' => 'ns',
+            'value' => serialize($vars['ns']),
+            'serialized' => '1'
+        ];
+        $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+            ->insert('package_meta', $fields);
+
+        // Set the default module row, if any
+        $module = $this->ModuleManager->get($vars['module_id']);
+        $module_row = null;
+
+        if (!empty($module->rows)) {
+            $module_row = reset($module->rows);
+            $this->Record->where('id', '=', $package_id)
+                ->update('packages', ['module_row' => $module_row->id]);
         }
 
         return $package_id;
@@ -275,6 +324,7 @@ class DomainManagerTlds extends DomainManagerModel
      * @param int $tld The identifier of the TLD to edit
      * @param array $vars An array of input data including:
      *
+     *  - ns A numerically indexed array, containing the nameservers for the given TLD
      *  - package_id The ID of the package to be used for pricing and sale of this TLD
      *  - module_id The ID of the registrar module to be used for this TLD
      *  - dns_management Whether to include DNS management for this TLD
@@ -292,20 +342,39 @@ class DomainManagerTlds extends DomainManagerModel
             // Update module
             Loader::loadModels($this, ['Packages', 'ModuleManager']);
 
-            if (
-                ($module = $this->ModuleManager->get($vars['module_id']))
-                && ($package = $this->PAckages->get($vars['package_id']))
-            ) {
-                $this->Record->where('id', '=', $package->package_id)
-                    ->update('packages', ['module_id' => $module->id]);
+            if (($module = $this->ModuleManager->get($vars['module_id']))) {
+                $tld = $this->get($vars['tld']);
 
-                // Update module row
-                // TODO
+                // Get module row
+                $module_row = null;
+                if (!empty($module->rows)) {
+                    $module_row = reset($module->rows);
+                }
+
+                // Update package
+                $fields = [
+                    'module_id' => $vars['module_id']
+                ];
+                if (!is_null($module_row)) {
+                    $fields['module_row'] = $module_row->id;
+                }
+                $this->Record->where('id', '=', $tld->package_id)
+                    ->update('packages', $fields);
+
+                // Set the nameservers to the package meta
+                $fields = [
+                    'package_id' => $tld->package_id,
+                    'key' => 'ns',
+                    'value' => serialize($vars['ns']),
+                    'serialized' => '1'
+                ];
+                $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+                    ->insert('package_meta', $fields);
             }
 
             // Update TLD
             $fields = ['tld', 'package_id', 'dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
-            $this->Record->where('tld', '=', $tld)
+            $this->Record->where('tld', '=', $vars['tld'])
                 ->where('company_id', '=', Configure::get('Blesta.company_id'))
                 ->update('domain_manager_tlds', $vars, $fields);
 
@@ -526,6 +595,10 @@ class DomainManagerTlds extends DomainManagerModel
                 ]
             ]
         ];
+
+        if ($edit) {
+            unset($rules['tld']['exists']);
+        }
 
         return $rules;
     }

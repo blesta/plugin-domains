@@ -1,81 +1,137 @@
         <?php
         echo $this->Html->ifSet($message);
 
+        $tabs = [];
+        foreach ((isset($currencies) ? $currencies : []) as $currency) {
+            $tabs[] = [
+                'name' => $currency,
+                'current' => ($currency == (isset($default_currency) ? $default_currency : '')),
+                'attributes' => [
+                    'id' => $currency,
+                    'class' => 'currency_tab'
+                ]
+            ];
+        }
+
         $this->Widget->clear();
-        $this->Widget->create($this->_('AdminDomains.tlds.boxtitle_tld_pricing', true), ['id' => 'admin_domains_configuration'], $this->Html->ifSet($render_section, null));
+        $this->Widget->setTabs($tabs);
+        $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, $tld->tld), ['id' => 'edit_tld' . str_replace('.', '_', $tld->tld)], $this->Html->ifSet($render_section, null));
         ?>
 
         <div class="inner">
             <?php
-            if (!empty($tlds)) {
+            foreach ((isset($currencies) ? $currencies : []) as $currency) {
             ?>
-            <table class="table" id="tlds">
-                <tr class="heading_row">
-                    <td class="icon"></td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_tld');?></span></td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_dns_management');?></span></td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_email_forwarding');?></span></td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_id_protection');?></span></td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_epp_code');?></span></td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_module');?></span></td>
-                    <td class="last"><span><?php $this->_('AdminDomains.tlds.heading_options');?></span></td>
-                </tr>
-                <?php
-                // Display all clients
-                foreach ($tlds as $i => $tld) {
-                ?>
-                <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?>>
-                    <td class="icon center"><i class="fa <?php echo ($tld->package->status !== 'inactive' ? 'fa-check' : 'fa-times');?>"></i></td>
-                    <td><?php echo $this->Html->safe($tld->tld);?></td>
-                    <td><i class="fa <?php echo ($tld->dns_management == 1 ? 'fa-check' : 'fa-ban');?>"></i></td>
-                    <td><i class="fa <?php echo ($tld->email_forwarding == 1 ? 'fa-check' : 'fa-ban');?>"></i></td>
-                    <td><i class="fa <?php echo ($tld->id_protection == 1 ? 'fa-check' : 'fa-ban');?>"></i></td>
-                    <td><i class="fa <?php echo ($tld->epp_code == 1 ? 'fa-check' : 'fa-ban');?>"></i></td>
-                    <td><?php echo $this->Html->safe($tld->module->name);?></td>
-                    <td>
-                        <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/';?>"><?php $this->_('AdminDomains.tlds.option_edit');?></a>,
-
-                        <?php
-                        if ($tld->package->status == 'inactive') {
-                        ?>
+                <div class="tab" id="currency_<?php echo $this->Html->safe($currency);?>">
+                    <table class="table option_table">
+                        <thead>
+                            <tr class="heading_row">
+                                <td class="icon center"></td>
+                                <td><span><?php $this->_('AdminDomains.pricing.heading_term');?></span></td>
+                                <td><span><?php $this->_('AdminDomains.pricing.heading_register_price');?></span></td>
+                                <td><span><?php $this->_('AdminDomains.pricing.heading_renew_price');?></span></td>
+                                <td><span><?php $this->_('AdminDomains.pricing.heading_transfer_price');?></span></td>
+                                <td><span><?php $this->_('AdminDomains.pricing.heading_setup_fee');?></span></td>
+                                <td class="last"><span><?php $this->_('AdminDomains.pricing.heading_cancel_fee');?></span></td>
+                            </tr>
+                        </thead>
+                        <tbody>
                             <?php
-                            $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/enabletld/');
-                            $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
+                            $i = 0;
+                            foreach ($package->pricing as $pricing) {
+                                if ($pricing->currency == $currency) {
                             ?>
-                            <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/enabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true));?>"><?php $this->_('AdminDomains.tlds.option_enable');?></a>
+                                <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
+                                    <td class="icon center">
+                                        <?php
+                                        $this->Form->fieldCheckbox('pricing[' . $pricing->id . ']', '1', '0', ['id' => 'tld_id_protection']);
+                                        ?>
+                                    </td>
+                                    <td><?php echo $pricing->term; ?> <?php echo $pricing->period; ?></td>
+                                    <td>
+                                        <?php
+                                        $this->Form->fieldText('pricing[' . $pricing->id . ']', $pricing->price, ['class' => 'stretch']);
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $this->Form->fieldText('pricing[' . $pricing->id . ']', $pricing->price_renews, ['class' => 'stretch']);
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $this->Form->fieldText('pricing[' . $pricing->id . ']', $pricing->price_transfer, ['class' => 'stretch']);
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $this->Form->fieldText('pricing[' . $pricing->id . ']', $pricing->setup_fee, ['class' => 'stretch']);
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $this->Form->fieldText('pricing[' . $pricing->id . ']', $pricing->cancel_fee, ['class' => 'stretch']);
+                                        ?>
+                                    </td>
+                                </tr>
                             <?php
-                            $this->Form->end();
+                                    $i++;
+                                }
+                            }
                             ?>
-                        <?php
-                        } else {
-                        ?>
-                            <?php
-                            $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/disabletld/');
-                            $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
-                            ?>
-                            <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/disabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true));?>"><?php $this->_('AdminDomains.tlds.option_disable');?></a>
-                            <?php
-                            $this->Form->end();
-                            ?>
-                        <?php
-                        }
-                        ?>
-                    </td>
-                </tr>
-                <?php
-                }
-                ?>
-            </table>
+                        </tbody>
+                    </table>
+                </div>
             <?php
             }
             ?>
+
+            <div class="button_row">
+                <?php
+                $this->Form->fieldSubmit('save', $this->_('AdminDomains.pricing.field_update', true), ['class' => 'btn btn-primary float-right']);
+                ?>
+                <a href="#" class="btn btn-default close float-right">Cancel</a>
+            </div>
         </div>
         <?php
         $this->Widget->end();
         ?>
 <script type="text/javascript">
     $(document).ready(function() {
-        // Handle confirmation
-        $('#tlds a.manage[rel]').blestaModalConfirm({base_url: '<?php echo $this->base_uri;?>', close: '<?php $this->_('AppController.modal.text_close');?>', submit: true});
+        // Set tabs
+        function hideAllTabs() {
+            <?php
+            foreach ($currencies as $currency) {
+            ?>
+            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #currency_<?php echo $this->Html->safe($currency);?>').hide();
+            <?php
+            }
+            ?>
+        }
+
+        hideAllTabs();
+        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .tabs_nav').hide();
+        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #currency_<?php echo $this->Html->safe($default_currency);?>').show();
+
+        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .tab_slider ul li').on('click', function () {
+            $('.tab_slider ul li').removeClass('current');
+            $(this).addClass('current');
+        });
+
+        <?php
+        foreach ($currencies as $currency) {
+        ?>
+        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .currency_tab#<?php echo $this->Html->safe($currency);?>').on('click', function () {
+            hideAllTabs();
+            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #currency_<?php echo $this->Html->safe($currency);?>').show();
+        });
+        <?php
+        }
+        ?>
+
+        // Close modal
+        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .btn.close').on('click', function () {
+            $(this).closest('.qtip').find('.qtip-close').click();
+        });
     });
 </script>

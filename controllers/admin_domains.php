@@ -357,12 +357,27 @@ class AdminDomains extends DomainManagerController
         }
 
         if (!empty($this->post)) {
-            foreach ($this->post['tlds'] as $tld => $params) {
-                $params = array_merge($params, [
-                    'module_id' => $params['module'],
+            foreach ($this->post['tlds'] as $tld => $vars) {
+                // Set checkboxes
+                if (empty($vars['dns_management'])) {
+                    $vars['dns_management'] = '0';
+                }
+                if (empty($vars['email_forwarding'])) {
+                    $vars['email_forwarding'] = '0';
+                }
+                if (empty($vars['id_protection'])) {
+                    $vars['id_protection'] = '0';
+                }
+                if (empty($vars['epp_code'])) {
+                    $vars['epp_code'] = '0';
+                }
+
+                // Update TLD
+                $vars = array_merge($vars, [
+                    'module_id' => $vars['module'],
                 ]);
 
-                $this->DomainManagerTlds->editTld($tld, $params);
+                $this->DomainManagerTlds->edit($tld, $vars);
             }
         }
 
@@ -374,7 +389,8 @@ class AdminDomains extends DomainManagerController
      */
     public function pricing()
     {
-        $this->uses(['Packages', 'DomainManager.DomainManagerTlds']);
+        $this->uses(['Packages', 'Currencies', 'DomainManager.DomainManagerTlds']);
+        $this->helpers(['Form']);
 
         // Fetch the package belonging to this TLD
         if (
@@ -386,7 +402,31 @@ class AdminDomains extends DomainManagerController
             $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
         }
 
-        echo $this->partial('admin_domains_pricing', compact('package', 'tld'));
+        // Get company settings
+        $company_id = Configure::get('Blesta.company_id');
+        $company_settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
+
+        // Get company default currency
+        $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
+
+        // Get company currencies
+        $currencies = $this->Form->collapseObjectArray(
+            $this->Currencies->getAll($company_id),
+            'code',
+            'code'
+        );
+        if (isset($currencies[$default_currency])) {
+            $currencies = [$default_currency => $default_currency] + $currencies;
+        }
+
+        // Get TLD package
+        $package = $this->Packages->get($this->get[0]);
+        $tld = $this->DomainManagerTlds->getByPackage($this->get[0]);
+
+        echo $this->partial(
+            'admin_domains_pricing',
+            compact('package', 'tld', 'currencies', 'default_currency')
+        );
 
         return false;
     }

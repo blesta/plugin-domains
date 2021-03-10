@@ -7,11 +7,6 @@ $lang['AdminDomains.!success.tld_disabled'] = 'The TLD was successfully disabled
 $lang['AdminDomains.!success.tld_enabled'] = 'The TLD was successfully enabled!';
 $lang['AdminDomains.!success.tld_added'] = 'The TLD was successfully added!';
 
-$lang['AdminDomains.index.page_title'] = 'Domain Manager - AdminDomains';
-
-$lang['AdminDomains.index.boxtitle'] = 'index';
-$lang['AdminDomains.index.submit'] = 'index';
-
 
 $lang['AdminDomains.registrars.text_none'] = 'There are no available registrars.';
 $lang['AdminDomains.registrars.boxtitle_registrars'] = 'Domain Manager - Registrars';
@@ -57,3 +52,7 @@ $lang['AdminDomains.tlds.option_enable'] = 'Enable';
 $lang['AdminDomains.tlds.option_add'] = 'Add';
 $lang['AdminDomains.tlds.confirm_disable'] = 'Are you sure you want to disable this TLD?';
 $lang['AdminDomains.tlds.confirm_enable'] = 'Are you sure you want to enable this TLD?';
+
+
+$lang['AdminDomains.pricing.boxtitle_edit_tld'] = 'Update TLD %1$s'; // %1$s is the TLD
+$lang['AdminDomains.pricing.field_update'] = 'Update';
