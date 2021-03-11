@@ -65,7 +65,7 @@ if (!empty($domains)) {
                 </a>
             </td>
             <td><?php echo $this->Html->safe(isset($domain->registrar) ? $domain->registrar : '');?></td>
-            <td><?php echo isset($domain->renewal_price) ? $this->CurrencyFormat->format($domain->renewal_price, '') : '';?></td>
+            <td><?php echo isset($domain->renewal_price) ? $this->CurrencyFormat->format($domain->renewal_price, $domain->package_pricing->currency) : '';?></td>
             <td><?php echo isset($domain->date_added) ? $this->Date->cast($domain->date_added, 'Y-m-d H:i:s') : '';?></td>
             <td><?php echo isset($domain->date_renews) ? $this->Date->cast($domain->date_renews, 'Y-m-d H:i:s') : '';?></td>
             <td><?php echo isset($domain->date_canceled) ? $this->_('AdminDomains.browse.text_no') : $this->_('AdminDomains.browse.text_yes');?></td>
