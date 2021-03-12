@@ -124,10 +124,17 @@ class AdminDomains extends DomainManagerController
     {
         $whois = Factory::get()->createWhois();
         if (!empty($this->post)) {
-            $domain_info = [
-                'text' => $whois->lookupDomain($this->post['domain'])->text,
-                'available' => $whois->isDomainAvailable($this->post['domain'])
-            ];
+            try {
+                $domain_info = [
+                    'text' => $whois->lookupDomain($this->post['domain'])->text,
+                    'available' => $whois->isDomainAvailable($this->post['domain'])
+                ];
+            } catch (Exception $e) {
+                $domain_info = [
+                    'text' => $e->getMessage(),
+                    'available' => false
+                ];
+            }
         }
         $this->set('vars', $this->post);
         $this->set('domain_info', isset($domain_info) ? $domain_info : []);

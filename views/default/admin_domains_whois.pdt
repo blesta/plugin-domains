@@ -28,7 +28,7 @@
                 <h3 class="mt-2 error_box <?php echo $domain_info['available'] ? '' : 'error';?>">
                     <?php $this->_('AdminDomains.whois.' . ($domain_info['available'] ? 'available' : 'unavailable'));?>
                 </h3>
-                <pre class="well"><?php echo trim($domain_info['text'], "\r\n");?></pre>
+                <pre class="well" style="overflow-x: auto;"><?php echo trim($domain_info['text'], "\r\n");?></pre>
                 <?php
                 }
                 ?>
