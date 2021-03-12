@@ -5,7 +5,7 @@
         $this->Widget->create(
             $this->_('AdminDomains.whois.boxtitle_whois', true),
             ['id' => 'admin_domains_whois'],
-            $this->Html->ifSet($render_section, null)
+            (isset($render_section) ? $render_section : null)
         );
         ?>
         <div class="inner">
