@@ -67,3 +67,11 @@ $lang['AdminDomains.configuration.tooltip_dns_management_option_group'] = 'The c
 $lang['AdminDomains.configuration.tooltip_email_forwarding_option_group'] = 'The configurable option group used to control whether a domain will have email forwarding services.';
 $lang['AdminDomains.configuration.tooltip_id_protection_option_group'] = 'The configurable option group used to control whether a domain will have ID protection services.';
 $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that we may highlight on order forms through the Order Plugin.  This feature is not yet supported';
+
+
+$lang['AdminDomains.whois.boxtitle_whois'] = 'Domain Manager - Whois Domain Lookup';
+$lang['AdminDomains.whois.title_row'] = 'Domain Lookup';
+$lang['AdminDomains.whois.available'] = 'Domain Available';
+$lang['AdminDomains.whois.unavailable'] = 'Domain Unavailable';
+$lang['AdminDomains.whois.field_domain'] = 'Domain';
+$lang['AdminDomains.whois.field_submit'] = 'Lookup';

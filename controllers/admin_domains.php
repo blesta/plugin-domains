@@ -1,4 +1,5 @@
 <?php
+use Iodev\Whois\Factory;
 use Blesta\Core\Util\Filters\ServiceFilters;
 /**
  * Domain Manager admin_domains controller
@@ -316,6 +317,29 @@ class AdminDomains extends DomainManagerController
             );
         }
         $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/registrars/');
+    }
+
+    /**
+     * Fetches the view for the whois page
+     */
+    public function whois()
+    {
+        $whois = Factory::get()->createWhois();
+        if (!empty($this->post)) {
+            try {
+                $domain_info = [
+                    'text' => $whois->lookupDomain($this->post['domain'])->text,
+                    'available' => $whois->isDomainAvailable($this->post['domain'])
+                ];
+            } catch (Exception $e) {
+                $domain_info = [
+                    'text' => $e->getMessage(),
+                    'available' => false
+                ];
+            }
+        }
+        $this->set('vars', $this->post);
+        $this->set('domain_info', isset($domain_info) ? $domain_info : []);
     }
 
     /**
