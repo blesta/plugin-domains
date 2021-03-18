@@ -495,6 +495,11 @@ class DomainManagerPlugin extends Plugin
                     $this->Services->edit($service->id, ['pricing_id' => $pricing->id]);
                     break;
                 }
+            }
+        }
+    }
+
+    /**
      * Performs the domain renewal reminder cron task
      */
     private function cronDomainRenewalReminders()
