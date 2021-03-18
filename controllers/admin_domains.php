@@ -137,6 +137,9 @@ class AdminDomains extends DomainManagerController
                 'domain_manager_dns_management_option_group',
                 'domain_manager_email_forwarding_option_group',
                 'domain_manager_id_protection_option_group',
+                'domain_manager_first_reminder_days_before',
+                'domain_manager_second_reminder_days_before',
+                'domain_manager_expiration_notice_days_after',
             ];
             if (!isset($this->post['domain_manager_spotlight_tlds'])) {
                 $this->post['domain_manager_spotlight_tlds'] = [];
@@ -175,11 +178,11 @@ class AdminDomains extends DomainManagerController
     }
 
     /**
-     * Fetch days
+     * Fetch a range of # of days and their language
      *
-     * @param int $min_days
-     * @param int $max_days
-     * @return array
+     * @param int $min_days The lower bound of the day range
+     * @param int $max_days The upper bound of the day range
+     * @return array A list of days and their language
      */
     private function getDays($min_days, $max_days)
     {
