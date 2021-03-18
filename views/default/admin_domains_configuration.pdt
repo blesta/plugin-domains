@@ -1,8 +1,7 @@
         <?php
         echo ($message ?? null);
 
-        $this->Widget->clear();
-        $this->Widget->create($this->_('AdminDomains.configuration.boxtitle', true), ['id' => 'admin_domains_configuration'], ($render_section ?? null));
+        $this->Widget->create($this->_('AdminDomains.configuration.boxtitle', true), ['id' => 'admin_domains_configuration'], (isset($render_section) ? $render_section : null));
         ?>
 
         <div class="inner">
@@ -15,29 +14,29 @@
                     <li>
                         <?php $this->Form->label($this->_('AdminDomains.configuration.field_package_group', true), 'package_group', ['class' => 'inline']); ?>
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_domain_manager_package_group');?></div></span>
-                        <?php $this->Form->fieldSelect('domain_manager_package_group', ($package_groups ?? null), ($vars['domain_manager_package_group'] ?? null), ['id' => 'package_group', 'class' => 'block']); ?>
+                        <?php $this->Form->fieldSelect('domain_manager_package_group', ($package_groups ?? null), (isset($vars['domain_manager_package_group']) ? $vars['domain_manager_package_group'] : null), ['id' => 'package_group', 'class' => 'block']); ?>
                     </li>
                     <li>
                         <?php $this->Form->label($this->_('AdminDomains.configuration.field_dns_management_option_group', true), 'dns_management_option_group', ['class' => 'inline']); ?>
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_dns_management_option_group');?></div></span>
-                        <?php $this->Form->fieldSelect('domain_manager_dns_management_option_group', ($package_option_groups ?? null), ($vars['domain_manager_dns_management_option_group'] ?? null), ['id' => 'dns_management_option_group', 'class' => 'block']); ?>
+                        <?php $this->Form->fieldSelect('domain_manager_dns_management_option_group', ($package_option_groups ?? null), (isset($vars['domain_manager_dns_management_option_group']) ? $vars['domain_manager_dns_management_option_group'] : null), ['id' => 'dns_management_option_group', 'class' => 'block']); ?>
                     </li>
                     <li>
                         <?php $this->Form->label($this->_('AdminDomains.configuration.field_email_forwarding_option_group', true), 'email_forwarding_option_group', ['class' => 'inline']); ?>
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_email_forwarding_option_group');?></div></span>
-                        <?php $this->Form->fieldSelect('domain_manager_email_forwarding_option_group', ($package_option_groups ?? null), ($vars['domain_manager_email_forwarding_option_group'] ?? null), ['id' => 'email_forwarding_option_group', 'class' => 'block']); ?>
+                        <?php $this->Form->fieldSelect('domain_manager_email_forwarding_option_group', ($package_option_groups ?? null), (isset($vars['domain_manager_email_forwarding_option_group']) ? $vars['domain_manager_email_forwarding_option_group'] : null), ['id' => 'email_forwarding_option_group', 'class' => 'block']); ?>
                     </li>
                     <li>
                         <?php $this->Form->label($this->_('AdminDomains.configuration.field_id_protection_option_group', true), 'id_protection_option_group', ['class' => 'inline']); ?>
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_id_protection_option_group');?></div></span>
-                        <?php $this->Form->fieldSelect('domain_manager_id_protection_option_group', ($package_option_groups ?? null), ($vars['domain_manager_id_protection_option_group'] ?? null), ['id' => 'id_protection_option_group', 'class' => 'block']); ?>
+                        <?php $this->Form->fieldSelect('domain_manager_id_protection_option_group', ($package_option_groups ?? null), (isset($vars['domain_manager_id_protection_option_group']) ? $vars['domain_manager_id_protection_option_group'] : null), ['id' => 'id_protection_option_group', 'class' => 'block']); ?>
                     </li>
                     <li>
                         <?php $this->Form->label($this->_('AdminDomains.configuration.field_spotlight_tlds', true), 'spotlight_tlds', ['class' => 'inline']); ?>
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_spotlight_tlds');?></div></span><br/>
                         <?php
-                        foreach (($tlds ?? []) as $tld) {
-                            $this->Form->fieldCheckbox('domain_manager_spotlight_tlds[' . $tld->tld . ']', '1', ($vars['domain_manager_spotlight_tlds'][$tld->tld] ?? null) === '1', ['id' => 'spotlight_tld_' . $tld->tld, 'class' => 'inline', 'disabled' => 'disabled']);
+                        foreach ((isset($tlds) ? $tlds : []) as $tld) {
+                            $this->Form->fieldCheckbox('domain_manager_spotlight_tlds[' . $tld->tld . ']', '1', (isset($vars['domain_manager_spotlight_tlds'][$tld->tld]) ? $vars['domain_manager_spotlight_tlds'][$tld->tld] : null) === '1', ['id' => 'spotlight_tld_' . $tld->tld, 'class' => 'inline', 'disabled' => 'disabled']);
                             $this->Form->label($tld->tld, 'spotlight_tld_' . $tld->tld, ['class' => 'inline']);
                         }
                         ?>
