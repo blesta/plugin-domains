@@ -435,8 +435,8 @@ class DomainManagerPlugin extends Plugin
 //                $renew_date = $this->Services->Date->modify($renew_date, renwal buffer . ' days', 'c');
 //            }
 
-            // If the expiration date is different than the date renews
-            if (strtotime($renew_date) != strtotime($service->date_renews)) {
+            // Update the renew date if the expiration date is greater than the renew date
+            if (strtotime($renew_date) > strtotime($service->date_renews)) {
                 $this->Services->edit($service->id, ['date_renews' => $renew_date]);
             }
         }
