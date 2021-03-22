@@ -184,7 +184,7 @@ class DomainManagerTlds extends DomainManagerModel
             // Set the TLD order
             $vars['order'] = 0;
             $last_tld = $this->getTlds(['company_id' => $vars['company_id']])
-                ->order(['package_id' => 'desc'])
+                ->order(['order' => 'desc'])
                 ->fetch();
 
             if (isset($last_tld->order)) {
@@ -222,6 +222,7 @@ class DomainManagerTlds extends DomainManagerModel
     private function createPackage(array $vars)
     {
         Loader::loadModels($this, ['Currencies', 'Languages', 'Companies']);
+        Loader::loadHelpers($this, ['Form']);
 
         // Set company id
         if (!isset($vars['company_id'])) {
@@ -239,8 +240,15 @@ class DomainManagerTlds extends DomainManagerModel
                 : null;
         }
 
-        // Fetch all company currencies
-        $currencies = $this->Currencies->getAll($vars['company_id']);
+        // Get company settings
+        $company_settings = $this->Form->collapseObjectArray(
+            $this->Companies->getSettings($vars['company_id']),
+            'value',
+            'key'
+        );
+
+        // Fetch company default currency
+        $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
 
         // Fetch all company languages
         $languages = $this->Languages->getAll($vars['company_id']);
@@ -251,17 +259,13 @@ class DomainManagerTlds extends DomainManagerModel
             'names' => [],
             'descriptions' => [],
             'hidden' => '1',
+            'status' => 'inactive',
             'company_id' => $vars['company_id'],
-            'pricing' => [],
+            'pricing' => [
+                ['term' => 1, 'period' => 'year', 'currency' => $default_currency]
+            ],
             'groups' => [$vars['package_group_id']]
         ];
-
-        // Add a pricing for terms 1-10 years for each currency
-        foreach ($currencies as $currency) {
-            for ($i = 1; $i <= 10; $i++) {
-                $package_params['pricing'][] = ['term' => $i, 'period' => 'year', 'currency' => $currency->code];
-            }
-        }
 
         // Add a package name and email content for each language
         foreach ($languages as $language) {
@@ -296,14 +300,16 @@ class DomainManagerTlds extends DomainManagerModel
             ->insert('package_meta', $fields);
 
         // Set the nameservers to the package meta
-        $fields = [
-            'package_id' => $package_id,
-            'key' => 'ns',
-            'value' => serialize($vars['ns']),
-            'serialized' => '1'
-        ];
-        $this->Record->duplicate('package_meta.value', '=', $fields['value'])
-            ->insert('package_meta', $fields);
+        if (isset($vars['ns'])) {
+            $fields = [
+                'package_id' => $package_id,
+                'key' => 'ns',
+                'value' => serialize($vars['ns']),
+                'serialized' => '1'
+            ];
+            $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+                ->insert('package_meta', $fields);
+        }
 
         // Set the default module row, if any
         $module = $this->ModuleManager->get($vars['module_id']);
@@ -385,52 +391,209 @@ class DomainManagerTlds extends DomainManagerModel
     }
 
     /**
-     * Updates the pricing of a TLD
+     * Updates the pricings of a TLD
      *
      * @param int $tld The identifier of the TLD to edit
-     * @param array $pricing A key => value array, where the key is the pricing ID
+     * @param array $pricing A key => value array, where the key is the package pricing ID
      *  and the value the pricing row
      */
-    public function updatePricing($tld, array $pricing)
+    public function updatePricings($tld, array $pricings)
     {
-        Loader::loadModels($this, ['Pricings']);
-        Loader::loadHelpers($this, ['CurrencyFormat']);
+        Loader::loadModels($this, ['Pricings', 'Currencies']);
+        Loader::loadHelpers($this, ['Form']);
 
         $tld = $this->get($tld);
 
-        if (!empty($pricing)) {
-            foreach ($pricing as $pricing_id => $pricing_row) {
-                $package_pricing = $this->Record->select()
-                    ->from('package_pricing')
-                    ->where('pricing_id', '=', $pricing_id)
-                    ->fetch();
+        // Get company currencies
+        $currencies = $this->Form->collapseObjectArray(
+            $this->Currencies->getAll(Configure::get('Blesta.company_id')),
+            'code',
+            'code'
+        );
 
-                if ($package_pricing->package_id == $tld->package_id) {
-                    $old_pricing = $this->Pricings->get($pricing_id);
+        // Set empty checkboxes
+        for ($i = 1; $i <= 10; $i++) {
+            foreach ($currencies as $currency) {
+                $pricings[$i][$currency]['enabled'] =
+                    isset($pricings[$i][$currency]['enabled']) ? $pricings[$i][$currency]['enabled'] : null;
+            }
+        }
 
-                    // Format row
-                    foreach ($pricing_row as $key => $value) {
-                        if (empty($value)) {
-                            unset($pricing_row[$key]);
-                            continue;
+        // Update pricing
+        if (!empty($pricings)) {
+            foreach ($pricings as $term => $term_pricing) {
+                foreach ($term_pricing as $currency => $pricing) {
+                    $pricing['currency'] = $currency;
+                    $pricing['term'] = $term;
+
+                    $pricing_row = $this->getPricing($tld->package_id, $term, $currency);
+
+                    if (!empty($pricing_row)) {
+                        if ((bool) $pricing['enabled']) {
+                            $this->updatePricing($pricing_row->id, $pricing);
+                        } else {
+                            $this->disablePricing($pricing_row->id);
                         }
-
-                        $pricing_row[$key] = $this->CurrencyFormat->format(
-                            $value,
-                            $old_pricing->currency,
-                            ['prefix' => false, 'suffix' => false, 'with_separator' => false, 'code' => false, 'decimals' => 4]
-                        );
+                    } else if ((bool) $pricing['enabled']) {
+                        $this->addPricing($tld->package_id, $pricing);
                     }
-
-                    if (isset($old_pricing->enabled)) {
-                        $pricing_row['enabled'] = isset($pricing_row['enabled']) ? $pricing_row['enabled'] : '0';
-                    }
-
-                    $this->Record->where('id', '=', $pricing_id)
-                        ->update('pricings', $pricing_row);
                 }
             }
         }
+    }
+
+    /**
+     * Get the pricing of a TLD by term and currency
+     *
+     * @param int $package_id The ID of the package belonging ot the TLD
+     * @param int $term The term of the pricing to look for
+     * @param string $currency The currency of the pricing to look for
+     * @return mixed
+     */
+    private function getPricing($package_id, $term, $currency)
+    {
+        return $this->Record->select('pricings.*')
+            ->from('pricings')
+            ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
+            ->where('package_pricing.package_id', '=', $package_id)
+            ->where('pricings.term', '=', $term)
+            ->where('pricings.period', '=', 'year')
+            ->where('pricings.currency', '=', $currency)
+            ->fetch();
+    }
+
+    /**
+     * Disable a TLD pricing
+     *
+     * @param int $pricing_id The ID of the pricing to disable
+     * @return int The ID of the pricing, void on error
+     */
+    private function disablePricing($pricing_id)
+    {
+        Loader::loadModels($this, ['Packages', 'Pricings']);
+
+        // Get package
+        $package = $this->Record->select('packages.*')
+            ->from('packages')
+            ->innerJoin('package_pricing', 'package_pricing.package_id', '=', 'packages.id', false)
+            ->where('package_pricing.pricing_id', '=', $pricing_id)
+            ->fetch();
+
+        if (isset($package->id)) {
+            $package = $this->Packages->get($package->id);
+        }
+
+        // Get pricing
+        $pricing = $this->Pricings->get($pricing_id);
+
+        // Check if is the last pricing of the package
+        if (count($package->pricing) <= 1) {
+            $this->Input->setErrors([
+                'count' => [
+                    'message' => Language::_('DomainManagerTlds.!error.package_pricing.count', true)
+                ]
+            ]);
+
+            return;
+        }
+
+        // Check if there are any services using this pricing
+        $one_year_term = $this->getPricing($package->id, 1, $pricing->currency);
+        $services_pricing = $this->Record->select('services.*')
+            ->from('services')
+            ->innerJoin('package_pricing', 'package_pricing.id', '=', 'services.pricing_id', false)
+            ->where('package_pricing.pricing_id', '=', $pricing_id)
+            ->fetchAll();
+
+        if (!empty($services_pricing) && $one_year_term !== $pricing_id) {
+            // Migrate all pricing services to the 1 year pricing
+            $pricing_package = $this->Record->select()
+                ->from('package_pricing')
+                ->where('package_pricing.pricing_id', '=', $one_year_term->id)
+                ->fetch();
+
+            foreach ($services_pricing as $service) {
+                if (isset($pricing_package->id)) {
+                    $this->Record->where('id', '=', $service->id)
+                        ->update('services', ['pricing_id' => $pricing_package->id]);
+                }
+            }
+        } else if (!empty($services_pricing) && $one_year_term == $pricing_id) {
+            $this->Input->setErrors([
+                'service' => [
+                    'message' => Language::_('DomainManagerTlds.!error.package_pricing.service', true)
+                ]
+            ]);
+
+            return;
+        }
+
+        // Delete pricing
+        $this->Record->from('pricings')->
+            where('pricings.id', '=', $pricing_id)->
+            delete();
+        $this->Record->from('package_pricing')->
+            where('package_pricing.pricing_id', '=', $pricing_id)->
+            delete();
+
+        return $pricing_id;
+    }
+
+    /**
+     * Updates an existing pricing
+     *
+     * @param int $pricing_id The ID of the pricing to update
+     * @param array $vars An array of pricing info including:
+     *
+     *  - term The term as an integer 1-65535 (optional, default 1)
+     *  - price The price of this term (optional, default 0.00)
+     *  - price_renews The renewal price of this term (optional, default null)
+     *  - price_transfer The transfer price of this term (optional, default null)
+     *  - setup_fee The setup fee for this pricing (optional, default 0.00)
+     *  - cancel_fee The cancellation fee for this pricing (optional, default 0.00)
+     *  - currency The ISO 4217 currency code for this pricing (optional, default USD)
+     */
+    private function updatePricing($pricing_id, $vars)
+    {
+        Loader::loadModels($this, ['Pricings']);
+
+        $vars = array_merge($vars, [
+            'company_id' => Configure::get('Blesta.company_id'),
+            'period' => 'year'
+        ]);
+        $this->Pricings->edit($pricing_id, $vars);
+    }
+
+    /**
+     * Adds a new pricing for the given package
+     *
+     * @param int $package_id The ID of the package to add the new pricing
+     * @param array $vars An array of pricing info including:
+     *
+     *  - term The term as an integer 1-65535 (optional, default 1)
+     *  - price The price of this term (optional, default 0.00)
+     *  - price_renews The renewal price of this term (optional, default null)
+     *  - price_transfer The transfer price of this term (optional, default null)
+     *  - setup_fee The setup fee for this pricing (optional, default 0.00)
+     *  - cancel_fee The cancellation fee for this pricing (optional, default 0.00)
+     *  - currency The ISO 4217 currency code for this pricing (optional, default USD)
+     */
+    private function addPricing($package_id, $vars)
+    {
+        Loader::loadModels($this, ['Pricings']);
+
+        // Add pricing
+        $vars = array_merge($vars, [
+            'company_id' => Configure::get('Blesta.company_id'),
+            'period' => 'year'
+        ]);
+        $pricing_id = $this->Pricings->add($vars);
+
+        // Map pricing to package
+        $this->Record->insert('package_pricing', [
+            'package_id' => $package_id,
+            'pricing_id' => $pricing_id
+        ]);
     }
 
     /**

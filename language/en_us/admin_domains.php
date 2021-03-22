@@ -64,4 +64,5 @@ $lang['AdminDomains.pricing.heading_transfer_price'] = 'Transfer Price';
 $lang['AdminDomains.pricing.heading_setup_fee'] = 'Setup Fee';
 $lang['AdminDomains.pricing.heading_cancel_fee'] = 'Cancel Fee';
 $lang['AdminDomains.pricing.field_nameserver'] = 'Name Server %1$s'; // %1$s is the name server
+$lang['AdminDomains.pricing.field_cancel'] = 'Cancel';
 $lang['AdminDomains.pricing.field_update'] = 'Update';

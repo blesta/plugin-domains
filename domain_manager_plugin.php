@@ -130,7 +130,7 @@ class DomainManagerPlugin extends Plugin
         // Create a package for each tld and add it to the database
         $default_tlds = $this->DomainManagerTlds->getDefaultTlds();
         $tld_packages_setting = $this->Companies->getSetting($company_id, 'domain_manager_tld_packages');
-        $tld_packages = ($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
+        $tld_packages = (array) ($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
 
         foreach ($default_tlds as $default_tld) {
             // Skip package creation for this TLD if there is already a package assigned to it

@@ -1,16 +1,16 @@
-#tlds td.small {
+.table td.small {
     width: 130px;
 }
 
-#tlds tr td {
+.table tr td {
     height: 22px;
 }
 
-#tlds #add_tld_row {
+.table #add_tld_row {
     display: none;
 }
 
-#tlds .icon {
+.table .icon {
     width: 17px;
     min-width: 17px;
     max-width: 17px;

@@ -1,5 +1,5 @@
         <?php
-        echo $this->Html->ifSet($message);
+        echo (isset($message) ? $message : null);
 
         $tabs = [
             [
@@ -20,7 +20,7 @@
 
         $this->Widget->clear();
         $this->Widget->setTabs($tabs);
-        $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, $tld->tld), ['id' => 'edit_tld' . str_replace('.', '_', $tld->tld)], $this->Html->ifSet($render_section, null));
+        $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, $tld->tld), ['id' => 'edit_tld' . str_replace('.', '_', $tld->tld)], (isset($render_section) ? $render_section : null));
 
         $this->Form->create(null, ['id' => 'edit_tld']);
         ?>
@@ -59,39 +59,39 @@
                                     <tbody>
                                         <?php
                                         $i = 0;
-                                        foreach ($package->pricing as $pricing) {
-                                            if ($pricing->currency == $currency) {
+                                        foreach ($package->pricing as $package_pricing) {
+                                            if ($package_pricing->currency == $currency) {
                                         ?>
                                             <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
                                                 <td class="icon center">
                                                     <?php
-                                                    $this->Form->fieldCheckbox('pricing[' . $pricing->id . '][enabled]', '1', (isset($pricing->enabled) ? $pricing->enabled : false));
+                                                    $this->Form->fieldCheckbox('pricing[' . $package_pricing->term . '][' . $currency . '][enabled]', '1', (isset($package_pricing->enabled) ? $package_pricing->enabled : false));
                                                     ?>
                                                 </td>
-                                                <td><?php echo $pricing->term; ?> <?php echo $pricing->period; ?></td>
+                                                <td><?php echo $package_pricing->term; ?> <?php echo $package_pricing->period; ?></td>
                                                 <td>
                                                     <?php
-                                                    $this->Form->fieldText('pricing[' . $pricing->id . '][price]', $this->CurrencyFormat->format($pricing->price, $pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
-                                                    ?>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                    $this->Form->fieldText('pricing[' . $pricing->id . '][price_renews]', $this->CurrencyFormat->format($pricing->price_renews, $pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
+                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency . '][price]', $this->CurrencyFormat->format((isset($package_pricing->price) ? $package_pricing->price : 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
                                                     ?>
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    $this->Form->fieldText('pricing[' . $pricing->id . '][price_transfer]', $this->CurrencyFormat->format($pricing->price_transfer, $pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
+                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency . '][price_renews]', $this->CurrencyFormat->format((isset($package_pricing->price_renews) ? $package_pricing->price_renews : 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
                                                     ?>
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    $this->Form->fieldText('pricing[' . $pricing->id . '][setup_fee]', $this->CurrencyFormat->format($pricing->setup_fee, $pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
+                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency . '][price_transfer]', $this->CurrencyFormat->format((isset($package_pricing->price_transfer) ? $package_pricing->price_transfer : 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
                                                     ?>
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    $this->Form->fieldText('pricing[' . $pricing->id . '][cancel_fee]', $this->CurrencyFormat->format($pricing->cancel_fee, $pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
+                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency . '][setup_fee]', $this->CurrencyFormat->format((isset($package_pricing->setup_fee) ? $package_pricing->setup_fee : 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency . '][cancel_fee]', $this->CurrencyFormat->format((isset($package_pricing->cancel_fee) ? $package_pricing->cancel_fee : 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
                                                     ?>
                                                 </td>
                                             </tr>
@@ -133,7 +133,7 @@
                 <?php
                 $this->Form->fieldSubmit('save', $this->_('AdminDomains.pricing.field_update', true), ['class' => 'btn btn-primary float-right']);
                 ?>
-                <a href="#" class="btn btn-default close float-right">Cancel</a>
+                <a href="#" class="btn btn-default close float-right"><?php $this->_('AdminDomains.pricing.field_cancel');?></a>
             </div>
         </div>
         <?php
@@ -169,6 +169,27 @@
             $(this).closest('.qtip').find('.qtip-close').click();
         });
 
+        // Sync Register and Renew price
+        $('.table input[name*="price"]').change(function() {
+            $(this).parent().parent().find('input[name*="price_renews"]').val($(this).val());
+        });
+
+        // Disabling pricing rows
+        function disablePricings() {
+            $('.table .icon input[name*="enabled"]').each(function () {
+                if ($(this).is(":checked")) {
+                    $(this).parent().parent().find('input[type="text"]').prop('disabled', false);
+                } else {
+                    $(this).parent().parent().find('input[type="text"]').prop('disabled', true);
+                }
+            });
+        }
+        disablePricings();
+
+        $('.table .icon input[name*="enabled"]').change(function() {
+            disablePricings();
+        });
+
         // Update TLD
         $('form').on('submit', function(event) {
             event.preventDefault();
@@ -178,16 +199,6 @@
                 $(this).attr('action'),
                 $(this).serialize("serialize"),
                 function(response) {
-                    // Show errors
-                    if (response.hasOwnProperty('error')) {
-                        var parent = $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').parents().find('#body_container .gap_row');
-
-                        parent.find('.error_section').remove();
-                        parent.prepend(response.error);
-
-                        return false;
-                    }
-
                     // Show messages
                     if (response.hasOwnProperty('message')) {
                         var parent = $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').parents().find('#body_container .gap_row');
@@ -195,6 +206,16 @@
                         parent.find('.error_section').remove();
                         parent.prepend(response.message);
                     }
+
+                    // Update pricing table
+                    $(this).blestaRequest(
+                        "GET",
+                        '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/pricing/' . $tld->package_id . '/');?>',
+                        null,
+                        function(response) {
+                            $('#<?php echo $this->Html->safe('edit_tld' . str_replace('.', '_', $tld->tld));?>').html(response);
+                        }
+                    );
 
                     $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').closest('.qtip').find('.qtip-close').click();
                 },
