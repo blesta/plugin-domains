@@ -1,5 +1,5 @@
         <?php
-        echo $this->Html->ifSet($message);
+        echo (isset($message) ? $message : null);
 
         $link_buttons = [
             [
@@ -16,7 +16,7 @@
         $this->Widget->clear();
         $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css', ['id' => 'domain_manager_styles']);
         $this->Widget->setLinkButtons($link_buttons);
-        $this->Widget->create($this->_('AdminDomains.tlds.boxtitle_tld_pricing', true), ['id' => 'admin_domains_configuration'], $this->Html->ifSet($render_section, null));
+        $this->Widget->create($this->_('AdminDomains.tlds.boxtitle_tld_pricing', true), ['id' => 'admin_domains_configuration'], (isset($render_section) ? $render_section : null));
         ?>
         <table class="table option_table">
             <thead>

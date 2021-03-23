@@ -412,10 +412,15 @@ class DomainManagerTlds extends DomainManagerModel
         );
 
         // Set empty checkboxes
+        $enabled_pricings = 0;
         for ($i = 1; $i <= 10; $i++) {
             foreach ($currencies as $currency) {
                 $pricings[$i][$currency]['enabled'] =
                     isset($pricings[$i][$currency]['enabled']) ? $pricings[$i][$currency]['enabled'] : null;
+
+                if ($pricings[$i][$currency]['enabled']) {
+                    $enabled_pricings++;
+                }
             }
         }
 
@@ -431,8 +436,16 @@ class DomainManagerTlds extends DomainManagerModel
                     if (!empty($pricing_row)) {
                         if ((bool) $pricing['enabled']) {
                             $this->updatePricing($pricing_row->id, $pricing);
-                        } else {
+                        } else if ($enabled_pricings > 1) {
                             $this->disablePricing($pricing_row->id);
+                        } else {
+                            $this->Input->setErrors([
+                                'count' => [
+                                    'message' => Language::_('DomainManagerTlds.!error.package_pricing.count', true)
+                                ]
+                            ]);
+
+                            return;
                         }
                     } else if ((bool) $pricing['enabled']) {
                         $this->addPricing($tld->package_id, $pricing);
