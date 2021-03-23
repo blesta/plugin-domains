@@ -1,16 +1,14 @@
         <?php
         echo ($message ?? null);
 
-        $this->Widget->clear();
         $this->Widget->create($this->_('AdminDomains.configuration.boxtitle', true), ['id' => 'admin_domains_configuration'], (isset($render_section) ? $render_section : null));
         ?>
 
         <div class="inner">
             <?php $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submit']); ?>
             <div class="title_row first">
-                <h3><?php $this->_('AdminDomains.configuration.heading_configuration');?></h3>
+                <h3><?php $this->_('AdminDomains.configuration.heading_tld');?></h3>
             </div>
-
             <div class="pad">
                 <ul>
                     <li>
@@ -42,6 +40,38 @@
                             $this->Form->label($tld->tld, 'spotlight_tld_' . $tld->tld, ['class' => 'inline']);
                         }
                         ?>
+                    </li>
+                </ul>
+            </div>
+            <div class="title_row">
+                <h3><?php $this->_('AdminDomains.configuration.heading_notice');?></h3>
+            </div>
+            <div class="pad">
+                <ul>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_first_reminder_days_before', true), 'first_reminder_days_before', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_first_reminder_days_before');?></div></span>
+                        <?php $this->Form->fieldSelect('domain_manager_first_reminder_days_before', ($first_reminder_days ?? null), ($vars['domain_manager_first_reminder_days_before'] ?? null), ['id' => 'first_reminder_days_before', 'class' => 'block']); ?>
+
+                    </li>
+                    <li>
+                        <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($first_reminder_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
+                    </li>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_second_reminder_days_before', true), 'second_reminder_days_before', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_second_reminder_days_before');?></div></span>
+                        <?php $this->Form->fieldSelect('domain_manager_second_reminder_days_before', ($second_reminder_days ?? null), ($vars['domain_manager_second_reminder_days_before'] ?? null), ['id' => 'second_reminder_days_before', 'class' => 'block']); ?>
+                    </li>
+                    <li>
+                        <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($second_reminder_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
+                    </li>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_expiration_notice_days_after', true), 'expiration_notice_days_after', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_expiration_notice_days_after');?></div></span>
+                        <?php $this->Form->fieldSelect('domain_manager_expiration_notice_days_after', ($expiration_notice_days ?? null), ($vars['domain_manager_expiration_notice_days_after'] ?? null), ['id' => 'expiration_notice_days_after', 'class' => 'block']); ?>
+                    </li>
+                    <li>
+                        <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($expiration_notice_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
                     </li>
                 </ul>
             </div>
