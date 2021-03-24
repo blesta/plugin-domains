@@ -181,6 +181,9 @@ class DomainManagerTlds extends DomainManagerModel
                 }
             }
 
+            // Set the package configurable options
+            $this->assignConfigurableOptions($vars['package_id'], $vars);
+
             // Set the TLD order
             $vars['order'] = 0;
             $last_tld = $this->getTlds(['company_id' => $vars['company_id']])
