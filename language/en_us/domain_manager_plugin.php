@@ -52,5 +52,7 @@ $lang['DomainManagerPlugin.dns_management.name'] = 'DNS Management';
 $lang['DomainManagerPlugin.dns_management.description'] = 'DNS Management';
 $lang['DomainManagerPlugin.id_protection.name'] = 'ID Protection';
 $lang['DomainManagerPlugin.id_protection.description'] = 'ID Protection';
+$lang['DomainManagerPlugin.epp_code.name'] = 'EPP Code';
+$lang['DomainManagerPlugin.epp_code.description'] = 'EPP Code';
 $lang['DomainManagerPlugin.enabled'] = 'Enabled';
 

@@ -380,6 +380,9 @@ class DomainManagerTlds extends DomainManagerModel
                     ->insert('package_meta', $fields);
             }
 
+            // Update package configurable options
+            $this->assignConfigurableOptions($tld->package_id, $vars);
+
             // Update TLD
             $fields = ['tld', 'package_id', 'dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
             $this->Record->where('tld', '=', $vars['tld'])
@@ -394,7 +397,7 @@ class DomainManagerTlds extends DomainManagerModel
      * Updates the pricings of a TLD
      *
      * @param int $tld The identifier of the TLD to edit
-     * @param array $pricing A key => value array, where the key is the package pricing ID
+     * @param array $pricings A key => value array, where the key is the package pricing ID
      *  and the value the pricing row
      */
     public function updatePricings($tld, array $pricings)
@@ -436,7 +439,7 @@ class DomainManagerTlds extends DomainManagerModel
                     if (!empty($pricing_row)) {
                         if ((bool) $pricing['enabled']) {
                             $this->updatePricing($pricing_row->id, $pricing);
-                        } else if ($enabled_pricings > 1) {
+                        } else if ($enabled_pricings >= 1) {
                             $this->disablePricing($pricing_row->id);
                         } else {
                             $this->Input->setErrors([
@@ -461,10 +464,16 @@ class DomainManagerTlds extends DomainManagerModel
      * @param int $package_id The ID of the package belonging ot the TLD
      * @param int $term The term of the pricing to look for
      * @param string $currency The currency of the pricing to look for
-     * @return mixed
+     * @return stdClass An object containing the pricing matching the given term and currency,
+     *  void if a match could not be found
      */
-    private function getPricing($package_id, $term, $currency)
+    public function getPricing($package_id, $term, $currency)
     {
+        // Verify if the given package id belongs to a TLD
+        if (!($tld = $this->getByPackage($package_id))) {
+            return false;
+        }
+
         return $this->Record->select('pricings.*')
             ->from('pricings')
             ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
@@ -566,7 +575,7 @@ class DomainManagerTlds extends DomainManagerModel
      *  - cancel_fee The cancellation fee for this pricing (optional, default 0.00)
      *  - currency The ISO 4217 currency code for this pricing (optional, default USD)
      */
-    private function updatePricing($pricing_id, $vars)
+    private function updatePricing($pricing_id, array $vars)
     {
         Loader::loadModels($this, ['Pricings']);
 
@@ -591,9 +600,14 @@ class DomainManagerTlds extends DomainManagerModel
      *  - cancel_fee The cancellation fee for this pricing (optional, default 0.00)
      *  - currency The ISO 4217 currency code for this pricing (optional, default USD)
      */
-    private function addPricing($package_id, $vars)
+    private function addPricing($package_id, array $vars)
     {
         Loader::loadModels($this, ['Pricings']);
+
+        // Verify if the given package id belongs to a TLD
+        if (!($tld = $this->getByPackage($package_id))) {
+            return false;
+        }
 
         // Add pricing
         $vars = array_merge($vars, [
@@ -607,6 +621,58 @@ class DomainManagerTlds extends DomainManagerModel
             'package_id' => $package_id,
             'pricing_id' => $pricing_id
         ]);
+    }
+
+    /**
+     * Assigns the configurable options group to the given package
+     *
+     * @param int $package_id The ID of the package to assign the configurable options
+     * @param array $vars An array of input data including:
+     *
+     *  - dns_management Whether to include DNS management for this TLD
+     *  - email_forwarding Whether to include email forwarding for this TLD
+     *  - id_protection Whether to include ID protection for this TLD
+     *  - epp_code Whether to include EPP Code for this TLD
+     */
+    private function assignConfigurableOptions($package_id, array $vars)
+    {
+        // Verify if the given package id belongs to a TLD
+        if (!($tld = $this->getByPackage($package_id))) {
+            return false;
+        }
+
+        Loader::loadModels($this, ['Companies']);
+        Loader::loadHelpers($this, ['Form']);
+
+        // Get company settings
+        $company_settings = $this->Form->collapseObjectArray(
+            $this->Companies->getSettings(Configure::get('Blesta.company_id')),
+            'value',
+            'key'
+        );
+
+        // Update configurable options
+        $options = ['dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
+
+        foreach ($options as $option) {
+            if (isset($company_settings['domain_manager_' . $option . '_option_group'])) {
+                $option_group_id = $company_settings['domain_manager_' . $option . '_option_group'];
+
+                if (isset($vars[$option]) && (bool)$vars[$option]) {
+                    $fields = [
+                        'package_id' => $package_id,
+                        'option_group_id' => $option_group_id
+                    ];
+                    $this->Record->duplicate('package_option.option_group_id', '=', $fields['option_group_id'])
+                        ->insert('package_option', $fields);
+                } else {
+                    $this->Record->from('package_option')
+                        ->where('package_option.package_id', '=', $package_id)
+                        ->where('package_option.option_group_id', '=', $option_group_id)
+                        ->delete();
+                }
+            }
+        }
     }
 
     /**
@@ -676,6 +742,7 @@ class DomainManagerTlds extends DomainManagerModel
      *  - dns_management Whether DNS management is included for the TLDs
      *  - email_forwarding Whether email forwarding is included for the TLDs
      *  - id_protection Whether ID protection is included for the TLDs
+     *  - epp_code Whether to include EPP Code for this TLD
      * @return Record A partially built query
      */
     private function getTlds(array $filters = [])
@@ -704,6 +771,10 @@ class DomainManagerTlds extends DomainManagerModel
 
         if (isset($filters['id_protection'])) {
             $this->Record->where('domain_manager_tlds.id_protection', '=', $filters['id_protection']);
+        }
+
+        if (isset($filters['epp_code'])) {
+            $this->Record->where('domain_manager_tlds.epp_code', '=', $filters['epp_code']);
         }
 
         return $this->Record;

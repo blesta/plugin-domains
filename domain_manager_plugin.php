@@ -164,7 +164,7 @@ class DomainManagerPlugin extends Plugin
     {
         Loader::loadModels($this, ['PackageOptions', 'PackageOptionGroups']);
 
-        $tld_addons = ['email_forwarding', 'dns_management', 'id_protection'];
+        $tld_addons = ['email_forwarding', 'dns_management', 'id_protection', 'epp_code'];
         foreach ($tld_addons as $tld_addon) {
             $setting = $this->Companies->getSetting($company_id, 'domain_manager_' . $tld_addon . '_option_group');
             // Skip option group creation for this tld and if there is already a group assigned to it

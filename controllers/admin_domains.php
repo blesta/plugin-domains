@@ -361,6 +361,7 @@ class AdminDomains extends DomainManagerController
                 'domain_manager_dns_management_option_group',
                 'domain_manager_email_forwarding_option_group',
                 'domain_manager_id_protection_option_group',
+                'domain_manager_epp_code_option_group',
             ];
             if (!isset($this->post['domain_manager_spotlight_tlds'])) {
                 $this->post['domain_manager_spotlight_tlds'] = [];
