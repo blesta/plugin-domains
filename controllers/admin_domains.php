@@ -1,6 +1,7 @@
 <?php
 use Iodev\Whois\Factory;
 use Blesta\Core\Util\Filters\ServiceFilters;
+
 /**
  * Domain Manager admin_domains controller
  *
@@ -347,7 +348,9 @@ class AdminDomains extends DomainManagerController
      */
     public function configuration()
     {
-        $this->uses(['Companies', 'PackageGroups', 'PackageOptionGroups', 'DomainManager.DomainManagerTlds']);
+        $this->uses(
+            ['Companies', 'EmailGroups', 'PackageGroups', 'PackageOptionGroups', 'DomainManager.DomainManagerTlds']
+        );
         $company_id = Configure::get('Blesta.company_id');
         $vars = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
         $vars['domain_manager_spotlight_tlds'] = isset($vars['domain_manager_spotlight_tlds'])
@@ -362,6 +365,9 @@ class AdminDomains extends DomainManagerController
                 'domain_manager_email_forwarding_option_group',
                 'domain_manager_id_protection_option_group',
                 'domain_manager_epp_code_option_group',
+                'domain_manager_first_reminder_days_before',
+                'domain_manager_second_reminder_days_before',
+                'domain_manager_expiration_notice_days_after'
             ];
             if (!isset($this->post['domain_manager_spotlight_tlds'])) {
                 $this->post['domain_manager_spotlight_tlds'] = [];
@@ -391,6 +397,39 @@ class AdminDomains extends DomainManagerController
             'package_option_groups',
             $this->Form->collapseObjectArray($this->PackageOptionGroups->getAll($company_id), 'name', 'id')
         );
+        $this->set('first_reminder_days', $this->getDays(26, 35));
+        $this->set('second_reminder_days', $this->getDays(4, 10));
+        $this->set('expiration_notice_days', $this->getDays(1, 5));
+        $this->set('first_reminder_template', $this->EmailGroups->getByAction('DomainManager.domain_renewal_1'));
+        $this->set('second_reminder_template', $this->EmailGroups->getByAction('DomainManager.domain_renewal_2'));
+        $this->set('expiration_notice_template', $this->EmailGroups->getByAction('DomainManager.domain_expiration'));
+    }
+
+    /**
+     * Fetch a range of # of days and their language
+     *
+     * @param int $min_days The lower bound of the day range
+     * @param int $max_days The upper bound of the day range
+     * @return array A list of days and their language
+     */
+    private function getDays($min_days, $max_days)
+    {
+        $days = [
+            '' => Language::_('AdminDomains.getDays.never', true)
+        ];
+        for ($i = $min_days; $i <= $max_days; $i++) {
+            $days[$i] = Language::_(
+                'AdminDomains.getDays.text_day'
+                . (
+                    $i === 1
+                    ? ''
+                    : 's'
+                ),
+                true,
+                $i
+            );
+        }
+        return $days;
     }
 
     /**

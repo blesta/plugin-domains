@@ -22,7 +22,9 @@ class DomainManagerPlugin extends Plugin
      */
     public function install($plugin_id)
     {
-        Loader::loadModels($this, ['Companies', 'Currencies', 'Languages', 'PluginManager']);
+        Loader::loadModels($this, ['Companies', 'Currencies', 'EmailGroups', 'Emails', 'Languages', 'PluginManager']);
+
+        Configure::load('domain_manager', dirname(__FILE__) . DS . 'config' . DS);
 
         try {
             // domain_manager_tlds
@@ -61,9 +63,56 @@ class DomainManagerPlugin extends Plugin
         // Add a config option and option group for each TLD addon
         $this->addTldAddonConfigOptions($company_id, $currencies);
 
-        // Set an empty array for the list of spotlight TLDs
-        if (!($setting = $this->Companies->getSetting($company_id, 'domain_manager_spotlight_tlds'))) {
-            $this->Companies->setSetting($company_id, 'domain_manager_spotlight_tlds', json_encode([]));
+        // Set the default days to before renewal to send the first reminder
+        if (!($setting = $this->Companies->getSetting($company_id, 'domain_manager_first_reminder_days_before'))) {
+            $this->Companies->setSetting($company_id, 'domain_manager_first_reminder_days_before', 35);
+        }
+        // Set the default days to before renewal to send the second reminder
+        if (!($setting = $this->Companies->getSetting($company_id, 'domain_manager_second_reminder_days_before'))) {
+            $this->Companies->setSetting($company_id, 'domain_manager_second_reminder_days_before', 10);
+        }
+        // Set the default days to before renewal to send the expiration notice
+        if (!($setting = $this->Companies->getSetting($company_id, 'domain_manager_expiration_notice_days_after'))) {
+            $this->Companies->setSetting($company_id, 'domain_manager_expiration_notice_days_after', 1);
+        }
+
+        // Add all email templates
+        $emails = Configure::get('DomainManager.install.emails');
+        foreach ($emails as $email) {
+            $group = $this->EmailGroups->getByAction($email['action']);
+            if ($group) {
+                $group_id = $group->id;
+            } else {
+                $group_id = $this->EmailGroups->add([
+                    'action' => $email['action'],
+                    'type' => $email['type'],
+                    'plugin_dir' => $email['plugin_dir'],
+                    'tags' => $email['tags']
+                ]);
+            }
+
+            // Set from hostname to use that which is configured for the company
+            if (isset(Configure::get('Blesta.company')->hostname)) {
+                $email['from'] = str_replace(
+                    '@mydomain.com',
+                    '@' . Configure::get('Blesta.company')->hostname,
+                    $email['from']
+                );
+            }
+
+            // Add the email template for each language
+            foreach ($languages as $language) {
+                $this->Emails->add([
+                    'email_group_id' => $group_id,
+                    'company_id' => Configure::get('Blesta.company_id'),
+                    'lang' => $language->code,
+                    'from' => $email['from'],
+                    'from_name' => $email['from_name'],
+                    'subject' => $email['subject'],
+                    'text' => $email['text'],
+                    'html' => $email['html']
+                ]);
+            }
         }
     }
 
@@ -227,7 +276,10 @@ class DomainManagerPlugin extends Plugin
      */
     public function uninstall($plugin_id, $last_instance)
     {
-        Loader::loadModels($this, ['CronTasks', 'Companies']);
+        Loader::loadModels($this, ['CronTasks', 'Companies', 'Emails', 'EmailGroups']);
+      
+        Configure::load('domain_manager', dirname(__FILE__) . DS . 'config' . DS);
+        $emails = Configure::get('DomainManager.install.emails');
 
         // Fetch the cron tasks for this plugin
         $cron_tasks = $this->getCronTasks();
@@ -282,6 +334,21 @@ class DomainManagerPlugin extends Plugin
             $cron_task_run = $this->CronTasks->getTaskRunByKey($task['key'], $task['dir'], false, $task['task_type']);
             if ($cron_task_run) {
                 $this->CronTasks->deleteTaskRun($cron_task_run->task_run_id);
+            }
+        }
+
+        // Remove emails and email groups as necessary
+        foreach ($emails as $email) {
+            // Fetch the email template created by this plugin
+            $group = $this->EmailGroups->getByAction($email['action']);
+
+            // Delete all emails templates belonging to this plugin's email group and company
+            if ($group) {
+                $this->Emails->deleteAll($group->id, Configure::get('Blesta.company_id'));
+
+                if ($last_instance) {
+                    $this->EmailGroups->delete($group->id);
+                }
             }
         }
 
@@ -385,7 +452,7 @@ class DomainManagerPlugin extends Plugin
                 $this->cronDomainTermChange();
                 break;
             case 'domain_renewal_reminders':
-                // Perform necessary actions
+                $this->cronDomainRenewalReminders();
                 break;
         }
     }
@@ -426,6 +493,95 @@ class DomainManagerPlugin extends Plugin
                     $this->Services->edit($service->id, ['pricing_id' => $pricing->id]);
                     break;
                 }
+            }
+        }
+    }
+
+    /**
+     * Performs the domain renewal reminder cron task
+     */
+    private function cronDomainRenewalReminders()
+    {
+        Loader::loadModels(
+            $this,
+            ['DomainManager.DomainManagerTlds', 'Clients', 'Companies', 'Contacts', 'Emails', 'Services']
+        );
+        Loader::loadHelpers($this, ['Form']);
+
+        $company_id = Configure::get('Blesta.company_id');
+        $settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
+        if (!isset($settings['domain_manager_package_group'])) {
+            return;
+        }
+
+        // Get the current day relative to the configured timezone
+        $date = clone $this->Services->Date;
+        $date->setTimezone(Configure::get('Blesta.company_timezone'), 'UTC');
+        $today = $date->format('c', date('c'));
+
+        // Get reminder date ranges
+        $first_reminder_days = '+' . $settings['domain_manager_first_reminder_days_before'] . ' days';
+        $second_reminder_days = '+' . $settings['domain_manager_second_reminder_days_before'] . ' days';
+        $expiration_notice_days = '-' . $settings['domain_manager_expiration_notice_days_after'] . ' days';
+        $reminders = [
+            'domain_renewal_1' => [
+                'start_date' => $date->modify($today, $first_reminder_days, 'Y-m-d 00:00:00'),
+                'end_date' => $date->modify($today, $first_reminder_days, 'Y-m-d 23:59:59'),
+            ],
+            'domain_renewal_2' => [
+                'start_date' => $date->modify($today, $second_reminder_days, 'Y-m-d 00:00:00'),
+                'end_date' => $date->modify($today, $second_reminder_days, 'Y-m-d 23:59:59'),
+            ],
+            'domain_expiration' => [
+                'start_date' => $date->modify($today, $expiration_notice_days, 'Y-m-d 00:00:00'),
+                'end_date' => $date->modify($today, $expiration_notice_days, 'Y-m-d 23:59:59'),
+            ]
+        ];
+
+        // Send reminders for each service renewing on the appropriate day
+        foreach ($reminders as $reminder => $dates) {
+            $start_date = $date->format('Y-m-d H:i:s', $dates['start_date']);
+            $end_date = $date->format('Y-m-d H:i:s', $dates['end_date']);
+
+            // Fetch all qualifying services
+            $services = $this->Services->getAll(
+                ['date_added' => 'DESC'],
+                true,
+                [],
+                [
+                    'services' => [
+                        'package_group_id' => $settings['domain_manager_package_group'],
+                        ['column' => 'date_renews', 'operator' => '>=', 'value' => $start_date],
+                        ['column' => 'date_renews', 'operator' => '<=', 'value' => $end_date]
+                    ]
+                ]
+            );
+
+            // Send the email for each service
+            foreach ($services as $service) {
+                $lang = null;
+                $client = $this->Clients->get($service->client_id);
+                $contact = $this->Contacts->get($client->contact_id);
+                if ($client && $client->settings['language']) {
+                    $lang = $client->settings['language'];
+                }
+
+                $tags = ['service' => $service, 'client' => $client, 'contact' => $contact, 'domain' => $service->name];
+                $options = ['to_client_id' => $service->client_id];
+
+                // Format the renew date
+                $service->date_renews = $date->format('Y-m-d', $service->date_renews);
+                $this->Emails->send(
+                    'DomainManager.' . $reminder,
+                    Configure::get('Blesta.company_id'),
+                    $lang,
+                    $contact->email,
+                    $tags,
+                    null,
+                    null,
+                    null,
+                    $options
+                );
             }
         }
     }
