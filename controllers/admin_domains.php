@@ -1,6 +1,7 @@
 <?php
 use Iodev\Whois\Factory;
 use Blesta\Core\Util\Filters\ServiceFilters;
+
 /**
  * Domain Manager admin_domains controller
  *
@@ -241,7 +242,7 @@ class AdminDomains extends DomainManagerController
             $registrars[$installed_registrar->class] = $installed_registrar;
         }
 
-        // Add avilable registrars to the end of the list
+        // Add available registrars to the end of the list
         foreach ($available_registrars as $available_registrar) {
             if (!isset($registrars[$available_registrar->class])) {
                 $registrars[$available_registrar->class] = $available_registrar;
@@ -253,7 +254,7 @@ class AdminDomains extends DomainManagerController
     /**
      * Install a registrar for this company
      */
-    public function installregistrar()
+    public function installRegistrar()
     {
         if (!isset($this->post['id'])) {
             $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/registrars/');
@@ -273,7 +274,7 @@ class AdminDomains extends DomainManagerController
     /**
      * Uninstall a registrar for this company
      */
-    public function uninstallregistrar()
+    public function uninstallRegistrar()
     {
         if (!isset($this->post['id']) || !($module = $this->ModuleManager->get($this->post['id']))) {
             $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/registrars/');
@@ -297,7 +298,7 @@ class AdminDomains extends DomainManagerController
     /**
      * Upgrade a registrar
      */
-    public function upgraderegistrar()
+    public function upgradeRegistrar()
     {
         // Fetch the module to upgrade
         if (!isset($this->post['id']) || !($module = $this->ModuleManager->get($this->post['id']))) {
@@ -363,9 +364,10 @@ class AdminDomains extends DomainManagerController
                 'domain_manager_dns_management_option_group',
                 'domain_manager_email_forwarding_option_group',
                 'domain_manager_id_protection_option_group',
+                'domain_manager_epp_code_option_group',
                 'domain_manager_first_reminder_days_before',
                 'domain_manager_second_reminder_days_before',
-                'domain_manager_expiration_notice_days_after',
+                'domain_manager_expiration_notice_days_after'
             ];
             if (!isset($this->post['domain_manager_spotlight_tlds'])) {
                 $this->post['domain_manager_spotlight_tlds'] = [];
@@ -428,5 +430,302 @@ class AdminDomains extends DomainManagerController
             );
         }
         return $days;
+    }
+
+    /**
+     * Fetches the view for all TLDs and their pricing
+     */
+    public function tlds()
+    {
+        $this->uses(['ModuleManager', 'Packages', 'DomainManager.DomainManagerTlds']);
+        $this->helpers(['Form']);
+
+        $company_id = Configure::get('Blesta.company_id');
+
+        // Add new TLD
+        if (!empty($this->post)) {
+            $vars = $this->post['add_tld'];
+
+            // Set checkboxes
+            if (empty($vars['dns_management'])) {
+                $vars['dns_management'] = '0';
+            }
+            if (empty($vars['email_forwarding'])) {
+                $vars['email_forwarding'] = '0';
+            }
+            if (empty($vars['id_protection'])) {
+                $vars['id_protection'] = '0';
+            }
+            if (empty($vars['epp_code'])) {
+                $vars['epp_code'] = '0';
+            }
+
+            $params = [
+                'tld' => '.' . trim($vars['tld'], '.'),
+                'company_id' => $company_id,
+            ];
+            $params = array_merge($vars, $params);
+
+            if (!empty($vars['module'])) {
+                $params['module_id'] = (int) $vars['module'];
+            }
+
+            $this->DomainManagerTlds->add($params);
+
+            if (($errors = $this->DomainManagerTlds->errors())) {
+                $this->flashMessage('error', $errors);
+            } else {
+                $this->flashMessage('message', Language::_('AdminDomains.!success.tld_added', true));
+            }
+            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+        }
+
+        // Fetch all the TLDs and their pricing for this company
+        $tlds = $this->DomainManagerTlds->getAll(['company_id' => $company_id]);
+
+        foreach ($tlds as $key => $tld) {
+            $package = $this->Packages->get($tld->package_id);
+            $module = $this->ModuleManager->get($package->module_id);
+
+            $tlds[$key]->package = $package;
+            $tlds[$key]->module = $module;
+        }
+
+        // Fetch all modules for this company
+        $modules = $this->ModuleManager->getAll(
+            $company_id,
+            'name',
+            'asc',
+            ['type' => 'registrar']
+        );
+        $none_module = $this->ModuleManager->getByClass('none', $company_id);
+        $none_module = isset($none_module[0]) ? $none_module[0] : null;
+        $select = ['' => Language::_('AppController.select.please', true)];
+        $none = [$none_module->id => $none_module->name];
+        $modules = $select + $none + $this->Form->collapseObjectArray($modules, 'name', 'id');
+
+        $this->set('tlds', $tlds);
+        $this->set('modules', $modules);
+
+        return $this->renderAjaxWidgetIfAsync($this->isAjax());
+    }
+
+    /**
+     * Disables a TLD for this company
+     */
+    public function disableTld()
+    {
+        $this->uses(['Packages', 'DomainManager.DomainManagerTlds']);
+
+        // Fetch the package belonging to this TLD
+        if (
+            !isset($this->post['id'])
+            || !($package = $this->Packages->get($this->post['id']))
+            || !($tld = $this->DomainManagerTlds->getByPackage($this->post['id']))
+        ) {
+            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+        }
+
+        $this->DomainManagerTlds->disable($tld->tld);
+
+        if (($errors = $this->DomainManagerTlds->errors())) {
+            $this->flashMessage('error', $errors);
+        } else {
+            $this->flashMessage('message', Language::_('AdminDomains.!success.tld_disabled', true));
+        }
+        $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+    }
+
+    /**
+     * Enables a TLD for this company
+     */
+    public function enableTld()
+    {
+        $this->uses(['Packages', 'DomainManager.DomainManagerTlds']);
+
+        // Fetch the package belonging to this TLD
+        if (
+            !isset($this->post['id'])
+            || !($package = $this->Packages->get($this->post['id']))
+            || !($tld = $this->DomainManagerTlds->getByPackage($this->post['id']))
+        ) {
+            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+        }
+
+        $this->DomainManagerTlds->enable($tld->tld);
+
+        if (($errors = $this->DomainManagerTlds->errors())) {
+            $this->flashMessage('error', $errors);
+        } else {
+            $this->flashMessage('message', Language::_('AdminDomains.!success.tld_enabled', true));
+        }
+        $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+    }
+
+    /**
+     * Sort TLDs
+     */
+    public function sortTlds()
+    {
+        $this->uses(['DomainManager.DomainManagerTlds']);
+
+        if (!$this->isAjax()) {
+            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+        }
+
+        if (!empty($this->post)) {
+            $this->DomainManagerTlds->sortTlds($this->post['tlds']);
+        }
+
+        return false;
+    }
+
+    /**
+     * Update TLD
+     */
+    public function updateTlds()
+    {
+        $this->uses(['DomainManager.DomainManagerTlds']);
+
+        if (!$this->isAjax()) {
+            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+        }
+
+        if (!empty($this->post)) {
+            foreach ($this->post['tlds'] as $tld => $vars) {
+                // Set checkboxes
+                if (empty($vars['dns_management'])) {
+                    $vars['dns_management'] = '0';
+                }
+                if (empty($vars['email_forwarding'])) {
+                    $vars['email_forwarding'] = '0';
+                }
+                if (empty($vars['id_protection'])) {
+                    $vars['id_protection'] = '0';
+                }
+                if (empty($vars['epp_code'])) {
+                    $vars['epp_code'] = '0';
+                }
+
+                // Update TLD
+                $vars = array_merge($vars, [
+                    'module_id' => $vars['module'],
+                ]);
+
+                $this->DomainManagerTlds->edit($tld, $vars);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Update TLD pricing
+     */
+    public function pricing()
+    {
+        $this->uses(['Packages', 'Currencies', 'DomainManager.DomainManagerTlds']);
+        $this->helpers(['Form', 'CurrencyFormat']);
+
+        // Fetch the package belonging to this TLD
+        if (
+            !$this->isAjax()
+            || !isset($this->get[0])
+            || !($package = $this->Packages->get($this->get[0]))
+            || !($tld = $this->DomainManagerTlds->getByPackage($this->get[0]))
+        ) {
+            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+        }
+
+        if (!empty($this->post)) {
+            $tld = $this->DomainManagerTlds->getByPackage($this->get[0]);
+
+            // Update nameservers
+            if (!isset($this->post['ns'])) {
+                $this->post['ns'] = [];
+            }
+            $this->DomainManagerTlds->edit($tld->tld, ['ns' => $this->post['ns']]);
+
+            // Update pricing
+            if (!isset($this->post['pricing'])) {
+                $this->post['pricing'] = [];
+            }
+            $this->DomainManagerTlds->updatePricings($tld->tld, $this->post['pricing']);
+
+            if (($errors = $this->DomainManagerTlds->errors())) {
+                echo json_encode([
+                    'message' => $this->setMessage(
+                        'error',
+                        $errors,
+                        true,
+                        null,
+                        false
+                    )
+                ]);
+            } else {
+                $tld->message = $this->setMessage(
+                    'message',
+                    Language::_('AdminDomains.!success.tld_updated', true),
+                    true,
+                    null,
+                    false
+                );
+                echo json_encode($tld);
+            }
+
+            return false;
+        }
+
+        // Get company settings
+        $company_id = Configure::get('Blesta.company_id');
+        $company_settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
+
+        // Get company default currency
+        $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
+
+        // Get company currencies
+        $currencies = $this->Form->collapseObjectArray(
+            $this->Currencies->getAll($company_id),
+            'code',
+            'code'
+        );
+        if (isset($currencies[$default_currency])) {
+            $currencies = [$default_currency => $default_currency] + $currencies;
+        }
+
+        // Get TLD package
+        $package = $this->Packages->get($this->get[0], true);
+        $tld = $this->DomainManagerTlds->getByPackage($this->get[0]);
+
+        // Add a pricing for terms 1-10 years for each currency
+        foreach ($currencies as $currency) {
+            for ($i = 1; $i <= 10; $i++) {
+                // Check if the term already exists
+                $exists_pricing = false;
+                foreach ($package->pricing as &$pricing) {
+                    if ($pricing->term == $i && $pricing->period == 'year'&& $pricing->currency == $currency) {
+                        $exists_pricing = true;
+                        $pricing->enabled = true;
+                    }
+                }
+
+                // If the term not exists, add a placeholder for that term
+                if (!$exists_pricing) {
+                    $package->pricing[] = (object) [
+                        'term' => $i,
+                        'period' => 'year',
+                        'currency' => $currency,
+                        'enabled' => false
+                    ];
+                }
+            }
+        }
+
+        echo $this->partial(
+            'admin_domains_pricing',
+            compact('package', 'tld', 'currencies', 'default_currency')
+        );
+
+        return false;
     }
 }
