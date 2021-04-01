@@ -224,7 +224,7 @@
         }
 
         // Update TLDs
-        $('.table tbody input, .table tbody select').change(function() {
+        $('body').on('change', '.table tbody input, .table tbody select', function() {
             $(this).blestaRequest(
                 "POST",
                 '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/updatetlds/');?>',

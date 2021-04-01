@@ -507,6 +507,9 @@ class AdminDomains extends DomainManagerController
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
 
+        // Include WYSIWYG
+        $this->Javascript->setFile('blesta/ckeditor/build/ckeditor.js', 'head', VENDORWEBDIR);
+
         return $this->renderAjaxWidgetIfAsync($this->isAjax());
     }
 
@@ -624,7 +627,7 @@ class AdminDomains extends DomainManagerController
      */
     public function pricing()
     {
-        $this->uses(['Packages', 'Currencies', 'DomainManager.DomainManagerTlds']);
+        $this->uses(['Packages', 'Currencies', 'Languages', 'DomainManager.DomainManagerTlds']);
         $this->helpers(['Form', 'CurrencyFormat']);
 
         // Fetch the package belonging to this TLD
@@ -634,17 +637,14 @@ class AdminDomains extends DomainManagerController
             || !($package = $this->Packages->get($this->get[0]))
             || !($tld = $this->DomainManagerTlds->getByPackage($this->get[0]))
         ) {
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+            //$this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
         }
 
         if (!empty($this->post)) {
             $tld = $this->DomainManagerTlds->getByPackage($this->get[0]);
 
-            // Update nameservers
-            if (!isset($this->post['ns'])) {
-                $this->post['ns'] = [];
-            }
-            $this->DomainManagerTlds->edit($tld->tld, ['ns' => $this->post['ns']]);
+            // Update TLD package
+            $this->DomainManagerTlds->edit($tld->tld, $this->post);
 
             // Update pricing
             if (!isset($this->post['pricing'])) {
@@ -693,9 +693,15 @@ class AdminDomains extends DomainManagerController
             $currencies = [$default_currency => $default_currency] + $currencies;
         }
 
+        // Get company languages
+        $languages = $this->Languages->getAll($company_id);
+
         // Get TLD package
         $package = $this->Packages->get($this->get[0], true);
         $tld = $this->DomainManagerTlds->getByPackage($this->get[0]);
+
+        // Get TLD package fields
+        $package_fields = $this->DomainManagerTlds->getTldFields($this->get[0]);
 
         // Add a pricing for terms 1-10 years for each currency
         foreach ($currencies as $currency) {
@@ -723,7 +729,7 @@ class AdminDomains extends DomainManagerController
 
         echo $this->partial(
             'admin_domains_pricing',
-            compact('package', 'tld', 'currencies', 'default_currency')
+            compact('package', 'package_fields', 'tld', 'currencies', 'default_currency', 'languages')
         );
 
         return false;

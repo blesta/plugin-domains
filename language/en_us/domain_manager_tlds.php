@@ -15,3 +15,6 @@ $lang['DomainManagerTlds.!error.epp_code.valid'] = 'Invalid value for EPP Code, 
 
 $lang['DomainManagerTlds.!error.package_pricing.count'] = 'The pricing cannot be disabled, the TLD must have at least one pricing.';
 $lang['DomainManagerTlds.!error.package_pricing.service'] = 'The pricing could not be disabled because a service is currently using it.';
+
+// TLD Fields
+$lang['DomainManagerTlds.getTldFields.group'] = 'Group';
