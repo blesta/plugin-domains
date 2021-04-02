@@ -229,7 +229,24 @@
                 "POST",
                 '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/updatetlds/');?>',
                 getPartialForm('tlds'),
-                null,
+                function(response) {
+                    if (response.hasOwnProperty('message')) {
+                        $('.common_box').parent().find('.error_section').remove();
+                        $('.common_box').parent().prepend(response.message);
+                    }
+
+                    // Restore TLD settings
+                    $(this).blestaRequest(
+                        "GET",
+                        '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');?>',
+                        null,
+                        function(tlds) {
+                            $(tlds.replacer).html(tlds.content);
+                        },
+                        null,
+                        {dataType: 'json'}
+                    );
+                },
                 null,
                 {dataType: 'json'}
             );

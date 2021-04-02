@@ -7,6 +7,7 @@ $lang['DomainManagerTlds.!error.tld.length'] = 'The TLD must be at least 3 chara
 $lang['DomainManagerTlds.!error.package_id.exists'] = 'Invalid package ID.';
 $lang['DomainManagerTlds.!error.package_group_id.exists'] = 'Invalid package group ID.';
 $lang['DomainManagerTlds.!error.module_id.exists'] = 'Invalid module ID.';
+$lang['DomainManagerTlds.!error.module_id.service'] = 'The module could not be updated because a service is currently using it.';
 $lang['DomainManagerTlds.!error.commpany_id.exists'] = 'Invalid company ID.';
 $lang['DomainManagerTlds.!error.dns_management.valid'] = 'Invalid value for DNS Management, must be 0 or 1.';
 $lang['DomainManagerTlds.!error.email_forwarding.valid'] = 'Invalid value for Email Forwarding, must be 0 or 1.';

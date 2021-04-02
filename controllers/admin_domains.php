@@ -592,6 +592,7 @@ class AdminDomains extends DomainManagerController
         }
 
         if (!empty($this->post)) {
+            $error = null;
             foreach ($this->post['tlds'] as $tld => $vars) {
                 // Set checkboxes
                 if (empty($vars['dns_management'])) {
@@ -613,7 +614,23 @@ class AdminDomains extends DomainManagerController
                 ]);
 
                 $this->DomainManagerTlds->edit($tld, $vars);
+
+                if (($errors = $this->DomainManagerTlds->errors())) {
+                    $error = $errors;
+                }
             }
+        }
+
+        if (!empty($error)) {
+            echo json_encode([
+                'message' => $this->setMessage(
+                    'error',
+                    $error,
+                    true,
+                    null,
+                    false
+                )
+            ]);
         }
 
         return false;
