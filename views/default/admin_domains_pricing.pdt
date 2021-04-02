@@ -287,7 +287,7 @@
                 }
                 ?>
 
-                <div class="title_row"><h3><?php $this->_('AdminDomains.pricing.heading_advanced_options');?></h3></div>
+                <div class="title_row<?php echo (empty($package_fields['fields']) ? ' first' : '');?>"><h3><?php $this->_('AdminDomains.pricing.heading_advanced_options');?></h3></div>
                 <div class="pad">
                     <p><?php $this->_('AdminDomains.pricing.text_advanced_options');?></p>
                     <a href="<?php echo $this->base_uri . 'packages/edit/' . $this->Html->safe($package->id) . '/';?>" class="btn btn-default"><?php $this->_('AdminDomains.pricing.field_edit_package');?></a>
