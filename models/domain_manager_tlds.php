@@ -398,7 +398,7 @@ class DomainManagerTlds extends DomainManagerModel
             );
 
             // Update configurable options
-            if (!empty($fields['option_groups'])) {
+            if (isset($fields['option_groups'])) {
                 $options = ['dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
                 $option_groups = array_flip($fields['option_groups']);
 
