@@ -631,6 +631,16 @@ class AdminDomains extends DomainManagerController
                     false
                 )
             ]);
+        } else {
+            echo json_encode([
+                'message' => $this->setMessage(
+                    'message',
+                    Language::_('AdminDomains.!success.tld_updated', true),
+                    true,
+                    null,
+                    false
+                )
+            ]);
         }
 
         return false;

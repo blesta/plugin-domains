@@ -879,7 +879,7 @@ class DomainManagerTlds extends DomainManagerModel
                             $package_id = isset($tld->package_id) ? $tld->package_id : null;
                         }
 
-                        if (is_null($package_id)) {
+                        if (empty($package_id)) {
                             return true;
                         }
 
@@ -890,20 +890,16 @@ class DomainManagerTlds extends DomainManagerModel
                             ->where('company_id', '=', Configure::get('Blesta.company_id'))
                             ->fetch();
 
-                        // Get package module row
-                        $module_row = $this->Record->select()
-                            ->from('module_rows')
-                            ->where('id', '=', $package->module_row)
-                            ->fetch();
-
-                        if (isset($module_row->module_id) && ((int)$module_row->module_id == (int)$module_id)) {
+                        if (isset($package->module_id) && ((int)$package->module_id == (int)$module_id)) {
                             return true;
                         }
 
                         // Check if there are any services using this module and package
-                        $services = $this->Record->select()
+                        $services = $this->Record->select(['services.*', 'packages.id' => 'package_id'])
                             ->from('services')
-                            ->where('module_row_id', '=', $package->module_row)
+                            ->innerJoin('package_pricing', 'package_pricing.id', '=', 'services.pricing_id', false)
+                            ->innerJoin('packages', 'packages.id', '=', 'package_pricing.package_id', false)
+                            ->where('packages.id', '=', $package_id)
                             ->numResults();
 
                         return !($services > 0);
