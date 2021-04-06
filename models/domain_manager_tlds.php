@@ -854,10 +854,58 @@ class DomainManagerTlds extends DomainManagerModel
             ],
             'module_id' => [
                 'exists' => [
-                    'if_set' => true,
+                    'if_set' => $edit,
                     'rule' => [[$this, 'validateExists'], 'id', 'modules'],
                     'message' => Language::_('DomainManagerTlds.!error.module_id.exists', true)
-                ]
+                ],
+                'service' => [
+                    'if_set' => $edit,
+                    'rule' => function($module_id) use (&$vars) {
+                        $parent = new stdClass();
+                        Loader::loadComponents($parent, ['Record']);
+
+                        // Get package id
+                        $package_id = null;
+                        if (isset($vars['package_id'])) {
+                            $package_id = $vars['package_id'];
+                        }
+
+                        if (is_null($package_id) && isset($vars['tld'])) {
+                            $tld = $this->Record->select()
+                                ->from('domain_manager_tlds')
+                                ->where('tld', '=', $vars['tld'])
+                                ->where('company_id', '=', Configure::get('Blesta.company_id'))
+                                ->fetch();
+                            $package_id = isset($tld->package_id) ? $tld->package_id : null;
+                        }
+
+                        if (empty($package_id)) {
+                            return true;
+                        }
+
+                        // Check if the package is using the same module id
+                        $package = $this->Record->select()
+                            ->from('packages')
+                            ->where('id', '=', $package_id)
+                            ->where('company_id', '=', Configure::get('Blesta.company_id'))
+                            ->fetch();
+
+                        if (isset($package->module_id) && ((int)$package->module_id == (int)$module_id)) {
+                            return true;
+                        }
+
+                        // Check if there are any services using this module and package
+                        $services = $this->Record->select(['services.*', 'packages.id' => 'package_id'])
+                            ->from('services')
+                            ->innerJoin('package_pricing', 'package_pricing.id', '=', 'services.pricing_id', false)
+                            ->innerJoin('packages', 'packages.id', '=', 'package_pricing.package_id', false)
+                            ->where('packages.id', '=', $package_id)
+                            ->numResults();
+
+                        return !($services > 0);
+                    },
+                    'message' => Language::_('DomainManagerTlds.!error.module_id.service', true)
+                ],
             ],
             'company_id' => [
                 'exists' => [
@@ -899,6 +947,8 @@ class DomainManagerTlds extends DomainManagerModel
 
         if ($edit) {
             unset($rules['tld']['exists']);
+        } else {
+            unset($rules['module_id']['service']);
         }
 
         return $rules;
