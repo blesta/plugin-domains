@@ -323,10 +323,29 @@
             <div class="main_tab" id="tab_welcome_email">
                 <div class="title_row first"><h3><?php $this->_('AdminDomains.pricing.heading_welcome_email');?></h3></div>
                 <div class="pad">
+                    <div class="links_row" style="">
+                        <a class="btn btn-default pull-right btn-sm load_sample_email" href="#"><span><?php $this->_('AdminDomains.pricing.field_load_sample_email');?></span></a>
+                    </div>
+
+                    <?php
+                    if (!empty($package_fields['tags'])) {
+                    ?>
+                    <ul>
+                        <li>
+                            <label for="">Tags:</label>
+                            <div class="accent_box">
+                                <?php echo $this->Html->safe($package_fields['tags']);?>
+                            </div>
+                        </li>
+                    </ul>
+                    <?php
+                    }
+                    ?>
+                    
                     <div id="email_content" class="tab_content inverse">
                         <ul class="tabs">
                             <?php
-                            foreach ($languages as $lang) {
+                            foreach ((isset($languages) ? $languages : []) as $lang) {
                                 ?>
                                 <li<?php echo ($this->Html->ifSet($lang->code) == Configure::get('Blesta.language') ? ' class="current"' : '');?>>
                                     <a href="#"><?php $this->Html->_($lang->name);?></a>
@@ -516,6 +535,33 @@
                 null,
                 {dataType: 'json'}
             );
+        });
+
+        // Set the module email template as the email content
+        $('.load_sample_email').on('click', function() {
+            var templates = <?php echo json_encode($package_fields['template'], JSON_PRETTY_PRINT);?>;
+
+            if (confirm('<?php $this->_('AdminDomains.pricing.text_confirm_load_email');?>')) {
+                <?php
+                foreach ((isset($languages) ? $languages : []) as $i => $lang) {
+                ?>
+                    $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> textarea').each(function() {
+                        $(this).val('');
+                    });
+
+                    $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_html textarea').val(templates.<?php echo $lang->code;?>.html);
+                    $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_text textarea').val(templates.<?php echo $lang->code;?>.text);
+
+                    const ck_editor = document.querySelector('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_html .ck-editor__editable');
+                    const ck_editor_instance = ck_editor.ckeditorInstance;
+
+                    ck_editor_instance.setData(templates.<?php echo $lang->code;?>.html);
+                <?php
+                }
+                ?>
+            }
+
+            return false;
         });
     });
 </script>

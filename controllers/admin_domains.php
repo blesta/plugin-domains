@@ -637,7 +637,7 @@ class AdminDomains extends DomainManagerController
             || !($package = $this->Packages->get($this->get[0]))
             || !($tld = $this->DomainManagerTlds->getByPackage($this->get[0]))
         ) {
-            //$this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
         }
 
         if (!empty($this->post)) {

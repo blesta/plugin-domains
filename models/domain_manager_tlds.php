@@ -335,7 +335,16 @@ class DomainManagerTlds extends DomainManagerModel
      *  - email_forwarding Whether to include email forwarding for this TLD
      *  - id_protection Whether to include ID protection for this TLD
      *  - epp_code Whether to include EPP Code for this TLD
-     *  - ns A numerically indexed array, containing the nameservers for the given TLD
+     *  - module_id The ID of the module this package belongs to (optional, default NULL)
+     *  - module_row The module row this package belongs to (optional, default 0)
+     *  - module_group The module group this package belongs to (optional, default NULL)
+     *  - email_content A numerically indexed array of email content including:
+     *      - lang The language of the email content
+     *      - html The html content for the email (optional)
+     *      - text The text content for the email, will be created automatically from html if not given (optional)
+     *  - option_groups A numerically indexed array of package option group assignments (optional)
+     *  - meta A set of miscellaneous fields to pass, in addition to the above
+     *      fields, to the module when adding the package (optional)
      * @return int The identifier of the TLD that was updated, void on error
      */
     public function edit($tld, array $vars)
@@ -398,7 +407,7 @@ class DomainManagerTlds extends DomainManagerModel
             );
 
             // Update configurable options
-            if (isset($fields['option_groups'])) {
+            if (!empty($fields['option_groups'])) {
                 $options = ['dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
                 $option_groups = array_flip($fields['option_groups']);
 
@@ -720,7 +729,7 @@ class DomainManagerTlds extends DomainManagerModel
             return false;
         }
 
-        Loader::loadModels($this, ['Packages', 'ModuleManager', 'PackageOptionGroups']);
+        Loader::loadModels($this, ['Packages', 'ModuleManager', 'PackageOptionGroups', 'Services']);
         Loader::loadHelpers($this, ['Form', 'DataStructure']);
 
         $this->ArrayHelper = $this->DataStructure->create('Array');
@@ -791,6 +800,22 @@ class DomainManagerTlds extends DomainManagerModel
                 unset($package_option_groups[$id]);
             }
         }
+
+        // Build the available package tags
+        $parser_options = Configure::get('Blesta.parser_options');
+        $package_email_tags = '';
+        $tags = $this->Services->getWelcomeEmailTags() + $tags;
+
+        if (!empty($tags)) {
+            $i = 0;
+            foreach ($tags as $group => $group_tags) {
+                foreach ($group_tags as $tag) {
+                    $package_email_tags .= ($i++ > 0 ? ' ' : '') .
+                        $parser_options['VARIABLE_START'] . $group . '.' . $tag . $parser_options['VARIABLE_END'];
+                }
+            }
+        }
+        $tags = $package_email_tags;
 
         return compact(
             'fields',
