@@ -1,4 +1,6 @@
 <?php
+use Blesta\Core\Util\Input\Fields\InputFields;
+
 /**
  * Domain Manager TLDs Management Model
  *
@@ -21,11 +23,8 @@ class DomainManagerTlds extends DomainManagerModel
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
-    public function getList(
-        array $filters = [],
-        $page = 1,
-        array $order = ['order' => 'asc']
-    ) {
+    public function getList(array $filters = [], $page = 1, array $order = ['order' => 'asc'])
+    {
         $tlds = $this->getTlds($filters)
             ->order($order)
             ->limit($this->getPerPage(), (max(1, $page) - 1) * $this->getPerPage())
@@ -66,10 +65,8 @@ class DomainManagerTlds extends DomainManagerModel
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
-    public function getAll(
-        array $filters = [],
-        array $order = ['order' => 'asc']
-    ) {
+    public function getAll(array $filters = [], array $order = ['order' => 'asc'])
+    {
         $tlds = $this->getTlds($filters)->order($order)->fetchAll();
 
         return $tlds;
@@ -333,57 +330,98 @@ class DomainManagerTlds extends DomainManagerModel
      * @param int $tld The identifier of the TLD to edit
      * @param array $vars An array of input data including:
      *
-     *  - ns A numerically indexed array, containing the nameservers for the given TLD
      *  - package_id The ID of the package to be used for pricing and sale of this TLD
-     *  - module_id The ID of the registrar module to be used for this TLD
      *  - dns_management Whether to include DNS management for this TLD
      *  - email_forwarding Whether to include email forwarding for this TLD
      *  - id_protection Whether to include ID protection for this TLD
      *  - epp_code Whether to include EPP Code for this TLD
+     *  - module_id The ID of the module this package belongs to (optional, default NULL)
+     *  - module_row The module row this package belongs to (optional, default 0)
+     *  - module_group The module group this package belongs to (optional, default NULL)
+     *  - email_content A numerically indexed array of email content including:
+     *      - lang The language of the email content
+     *      - html The html content for the email (optional)
+     *      - text The text content for the email, will be created automatically from html if not given (optional)
+     *  - option_groups A numerically indexed array of package option group assignments (optional)
+     *  - meta A set of miscellaneous fields to pass, in addition to the above
+     *      fields, to the module when adding the package (optional)
      * @return int The identifier of the TLD that was updated, void on error
      */
     public function edit($tld, array $vars)
     {
+        Loader::loadModels($this, ['Packages', 'ModuleManager', 'Companies']);
+        Loader::loadHelpers($this, ['Form']);
+
         $vars['tld'] = $tld;
         $tld = $this->get($vars['tld']);
 
         $this->Input->setRules($this->getRules($vars, true));
 
         if ($this->Input->validates($vars)) {
-            // Update module
-            Loader::loadModels($this, ['Packages', 'ModuleManager']);
+            // Get package
+            $package = $this->Packages->get(isset($vars['package_id']) ? $vars['package_id'] : $tld->package_id);
 
-            if (isset($vars['module_id']) && ($module = $this->ModuleManager->get($vars['module_id']))) {
-                // Get module row
-                $module_row = null;
-                if (!empty($module->rows)) {
-                    $module_row = reset($module->rows);
-                }
+            // Update package
+            $fields = [
+                'module_id' => isset($vars['module_id'])
+                    ? $vars['module_id']
+                    : (isset($package->module_id) ? $package->module_id : null),
+                'names' => $package->names,
+                'descriptions' => $package->descriptions,
+                'module_row' => isset($vars['module_row'])
+                    ? $vars['module_row']
+                    : (isset($package->module_row) ? $package->module_row : null),
+                'module_group' => isset($vars['module_group'])
+                    ? $vars['module_group']
+                    : (isset($package->module_group) ? $package->module_group : null),
+                'status' => $package->status,
+                'email_content' => isset($vars['email_content'])
+                    ? $vars['email_content']
+                    : (isset($package->email_content) ? $package->email_content : null),
+                'pricing' => $package->pricing,
+                'option_groups' => isset($vars['option_groups']) ? $vars['option_groups'] : [],
+                'meta' => isset($vars['meta'])
+                    ? $vars['meta']
+                    : (isset($package->meta) ? $package->meta : []),
+            ];
+            $fields = json_decode(json_encode($fields), true);
 
-                // Update package
-                $fields = [
-                    'module_id' => $vars['module_id']
-                ];
-                if (!is_null($module_row)) {
-                    $fields['module_row'] = $module_row->id;
+            foreach ($fields as $key => $value) {
+                if (empty($value) && !is_array($value)) {
+                    unset($fields[$key]);
                 }
-                $this->Record->where('id', '=', $tld->package_id)
-                    ->update('packages', $fields);
             }
 
-            // Update name servers
-            if (isset($vars['ns'])) {
-                $fields = [
-                    'package_id' => $tld->package_id,
-                    'key' => 'ns',
-                    'value' => serialize($vars['ns']),
-                    'serialized' => '1'
-                ];
-                $this->Record->duplicate('package_meta.value', '=', $fields['value'])
-                    ->insert('package_meta', $fields);
+            $this->Packages->edit($package->id, $fields);
+
+            if (($errors = $this->Packages->errors())) {
+                $this->Input->setErrors($errors);
+                return;
             }
 
-            // Update package configurable options
+            // Get company settings
+            $company_settings = $this->Form->collapseObjectArray(
+                $this->Companies->getSettings(Configure::get('Blesta.company_id')),
+                'value',
+                'key'
+            );
+
+            // Update configurable options
+            if (!empty($fields['option_groups'])) {
+                $options = ['dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
+                $option_groups = array_flip($fields['option_groups']);
+
+                foreach ($options as $option) {
+                    $option_group_id = isset($company_settings['domain_manager_' . $option . '_option_group'])
+                        ? $company_settings['domain_manager_' . $option . '_option_group']
+                        : null;
+
+                    if (!is_null($option_group_id)) {
+                        $vars[$option] = isset($option_groups[$option_group_id]) ? 1 : 0;
+                    }
+                }
+            }
+
             $this->assignConfigurableOptions($tld->package_id, $vars);
 
             // Update TLD
@@ -440,7 +478,7 @@ class DomainManagerTlds extends DomainManagerModel
                     $pricing_row = $this->getPricing($tld->package_id, $term, $currency);
 
                     if (!empty($pricing_row)) {
-                        if ((bool) $pricing['enabled']) {
+                        if ((bool)$pricing['enabled']) {
                             $this->updatePricing($pricing_row->id, $pricing);
                         } else if ($enabled_pricings >= 1) {
                             $this->disablePricing($pricing_row->id);
@@ -554,12 +592,12 @@ class DomainManagerTlds extends DomainManagerModel
         }
 
         // Delete pricing
-        $this->Record->from('pricings')->
-            where('pricings.id', '=', $pricing_id)->
-            delete();
-        $this->Record->from('package_pricing')->
-            where('package_pricing.pricing_id', '=', $pricing_id)->
-            delete();
+        $this->Record->from('pricings')
+            ->where('pricings.id', '=', $pricing_id)
+            ->delete();
+        $this->Record->from('package_pricing')
+            ->where('package_pricing.pricing_id', '=', $pricing_id)
+            ->delete();
 
         return $pricing_id;
     }
@@ -676,6 +714,121 @@ class DomainManagerTlds extends DomainManagerModel
                 }
             }
         }
+    }
+
+    /**
+     * Fetches the package fields, html, email tags and email template of the given package id
+     *
+     * @param int $package_id The ID of the package to fetch the fields
+     * @return array An array containing the package fields, html, tags and email template
+     */
+    public function getTldFields($package_id)
+    {
+        // Verify if the given package id belongs to a TLD
+        if (!($tld = $this->getByPackage($package_id))) {
+            return false;
+        }
+
+        Loader::loadModels($this, ['Packages', 'ModuleManager', 'PackageOptionGroups', 'Services']);
+        Loader::loadHelpers($this, ['Form', 'DataStructure']);
+
+        $this->ArrayHelper = $this->DataStructure->create('Array');
+
+        // Get package
+        $package = $this->Packages->get($package_id);
+
+        // Initialize module
+        $module = $this->ModuleManager->initModule($package->module_id);
+
+        // Fetch all package fields this module requires
+        $package_fields = $module->getPackageFields();
+        $fields = $package_fields->getFields();
+        $html = $package_fields->getHtml();
+        $tags = $module->getEmailTags();
+        $template = $module->getEmailTemplate();
+        $row_name = $module->moduleRowName();
+        $group_name = $module->moduleGroupName();
+
+        if (empty($group_name)) {
+            $group_name = Language::_('DomainManagerTlds.getTldFields.group', true);
+        }
+
+        // Remove TLDs and Nameservers fields
+        $remove_fields = ['meta[ns][]', 'meta[tlds][]'];
+
+        foreach ($fields as $key => $field) {
+            $remove_field = false;
+            foreach ($field->fields as $sub_field) {
+                if (in_array($sub_field->params['name'], $remove_fields)) {
+                    $remove_field = true;
+                }
+            }
+
+            if ($remove_field) {
+                unset($fields[$key]);
+            }
+        }
+
+        // Get module groups and rows
+        $groups = $this->ArrayHelper->numericToKey(
+            (array) $this->ModuleManager->getGroups($package->module_id),
+            'id',
+            'name'
+        );
+        $rows = $this->ArrayHelper->numericToKey(
+            (array) $this->ModuleManager->getRows($package->module_id),
+            'id',
+            'meta'
+        );
+
+        $row_key = $module->moduleRowMetaKey();
+        foreach ($rows as $key => &$value) {
+            $value = $value->$row_key;
+        }
+
+        // Fetch all available package option groups
+        $package_option_groups = $this->Form->collapseObjectArray(
+            $this->PackageOptionGroups->getAll(Configure::get('Blesta.company_id')),
+            'name',
+            'id'
+        );
+        $selected_option_groups = $this->Form->collapseObjectArray($package->option_groups, 'name', 'id');
+
+        // Fetch selectable package option groups
+        foreach ($package_option_groups as $id => $name) {
+            if (isset($selected_option_groups[$id])) {
+                unset($package_option_groups[$id]);
+            }
+        }
+
+        // Build the available package tags
+        $parser_options = Configure::get('Blesta.parser_options');
+        $package_email_tags = '';
+        $tags = $this->Services->getWelcomeEmailTags() + $tags;
+
+        if (!empty($tags)) {
+            $i = 0;
+            foreach ($tags as $group => $group_tags) {
+                foreach ($group_tags as $tag) {
+                    $package_email_tags .= ($i++ > 0 ? ' ' : '') .
+                        $parser_options['VARIABLE_START'] . $group . '.' . $tag . $parser_options['VARIABLE_END'];
+                }
+            }
+        }
+        $tags = $package_email_tags;
+
+        return compact(
+            'fields',
+            'html',
+            'tags',
+            'template',
+            'row_name',
+            'group_name',
+            'groups',
+            'rows',
+            'package_option_groups',
+            'selected_option_groups'
+        );
     }
 
     /**
