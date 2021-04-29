@@ -1,8 +1,8 @@
         <?php
-        echo $this->Html->ifSet($message);
+        echo ($message ?? null);
 
         $this->Widget->clear();
-        $this->Widget->create($this->_('AdminDomains.index.boxtitle', true), ['id'=>'admin_domains'], $this->Html->ifSet($render_section, null));
+        $this->Widget->create($this->_('AdminDomains.index.boxtitle', true), ['id'=>'admin_domains'], (isset($render_section) ? $render_section : null));
         $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/index/', ['id' => 'index']);
         ?>
 
