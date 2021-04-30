@@ -17,13 +17,6 @@
                 ]
             ],
             [
-                'name' => $this->_('AdminDomains.pricing.tab_package_options', true),
-                'current' => false,
-                'attributes' => [
-                    'class' => 'package_options'
-                ]
-            ],
-            [
                 'name' => $this->_('AdminDomains.pricing.tab_configurable_options', true),
                 'current' => false,
                 'attributes' => [
@@ -35,6 +28,13 @@
                 'current' => false,
                 'attributes' => [
                     'class' => 'welcome_email'
+                ]
+            ],
+            [
+                'name' => $this->_('AdminDomains.pricing.tab_advanced', true),
+                'current' => false,
+                'attributes' => [
+                    'class' => 'advanced'
                 ]
             ]
         ];
@@ -139,7 +139,7 @@
                 </div>
             </div>
 
-            <div class="main_tab" id="tab_package_options">
+            <div class="main_tab" id="tab_advanced">
                 <?php
                 if (!empty($package_fields['fields'])) {
                 ?>
