@@ -17,6 +17,13 @@
                 ]
             ],
             [
+                'name' => $this->_('AdminDomains.pricing.tab_renewal_options', true),
+                'current' => false,
+                'attributes' => [
+                    'class' => 'renewal_options'
+                ]
+            ],
+            [
                 'name' => $this->_('AdminDomains.pricing.tab_package_options', true),
                 'current' => false,
                 'attributes' => [
@@ -148,6 +155,50 @@
                         }
                         ?>
                     </ul>
+                </div>
+            </div>
+
+            <div class="main_tab" id="tab_renewal_options">
+                <div class="title_row first"><h3><?php $this->_('AdminDomains.pricing.heading_renewal_offset');?></h3></div>
+                <div class="pad">
+                    <p><?php $this->_('AdminDomains.pricing.text_renewal_offset');?></p>
+
+                    <table class="table">
+                        <thead>
+                        <tr class="heading_row">
+                            <td><span><?php $this->_('AdminDomains.pricing.heading_term');?></span></td>
+                            <td><span><?php $this->_('AdminDomains.pricing.heading_offset_term');?></span></td>
+                            <td><span><?php $this->_('AdminDomains.pricing.heading_offset_period');?></span></td>
+                            <td class="last"><span><?php $this->_('AdminDomains.pricing.heading_offset_operator');?></span></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                        for ($i = 1; $i <= 10; $i++) {
+                            ?>
+                            <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?>>
+                                <td><?php $this->_('AdminDomains.pricing.text_year' . ($i > 1 ? 's' : ''), false, $i);?></td>
+                                <td>
+                                    <?php
+                                    $this->Form->fieldText('renewal_offset[' . $i . '][offset_term]', (isset($tld->renewal_offsets[$i]->offset_term) ? $tld->renewal_offsets[$i]->offset_term : 0));
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    $this->Form->fieldSelect('renewal_offset[' . $i . '][offset_period]', $periods, (isset($tld->renewal_offsets[$i]->offset_period) ? $tld->renewal_offsets[$i]->offset_period : 'day'));
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    $this->Form->fieldSelect('renewal_offset[' . $i . '][offset_operator]', $operators, (isset($tld->renewal_offsets[$i]->offset_operator) ? $tld->renewal_offsets[$i]->offset_operator : '<'));
+                                    ?>
+                                </td>
+                            </tr>
+                            <?php
+                        }
+                        ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -332,7 +383,7 @@
                     ?>
                     <ul>
                         <li>
-                            <label for="">Tags:</label>
+                            <label for=""><?php $this->_('AdminDomains.pricing.text_tags');?></label>
                             <div class="accent_box">
                                 <?php echo $this->Html->safe($package_fields['tags']);?>
                             </div>
@@ -440,7 +491,7 @@
             $(this).parent().parent().find('input[name*="price_renews"]').val($(this).val());
         });
 
-        // Disabling pricing rows
+        // Disable pricing rows
         function disablePricings() {
             $('.table .icon input[name*="enabled"]').each(function () {
                 if ($(this).is(":checked")) {
