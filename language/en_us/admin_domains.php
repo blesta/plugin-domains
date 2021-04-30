@@ -90,13 +90,17 @@ $lang['AdminDomains.tlds.heading_id_protection'] = 'ID Protection';
 $lang['AdminDomains.tlds.heading_epp_code'] = 'EPP Code';
 $lang['AdminDomains.tlds.heading_module'] = 'Module';
 $lang['AdminDomains.tlds.heading_options'] = 'Options';
-
 $lang['AdminDomains.tlds.option_edit'] = 'Edit';
 $lang['AdminDomains.tlds.option_disable'] = 'Disable';
 $lang['AdminDomains.tlds.option_enable'] = 'Enable';
 $lang['AdminDomains.tlds.option_add'] = 'Add';
 $lang['AdminDomains.tlds.confirm_disable'] = 'Are you sure you want to disable this TLD?';
 $lang['AdminDomains.tlds.confirm_enable'] = 'Are you sure you want to enable this TLD?';
+
+$lang['AdminDomains.tlds.tooltip_dns_management'] = 'The availability of DNS management will depend on whether the registrar module implements such functionality and may not be available for all TLDs or registrars';
+$lang['AdminDomains.tlds.tooltip_email_forwarding'] = 'The availability of Email Forwarding will depend on whether the registrar module implements such functionality and may not be available for all TLDs or registrars';
+$lang['AdminDomains.tlds.tooltip_id_protection'] = 'The availability of ID Protection will depend on whether the registrar module implements such functionality and may not be available for all TLDs or registrars';
+$lang['AdminDomains.tlds.tooltip_epp_code'] = 'The availability of the EPP Code will depend on whether the registrar module implements such functionality and may not be available for all TLDs or registrars';
 
 
 $lang['AdminDomains.pricing.boxtitle_edit_tld'] = 'Update TLD %1$s'; // %1$s is the TLD

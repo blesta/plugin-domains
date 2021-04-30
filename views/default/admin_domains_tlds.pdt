@@ -24,10 +24,22 @@
                     <td class="icon"></td>
                     <td class="icon"></td>
                     <td><span><?php $this->_('AdminDomains.tlds.heading_tld');?></span></td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_dns_management');?></span></td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_email_forwarding');?></span></td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_id_protection');?></span></td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_epp_code');?></span></td>
+                    <td>
+                        <span><?php $this->_('AdminDomains.tlds.heading_dns_management');?></span>
+                        <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_dns_management');?></div></span>
+                    </td>
+                    <td>
+                        <span><?php $this->_('AdminDomains.tlds.heading_email_forwarding');?></span>
+                        <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_email_forwarding');?></div></span>
+                    </td>
+                    <td>
+                        <span><?php $this->_('AdminDomains.tlds.heading_id_protection');?></span>
+                        <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_id_protection');?></div></span>
+                    </td>
+                    <td>
+                        <span><?php $this->_('AdminDomains.tlds.heading_epp_code');?></span>
+                        <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_epp_code');?></div></span>
+                    </td>
                     <td><span><?php $this->_('AdminDomains.tlds.heading_module');?></span></td>
                     <td class="last"><span><?php $this->_('AdminDomains.tlds.heading_options');?></span></td>
                 </tr>
