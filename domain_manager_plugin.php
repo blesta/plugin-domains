@@ -39,17 +39,6 @@ class DomainManagerPlugin extends Plugin
                 ->setField('epp_code', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setKey(['tld', 'company_id'], 'primary')
                 ->create('domain_manager_tlds', true);
-
-            // domain_manager_tld_renewal_offsets
-            $this->Record
-                ->setField('tld', ['type' => 'VARCHAR', 'size' => "64"])
-                ->setField('term', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                ->setField('company_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                ->setField('offset_term', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'default' => 0])
-                ->setField('offset_period', ['type' => 'enum', 'size' => "'day','week','month','year'", 'default' => 'day'])
-                ->setField('offset_operator', ['type' => 'enum', 'size' => "'later','earlier'", 'default' => 'earlier'])
-                ->setKey(['tld', 'term', 'company_id'], 'primary')
-                ->create('domain_manager_tld_renewal_offsets', true);
         } catch (Exception $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -504,28 +493,6 @@ class DomainManagerPlugin extends Plugin
             // Get the expiration date of this service from the registrar
             if (method_exists($modules[$module_id], 'getExpirationDate')) {
                 $renew_date = $modules[$module_id]->getExpirationDate($domain, 'c', $service->module_row_id);
-            }
-
-            // Apply the renewal offset
-            if (!isset($this->Record)) {
-                Loader::loadComponents($this, ['Record']);
-            }
-
-            $renewal_offset = $this->Record->select('domain_manager_tld_renewal_offsets.*')
-                ->from('domain_manager_tld_renewal_offsets')
-                ->innerJoin('domain_manager_tlds', 'domain_manager_tlds.tld', '=', 'domain_manager_tld_renewal_offsets.tld', false)
-                ->where('domain_manager_tlds.package_id', '=', $service->package_id)
-                ->where('domain_manager_tld_renewal_offsets.term', '=', $service->term)
-                ->fetch();
-
-            if (!empty($renewal_offset->offset_term)) {
-                $renew_date = $this->Services->Date->modify(
-                    $renew_date,
-                    ($renewal_offset->offset_operator == 'earlier' ? '-' : '+')
-                        . $renewal_offset->offset_term . ' ' . $renewal_offset->offset_period
-                        . ($renewal_offset->offset_term > 1 ? 's' : ''),
-                    'c'
-                );
             }
 
             // Update the renew date if the expiration date is greater than the renew date

@@ -754,12 +754,6 @@ class AdminDomains extends DomainManagerController
             }
         }
 
-        // Get renewal offset periods
-        $periods = $this->getPeriods();
-
-        // Get renewal offset operators
-        $operators = $this->getOperators();
-
         echo $this->partial(
             'admin_domains_pricing',
             compact(
@@ -768,40 +762,10 @@ class AdminDomains extends DomainManagerController
                 'tld',
                 'currencies',
                 'default_currency',
-                'languages',
-                'periods',
-                'operators'
+                'languages'
             )
         );
 
         return false;
-    }
-
-    /**
-     * Get the periods for renewal offset
-     *
-     * @return array An array containing all the valid periods for renewal offset
-     */
-    private function getPeriods()
-    {
-        return [
-            'day' => Language::_('AdminDomains.getPeriods.day', true),
-            'week' => Language::_('AdminDomains.getPeriods.week', true),
-            'month' => Language::_('AdminDomains.getPeriods.month', true),
-            'year' => Language::_('AdminDomains.getPeriods.year', true)
-        ];
-    }
-
-    /**
-     * Get the operators for renewal offset
-     *
-     * @return array An array containing all the valid periods for renewal offset
-     */
-    private function getOperators()
-    {
-        return [
-            'later' => Language::_('AdminDomains.getOperators.later', true),
-            'earlier' => Language::_('AdminDomains.getOperators.earlier', true)
-        ];
     }
 }

@@ -25,25 +25,10 @@ class DomainManagerTlds extends DomainManagerModel
      */
     public function getList(array $filters = [], $page = 1, array $order = ['order' => 'asc'])
     {
-        $tlds = $this->getTlds($filters)
+        return $this->getTlds($filters)
             ->order($order)
             ->limit($this->getPerPage(), (max(1, $page) - 1) * $this->getPerPage())
             ->fetchAll();
-
-        foreach ($tlds as &$tld) {
-            $tld->renewal_offsets = $this->Record->select()
-                ->from('domain_manager_tld_renewal_offsets')
-                ->where('domain_manager_tld_renewal_offsets.company_id', '=', $tld->company_id)
-                ->where('domain_manager_tld_renewal_offsets.tld', '=', $tld->tld)
-                ->fetchAll();
-
-            foreach ($tld->renewal_offsets as $key => $renewal_offset) {
-                $tld->renewal_offsets[$renewal_offset->term] = $renewal_offset;
-            }
-            unset($tld->renewal_offsets[0]);
-        }
-
-        return $tlds;
     }
 
     /**
@@ -80,22 +65,7 @@ class DomainManagerTlds extends DomainManagerModel
      */
     public function getAll(array $filters = [], array $order = ['order' => 'asc'])
     {
-        $tlds = $this->getTlds($filters)->order($order)->fetchAll();
-
-        foreach ($tlds as &$tld) {
-            $tld->renewal_offsets = $this->Record->select()
-                ->from('domain_manager_tld_renewal_offsets')
-                ->where('domain_manager_tld_renewal_offsets.company_id', '=', $tld->company_id)
-                ->where('domain_manager_tld_renewal_offsets.tld', '=', $tld->tld)
-                ->fetchAll();
-
-            foreach ($tld->renewal_offsets as $key => $renewal_offset) {
-                $tld->renewal_offsets[$renewal_offset->term] = $renewal_offset;
-            }
-            unset($tld->renewal_offsets[0]);
-        }
-
-        return $tlds;
+        return $this->getTlds($filters)->order($order)->fetchAll();
     }
 
     /**
@@ -106,23 +76,10 @@ class DomainManagerTlds extends DomainManagerModel
      */
     public function get($tld)
     {
-        $tld = $this->getTlds([
+        return $this->getTlds([
             'tld' => $tld,
             'company_id' => Configure::get('Blesta.company_id')
         ])->fetch();
-
-        $tld->renewal_offsets = $this->Record->select()
-            ->from('domain_manager_tld_renewal_offsets')
-            ->where('domain_manager_tld_renewal_offsets.company_id', '=', $tld->company_id)
-            ->where('domain_manager_tld_renewal_offsets.tld', '=', $tld->tld)
-            ->fetchAll();
-
-        foreach ($tld->renewal_offsets as $key => $renewal_offset) {
-            $tld->renewal_offsets[$renewal_offset->term] = $renewal_offset;
-        }
-        unset($tld->renewal_offsets[0]);
-
-        return $tld;
     }
 
     /**
@@ -133,23 +90,10 @@ class DomainManagerTlds extends DomainManagerModel
      */
     public function getByPackage($package_id)
     {
-        $tld = $this->getTlds([
+        return $this->getTlds([
             'package_id' => $package_id,
             'company_id' => Configure::get('Blesta.company_id')
         ])->fetch();
-
-        $tld->renewal_offsets = $this->Record->select()
-            ->from('domain_manager_tld_renewal_offsets')
-            ->where('domain_manager_tld_renewal_offsets.company_id', '=', $tld->company_id)
-            ->where('domain_manager_tld_renewal_offsets.tld', '=', $tld->tld)
-            ->fetchAll();
-
-        foreach ($tld->renewal_offsets as $key => $renewal_offset) {
-            $tld->renewal_offsets[$renewal_offset->term] = $renewal_offset;
-        }
-        unset($tld->renewal_offsets[0]);
-
-        return $tld;
     }
 
     /**
@@ -397,11 +341,6 @@ class DomainManagerTlds extends DomainManagerModel
      *  - option_groups A numerically indexed array of package option group assignments (optional)
      *  - meta A set of miscellaneous fields to pass, in addition to the above
      *      fields, to the module when adding the package (optional)
-     *  - renewal_offset A key=>value array, where 'key' is the year term and 'value'
-     *     is another key=>value array containing:
-     *     - offset_term The term to offset the renewal date
-     *     - offset_period The period to offset the renewal date
-     *     - offset_operator The operator to offset the renewal date, < for earlier and > for later
      * @return int The identifier of the TLD that was updated, void on error
      */
     public function edit($tld, array $vars)
@@ -486,26 +425,6 @@ class DomainManagerTlds extends DomainManagerModel
             $this->Record->where('tld', '=', $vars['tld'])
                 ->where('company_id', '=', Configure::get('Blesta.company_id'))
                 ->update('domain_manager_tlds', $vars, $fields);
-
-            // Update TLD renewal offset
-            if (!empty($vars['renewal_offset']) && is_array($vars['renewal_offset'])) {
-                foreach ($vars['renewal_offset'] as $term => $offset) {
-                    if ($offset['offset_term'] > 0 && in_array($offset['offset_operator'], ['later', 'earlier'])) {
-                        $fields = [
-                            'tld' => $vars['tld'],
-                            'term' => $term,
-                            'company_id' => Configure::get('Blesta.company_id'),
-                            'offset_term' => $offset['offset_term'],
-                            'offset_period' => $offset['offset_period'],
-                            'offset_operator' => $offset['offset_operator']
-                        ];
-                        $this->Record->duplicate('domain_manager_tld_renewal_offsets.offset_term', '=', $fields['offset_term'])
-                            ->duplicate('domain_manager_tld_renewal_offsets.offset_period', '=', $fields['offset_period'])
-                            ->duplicate('domain_manager_tld_renewal_offsets.offset_operator', '=', $fields['offset_operator'])
-                            ->insert('domain_manager_tld_renewal_offsets', $fields);
-                    }
-                }
-            }
 
             return $vars['tld'];
         }
