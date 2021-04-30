@@ -72,9 +72,7 @@
                                             <td><span><?php $this->_('AdminDomains.pricing.heading_term');?></span></td>
                                             <td><span><?php $this->_('AdminDomains.pricing.heading_register_price');?></span></td>
                                             <td><span><?php $this->_('AdminDomains.pricing.heading_renew_price');?></span></td>
-                                            <td><span><?php $this->_('AdminDomains.pricing.heading_transfer_price');?></span></td>
-                                            <td><span><?php $this->_('AdminDomains.pricing.heading_setup_fee');?></span></td>
-                                            <td class="last"><span><?php $this->_('AdminDomains.pricing.heading_cancel_fee');?></span></td>
+                                            <td class="last"><span><?php $this->_('AdminDomains.pricing.heading_transfer_price');?></span></td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -103,16 +101,6 @@
                                                 <td>
                                                     <?php
                                                     $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency . '][price_transfer]', $this->CurrencyFormat->format((isset($package_pricing->price_transfer) ? $package_pricing->price_transfer : 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
-                                                    ?>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency . '][setup_fee]', $this->CurrencyFormat->format((isset($package_pricing->setup_fee) ? $package_pricing->setup_fee : 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
-                                                    ?>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency . '][cancel_fee]', $this->CurrencyFormat->format((isset($package_pricing->cancel_fee) ? $package_pricing->cancel_fee : 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => 4]), ['class' => 'stretch']);
                                                     ?>
                                                 </td>
                                             </tr>
