@@ -612,8 +612,6 @@ class DomainManagerTlds extends DomainManagerModel
      *  - price The price of this term (optional, default 0.00)
      *  - price_renews The renewal price of this term (optional, default null)
      *  - price_transfer The transfer price of this term (optional, default null)
-     *  - setup_fee The setup fee for this pricing (optional, default 0.00)
-     *  - cancel_fee The cancellation fee for this pricing (optional, default 0.00)
      *  - currency The ISO 4217 currency code for this pricing (optional, default USD)
      */
     private function updatePricing($pricing_id, array $vars)
@@ -637,8 +635,6 @@ class DomainManagerTlds extends DomainManagerModel
      *  - price The price of this term (optional, default 0.00)
      *  - price_renews The renewal price of this term (optional, default null)
      *  - price_transfer The transfer price of this term (optional, default null)
-     *  - setup_fee The setup fee for this pricing (optional, default 0.00)
-     *  - cancel_fee The cancellation fee for this pricing (optional, default 0.00)
      *  - currency The ISO 4217 currency code for this pricing (optional, default USD)
      */
     private function addPricing($package_id, array $vars)
