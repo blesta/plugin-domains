@@ -1,4 +1,7 @@
 <?php
+
+use Blesta\Core\Util\Common\Traits\Container;
+
 /**
  * Domain Manager plugin handler
  *
@@ -6,6 +9,14 @@
  */
 class DomainManagerPlugin extends Plugin
 {
+    // Load traits
+    use Container;
+
+    /**
+     * @var Monolog\Logger An instance of the logger
+     */
+    protected $logger;
+
     public function __construct()
     {
         // Load components required by this plugin
@@ -13,6 +24,10 @@ class DomainManagerPlugin extends Plugin
 
         Language::loadLang('domain_manager_plugin', null, dirname(__FILE__) . DS . 'language' . DS);
         $this->loadConfig(dirname(__FILE__) . DS . 'config.json');
+
+        // Initialize logger
+        $logger = $this->getFromContainer('logger');
+        $this->logger = $logger;
     }
 
     /**
@@ -188,6 +203,13 @@ class DomainManagerPlugin extends Plugin
             ) {
                 $tld_params = ['tld' => $default_tld, 'company_id' => $company_id, 'package_id' => $package->id];
                 $this->DomainManagerTlds->add($tld_params);
+
+                $errors = $this->DomainManagerTlds->errors();
+                if (!empty($errors)) {
+                    $this->logger->error(json_encode($errors));
+                    $this->Input->setErrors($errors);
+                }
+
                 continue;
             }
 
@@ -195,6 +217,12 @@ class DomainManagerPlugin extends Plugin
             $tld_params = ['tld' => $default_tld, 'company_id' => $company_id, 'package_group_id' => $package_group_id];
             $tld = $this->DomainManagerTlds->add($tld_params);
             $package_id = isset($tld['package_id']) ? $tld['package_id'] : null;
+
+            $errors = $this->DomainManagerTlds->errors();
+            if (!empty($errors)) {
+                $this->logger->error(json_encode($errors));
+                $this->Input->setErrors($errors);
+            }
 
             $tld_packages[$default_tld] = $package_id;
         }
