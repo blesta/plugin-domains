@@ -379,7 +379,11 @@ class DomainManagerTlds extends DomainManagerModel
                     ? $vars['email_content']
                     : (isset($package->email_content) ? $package->email_content : null),
                 'pricing' => $package->pricing,
-                'option_groups' => isset($vars['option_groups']) ? $vars['option_groups'] : [],
+                'option_groups' => (array) (
+                    isset($package->option_groups)
+                        ? $this->Form->collapseObjectArray($package->option_groups, 'id', 'id')
+                        : []
+                ),
                 'meta' => isset($vars['meta'])
                     ? $vars['meta']
                     : (isset($package->meta) ? $package->meta : []),
@@ -407,21 +411,6 @@ class DomainManagerTlds extends DomainManagerModel
             );
 
             // Update configurable options
-            if (!empty($fields['option_groups'])) {
-                $options = ['dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
-                $option_groups = array_flip($fields['option_groups']);
-
-                foreach ($options as $option) {
-                    $option_group_id = isset($company_settings['domain_manager_' . $option . '_option_group'])
-                        ? $company_settings['domain_manager_' . $option . '_option_group']
-                        : null;
-
-                    if (!is_null($option_group_id)) {
-                        $vars[$option] = isset($option_groups[$option_group_id]) ? 1 : 0;
-                    }
-                }
-            }
-
             $this->assignConfigurableOptions($tld->package_id, $vars);
 
             // Update TLD

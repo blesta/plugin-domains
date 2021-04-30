@@ -282,32 +282,6 @@
                 </div>
             </div>
 
-            <div class="main_tab" id="tab_configurable_options">
-                <div class="title_row first"><h3><?php $this->_('AdminDomains.pricing.heading_configurable_options');?></h3></div>
-                <div class="pad">
-                    <ul>
-                        <li>
-                            <table>
-                                <tr>
-                                    <td><?php $this->Form->label($this->_('AdminDomains.pricing.field_membergroups', true), 'assigned_option_groups');?></td>
-                                    <td></td>
-                                    <td><?php $this->Form->label($this->_('AdminDomains.pricing.field_availablegroups', true), 'available_option_groups');?></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <?php $this->Form->fieldMultiSelect('option_groups[]', (isset($package_fields['selected_option_groups']) ? $package_fields['selected_option_groups'] : []), [], ['class' => 'assigned_option_groups']);?>
-                                    </td>
-                                    <td><a href="#" class="move_left">&nbsp;</a> &nbsp; <a href="#" class="move_right">&nbsp;</a></td>
-                                    <td>
-                                        <?php $this->Form->fieldMultiSelect('available_option_groups[]', (isset($package_fields['package_option_groups']) ? $package_fields['package_option_groups'] : []), [], ['class' => 'available_option_groups']);?>
-                                    </td>
-                                </tr>
-                            </table>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
             <div class="main_tab" id="tab_welcome_email">
                 <div class="title_row first"><h3><?php $this->_('AdminDomains.pricing.heading_welcome_email');?></h3></div>
                 <div class="pad">
