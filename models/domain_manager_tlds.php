@@ -1007,12 +1007,12 @@ class DomainManagerTlds extends DomainManagerModel
             ],
             'module_id' => [
                 'exists' => [
-                    'if_set' => $edit,
+                    'if_set' => true,
                     'rule' => [[$this, 'validateExists'], 'id', 'modules'],
                     'message' => Language::_('DomainManagerTlds.!error.module_id.exists', true)
                 ],
                 'service' => [
-                    'if_set' => $edit,
+                    'if_set' => true,
                     'rule' => function($module_id) use (&$vars) {
                         $parent = new stdClass();
                         Loader::loadComponents($parent, ['Record']);
