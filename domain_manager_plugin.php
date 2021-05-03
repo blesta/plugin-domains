@@ -276,7 +276,7 @@ class DomainManagerPlugin extends Plugin
     public function uninstall($plugin_id, $last_instance)
     {
         Loader::loadModels($this, ['CronTasks', 'Companies', 'Emails', 'EmailGroups']);
-      
+
         Configure::load('domain_manager', dirname(__FILE__) . DS . 'config' . DS);
         $emails = Configure::get('DomainManager.install.emails');
 
@@ -473,7 +473,7 @@ class DomainManagerPlugin extends Plugin
         $services = $this->Services->getAll(
             ['date_added' => 'DESC'],
             true,
-            //['package_group_id' => $settings['domain_manager_package_group']]
+            ['package_group_id' => $settings['domain_manager_package_group']]
         );
 
         // Set the service renew date based on the expiration date retrieved from the module
@@ -484,6 +484,10 @@ class DomainManagerPlugin extends Plugin
                 $modules[$module_id] = $this->ModuleManager->initModule($module_id);
             }
 
+            if (!method_exists($modules[$module_id], 'getExpirationDate')) {
+                continue;
+            }
+
             // Get the domain name from the module
             $domain = $service->name;
             if (method_exists($modules[$module_id], 'getServiceDomain')) {
@@ -491,9 +495,7 @@ class DomainManagerPlugin extends Plugin
             }
 
             // Get the expiration date of this service from the registrar
-            if (method_exists($modules[$module_id], 'getExpirationDate')) {
-                $renew_date = $modules[$module_id]->getExpirationDate($domain, 'c', $service->module_row_id);
-            }
+            $renew_date = $modules[$module_id]->getExpirationDate($domain, 'c', $service->module_row_id);
 
             // Update the renew date if the expiration date is greater than the renew date
             if (strtotime($renew_date) > strtotime($service->date_renews)) {
