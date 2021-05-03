@@ -756,7 +756,14 @@ class AdminDomains extends DomainManagerController
 
         echo $this->partial(
             'admin_domains_pricing',
-            compact('package', 'package_fields', 'tld', 'currencies', 'default_currency', 'languages')
+            compact(
+                'package',
+                'package_fields',
+                'tld',
+                'currencies',
+                'default_currency',
+                'languages'
+            )
         );
 
         return false;

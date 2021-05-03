@@ -294,7 +294,7 @@
                     ?>
                     <ul>
                         <li>
-                            <label for="">Tags:</label>
+                            <label for=""><?php $this->_('AdminDomains.pricing.text_tags');?></label>
                             <div class="accent_box">
                                 <?php echo $this->Html->safe($package_fields['tags']);?>
                             </div>
@@ -402,7 +402,7 @@
             $(this).parent().parent().find('input[name*="price_renews"]').val($(this).val());
         });
 
-        // Disabling pricing rows
+        // Disable pricing rows
         function disablePricings() {
             $('.table .icon input[name*="enabled"]').each(function () {
                 if ($(this).is(":checked")) {
