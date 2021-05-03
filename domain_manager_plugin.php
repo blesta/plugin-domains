@@ -54,7 +54,6 @@ class DomainManagerPlugin extends Plugin
                 ->setField('epp_code', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setKey(['tld', 'company_id'], 'primary')
                 ->create('domain_manager_tlds', true);
-
         } catch (Exception $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -305,7 +304,7 @@ class DomainManagerPlugin extends Plugin
     public function uninstall($plugin_id, $last_instance)
     {
         Loader::loadModels($this, ['CronTasks', 'Companies', 'Emails', 'EmailGroups']);
-      
+
         Configure::load('domain_manager', dirname(__FILE__) . DS . 'config' . DS);
         $emails = Configure::get('DomainManager.install.emails');
 
@@ -473,15 +472,63 @@ class DomainManagerPlugin extends Plugin
     {
         switch ($key) {
             case 'domain_synchronization':
-                // Perform necessary actions
+                $this->synchronizeDomains();
                 break;
             case 'domain_term_change':
-                // Perform necessary actions
                 $this->cronDomainTermChange();
                 break;
             case 'domain_renewal_reminders':
                 $this->cronDomainRenewalReminders();
                 break;
+        }
+    }
+
+    /**
+     * Performs the domain synchronization cron task
+     */
+    private function synchronizeDomains()
+    {
+        Loader::loadModels($this, ['Companies', 'ModuleManager', 'Services']);
+        Loader::loadHelpers($this, ['Form']);
+
+        $company_id = Configure::get('Blesta.company_id');
+        $settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
+        if (!isset($settings['domain_manager_package_group'])) {
+            return;
+        }
+
+        // Find all domain services
+        $services = $this->Services->getAll(
+            ['date_added' => 'DESC'],
+            true,
+            ['package_group_id' => $settings['domain_manager_package_group']]
+        );
+
+        // Set the service renew date based on the expiration date retrieved from the module
+        $modules = [];
+        foreach ($services as $service) {
+            $module_id = $service->package->module_id;
+            if (!isset($modules[$module_id])) {
+                $modules[$module_id] = $this->ModuleManager->initModule($module_id);
+            }
+
+            if (!method_exists($modules[$module_id], 'getExpirationDate')) {
+                continue;
+            }
+
+            // Get the domain name from the module
+            $domain = $service->name;
+            if (method_exists($modules[$module_id], 'getServiceDomain')) {
+                $domain = $modules[$module_id]->getServiceDomain($service);
+            }
+
+            // Get the expiration date of this service from the registrar
+            $renew_date = $modules[$module_id]->getExpirationDate($domain, 'c', $service->module_row_id);
+
+            // Update the renew date if the expiration date is greater than the renew date
+            if (strtotime($renew_date) > strtotime($service->date_renews)) {
+                $this->Services->edit($service->id, ['date_renews' => $renew_date]);
+            }
         }
     }
 

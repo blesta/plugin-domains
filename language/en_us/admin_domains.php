@@ -116,6 +116,7 @@ $lang['AdminDomains.pricing.heading_nameservers'] = 'Nameservers';
 $lang['AdminDomains.pricing.heading_module_options'] = 'Module Options';
 $lang['AdminDomains.pricing.heading_advanced_options'] = 'Advanced Options';
 $lang['AdminDomains.pricing.heading_welcome_email'] = 'Welcome Email';
+$lang['AdminDomains.pricing.text_tags'] = 'Tags:';
 $lang['AdminDomains.pricing.text_confirm_load_email'] = 'Are you sure you want to load the sample email? This will discard all changes.';
 $lang['AdminDomains.pricing.text_advanced_options'] = 'Edit the core package, to define Client Limits, Configurable Options, Available Quantity, Plugin Integrations, Descriptions and more.';
 $lang['AdminDomains.pricing.field_nameserver'] = 'Name Server %1$s'; // %1$s is the name server
@@ -139,3 +140,12 @@ $lang['AdminDomains.whois.field_submit'] = 'Lookup';
 $lang['AdminDomains.getDays.never'] = 'Never';
 $lang['AdminDomains.getDays.text_day'] = '%1$s Day'; // %1$s is the number of days
 $lang['AdminDomains.getDays.text_days'] = '%1$s Days'; // %1$s is the number of days
+
+
+$lang['AdminDomains.getPeriods.day'] = 'Day';
+$lang['AdminDomains.getPeriods.week'] = 'Week';
+$lang['AdminDomains.getPeriods.month'] = 'Month';
+$lang['AdminDomains.getPeriods.year'] = 'Year';
+
+$lang['AdminDomains.getOperators.later'] = 'Later';
+$lang['AdminDomains.getOperators.earlier'] = 'Earlier';

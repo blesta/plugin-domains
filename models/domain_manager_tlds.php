@@ -25,12 +25,10 @@ class DomainManagerTlds extends DomainManagerModel
      */
     public function getList(array $filters = [], $page = 1, array $order = ['order' => 'asc'])
     {
-        $tlds = $this->getTlds($filters)
+        return $this->getTlds($filters)
             ->order($order)
             ->limit($this->getPerPage(), (max(1, $page) - 1) * $this->getPerPage())
             ->fetchAll();
-
-        return $tlds;
     }
 
     /**
@@ -67,9 +65,7 @@ class DomainManagerTlds extends DomainManagerModel
      */
     public function getAll(array $filters = [], array $order = ['order' => 'asc'])
     {
-        $tlds = $this->getTlds($filters)->order($order)->fetchAll();
-
-        return $tlds;
+        return $this->getTlds($filters)->order($order)->fetchAll();
     }
 
     /**
