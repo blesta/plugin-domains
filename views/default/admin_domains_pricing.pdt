@@ -17,13 +17,6 @@
                 ]
             ],
             [
-                'name' => $this->_('AdminDomains.pricing.tab_configurable_options', true),
-                'current' => false,
-                'attributes' => [
-                    'class' => 'configurable_options'
-                ]
-            ],
-            [
                 'name' => $this->_('AdminDomains.pricing.tab_welcome_email', true),
                 'current' => false,
                 'attributes' => [
@@ -303,7 +296,7 @@
                     <?php
                     }
                     ?>
-                    
+
                     <div id="email_content" class="tab_content inverse">
                         <ul class="tabs">
                             <?php
