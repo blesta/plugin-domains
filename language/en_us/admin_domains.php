@@ -149,3 +149,9 @@ $lang['AdminDomains.getPeriods.year'] = 'Year';
 
 $lang['AdminDomains.getOperators.later'] = 'Later';
 $lang['AdminDomains.getOperators.earlier'] = 'Earlier';
+
+
+$lang['AdminDomains.getfilters.any'] = 'Any';
+$lang['AdminDomains.getfilters.field_module_id'] = 'Registrar Modules';
+$lang['AdminDomains.getfilters.field_package_name'] = 'TLD';
+$lang['AdminDomains.getfilters.field_service_meta'] = 'Domain Name';
