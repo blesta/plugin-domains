@@ -127,8 +127,7 @@ class AdminDomains extends DomainManagerController
             $this->getFilters(
                 [
                     'language' => Configure::get('Blesta.language'),
-                    'company_id' => Configure::get('Blesta.company_id'),
-                    'module_type' => 'registrar'
+                    'company_id' => Configure::get('Blesta.company_id')
                 ],
                 $post_filters
             )
@@ -774,8 +773,6 @@ class AdminDomains extends DomainManagerController
      * @param array $options A list of options for building the filters including:
      *  - language The language for filter labels and tooltips
      *  - company_id The company ID to filter modules on
-     *  - client True to fetch the filters for the client interface, false to fetch the filters for the admin interface
-     *  - client_id The client ID to filter modules on
      * @param array $vars A list of submitted inputs that act as defaults for filter fields including:
      *  - module_id The module ID on which to filter packages
      *  - package_name The (partial) name of the packages for which to fetch services
@@ -788,35 +785,30 @@ class AdminDomains extends DomainManagerController
         Loader::loadModels($this, ['ModuleManager']);
         Loader::loadHelpers($this, ['Form']);
 
-        if (!isset($options['client'])) {
-            $options['client'] = false;
-        }
 
         $fields = new InputFields();
 
         // Set module ID filter
-        if (!$options['client']) {
-            $modules = $this->Form->collapseObjectArray(
-                $this->ModuleManager->getAll($options['company_id'], 'name', 'asc', ['type' => 'registrar']),
-                'name',
-                'id'
-            );
+        $modules = $this->Form->collapseObjectArray(
+            $this->ModuleManager->getAll($options['company_id'], 'name', 'asc', ['type' => 'registrar']),
+            'name',
+            'id'
+        );
 
 
-            $module = $fields->label(
-                Language::_('AdminDomains.getfilters.field_module_id', true),
-                'module_id'
-            );
-            $module->attach(
-                $fields->fieldSelect(
-                    'filters[module_id]',
-                    ['' => Language::_('AdminDomains.getfilters.any', true)] + $modules,
-                    isset($vars['module_id']) ? $vars['module_id'] : null,
-                    ['id' => 'module_id', 'class' => 'form-control']
-                )
-            );
-            $fields->setField($module);
-        }
+        $module = $fields->label(
+            Language::_('AdminDomains.getfilters.field_module_id', true),
+            'module_id'
+        );
+        $module->attach(
+            $fields->fieldSelect(
+                'filters[module_id]',
+                ['' => Language::_('AdminDomains.getfilters.any', true)] + $modules,
+                isset($vars['module_id']) ? $vars['module_id'] : null,
+                ['id' => 'module_id', 'class' => 'form-control']
+            )
+        );
+        $fields->setField($module);
 
         // Set the package name filter
         $package_name = $fields->label(
