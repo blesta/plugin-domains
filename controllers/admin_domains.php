@@ -790,7 +790,10 @@ class AdminDomains extends DomainManagerController
 
         // Set module ID filter
         $modules = $this->Form->collapseObjectArray(
-            $this->ModuleManager->getAll($options['company_id'], 'name', 'asc', ['type' => 'registrar']),
+            array_merge(
+                $this->ModuleManager->getByClass('none', $options['company_id']),
+                $this->ModuleManager->getAll($options['company_id'], 'name', 'asc', ['type' => 'registrar'])
+            ),
             'name',
             'id'
         );
