@@ -390,9 +390,15 @@
             $(this).closest('.qtip').find('.qtip-close').click();
         });
 
-        // Sync Register and Renew price
-        $('.table input[name*="price"]').change(function() {
-            $(this).parent().parent().find('input[name*="price_renews"]').val($(this).val());
+        // Sync Register, Renew and Transfer price
+        $('.table input[name*="[price]"]').change(function() {
+            if ($(this).parent().parent().find('input[name*="[price_renews]"]').val() == 0) {
+                $(this).parent().parent().find('input[name*="[price_renews]"]').val($(this).val());
+            }
+
+            if ($(this).parent().parent().find('input[name*="[price_transfer]"]').val() == 0) {
+                $(this).parent().parent().find('input[name*="[price_transfer]"]').val($(this).val());
+            }
         });
 
         // Disable pricing rows

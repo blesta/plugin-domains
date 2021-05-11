@@ -380,9 +380,11 @@ class DomainManagerTlds extends DomainManagerModel
                         ? $this->Form->collapseObjectArray($package->option_groups, 'id', 'id')
                         : []
                 ),
-                'meta' => isset($vars['meta'])
-                    ? $vars['meta']
-                    : (isset($package->meta) ? $package->meta : []),
+                'meta' => (array) (
+                    isset($vars['meta'])
+                        ? array_merge((isset($package->meta) ? (array) $package->meta : []), $vars['meta'])
+                        : (isset($package->meta) ? $package->meta : [])
+                )
             ];
             $fields = json_decode(json_encode($fields), true);
 
