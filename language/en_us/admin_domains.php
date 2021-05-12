@@ -54,8 +54,9 @@ $lang['AdminDomains.registrars.confirm_uninstall'] = 'Are you sure you want to u
 
 
 $lang['AdminDomains.configuration.boxtitle'] = 'Domain Manager - Configuration';
-$lang['AdminDomains.configuration.heading_tld'] = 'TLD Settings';
-$lang['AdminDomains.configuration.heading_notice'] = 'Notice Settings';
+$lang['AdminDomains.configuration.tab_general'] = 'General';
+$lang['AdminDomains.configuration.tab_notifications'] = 'Notifications';
+$lang['AdminDomains.configuration.tab_advanced'] = 'Advanced';
 
 $lang['AdminDomains.configuration.field_package_group'] = 'TLD Package Group';
 $lang['AdminDomains.configuration.field_dns_management_option_group'] = 'DNS Management Option Group';
