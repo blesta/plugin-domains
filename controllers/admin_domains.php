@@ -725,31 +725,43 @@ class AdminDomains extends DomainManagerController
         $package = $this->Packages->get($this->get[0], true);
         $tld = $this->DomainManagerTlds->getByPackage($this->get[0]);
 
-        // Get TLD package fields
-        $package_fields = $this->DomainManagerTlds->getTldFields($this->get[0]);
+        try {
+            // Get TLD package fields
+            $package_fields = $this->DomainManagerTlds->getTldFields($this->get[0]);
 
-        // Add a pricing for terms 1-10 years for each currency
-        foreach ($currencies as $currency) {
-            for ($i = 1; $i <= 10; $i++) {
-                // Check if the term already exists
-                $exists_pricing = false;
-                foreach ($package->pricing as &$pricing) {
-                    if ($pricing->term == $i && $pricing->period == 'year'&& $pricing->currency == $currency) {
-                        $exists_pricing = true;
-                        $pricing->enabled = true;
+            // Add a pricing for terms 1-10 years for each currency
+            foreach ($currencies as $currency) {
+                for ($i = 1; $i <= 10; $i++) {
+                    // Check if the term already exists
+                    $exists_pricing = false;
+                    foreach ($package->pricing as &$pricing) {
+                        if ($pricing->term == $i && $pricing->period == 'year' && $pricing->currency == $currency) {
+                            $exists_pricing = true;
+                            $pricing->enabled = true;
+                        }
+                    }
+
+                    // If the term not exists, add a placeholder for that term
+                    if (!$exists_pricing) {
+                        $package->pricing[] = (object)[
+                            'term' => $i,
+                            'period' => 'year',
+                            'currency' => $currency,
+                            'enabled' => false
+                        ];
                     }
                 }
-
-                // If the term not exists, add a placeholder for that term
-                if (!$exists_pricing) {
-                    $package->pricing[] = (object) [
-                        'term' => $i,
-                        'period' => 'year',
-                        'currency' => $currency,
-                        'enabled' => false
-                    ];
-                }
             }
+        } catch (Throwable $e) {
+            echo $this->setMessage(
+                'error',
+                ['exception' => [$e->getMessage()]],
+                true,
+                ['show_close' => false],
+                false
+            );
+
+            return false;
         }
 
         echo $this->partial(
