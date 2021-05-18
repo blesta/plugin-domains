@@ -7,16 +7,16 @@ Used to handle various aspects of domain management and sales
 1. You can install the plugin via composer:
 
     ```
-    composer require blesta/domain_manager
+    composer require blesta/domains
     ```
 
-2. OR upload the source code to a /plugins/domain_manager/ directory within
+2. OR upload the source code to a /plugins/domains/ directory within
 your Blesta installation path.
 
     For example:
 
     ```
-    /var/www/html/blesta/plugins/domain_manager/
+    /var/www/html/blesta/plugins/domains/
     ```
 
 3. Log in to your admin Blesta account and navigate to

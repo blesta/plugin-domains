@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
-    "name": "DomainManagerPlugin.name",
-    "description": "DomainManagerPlugin.description",
+    "name": "DomainsPlugin.name",
+    "description": "DomainsPlugin.description",
     "authors": [
         {
             "name": "Phillips Data, Inc.",

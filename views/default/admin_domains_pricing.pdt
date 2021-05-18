@@ -455,7 +455,7 @@
                     // Update pricing table
                     $(this).blestaRequest(
                         "GET",
-                        '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/pricing/' . $tld->package_id . '/');?>',
+                        '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/pricing/' . $tld->package_id . '/');?>',
                         null,
                         function(response) {
                             $('#<?php echo $this->Html->safe('edit_tld' . str_replace('.', '_', $tld->tld));?>').parent().html(response);
@@ -465,7 +465,7 @@
                     // Update TLD row
                     $(this).blestaRequest(
                         "GET",
-                        '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');?>',
+                        '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/tlds/');?>',
                         null,
                         function(tlds) {
                             var parent = $('body').find('#body_container .gap_row');
