@@ -347,7 +347,7 @@ class AdminDomains extends DomainsController
     public function configuration()
     {
         $this->uses(
-            ['Companies', 'EmailGroups', 'PackageGroups', 'PackageOptionGroups', 'Domains.DomainTlds']
+            ['Companies', 'EmailGroups', 'PackageGroups', 'PackageOptionGroups', 'Domains.DomainsTlds']
         );
         $company_id = Configure::get('Blesta.company_id');
         $vars = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
@@ -386,7 +386,7 @@ class AdminDomains extends DomainsController
         }
 
         $this->set('vars', $vars);
-        $this->set('tlds', $this->DomainTlds->getAll(['company_id' => $company_id]));
+        $this->set('tlds', $this->DomainsTlds->getAll(['company_id' => $company_id]));
         $this->set(
             'package_groups',
             $this->Form->collapseObjectArray($this->PackageGroups->getAll($company_id, 'standard'), 'name', 'id')
@@ -435,7 +435,7 @@ class AdminDomains extends DomainsController
      */
     public function tlds()
     {
-        $this->uses(['ModuleManager', 'Packages', 'Domains.DomainTlds']);
+        $this->uses(['ModuleManager', 'Packages', 'Domains.DomainsTlds']);
         $this->helpers(['Form']);
 
         $company_id = Configure::get('Blesta.company_id');
@@ -468,9 +468,9 @@ class AdminDomains extends DomainsController
                 $params['module_id'] = (int) $vars['module'];
             }
 
-            $this->DomainTlds->add($params);
+            $this->DomainsTlds->add($params);
 
-            if (($errors = $this->DomainTlds->errors())) {
+            if (($errors = $this->DomainsTlds->errors())) {
                 $this->flashMessage('error', $errors);
             } else {
                 $this->flashMessage('message', Language::_('AdminDomains.!success.tld_added', true));
@@ -479,7 +479,7 @@ class AdminDomains extends DomainsController
         }
 
         // Fetch all the TLDs and their pricing for this company
-        $tlds = $this->DomainTlds->getAll(['company_id' => $company_id]);
+        $tlds = $this->DomainsTlds->getAll(['company_id' => $company_id]);
 
         foreach ($tlds as $key => $tld) {
             $package = $this->Packages->get($tld->package_id);
@@ -516,20 +516,20 @@ class AdminDomains extends DomainsController
      */
     public function disableTld()
     {
-        $this->uses(['Packages', 'Domains.DomainTlds']);
+        $this->uses(['Packages', 'Domains.DomainsTlds']);
 
         // Fetch the package belonging to this TLD
         if (
             !isset($this->post['id'])
             || !($package = $this->Packages->get($this->post['id']))
-            || !($tld = $this->DomainTlds->getByPackage($this->post['id']))
+            || !($tld = $this->DomainsTlds->getByPackage($this->post['id']))
         ) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
-        $this->DomainTlds->disable($tld->tld);
+        $this->DomainsTlds->disable($tld->tld);
 
-        if (($errors = $this->DomainTlds->errors())) {
+        if (($errors = $this->DomainsTlds->errors())) {
             $this->flashMessage('error', $errors);
         } else {
             $this->flashMessage('message', Language::_('AdminDomains.!success.tld_disabled', true));
@@ -542,20 +542,20 @@ class AdminDomains extends DomainsController
      */
     public function enableTld()
     {
-        $this->uses(['Packages', 'Domains.DomainTlds']);
+        $this->uses(['Packages', 'Domains.DomainsTlds']);
 
         // Fetch the package belonging to this TLD
         if (
             !isset($this->post['id'])
             || !($package = $this->Packages->get($this->post['id']))
-            || !($tld = $this->DomainTlds->getByPackage($this->post['id']))
+            || !($tld = $this->DomainsTlds->getByPackage($this->post['id']))
         ) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
-        $this->DomainTlds->enable($tld->tld);
+        $this->DomainsTlds->enable($tld->tld);
 
-        if (($errors = $this->DomainTlds->errors())) {
+        if (($errors = $this->DomainsTlds->errors())) {
             $this->flashMessage('error', $errors);
         } else {
             $this->flashMessage('message', Language::_('AdminDomains.!success.tld_enabled', true));
@@ -568,14 +568,14 @@ class AdminDomains extends DomainsController
      */
     public function sortTlds()
     {
-        $this->uses(['Domains.DomainTlds']);
+        $this->uses(['Domains.DomainsTlds']);
 
         if (!$this->isAjax()) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
         if (!empty($this->post)) {
-            $this->DomainTlds->sortTlds($this->post['tlds']);
+            $this->DomainsTlds->sortTlds($this->post['tlds']);
         }
 
         return false;
@@ -586,7 +586,7 @@ class AdminDomains extends DomainsController
      */
     public function updateTlds()
     {
-        $this->uses(['Domains.DomainTlds']);
+        $this->uses(['Domains.DomainsTlds']);
 
         if (!$this->isAjax()) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
@@ -614,9 +614,9 @@ class AdminDomains extends DomainsController
                     'module_id' => $vars['module'],
                 ]);
 
-                $this->DomainTlds->edit($tld, $vars);
+                $this->DomainsTlds->edit($tld, $vars);
 
-                if (($errors = $this->DomainTlds->errors())) {
+                if (($errors = $this->DomainsTlds->errors())) {
                     $error = $errors;
                 }
             }
@@ -652,7 +652,7 @@ class AdminDomains extends DomainsController
      */
     public function pricing()
     {
-        $this->uses(['Packages', 'Currencies', 'Languages', 'Domains.DomainTlds']);
+        $this->uses(['Packages', 'Currencies', 'Languages', 'Domains.DomainsTlds']);
         $this->helpers(['Form', 'CurrencyFormat']);
 
         // Fetch the package belonging to this TLD
@@ -660,24 +660,24 @@ class AdminDomains extends DomainsController
             !$this->isAjax()
             || !isset($this->get[0])
             || !($package = $this->Packages->get($this->get[0]))
-            || !($tld = $this->DomainTlds->getByPackage($this->get[0]))
+            || !($tld = $this->DomainsTlds->getByPackage($this->get[0]))
         ) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
         if (!empty($this->post)) {
-            $tld = $this->DomainTlds->getByPackage($this->get[0]);
+            $tld = $this->DomainsTlds->getByPackage($this->get[0]);
 
             // Update TLD package
-            $this->DomainTlds->edit($tld->tld, $this->post);
+            $this->DomainsTlds->edit($tld->tld, $this->post);
 
             // Update pricing
             if (!isset($this->post['pricing'])) {
                 $this->post['pricing'] = [];
             }
-            $this->DomainTlds->updatePricings($tld->tld, $this->post['pricing']);
+            $this->DomainsTlds->updatePricings($tld->tld, $this->post['pricing']);
 
-            if (($errors = $this->DomainTlds->errors())) {
+            if (($errors = $this->DomainsTlds->errors())) {
                 echo json_encode([
                     'message' => $this->setMessage(
                         'error',
@@ -723,10 +723,10 @@ class AdminDomains extends DomainsController
 
         // Get TLD package
         $package = $this->Packages->get($this->get[0], true);
-        $tld = $this->DomainTlds->getByPackage($this->get[0]);
+        $tld = $this->DomainsTlds->getByPackage($this->get[0]);
 
         // Get TLD package fields
-        $package_fields = $this->DomainTlds->getTldFields($this->get[0]);
+        $package_fields = $this->DomainsTlds->getTldFields($this->get[0]);
 
         // Add a pricing for terms 1-10 years for each currency
         foreach ($currencies as $currency) {

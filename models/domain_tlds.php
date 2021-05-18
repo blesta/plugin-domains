@@ -6,7 +6,7 @@ use Blesta\Core\Util\Input\Fields\InputFields;
  *
  * @link https://www.blesta.com Blesta
  */
-class DomainTlds extends DomainsModel
+class DomainsTlds extends DomainsModel
 {
     /**
      * Returns a list of TLDs for the given company
@@ -197,7 +197,7 @@ class DomainTlds extends DomainsModel
                 'id_protection',
                 'epp_code'
             ];
-            $this->Record->insert('domain_tlds', $vars, $fields);
+            $this->Record->insert('domains_tlds', $vars, $fields);
 
             return $vars;
         }
@@ -415,7 +415,7 @@ class DomainTlds extends DomainsModel
             $fields = ['tld', 'package_id', 'dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
             $this->Record->where('tld', '=', $vars['tld'])
                 ->where('company_id', '=', Configure::get('Blesta.company_id'))
-                ->update('domain_tlds', $vars, $fields);
+                ->update('domains_tlds', $vars, $fields);
 
             return $vars['tld'];
         }
@@ -472,7 +472,7 @@ class DomainTlds extends DomainsModel
                         } else {
                             $this->Input->setErrors([
                                 'count' => [
-                                    'message' => Language::_('DomainTlds.!error.package_pricing.count', true)
+                                    'message' => Language::_('DomainsTlds.!error.package_pricing.count', true)
                                 ]
                             ]);
 
@@ -540,7 +540,7 @@ class DomainTlds extends DomainsModel
         if (count($package->pricing) <= 1) {
             $this->Input->setErrors([
                 'count' => [
-                    'message' => Language::_('DomainTlds.!error.package_pricing.count', true)
+                    'message' => Language::_('DomainsTlds.!error.package_pricing.count', true)
                 ]
             ]);
 
@@ -571,7 +571,7 @@ class DomainTlds extends DomainsModel
         } else if (!empty($services_pricing) && $one_year_term == $pricing_id) {
             $this->Input->setErrors([
                 'service' => [
-                    'message' => Language::_('DomainTlds.!error.package_pricing.service', true)
+                    'message' => Language::_('DomainsTlds.!error.package_pricing.service', true)
                 ]
             ]);
 
@@ -733,7 +733,7 @@ class DomainTlds extends DomainsModel
         $group_name = $module->moduleGroupName();
 
         if (empty($group_name)) {
-            $group_name = Language::_('DomainTlds.getTldFields.group', true);
+            $group_name = Language::_('DomainsTlds.getTldFields.group', true);
         }
 
         // Remove TLDs and Nameservers fields
@@ -822,9 +822,9 @@ class DomainTlds extends DomainsModel
     public function delete($tld)
     {
         // Delete a TLD
-        $this->Record->from('domain_tlds')->
-            where('domain_tlds.tld', '=', $tld)->
-            where('domain_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
+        $this->Record->from('domains_tlds')->
+            where('domains_tlds.tld', '=', $tld)->
+            where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
             delete();
     }
 
@@ -866,7 +866,7 @@ class DomainTlds extends DomainsModel
     {
         foreach($tlds as $order => $package_id) {
             $this->Record->where('package_id', '=', $package_id)
-                ->update('domain_tlds', ['order' => $order]);
+                ->update('domains_tlds', ['order' => $order]);
         }
     }
 
@@ -886,34 +886,34 @@ class DomainTlds extends DomainsModel
      */
     private function getTlds(array $filters = [])
     {
-        $this->Record->select()->from('domain_tlds');
+        $this->Record->select()->from('domains_tlds');
 
         if (isset($filters['tld'])) {
-            $this->Record->where('domain_tlds.tld', '=', $filters['tld']);
+            $this->Record->where('domains_tlds.tld', '=', $filters['tld']);
         }
 
         if (isset($filters['company_id'])) {
-            $this->Record->where('domain_tlds.company_id', '=', $filters['company_id']);
+            $this->Record->where('domains_tlds.company_id', '=', $filters['company_id']);
         }
 
         if (isset($filters['package_id'])) {
-            $this->Record->where('domain_tlds.package_id', '=', $filters['package_id']);
+            $this->Record->where('domains_tlds.package_id', '=', $filters['package_id']);
         }
 
         if (isset($filters['dns_management'])) {
-            $this->Record->where('domain_tlds.dns_management', '=', $filters['dns_management']);
+            $this->Record->where('domains_tlds.dns_management', '=', $filters['dns_management']);
         }
 
         if (isset($filters['email_forwarding'])) {
-            $this->Record->where('domain_tlds.email_forwarding', '=', $filters['email_forwarding']);
+            $this->Record->where('domains_tlds.email_forwarding', '=', $filters['email_forwarding']);
         }
 
         if (isset($filters['id_protection'])) {
-            $this->Record->where('domain_tlds.id_protection', '=', $filters['id_protection']);
+            $this->Record->where('domains_tlds.id_protection', '=', $filters['id_protection']);
         }
 
         if (isset($filters['epp_code'])) {
-            $this->Record->where('domain_tlds.epp_code', '=', $filters['epp_code']);
+            $this->Record->where('domains_tlds.epp_code', '=', $filters['epp_code']);
         }
 
         return $this->Record;
@@ -950,7 +950,7 @@ class DomainTlds extends DomainsModel
                     'if_set' => $edit,
                     'rule' => 'isEmpty',
                     'negate' => true,
-                    'message' => Language::_('DomainTlds.!error.tld.empty', true)
+                    'message' => Language::_('DomainsTlds.!error.tld.empty', true)
                 ],
                 'exists' => [
                     'if_set' => $edit,
@@ -959,40 +959,40 @@ class DomainTlds extends DomainsModel
                         Loader::loadComponents($parent, ['Record']);
 
                         $count = $this->Record->select()
-                            ->from('domain_tlds')
+                            ->from('domains_tlds')
                             ->where('tld', '=', $tld)
                             ->where('company_id', '=', Configure::get('Blesta.company_id'))
                             ->numResults();
 
                         return !($count > 0);
                     },
-                    'message' => Language::_('DomainTlds.!error.tld.exists', true)
+                    'message' => Language::_('DomainsTlds.!error.tld.exists', true)
                 ],
                 'length' => [
                     'if_set' => true,
                     'rule' => ['minLength', 3],
-                    'message' => Language::_('DomainTlds.!error.tld.length', true)
+                    'message' => Language::_('DomainsTlds.!error.tld.length', true)
                 ]
             ],
             'package_id' => [
                 'exists' => [
                     'if_set' => true,
                     'rule' => [[$this, 'validateExists'], 'id', 'packages'],
-                    'message' => Language::_('DomainTlds.!error.package_id.exists', true)
+                    'message' => Language::_('DomainsTlds.!error.package_id.exists', true)
                 ]
             ],
             'package_group_id' => [
                 'exists' => [
                     'if_set' => true,
                     'rule' => [[$this, 'validateExists'], 'id', 'package_groups'],
-                    'message' => Language::_('DomainTlds.!error.package_group_id.exists', true)
+                    'message' => Language::_('DomainsTlds.!error.package_group_id.exists', true)
                 ]
             ],
             'module_id' => [
                 'exists' => [
                     'if_set' => true,
                     'rule' => [[$this, 'validateExists'], 'id', 'modules'],
-                    'message' => Language::_('DomainTlds.!error.module_id.exists', true)
+                    'message' => Language::_('DomainsTlds.!error.module_id.exists', true)
                 ],
                 'service' => [
                     'if_set' => true,
@@ -1008,7 +1008,7 @@ class DomainTlds extends DomainsModel
 
                         if (is_null($package_id) && isset($vars['tld'])) {
                             $tld = $this->Record->select()
-                                ->from('domain_tlds')
+                                ->from('domains_tlds')
                                 ->where('tld', '=', $vars['tld'])
                                 ->where('company_id', '=', Configure::get('Blesta.company_id'))
                                 ->fetch();
@@ -1040,35 +1040,35 @@ class DomainTlds extends DomainsModel
 
                         return !($services > 0);
                     },
-                    'message' => Language::_('DomainTlds.!error.module_id.service', true)
+                    'message' => Language::_('DomainsTlds.!error.module_id.service', true)
                 ],
             ],
             'company_id' => [
                 'exists' => [
                     'if_set' => $edit,
                     'rule' => [[$this, 'validateExists'], 'id', 'companies'],
-                    'message' => Language::_('DomainTlds.!error.company_id.exists', true)
+                    'message' => Language::_('DomainsTlds.!error.company_id.exists', true)
                 ]
             ],
             'dns_management' => [
                 'valid' => [
                     'if_set' => true,
                     'rule' => ['in_array', [0, 1]],
-                    'message' => Language::_('DomainTlds.!error.dns_management.valid', true)
+                    'message' => Language::_('DomainsTlds.!error.dns_management.valid', true)
                 ]
             ],
             'email_forwarding' => [
                 'valid' => [
                     'if_set' => true,
                     'rule' => ['in_array', [0, 1]],
-                    'message' => Language::_('DomainTlds.!error.email_forwarding.valid', true)
+                    'message' => Language::_('DomainsTlds.!error.email_forwarding.valid', true)
                 ]
             ],
             'id_protection' => [
                 'valid' => [
                     'if_set' => true,
                     'rule' => ['in_array', [0, 1]],
-                    'message' => Language::_('DomainTlds.!error.id_protection.valid', true)
+                    'message' => Language::_('DomainsTlds.!error.id_protection.valid', true)
                 ]
             ]
             ,
@@ -1076,7 +1076,7 @@ class DomainTlds extends DomainsModel
                 'valid' => [
                     'if_set' => true,
                     'rule' => ['in_array', [0, 1]],
-                    'message' => Language::_('DomainTlds.!error.epp_code.valid', true)
+                    'message' => Language::_('DomainsTlds.!error.epp_code.valid', true)
                 ]
             ]
         ];

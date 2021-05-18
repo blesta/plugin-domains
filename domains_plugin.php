@@ -42,7 +42,7 @@ class DomainsPlugin extends Plugin
         Configure::load('domains', dirname(__FILE__) . DS . 'config' . DS);
 
         try {
-            // domain_tlds
+            // domains_tlds
             $this->Record
                 ->setField('tld', ['type' => 'VARCHAR', 'size' => "64"])
                 ->setField('company_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
@@ -53,7 +53,7 @@ class DomainsPlugin extends Plugin
                 ->setField('id_protection', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setField('epp_code', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setKey(['tld', 'company_id'], 'primary')
-                ->create('domain_tlds', true);
+                ->create('domains_tlds', true);
         } catch (Exception $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -185,13 +185,13 @@ class DomainsPlugin extends Plugin
      */
     private function addTldPackages($company_id, $package_group_id)
     {
-        Loader::loadModels($this, ['ModuleManager', 'Packages', 'Domains.DomainTlds']);
+        Loader::loadModels($this, ['ModuleManager', 'Packages', 'Domains.DomainsTlds']);
 
         // Get the none module for this company
         $none_modules = $this->ModuleManager->getByClass('none', $company_id);
 
         // Create a package for each tld and add it to the database
-        $default_tlds = $this->DomainTlds->getDefaultTlds();
+        $default_tlds = $this->DomainsTlds->getDefaultTlds();
         $tld_packages_setting = $this->Companies->getSetting($company_id, 'domains_tld_packages');
         $tld_packages = (array) ($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
 
@@ -201,9 +201,9 @@ class DomainsPlugin extends Plugin
                 && ($package = $this->Packages->get($tld_packages[$default_tld]))
             ) {
                 $tld_params = ['tld' => $default_tld, 'company_id' => $company_id, 'package_id' => $package->id];
-                $this->DomainTlds->add($tld_params);
+                $this->DomainsTlds->add($tld_params);
 
-                $errors = $this->DomainTlds->errors();
+                $errors = $this->DomainsTlds->errors();
                 if (!empty($errors)) {
                     $this->logger->error(json_encode($errors));
                     $this->Input->setErrors($errors);
@@ -214,10 +214,10 @@ class DomainsPlugin extends Plugin
 
             // Create new package
             $tld_params = ['tld' => $default_tld, 'company_id' => $company_id, 'package_group_id' => $package_group_id];
-            $tld = $this->DomainTlds->add($tld_params);
+            $tld = $this->DomainsTlds->add($tld_params);
             $package_id = isset($tld['package_id']) ? $tld['package_id'] : null;
 
-            $errors = $this->DomainTlds->errors();
+            $errors = $this->DomainsTlds->errors();
             if (!empty($errors)) {
                 $this->logger->error(json_encode($errors));
                 $this->Input->setErrors($errors);
@@ -314,7 +314,7 @@ class DomainsPlugin extends Plugin
         if ($last_instance) {
             try {
                 // Remove database tables
-                $this->Record->drop('domain_tlds');
+                $this->Record->drop('domains_tlds');
             } catch (Exception $e) {
                 // Error dropping... no permission?
                 $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -336,8 +336,8 @@ class DomainsPlugin extends Plugin
             );
             $tld_packages = ($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
             $tlds = $this->Record->select()->
-                from('domain_tlds')->
-                where('domain_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
+                from('domains_tlds')->
+                where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
                 fetchAll();
 
             foreach ($tlds as $tld) {
@@ -351,8 +351,8 @@ class DomainsPlugin extends Plugin
             );
 
             // Remove company TLDs
-            $this->Record->from('domain_tlds')->
-                where('domain_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
+            $this->Record->from('domains_tlds')->
+                where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
                 delete();
         }
 
@@ -537,7 +537,7 @@ class DomainsPlugin extends Plugin
      */
     private function cronDomainTermChange()
     {
-        Loader::loadModels($this, ['Domains.DomainTlds', 'Companies', 'Services']);
+        Loader::loadModels($this, ['Domains.DomainsTlds', 'Companies', 'Services']);
         Loader::loadHelpers($this, ['Form']);
 
         $company_id = Configure::get('Blesta.company_id');
@@ -579,7 +579,7 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels(
             $this,
-            ['Domains.DomainTlds', 'Clients', 'Companies', 'Contacts', 'Emails', 'Services']
+            ['Domains.DomainsTlds', 'Clients', 'Companies', 'Contacts', 'Emails', 'Services']
         );
         Loader::loadHelpers($this, ['Form']);
 
