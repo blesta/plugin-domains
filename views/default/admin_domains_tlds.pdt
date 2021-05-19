@@ -14,7 +14,7 @@
         ];
 
         $this->Widget->clear();
-        $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css', ['id' => 'domain_manager_styles']);
+        $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css', ['id' => 'domains_styles']);
         $this->Widget->setLinkButtons($link_buttons);
         $this->Widget->create($this->_('AdminDomains.tlds.boxtitle_tld_pricing', true), ['id' => 'admin_domains_tlds'], (isset($render_section) ? $render_section : null));
         ?>
@@ -79,16 +79,16 @@
                         ?>
                     </td>
                     <td>
-                        <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/';?>" class="modal"><?php $this->_('AdminDomains.tlds.option_edit');?></a>,
+                        <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/';?>" class="modal"><?php $this->_('AdminDomains.tlds.option_edit');?></a>,
 
                         <?php
                         if ($tld->package->status == 'inactive') {
                         ?>
                             <?php
-                            $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/enabletld/');
+                            $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/enabletld/');
                             $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
                             ?>
-                            <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/enabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true));?>"><?php $this->_('AdminDomains.tlds.option_enable');?></a>
+                            <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/enabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true));?>"><?php $this->_('AdminDomains.tlds.option_enable');?></a>
                             <?php
                             $this->Form->end();
                             ?>
@@ -96,10 +96,10 @@
                         } else {
                         ?>
                             <?php
-                            $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/disabletld/');
+                            $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/disabletld/');
                             $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
                             ?>
-                            <a href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/disabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true));?>"><?php $this->_('AdminDomains.tlds.option_disable');?></a>
+                            <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/disabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true));?>"><?php $this->_('AdminDomains.tlds.option_disable');?></a>
                             <?php
                             $this->Form->end();
                             ?>
@@ -151,7 +151,7 @@
                         ?>
                     </td>
                     <td>
-                        <a class="add_tld" href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/tlds/';?>"><?php $this->_('AdminDomains.tlds.option_add');?></a>
+                        <a class="add_tld" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/tlds/';?>"><?php $this->_('AdminDomains.tlds.option_add');?></a>
                     </td>
                 </tr>
             </tfoot>
@@ -176,7 +176,7 @@
 
                 $(this).blestaRequest(
                     "POST",
-                    '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/sorttlds/');?>',
+                    '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/sorttlds/');?>',
                     $(this).sortable("serialize") + "&" + $.param(params),
                     null,
                     null,
@@ -242,7 +242,7 @@
         $('body').on('change', '#admin_domains_tlds .table tbody input.quickupdate, .table tbody select.quickupdate', function() {
             $(this).blestaRequest(
                 "POST",
-                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/updatetlds/');?>',
+                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updatetlds/');?>',
                 getPartialForm('tlds'),
                 function(response) {
                     if (response.hasOwnProperty('message')) {
@@ -253,7 +253,7 @@
                     // Restore TLD settings
                     $(this).blestaRequest(
                         "GET",
-                        '<?php echo $this->Html->safe($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');?>',
+                        '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/tlds/');?>',
                         null,
                         function(tlds) {
                             $(tlds.replacer).html(tlds.content);
