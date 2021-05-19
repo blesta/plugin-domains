@@ -703,18 +703,6 @@ class DomainsPlugin extends Plugin
                         ]
                     ]
                 ]
-            ],
-            // Widget
-            [
-                'action' => 'widget_staff_home',
-                'uri' => 'plugin/domains/admin_main/index/',
-                'name' => 'DomainsPlugin.widget_staff_home.main',
-            ],
-            // Client Widget
-            [
-                'action' => 'widget_client_home',
-                'uri' => 'plugin/domains/client_main/index/',
-                'name' => 'DomainsPlugin.widget_client_home.main',
             ]
         ];
     }
