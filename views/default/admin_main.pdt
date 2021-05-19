@@ -3,13 +3,13 @@
 
         $this->Widget->clear();
         $this->Widget->create($this->_('AdminMain.index.boxtitle', true), ['id'=>'admin_main'], (isset($render_section) ? $render_section : null));
-        $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_main/index/', ['id' => 'index']);
+        $this->Form->create($this->base_uri . 'plugin/domains/admin_main/index/', ['id' => 'index']);
         ?>
 
         <div class="col-md-12">
             <p>This is a very simple action page, created by the extension generator.  The content
-                of this file can be modified at <?php echo PLUGINDIR . 'domain_manager' . DS . 'views' . DS . 'default' . DS . 'admin_main_index.pdt';?>.
-                Included here is a basic form that can be submitted and is handled by the index() method in <?php echo PLUGINDIR . 'domain_manager' . DS . 'controllers' . DS . 'admin_main.php';?>
+                of this file can be modified at <?php echo PLUGINDIR . 'domains' . DS . 'views' . DS . 'default' . DS . 'admin_main_index.pdt';?>.
+                Included here is a basic form that can be submitted and is handled by the index() method in <?php echo PLUGINDIR . 'domains' . DS . 'controllers' . DS . 'admin_main.php';?>
             </p>
             <div class="button_row">
                 <button class="btn btn-default pull-right">

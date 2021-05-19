@@ -5,7 +5,7 @@
  *
  * @link https://www.blesta.com Blesta
  */
-class AdminMain extends DomainManagerController
+class AdminMain extends DomainsController
 {
     /**
      * Setup

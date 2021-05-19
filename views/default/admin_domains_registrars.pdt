@@ -37,17 +37,17 @@
                         if (!(isset($registrars[$i]->installed) ? $registrars[$i]->installed : true)) {
                         ?>
                             <?php
-                            $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/installregistrar/' . (isset($registrars[$i]->class) ? $registrars[$i]->class : null) . '/', ['class' => 'disable-on-submit']);
+                            $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/installregistrar/' . (isset($registrars[$i]->class) ? $registrars[$i]->class : null) . '/', ['class' => 'disable-on-submit']);
                             $this->Form->fieldHidden('id', (isset($registrars[$i]->class) ? $registrars[$i]->class : null));
                             $this->Form->fieldSubmit('save', $this->_('AdminDomains.registrars.btn_install', true), ['class' => 'btn btn-primary pull-right']);
                             $this->Form->end();
                             ?>
                         <?php
                         } else {
-                            $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/uninstallregistrar');
+                            $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/uninstallregistrar');
                             $this->Form->fieldHidden('id', (isset($registrars[$i]->id) ? $registrars[$i]->id : null));
                             ?>
-                                <a class="btn btn-danger pull-right manage" href="<?php echo $this->base_uri . 'plugin/domain_manager/admin_domains/uninstallregistrar/' . (isset($registrars[$i]->id) ? $this->Html->safe($registrars[$i]->id, true) : null) . '/';?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.registrars.confirm_uninstall', true));?>"><?php $this->_('AdminDomains.registrars.btn_uninstall');?></a>
+                                <a class="btn btn-danger pull-right manage" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/uninstallregistrar/' . (isset($registrars[$i]->id) ? $this->Html->safe($registrars[$i]->id, true) : null) . '/';?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.registrars.confirm_uninstall', true));?>"><?php $this->_('AdminDomains.registrars.btn_uninstall');?></a>
                             <?php
                             $this->Form->end();
 
@@ -58,7 +58,7 @@
                             } else {
                             ?>
                                 <?php
-                                $this->Form->create($this->base_uri . 'plugin/domain_manager/admin_domains/upgraderegistrar/' . (isset($registrars[$i]->id) ? $registrars[$i]->id : null) . '/', ['class' => 'disable-on-submit']);
+                                $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/upgraderegistrar/' . (isset($registrars[$i]->id) ? $registrars[$i]->id : null) . '/', ['class' => 'disable-on-submit']);
                                 $this->Form->fieldHidden('id', (isset($registrars[$i]->id) ? $registrars[$i]->id : null));
                                 $this->Form->fieldSubmit('save', $this->_('AdminDomains.registrars.btn_upgrade', true), ['class' => 'btn btn-primary pull-right']);
                                 $this->Form->end();

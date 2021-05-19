@@ -5,7 +5,7 @@
  *
  * @link https://www.blesta.com Blesta
  */
-class ClientMain extends DomainManagerController
+class ClientMain extends DomainsController
 {
     /**
      * Setup
