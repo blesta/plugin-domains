@@ -385,6 +385,7 @@ class AdminDomains extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configuration/');
         }
 
+        $this->set('tab', isset($this->get['tab']) ? $this->get['tab'] : 'general');
         $this->set('vars', $vars);
         $this->set('tlds', $this->DomainsTlds->getAll(['company_id' => $company_id]));
         $this->set(
@@ -401,6 +402,48 @@ class AdminDomains extends DomainsController
         $this->set('first_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_1'));
         $this->set('second_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_2'));
         $this->set('expiration_notice_template', $this->EmailGroups->getByAction('Domains.domain_expiration'));
+    }
+
+    /**
+     * Imports packages from outside the domain manager
+     */
+    public function importPackages()
+    {
+        $this->uses(['Packages']);
+        if (!empty($this->post)) {
+
+            $installed_registrars = $this->ModuleManager->getAll(
+                Configure::get('Blesta.company_id'),
+                'name',
+                'asc',
+                ['type' => 'registrar']
+            );
+            foreach ($installed_registrars as $installed_registrar) {
+                $packages = $this->Packages->getAll(
+                    Configure::get('Blesta.company_id'),
+                    ['name' => 'ASC'],
+                    null,
+                    null,
+                    ['module_id' => $installed_registrar->id]
+                );
+
+                foreach ($packages as $package) {
+                    var_dump($package);
+                }
+            }
+
+            // Set success message
+            $this->setMessage(
+                'message',
+                Language::_('AdminDomains.!success.packages_imported', true),
+                false,
+                null,
+                false
+            );
+            $vars = $this->post;
+        }
+
+        $this->set('vars', ($vars ?? []));
     }
 
     /**

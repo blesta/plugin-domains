@@ -4,22 +4,30 @@ echo (isset($message) ? $message : null);
 $tabs = [
     [
         'name' => $this->_('AdminDomains.configuration.tab_general', true),
-        'current' => true,
+        'current' => (($tab ?? 'general') == 'general'),
         'attributes' => [
             'id' => 'general_tab'
         ]
     ],
     [
         'name' => $this->_('AdminDomains.configuration.tab_notifications', true),
-        'current' => false,
+        'current' => (($tab ?? 'general') == 'notifications'),
         'attributes' => [
             'id' => 'notifications_tab'
         ]
     ],
     [
         'name' => $this->_('AdminDomains.configuration.tab_advanced', true),
+        'current' => (($tab ?? 'general') == 'advanced'),
+        'attributes' => [
+            'id' => 'advanced_tab'
+        ]
+    ],
+    [
+        'name' => $this->_('AdminDomains.configuration.tab_importpackages', true),
         'current' => false,
         'attributes' => [
+            'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/'),
             'id' => 'advanced_tab'
         ]
     ]
@@ -125,9 +133,6 @@ $this->Widget->end();
 $(document).ready(function() {
     $('#html').blestaBindWysiwygEditor({language: '<?php echo substr(Configure::get('Blesta.language'), 0, 2); ?>'});
 
-    // Set tabs
-    $('#tab_notifications').hide();
-    $('#tab_advanced').hide();
 
     $('.tab_slider ul li').on('click', function() {
         $('.tab_slider ul li').removeClass('current');
@@ -151,5 +156,7 @@ $(document).ready(function() {
         $('#tab_notifications').hide();
         $('#tab_advanced').show();
     });
+
+    $('#<?php echo ($tab ?? 'general');?>_tab').click();
 });
 </script>

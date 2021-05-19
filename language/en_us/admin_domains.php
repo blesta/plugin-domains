@@ -8,6 +8,7 @@ $lang['AdminDomains.!success.tld_enabled'] = 'The TLD was successfully enabled!'
 $lang['AdminDomains.!success.tld_added'] = 'The TLD was successfully added!';
 $lang['AdminDomains.!success.tld_updated'] = 'The TLD was successfully updated!';
 $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
+$lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
 
 
 $lang['AdminDomains.browse.boxtitle_browse'] = 'Domain Manager - Browse Domains';
@@ -57,6 +58,7 @@ $lang['AdminDomains.configuration.boxtitle'] = 'Domain Manager - Configuration';
 $lang['AdminDomains.configuration.tab_general'] = 'General';
 $lang['AdminDomains.configuration.tab_notifications'] = 'Notifications';
 $lang['AdminDomains.configuration.tab_advanced'] = 'Advanced';
+$lang['AdminDomains.configuration.tab_importpackages'] = 'Import Packages';
 
 $lang['AdminDomains.configuration.field_package_group'] = 'TLD Package Group';
 $lang['AdminDomains.configuration.field_dns_management_option_group'] = 'DNS Management Option Group';
@@ -80,6 +82,15 @@ $lang['AdminDomains.configuration.tooltip_first_reminder_days_before'] = 'Select
 $lang['AdminDomains.configuration.tooltip_second_reminder_days_before'] = 'Select the number of days before a domain expires to send the second renewal email (4-10 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_expiration_notice_days_after'] = 'Select the number of days after a domain expires to send the expiration notice email (1-5 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that we may highlight on order forms through the Order Plugin.  This feature is not yet supported';
+
+
+$lang['AdminDomains.importpackages.boxtitle'] = 'Configuration';
+$lang['AdminDomains.importpackages.description'] = 'This tool will search for any packages that use a registrar module and clone the package once for each of the TLDs assigned to it.  If multiple packages are assigned to the same TLD, then the domain manager will clone the first one it encounters and ignore the others.';
+
+$lang['AdminDomains.importpackages.field_migrate_services'] = 'Migrate Services';
+$lang['AdminDomains.importpackages.tooltip_migrate_services'] = 'When checked, any services assigned to the cloned packages will be migrated to the newly create packages.';
+
+$lang['AdminDomains.importpackages.field_submit'] = 'Import Packages';
 
 
 $lang['AdminDomains.tlds.boxtitle_tld_pricing'] = 'Domain Manager - TLD Pricing';
