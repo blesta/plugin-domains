@@ -23,10 +23,8 @@ $lang['AdminDomains.browse.option_delete'] = 'Delete';
 $lang['AdminDomains.browse.option_manage'] = 'Manage';
 $lang['AdminDomains.browse.confirm_delete'] = 'Are you sure you want to delete this domain service?';
 $lang['AdminDomains.browse.text_none'] = 'There are no registered domains.';
-$lang['AdminDomains.browse.text_yes'] = 'Yes';
-$lang['AdminDomains.browse.text_no'] = 'No';
-$lang['AdminDomains.browse.on'] = 'On';
-$lang['AdminDomains.browse.off'] = 'Off';
+$lang['AdminDomains.browse.text_on'] = 'On';
+$lang['AdminDomains.browse.text_off'] = 'Off';
 
 $lang['AdminDomains.browse.category_active'] = 'Active';
 $lang['AdminDomains.browse.category_canceled'] = 'Canceled';
