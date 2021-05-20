@@ -85,10 +85,10 @@ $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that we may h
 
 
 $lang['AdminDomains.importpackages.boxtitle'] = 'Configuration';
-$lang['AdminDomains.importpackages.description'] = 'This tool will search for any packages that use a registrar module and clone the package once for each of the TLDs assigned to it.  If multiple packages are assigned to the same TLD, then the domain manager will clone the first one it encounters and ignore the others.';
+$lang['AdminDomains.importpackages.description'] = 'This tool will search for any packages that use a registrar module and clone the package once for each of the TLDs assigned to it.  If multiple packages are assigned to the same TLD, then the domain manager will clone the first one it encounters and ignore the others.  Only yearly pricings will be cloned.  If a package has no yearly pricings it will be skipped.';
 
 $lang['AdminDomains.importpackages.field_migrate_services'] = 'Migrate Services';
-$lang['AdminDomains.importpackages.tooltip_migrate_services'] = 'When checked, any services assigned to the cloned packages will be migrated to the newly create packages.';
+$lang['AdminDomains.importpackages.tooltip_migrate_services'] = 'When checked, any services assigned to the cloned packages will be migrated to the newly create packages.  This will only apply to services with a yearly pricing period.';
 
 $lang['AdminDomains.importpackages.field_submit'] = 'Import Packages';
 

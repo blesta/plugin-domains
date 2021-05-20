@@ -411,6 +411,7 @@ class AdminDomains extends DomainsController
     {
         $this->uses(['Companies', 'Domains.DomainsTlds', 'Packages']);
         if (!empty($this->post)) {
+            $this->Packages->begin();
             // Get company settings
             $company_id = Configure::get('Blesta.company_id');
             $company_settings = $this->Form->collapseObjectArray(
@@ -458,14 +459,21 @@ class AdminDomains extends DomainsController
                         }
 
                         $package_id = $this->clonePackage($package, $tld, $company_settings);
-                        $created_tlds[$tld] = $package_id;
+                        if ($package_id) {
+                            $created_tlds[$tld] = $package_id;
+                        }
                     }
                 }
             }
 
             // Create new TLDs
-            foreach ($created_tlds as $created_tld) {
-                // Add the tld
+            foreach ($created_tlds as $created_tld => $package_id) {
+                // Add the TLD
+                $tld_vars = [
+                    'tld' => $created_tld,
+                    'package_id' => $package_id
+                ];
+                $this->DomainsTlds->add($tld_vars);
             }
 
             // Set success message
@@ -477,6 +485,7 @@ class AdminDomains extends DomainsController
                 false
             );
             $vars = $this->post;
+            $this->Packages->commit();
         }
 
         $this->set('vars', ($vars ?? []));
@@ -489,7 +498,6 @@ class AdminDomains extends DomainsController
      */
     private function clonePackage(stdClass $package, $tld, array $company_settings)
     {
-        var_dump($package);
         $package_vars = ['pricing' => [], 'groups' => [], 'plugins' => [], 'option_groups' => [],
             'names' => [], 'descriptions' => [], 'email_content' => []
         ];
@@ -505,6 +513,7 @@ class AdminDomains extends DomainsController
 
         // Parse name details
         foreach ($package->names as $name) {
+            $name->name = $tld;
             $package_vars['names'][] = (array)$name;
         }
 
@@ -520,8 +529,15 @@ class AdminDomains extends DomainsController
 
         // Parse pricing details
         foreach ($package->pricing as $pricing) {
-            unset($pricing->id, $pricing->pricing_id, $pricing->package_id);
-            $package_vars['pricing'][] = (array)$pricing;
+            if ($pricing->period == 'year') {
+                unset($pricing->id, $pricing->pricing_id, $pricing->package_id);
+                $package_vars['pricing'][] = (array)$pricing;
+            }
+        }
+
+        // Don't clone the package if it has no yearly prices
+        if (empty($package_vars['pricing'])) {
+            return;
         }
 
         // Parse plugin details
@@ -557,13 +573,67 @@ class AdminDomains extends DomainsController
             }
         }
 
-        $this->Packages->begin();
         $package_id = $this->Packages->add($package_vars);
-        var_dump($package_id, $this->Packages->errors());
-        $this->Packages->rollback();
 
-        die;
-        return $package_vars;
+        // Migrate the services from the cloned package to the new one if they match the TLD
+        if (isset($this->post['migrate_services'])) {
+            $this->migrateServices($package->id, $package_id, $tld);
+        }
+
+        return $package_id;
+    }
+
+    /**
+     * Migrates services from one package to another based on the TLD
+     *
+     * @param int $from_package_id The package from which to migrate services
+     * @param int $to_package_id The package to which services should be migrated
+     * @param string $tld The TLD on which to base migrations
+     */
+    private function migrateServices($from_package_id, $to_package_id, $tld)
+    {
+        $this->uses(['Services']);
+        $services = $this->Services->getAll(
+            ['date_added' => 'DESC'],
+            true,
+            ['package_id' => $from_package_id, 'status' => 'all']
+        );
+        $to_package = $this->Packages->get($to_package_id);
+
+        $package_group_id = $to_package->groups[0]->id;
+
+        foreach ($services as $service) {
+            // Find the correct pricing to which to move
+            $from_pricing = $this->Services->getPackagePricing($service->pricing_id);
+            $pricing_id = null;
+            foreach ($to_package->pricing as $pricing) {
+                if ($pricing->term == $from_pricing->term
+                    && $pricing->period == $from_pricing->period
+                    && $pricing->currency == $from_pricing->currency
+                ) {
+                    $pricing_id = $pricing->id;
+                    break;
+                } elseif ($pricing->term == '1'
+                    && $pricing->period == 'year'
+                    && $pricing->currency == $from_pricing->currency
+                ) {
+                    $pricing_id = $pricing->id;
+                }
+            }
+
+            // Don't migrate the service if there is no matching pricing
+            if (!$pricing_id) {
+                break;
+            }
+
+            if (str_ends_with(strtolower($service->name), $tld)) {
+                $this->Services->edit(
+                    $service->id,
+                    ['pricing_id' => $pricing_id, 'package_group_id' => $package_group_id],
+                    true
+                );
+            }
+        }
     }
 
     /**
