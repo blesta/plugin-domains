@@ -4,7 +4,7 @@
  *
  * @link https://www.blesta.com Blesta
  */
-class DomainManagerModel extends AppModel
+class DomainsModel extends AppModel
 {
     public function __construct()
     {

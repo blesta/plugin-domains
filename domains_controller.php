@@ -4,7 +4,7 @@
  *
  * @link https://www.blesta.com Blesta
  */
-class DomainManagerController extends AppController
+class DomainsController extends AppController
 {
     /**
      * Require admin to be login and setup the view
@@ -23,7 +23,7 @@ class DomainManagerController extends AppController
             dirname(__FILE__) . DS . 'language' . DS
         );
         Language::loadLang(
-            'domain_manager_controller',
+            'domains_controller',
             null,
             dirname(__FILE__) . DS . 'language' . DS
         );

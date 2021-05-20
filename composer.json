@@ -1,5 +1,5 @@
 {
-    "name": "blesta/domain_manager",
+    "name": "blesta/domains",
     "description": "Used to handle various aspects of domain management and sales",
     "license": "proprietary",
     "type": "blesta-plugin",

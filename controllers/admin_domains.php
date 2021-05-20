@@ -7,7 +7,7 @@ use Blesta\Core\Util\Input\Fields\InputFields;
  *
  * @link https://www.blesta.com Blesta
  */
-class AdminDomains extends DomainManagerController
+class AdminDomains extends DomainsController
 {
     /**
      * Setup
@@ -25,7 +25,7 @@ class AdminDomains extends DomainManagerController
      */
     public function index()
     {
-        $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/browse/');
+        $this->redirect($this->base_uri . 'plugin/domains/admin_domains/browse/');
     }
 
     /**
@@ -62,7 +62,7 @@ class AdminDomains extends DomainManagerController
 
         $package_group_id = $this->Companies->getSetting(
             Configure::get('Blesta.company_id'),
-            'domain_manager_package_group'
+            'domains_package_group'
         );
         $service_filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
 
@@ -147,7 +147,7 @@ class AdminDomains extends DomainManagerController
             Configure::get('Blesta.pagination'),
             [
                 'total_results' => $total_results,
-                'uri' => $this->base_uri . 'plugin/domain_manager/admin_domains/browse/',
+                'uri' => $this->base_uri . 'plugin/domains/admin_domains/browse/',
                 'params' => ['sort' => $sort, 'order' => $order]
             ]
         );
@@ -183,7 +183,7 @@ class AdminDomains extends DomainManagerController
         // Require authorization to update a client's service
         if (!$this->authorized('admin_clients', 'editservice')) {
             $this->flashMessage('error', Language::_('AppController.!error.unauthorized_access', true), null, false);
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/browse/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/browse/');
         }
 
         // Only include service IDs in the list
@@ -255,14 +255,14 @@ class AdminDomains extends DomainManagerController
     public function installRegistrar()
     {
         if (!isset($this->post['id'])) {
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/registrars/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/registrars/');
         }
 
         $module_id = $this->ModuleManager->add(['class' => $this->post['id'], 'company_id' => $this->company_id]);
 
         if (($errors = $this->ModuleManager->errors())) {
             $this->flashMessage('error', $errors, null, false);
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/registrars/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/registrars/');
         } else {
             $this->flashMessage('message', Language::_('AdminDomains.!success.registrar_installed', true), null, false);
             $this->redirect($this->base_uri . 'settings/company/modules/manage/' . $module_id);
@@ -275,7 +275,7 @@ class AdminDomains extends DomainManagerController
     public function uninstallRegistrar()
     {
         if (!isset($this->post['id']) || !($module = $this->ModuleManager->get($this->post['id']))) {
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/registrars/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/registrars/');
         }
 
         $this->ModuleManager->delete($this->post['id']);
@@ -290,7 +290,7 @@ class AdminDomains extends DomainManagerController
                 false
             );
         }
-        $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/registrars/');
+        $this->redirect($this->base_uri . 'plugin/domains/admin_domains/registrars/');
     }
 
     /**
@@ -300,7 +300,7 @@ class AdminDomains extends DomainManagerController
     {
         // Fetch the module to upgrade
         if (!isset($this->post['id']) || !($module = $this->ModuleManager->get($this->post['id']))) {
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/registrars/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/registrars/');
         }
 
         $this->ModuleManager->upgrade($this->post['id']);
@@ -315,7 +315,7 @@ class AdminDomains extends DomainManagerController
                 false
             );
         }
-        $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/registrars/');
+        $this->redirect($this->base_uri . 'plugin/domains/admin_domains/registrars/');
     }
 
     /**
@@ -347,30 +347,30 @@ class AdminDomains extends DomainManagerController
     public function configuration()
     {
         $this->uses(
-            ['Companies', 'EmailGroups', 'PackageGroups', 'PackageOptionGroups', 'DomainManager.DomainManagerTlds']
+            ['Companies', 'EmailGroups', 'PackageGroups', 'PackageOptionGroups', 'Domains.DomainsTlds']
         );
         $company_id = Configure::get('Blesta.company_id');
         $vars = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
-        $vars['domain_manager_spotlight_tlds'] = isset($vars['domain_manager_spotlight_tlds'])
-            ? json_decode($vars['domain_manager_spotlight_tlds'], true)
+        $vars['domains_spotlight_tlds'] = isset($vars['domains_spotlight_tlds'])
+            ? json_decode($vars['domains_spotlight_tlds'], true)
             : [];
         if (!empty($this->post)) {
             // Leave the spotlight tlds out for now as we don't intend to include them in the initial release
             $accepted_settings = [
-//                'domain_manager_spotlight_tlds',
-                'domain_manager_package_group',
-                'domain_manager_dns_management_option_group',
-                'domain_manager_email_forwarding_option_group',
-                'domain_manager_id_protection_option_group',
-                'domain_manager_epp_code_option_group',
-                'domain_manager_first_reminder_days_before',
-                'domain_manager_second_reminder_days_before',
-                'domain_manager_expiration_notice_days_after'
+//                'domains_spotlight_tlds',
+                'domains_package_group',
+                'domains_dns_management_option_group',
+                'domains_email_forwarding_option_group',
+                'domains_id_protection_option_group',
+                'domains_epp_code_option_group',
+                'domains_first_reminder_days_before',
+                'domains_second_reminder_days_before',
+                'domains_expiration_notice_days_after'
             ];
-            if (!isset($this->post['domain_manager_spotlight_tlds'])) {
-                $this->post['domain_manager_spotlight_tlds'] = [];
+            if (!isset($this->post['domains_spotlight_tlds'])) {
+                $this->post['domains_spotlight_tlds'] = [];
             }
-            $this->post['domain_manager_spotlight_tlds'] = json_encode($this->post['domain_manager_spotlight_tlds']);
+            $this->post['domains_spotlight_tlds'] = json_encode($this->post['domains_spotlight_tlds']);
             $this->Companies->setSettings(
                 $company_id,
                 array_intersect_key($this->post, array_flip($accepted_settings))
@@ -382,11 +382,11 @@ class AdminDomains extends DomainManagerController
                 null,
                 false
             );
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/configuration/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configuration/');
         }
 
         $this->set('vars', $vars);
-        $this->set('tlds', $this->DomainManagerTlds->getAll(['company_id' => $company_id]));
+        $this->set('tlds', $this->DomainsTlds->getAll(['company_id' => $company_id]));
         $this->set(
             'package_groups',
             $this->Form->collapseObjectArray($this->PackageGroups->getAll($company_id, 'standard'), 'name', 'id')
@@ -398,9 +398,9 @@ class AdminDomains extends DomainManagerController
         $this->set('first_reminder_days', $this->getDays(26, 35));
         $this->set('second_reminder_days', $this->getDays(4, 10));
         $this->set('expiration_notice_days', $this->getDays(1, 5));
-        $this->set('first_reminder_template', $this->EmailGroups->getByAction('DomainManager.domain_renewal_1'));
-        $this->set('second_reminder_template', $this->EmailGroups->getByAction('DomainManager.domain_renewal_2'));
-        $this->set('expiration_notice_template', $this->EmailGroups->getByAction('DomainManager.domain_expiration'));
+        $this->set('first_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_1'));
+        $this->set('second_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_2'));
+        $this->set('expiration_notice_template', $this->EmailGroups->getByAction('Domains.domain_expiration'));
     }
 
     /**
@@ -435,7 +435,7 @@ class AdminDomains extends DomainManagerController
      */
     public function tlds()
     {
-        $this->uses(['ModuleManager', 'Packages', 'DomainManager.DomainManagerTlds']);
+        $this->uses(['ModuleManager', 'Packages', 'Domains.DomainsTlds']);
         $this->helpers(['Form']);
 
         $company_id = Configure::get('Blesta.company_id');
@@ -468,18 +468,18 @@ class AdminDomains extends DomainManagerController
                 $params['module_id'] = (int) $vars['module'];
             }
 
-            $this->DomainManagerTlds->add($params);
+            $this->DomainsTlds->add($params);
 
-            if (($errors = $this->DomainManagerTlds->errors())) {
+            if (($errors = $this->DomainsTlds->errors())) {
                 $this->flashMessage('error', $errors);
             } else {
                 $this->flashMessage('message', Language::_('AdminDomains.!success.tld_added', true));
             }
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
         // Fetch all the TLDs and their pricing for this company
-        $tlds = $this->DomainManagerTlds->getAll(['company_id' => $company_id]);
+        $tlds = $this->DomainsTlds->getAll(['company_id' => $company_id]);
 
         foreach ($tlds as $key => $tld) {
             $package = $this->Packages->get($tld->package_id);
@@ -516,25 +516,25 @@ class AdminDomains extends DomainManagerController
      */
     public function disableTld()
     {
-        $this->uses(['Packages', 'DomainManager.DomainManagerTlds']);
+        $this->uses(['Packages', 'Domains.DomainsTlds']);
 
         // Fetch the package belonging to this TLD
         if (
             !isset($this->post['id'])
             || !($package = $this->Packages->get($this->post['id']))
-            || !($tld = $this->DomainManagerTlds->getByPackage($this->post['id']))
+            || !($tld = $this->DomainsTlds->getByPackage($this->post['id']))
         ) {
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
-        $this->DomainManagerTlds->disable($tld->tld);
+        $this->DomainsTlds->disable($tld->tld);
 
-        if (($errors = $this->DomainManagerTlds->errors())) {
+        if (($errors = $this->DomainsTlds->errors())) {
             $this->flashMessage('error', $errors);
         } else {
             $this->flashMessage('message', Language::_('AdminDomains.!success.tld_disabled', true));
         }
-        $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+        $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
     }
 
     /**
@@ -542,25 +542,25 @@ class AdminDomains extends DomainManagerController
      */
     public function enableTld()
     {
-        $this->uses(['Packages', 'DomainManager.DomainManagerTlds']);
+        $this->uses(['Packages', 'Domains.DomainsTlds']);
 
         // Fetch the package belonging to this TLD
         if (
             !isset($this->post['id'])
             || !($package = $this->Packages->get($this->post['id']))
-            || !($tld = $this->DomainManagerTlds->getByPackage($this->post['id']))
+            || !($tld = $this->DomainsTlds->getByPackage($this->post['id']))
         ) {
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
-        $this->DomainManagerTlds->enable($tld->tld);
+        $this->DomainsTlds->enable($tld->tld);
 
-        if (($errors = $this->DomainManagerTlds->errors())) {
+        if (($errors = $this->DomainsTlds->errors())) {
             $this->flashMessage('error', $errors);
         } else {
             $this->flashMessage('message', Language::_('AdminDomains.!success.tld_enabled', true));
         }
-        $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+        $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
     }
 
     /**
@@ -568,14 +568,14 @@ class AdminDomains extends DomainManagerController
      */
     public function sortTlds()
     {
-        $this->uses(['DomainManager.DomainManagerTlds']);
+        $this->uses(['Domains.DomainsTlds']);
 
         if (!$this->isAjax()) {
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
         if (!empty($this->post)) {
-            $this->DomainManagerTlds->sortTlds($this->post['tlds']);
+            $this->DomainsTlds->sortTlds($this->post['tlds']);
         }
 
         return false;
@@ -586,10 +586,10 @@ class AdminDomains extends DomainManagerController
      */
     public function updateTlds()
     {
-        $this->uses(['DomainManager.DomainManagerTlds']);
+        $this->uses(['Domains.DomainsTlds']);
 
         if (!$this->isAjax()) {
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
         if (!empty($this->post)) {
@@ -614,9 +614,9 @@ class AdminDomains extends DomainManagerController
                     'module_id' => $vars['module'],
                 ]);
 
-                $this->DomainManagerTlds->edit($tld, $vars);
+                $this->DomainsTlds->edit($tld, $vars);
 
-                if (($errors = $this->DomainManagerTlds->errors())) {
+                if (($errors = $this->DomainsTlds->errors())) {
                     $error = $errors;
                 }
             }
@@ -652,7 +652,7 @@ class AdminDomains extends DomainManagerController
      */
     public function pricing()
     {
-        $this->uses(['Packages', 'Currencies', 'Languages', 'DomainManager.DomainManagerTlds']);
+        $this->uses(['Packages', 'Currencies', 'Languages', 'Domains.DomainsTlds']);
         $this->helpers(['Form', 'CurrencyFormat']);
 
         // Fetch the package belonging to this TLD
@@ -660,24 +660,24 @@ class AdminDomains extends DomainManagerController
             !$this->isAjax()
             || !isset($this->get[0])
             || !($package = $this->Packages->get($this->get[0]))
-            || !($tld = $this->DomainManagerTlds->getByPackage($this->get[0]))
+            || !($tld = $this->DomainsTlds->getByPackage($this->get[0]))
         ) {
-            $this->redirect($this->base_uri . 'plugin/domain_manager/admin_domains/tlds/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
         if (!empty($this->post)) {
-            $tld = $this->DomainManagerTlds->getByPackage($this->get[0]);
+            $tld = $this->DomainsTlds->getByPackage($this->get[0]);
 
             // Update TLD package
-            $this->DomainManagerTlds->edit($tld->tld, $this->post);
+            $this->DomainsTlds->edit($tld->tld, $this->post);
 
             // Update pricing
             if (!isset($this->post['pricing'])) {
                 $this->post['pricing'] = [];
             }
-            $this->DomainManagerTlds->updatePricings($tld->tld, $this->post['pricing']);
+            $this->DomainsTlds->updatePricings($tld->tld, $this->post['pricing']);
 
-            if (($errors = $this->DomainManagerTlds->errors())) {
+            if (($errors = $this->DomainsTlds->errors())) {
                 echo json_encode([
                     'message' => $this->setMessage(
                         'error',
@@ -723,11 +723,11 @@ class AdminDomains extends DomainManagerController
 
         // Get TLD package
         $package = $this->Packages->get($this->get[0], true);
-        $tld = $this->DomainManagerTlds->getByPackage($this->get[0]);
+        $tld = $this->DomainsTlds->getByPackage($this->get[0]);
 
         try {
             // Get TLD package fields
-            $package_fields = $this->DomainManagerTlds->getTldFields($this->get[0]);
+            $package_fields = $this->DomainsTlds->getTldFields($this->get[0]);
 
             // Add a pricing for terms 1-10 years for each currency
             foreach ($currencies as $currency) {
