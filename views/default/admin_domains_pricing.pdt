@@ -38,7 +38,7 @@
 
         $this->Widget->clear();
         $this->Widget->setTabs($tabs);
-        $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, $tld->tld), ['id' => 'edit_tld' . str_replace('.', '_', $tld->tld)], (isset($render_section) ? $render_section : null));
+        $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, (isset($tld->tld) ? $tld->tld : null)), ['id' => 'edit_tld' . str_replace('.', '_', (isset($tld->tld) ? $tld->tld : null))], (isset($render_section) ? $render_section : null));
 
         $this->Form->create(null, ['id' => 'edit_tld']);
         ?>
