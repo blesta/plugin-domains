@@ -10,7 +10,7 @@
                         'uri' => $this->base_uri . 'plugin/domains/admin_domains/browse/',
                         'children' => [
                             [
-                                'name' => Language::_('AdminDomains.leftnav.nav_domains_browse', true),
+                                'name' => Language::_('AdminDomains.leftnav.nav_domains_domains', true),
                                 'uri' => $this->base_uri . 'plugin/domains/admin_domains/browse/'
                             ],
                             [

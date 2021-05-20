@@ -160,9 +160,9 @@ $lang['AdminDomains.getfilters.field_service_meta'] = 'Domain Name';
 
 
 $lang['AdminDomains.leftnav.nav_domains'] = 'Domains';
-$lang['AdminDomains.leftnav.nav_domains_browse'] = 'Browse';
-$lang['AdminDomains.leftnav.nav_domains_whois'] = 'Whois Lookup';
+$lang['AdminDomains.leftnav.nav_domains_domains'] = 'Domains';
+$lang['AdminDomains.leftnav.nav_domains_whois'] = 'Whois Domain Lookup';
 $lang['AdminDomains.leftnav.nav_tlds'] = 'TLDs';
-$lang['AdminDomains.leftnav.nav_tlds_pricing'] = 'Pricing';
+$lang['AdminDomains.leftnav.nav_tlds_pricing'] = 'TLD Pricing';
 $lang['AdminDomains.leftnav.nav_tlds_registrars'] = 'Registrars';
 $lang['AdminDomains.leftnav.nav_configuration'] = 'Configuration';
