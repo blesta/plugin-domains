@@ -28,7 +28,7 @@ class ClientMain extends DomainsController
     public function index()
     {
         // Load required models
-        $this->uses(['Companies', 'ModuleManager', 'Services', 'Packages']);
+        $this->uses(['Domains.DomainsTlds', 'Companies', 'ModuleManager', 'Services', 'Packages']);
 
         // Set filters from post input
         $post_filters = [];
@@ -66,6 +66,11 @@ class ClientMain extends DomainsController
             $services_filters
         );
         $total_results = $this->Services->getListCount($this->client->id, $status, false, null, $services_filters);
+
+        // Get TLD for each service
+        foreach ($services as &$service) {
+            $service->tld = $this->DomainsTlds->getByPackage($service->package_id);
+        }
 
         // Set the number of services of each type, not including children
         $status_count = [

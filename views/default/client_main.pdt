@@ -27,7 +27,7 @@
                     <table class="table table-curved table-striped-alt table-hover" id="domains">
                         <thead>
                             <tr>
-                                <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/index/' . (isset($status) ? $status : null) . '/?sort=name&order=' . ($sort == 'name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'name' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_tld');?></a></th>
+                                <th><?php $this->_('ClientMain.index.heading_tld');?></th>
                                 <th><?php $this->_('ClientMain.index.heading_domain');?></th>
                                 <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/index/' . (isset($status) ? $status : null) . '/?sort=term&order=' . ($sort == 'term' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'term' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_term');?></a></th>
                                 <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/index/' . (isset($status) ? $status : null) . '/?sort=date_added&order=' . ($sort == 'date_added' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_added' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_registration_date');?></a></th>
@@ -56,7 +56,7 @@
                             for ($i = 0; $i < $num_domains; $i++) {
                             ?>
                             <tr class="expand service_info">
-                                <td><?php (print (isset($domains[$i]->package->name) ? $this->Html->safe($domains[$i]->package->name) : null));?></td>
+                                <td><?php (print (isset($domains[$i]->tld->tld) ? $this->Html->safe($domains[$i]->tld->tld) : null));?></td>
                                 <td><?php (print (isset($domains[$i]->name) ? $this->Html->safe($domains[$i]->name) : null));?></td>
                                 <td>
                                     <?php
