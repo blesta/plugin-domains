@@ -676,33 +676,10 @@ class DomainsPlugin extends Plugin
         return [
             // Domains Nav
             [
-                'action' => 'nav_primary_staff',
-                'uri' => 'plugin/domains/admin_domains/index/',
-                'name' => 'DomainsPlugin.nav_primary_staff.main',
-                'options' => [
-                    'sub' => [
-                        [
-                            'uri' => 'plugin/domains/admin_domains/browse',
-                            'name' => 'DomainsPlugin.nav_primary_staff.browse'
-                        ],
-                        [
-                            'uri' => 'plugin/domains/admin_domains/tlds',
-                            'name' => 'DomainsPlugin.nav_primary_staff.tlds'
-                        ],
-                        [
-                            'uri' => 'plugin/domains/admin_domains/registrars',
-                            'name' => 'DomainsPlugin.nav_primary_staff.registrars'
-                        ],
-                        [
-                            'uri' => 'plugin/domains/admin_domains/whois',
-                            'name' => 'DomainsPlugin.nav_primary_staff.whois'
-                        ],
-                        [
-                            'uri' => 'plugin/domains/admin_domains/configuration',
-                            'name' => 'DomainsPlugin.nav_primary_staff.configuration'
-                        ]
-                    ]
-                ]
+                'action' => 'nav_secondary_staff',
+                'uri' => 'plugin/domains/admin_domains/browse/',
+                'name' => 'DomainsPlugin.nav_secondary_staff.domains',
+                'options' => ['parent' => 'packages/']
             ],
             // Widget
             [

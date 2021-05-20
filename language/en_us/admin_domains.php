@@ -148,6 +148,7 @@ $lang['AdminDomains.getPeriods.week'] = 'Week';
 $lang['AdminDomains.getPeriods.month'] = 'Month';
 $lang['AdminDomains.getPeriods.year'] = 'Year';
 
+
 $lang['AdminDomains.getOperators.later'] = 'Later';
 $lang['AdminDomains.getOperators.earlier'] = 'Earlier';
 
@@ -156,3 +157,12 @@ $lang['AdminDomains.getfilters.any'] = 'Any';
 $lang['AdminDomains.getfilters.field_module_id'] = 'Registrar Modules';
 $lang['AdminDomains.getfilters.field_package_name'] = 'TLD';
 $lang['AdminDomains.getfilters.field_service_meta'] = 'Domain Name';
+
+
+$lang['AdminDomains.leftnav.nav_domains'] = 'Domains';
+$lang['AdminDomains.leftnav.nav_domains_browse'] = 'Browse';
+$lang['AdminDomains.leftnav.nav_domains_whois'] = 'Whois Lookup';
+$lang['AdminDomains.leftnav.nav_tlds'] = 'TLDs';
+$lang['AdminDomains.leftnav.nav_tlds_pricing'] = 'Pricing';
+$lang['AdminDomains.leftnav.nav_tlds_registrars'] = 'Registrars';
+$lang['AdminDomains.leftnav.nav_configuration'] = 'Configuration';

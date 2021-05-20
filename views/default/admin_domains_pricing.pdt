@@ -446,7 +446,7 @@
                 function(response) {
                     // Show messages
                     if (response.hasOwnProperty('message')) {
-                        var parent = $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').parents().find('#body_container .gap_row');
+                        var parent = $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').parents().find('#body_container .gap_row #right_outer');
 
                         parent.find('.error_section').remove();
                         parent.prepend(response.message);
