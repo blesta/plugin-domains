@@ -30,8 +30,7 @@ $tabs = [
         'name' => $this->_('AdminDomains.configuration.tab_importpackages', true),
         'current' => true,
         'attributes' => [
-            'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/'),
-            'id' => 'advanced_tab'
+            'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/')
         ]
     ]
 ];

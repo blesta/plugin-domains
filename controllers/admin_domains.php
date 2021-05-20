@@ -409,9 +409,25 @@ class AdminDomains extends DomainsController
      */
     public function importPackages()
     {
-        $this->uses(['Packages']);
+        $this->uses(['Companies', 'Domains.DomainsTlds', 'Packages']);
         if (!empty($this->post)) {
+            // Get company settings
+            $company_id = Configure::get('Blesta.company_id');
+            $company_settings = $this->Form->collapseObjectArray(
+                $this->Companies->getSettings($company_id),
+                'value',
+                'key'
+            );
 
+            // Get the current TLDs
+            $tlds = $this->Form->collapseObjectArray(
+                $this->DomainsTlds->getAll(['company_id' => $company_id]),
+                'package_id',
+                'tld'
+            );
+            $created_tlds = [];
+
+            // Get all the registrar modules
             $installed_registrars = $this->ModuleManager->getAll(
                 Configure::get('Blesta.company_id'),
                 'name',
@@ -419,17 +435,37 @@ class AdminDomains extends DomainsController
                 ['type' => 'registrar']
             );
             foreach ($installed_registrars as $installed_registrar) {
+                // Get all packages for the registrar module
                 $packages = $this->Packages->getAll(
                     Configure::get('Blesta.company_id'),
                     ['name' => 'ASC'],
-                    null,
+                    'active',
                     null,
                     ['module_id' => $installed_registrar->id]
                 );
 
                 foreach ($packages as $package) {
-                    var_dump($package);
+                    $package = $this->Packages->get($package->id);
+                    if (!isset($package->meta->tlds)) {
+                        continue;
+                    }
+
+                    // Clone the package once for each assigned TLD
+                    foreach ($package->meta->tlds as $tld) {
+                        // Skip this TLD if a package already exists for it
+                        if (array_key_exists($tld, $tlds) || array_key_exists($tld, $created_tlds)) {
+                            continue;
+                        }
+
+                        $package_id = $this->clonePackage($package, $tld, $company_settings);
+                        $created_tlds[$tld] = $package_id;
+                    }
                 }
+            }
+
+            // Create new TLDs
+            foreach ($created_tlds as $created_tld) {
+                // Add the tld
             }
 
             // Set success message
@@ -444,6 +480,90 @@ class AdminDomains extends DomainsController
         }
 
         $this->set('vars', ($vars ?? []));
+    }
+
+    /**
+     * Formats details from a package to
+     *
+     * @param stdClass $package
+     */
+    private function clonePackage(stdClass $package, $tld, array $company_settings)
+    {
+        var_dump($package);
+        $package_vars = ['pricing' => [], 'groups' => [], 'plugins' => [], 'option_groups' => [],
+            'names' => [], 'descriptions' => [], 'email_content' => []
+        ];
+
+        // Clone the simple package fields
+        $clone_fields = ['module_id', 'qty', 'client_qty', 'module_row', 'module_group',
+            'taxable', 'single_term', 'status', 'company_id', 'prorata_day', 'prorata_cutoff',
+
+        ];
+        foreach ($clone_fields as $clone_field) {
+            $package_vars[$clone_field] = $package->{$clone_field};
+        }
+
+        // Parse name details
+        foreach ($package->names as $name) {
+            $package_vars['names'][] = (array)$name;
+        }
+
+        // Parse description details
+        foreach ($package->descriptions as $description) {
+            $package_vars['descriptions'][] = (array)$description;
+        }
+
+        // Parse description details
+        foreach ($package->email_content as $email) {
+            $package_vars['email_content'][] = (array)$email;
+        }
+
+        // Parse pricing details
+        foreach ($package->pricing as $pricing) {
+            unset($pricing->id, $pricing->pricing_id, $pricing->package_id);
+            $package_vars['pricing'][] = (array)$pricing;
+        }
+
+        // Parse plugin details
+        foreach ($package->plugins as $plugin) {
+            $package_vars['plugins'][] = $plugin->plugin_id;
+        }
+
+        // Parse option group details
+        foreach ($package->option_groups as $option_group) {
+            $package_vars['option_groups'][] = $option_group->id;
+        }
+
+        // Assign the tld
+        $package_vars['meta'] = (array)$package->meta;
+        $package_vars['meta']['tlds'] = [$tld];
+        // Assign the domain manager package group
+        $package_vars['groups'] = isset($company_settings['domains_package_group'])
+            ? [$company_settings['domains_package_group']]
+            : [];
+        // Mark the package group as hidden
+        $package_vars['hidden'] = '1';
+
+        // Assign domain manager package option groups
+        $option_group_settings = [
+            'domains_dns_management_option_group',
+            'domains_email_forwarding_option_group',
+            'domains_id_protection_option_group',
+            'domains_epp_code_option_group'
+        ];
+        foreach ($option_group_settings as $option_group_setting) {
+            if (isset($company_settings[$option_group_setting])) {
+                $package_vars['option_groups'][] = $company_settings[$option_group_setting];
+            }
+        }
+
+        $this->Packages->begin();
+        $package_id = $this->Packages->add($package_vars);
+        var_dump($package_id, $this->Packages->errors());
+        $this->Packages->rollback();
+
+        die;
+        return $package_vars;
     }
 
     /**
