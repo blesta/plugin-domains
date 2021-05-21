@@ -680,18 +680,6 @@ class DomainsPlugin extends Plugin
                 'uri' => 'plugin/domains/admin_domains/browse/',
                 'name' => 'DomainsPlugin.nav_secondary_staff.domains',
                 'options' => ['parent' => 'packages/']
-            ],
-            // Widget
-            [
-                'action' => 'widget_staff_home',
-                'uri' => 'plugin/domains/admin_main/index/',
-                'name' => 'DomainsPlugin.widget_staff_home.main',
-            ],
-            // Client Widget
-            [
-                'action' => 'widget_client_home',
-                'uri' => 'plugin/domains/client_main/index/',
-                'name' => 'DomainsPlugin.widget_client_home.main',
             ]
         ];
     }
