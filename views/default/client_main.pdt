@@ -1,22 +1,157 @@
-        <?php
-        echo ($message ?? null);
 
-        $this->Widget->clear();
-        $this->Widget->create($this->_('ClientMain.index.boxtitle', true), ['id'=>'client_main'], (isset($render_section) ? $render_section : null));
-        $this->Form->create($this->base_uri . 'plugin/domains/client_main/index/', ['id' => 'index']);
-        ?>
-
+            <?php
+            // Don't show this container when only rendering the widget section
+            if (!(isset($render_section) ? $render_section : null) && !(isset($is_ajax) ? $is_ajax : null)) {
+            ?>
         <div class="col-md-12">
-            <p>This is a very simple action page, created by the extension generator.  The content
-                of this file can be modified at <?php echo PLUGINDIR . 'domains' . DS . 'views' . DS . 'default' . DS . 'client_main_index.pdt';?>.
-                Included here is a basic form that can be submitted and is handled by the index() method in <?php echo PLUGINDIR . 'domains' . DS . 'controllers' . DS . 'client_main.php';?>
-            </p>
-            <div class="button_row">
-                <button class="btn btn-default pull-right">
-                    <i class="fa fa-edit"></i> <?php $this->_('ClientMain.index.submit');?>
-                </button>
+            <?php
+            }
+            $links = [
+                ['name' => $this->_('ClientMain.index.category_active', true) . ' <span class="badge">' . (isset($status_count['active']) ? $this->Html->safe($status_count['active']) : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'active' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/client_main/index/active/', 'class' => 'ajax']],
+                ['name' => $this->_('ClientMain.index.category_pending', true) . ' <span class="badge">' . (isset($status_count['pending']) ? $this->Html->safe($status_count['pending']) : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'pending' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/client_main/index/pending/', 'class' => 'ajax']],
+                ['name' => $this->_('ClientMain.index.category_suspended', true) . ' <span class="badge">' . (isset($status_count['suspended']) ? $this->Html->safe($status_count['suspended']) : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'suspended' ? true : false), 'highlight' => true, 'attributes' => ['href' => $this->base_uri . 'plugin/domains/client_main/index/suspended/', 'class' => 'ajax']],
+                ['name' => $this->_('ClientMain.index.category_deleted', true) . ' <span class="badge">' . (isset($status_count['canceled']) ? $this->Html->safe($status_count['canceled']) : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'canceled' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/client_main/index/canceled/', 'class' => 'ajax']],
+            ];
+
+            $this->WidgetClient->clear();
+            $this->WidgetClient->setLinks($links);
+            $this->WidgetClient->setFilters((isset($filters) ? $filters : null), $this->Html->safe($this->base_uri . 'plugin/domains/client_main/index/' . (isset($status) ? $this->Html->safe($status) : null)), !empty($filter_vars));
+            $this->WidgetClient->setAjaxFiltering();
+            $this->WidgetClient->create($this->_('ClientMain.index.boxtitle_domains', true), ['id' => 'client_domains'], (isset($render_section) ? $render_section : null));
+            $this->WidgetClient->startBody();
+            $this->WidgetClient->buildFilters();
+
+            if ((isset($domains) ? $domains : false) && ($num_domains = count($domains)) > 0) {
+            ?>
+                <div class="table-responsive">
+                    <table class="table table-curved table-striped-alt table-hover" id="domains">
+                        <thead>
+                            <tr>
+                                <th><?php $this->_('ClientMain.index.heading_tld');?></th>
+                                <th><?php $this->_('ClientMain.index.heading_domain');?></th>
+                                <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/index/' . (isset($status) ? $status : null) . '/?sort=term&order=' . ($sort == 'term' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'term' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_term');?></a></th>
+                                <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/index/' . (isset($status) ? $status : null) . '/?sort=date_added&order=' . ($sort == 'date_added' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_added' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_registration_date');?></a></th>
+                                <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/index/' . (isset($status) ? $status : null) . '/?sort=date_renews&order=' . ($sort == 'date_renews' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_renews' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_expiration_date');?></a></th>
+                                <?php
+                                if ((isset($status) ? $status : null) != 'canceled') {
+                                    if ((isset($status) ? $status : null) == 'suspended') {
+                                    ?>
+                                    <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/index/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=date_suspended&order=' . ($sort == 'date_suspended' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_suspended' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_suspension_date');?></a></th>
+                                    <?php
+                                    }
+                                ?>
+                                <th><?php $this->_('ClientMain.index.heading_options');?></th>
+                                <?php
+                                } else {
+                                ?>
+                                <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/index/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=date_canceled&order=' . ($sort == 'date_canceled' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_canceled' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_deletion_date');?></a></th>
+                                <?php
+                                }
+                                ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            // List all domains
+                            for ($i = 0; $i < $num_domains; $i++) {
+                            ?>
+                            <tr class="expand service_info">
+                                <td><?php (print (isset($domains[$i]->tld->tld) ? $this->Html->safe($domains[$i]->tld->tld) : null));?></td>
+                                <td><?php (print (isset($domains[$i]->name) ? $this->Html->safe($domains[$i]->name) : null));?></td>
+                                <td>
+                                    <?php
+                                    if ((isset($domains[$i]->package_pricing->period) ? $domains[$i]->package_pricing->period : null) == 'onetime') {
+                                        (print (isset($periods[$domains[$i]->package_pricing->period]) ? $this->Html->safe($periods[$domains[$i]->package_pricing->period]) : null));
+                                    } else {
+                                        $term = (isset($domains[$i]->package_pricing->term) ? $this->Html->safe($domains[$i]->package_pricing->term) : null);
+                                        $period = ($term == 1 ? (isset($periods[$domains[$i]->package_pricing->period]) ? $periods[$domains[$i]->package_pricing->period] : null) : (isset($periods[$domains[$i]->package_pricing->period . '_plural']) ? $periods[$domains[$i]->package_pricing->period . '_plural'] : null));
+                                        $renewal_price = $this->CurrencyFormat->format((isset($domains[$i]->renewal_price) ? $domains[$i]->renewal_price : null), (isset($domains[$i]->override_currency) ? $domains[$i]->override_currency : (isset($domains[$i]->package_pricing->currency) ? $domains[$i]->package_pricing->currency : null)));
+                                        $this->_('ClientMain.index.recurring_term', false, $this->Html->safe($term), $this->Html->safe($period), $this->Html->safe($renewal_price));
+                                    }
+                                    ?>
+                                </td>
+                                <td><?php echo $this->Date->cast((isset($domains[$i]->date_added) ? $this->Html->safe($domains[$i]->date_added) : null));?></td>
+                                <td>
+                                    <?php echo (empty($domains[$i]->date_renews) ? $this->_('ClientMain.index.text_never', true) : $this->Date->cast($domains[$i]->date_renews));?>
+                                    <?php
+                                    if ((isset($status) ? $status : null) != 'canceled' && !empty($domains[$i]->date_canceled) && $this->Date->toTime($this->Date->cast($domains[$i]->date_canceled)) > $this->Date->toTime($this->Date->cast(date('c')))) {
+                                    ?>
+                                    <a href="#" data-toggle="tooltip" title="<?php $this->_('ClientMain.manage.text_date_to_cancel', false, $this->Date->cast($domains[$i]->date_canceled));?>"><i class="fas fa-clock text-primary"></i></a>
+                                    <?php
+                                    }
+                                    ?>
+                                </td>
+                                <?php
+                                if ((isset($status) ? $status : null) != 'canceled') {
+                                    if ((isset($status) ? $status : null) == 'suspended') {
+                                    ?>
+                                    <td><?php echo (empty($domains[$i]->date_suspended) ? $this->_('ClientMain.index.text_never', true) : $this->Date->cast((isset($domains[$i]->date_suspended) ? $this->Html->safe($domains[$i]->date_suspended) : null)));?></td>
+                                    <?php
+                                    }
+                                ?>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="<?php echo $this->Html->safe($this->base_uri . 'services/manage/' . (isset($domains[$i]->id) ? $domains[$i]->id : null) . '/');?>" class="btn btn-xs btn-light">
+                                            <i class="fas fa-cog fa-fw"></i>  <?php $this->_('ClientMain.index.option_manage');?>
+                                        </a>
+                                    </div>
+                                </td>
+                                <?php
+                                } else {
+                                ?>
+                                <td><?php echo (empty($domains[$i]->date_canceled) ? $this->_('ClientMain.index.text_never', true) : $this->Date->cast((isset($domains[$i]->date_canceled) ? $this->Html->safe($domains[$i]->date_canceled) : null)));?></td>
+                                <?php
+                                }
+                                ?>
+                            </tr>
+                            <tr class="expand_details" id="domains_<?php (print (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null));?>">
+                                <td colspan="7" class="subtable">
+                                </td>
+                            </tr>
+                            <?php
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php
+            } else {
+            ?>
+            <div class="alert alert-info">
+                <p>
+                    <?php
+                    $section_language = $this->_('ClientMain.index.category_' . (isset($status) ? $status : null), true);
+                    $this->_('ClientMain.index.no_results', false, $section_language);
+                    ?>
+                </p>
             </div>
+            <?php
+            }
+
+            $this->WidgetClient->endBody();
+            if ($this->Pagination->hasPages()) {
+                $this->WidgetClient->startFooter();
+                $this->Pagination->build();
+                $this->WidgetClient->endFooter();
+            }
+            $this->WidgetClient->end();
+
+            // Don't show this container when only rendering the widget section
+            if (!(isset($render_section) ? $render_section : null) && !(isset($is_ajax) ? $is_ajax : null)) {
+            ?>
         </div>
-        <?php
-        $this->Form->end();
-        $this->Widget->end();
+            <?php
+            }
+            ?>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Fetch all transactions applied to the given invoices
+        $("#client_domains").on('click', '.service_info a,.service_info input', function(e) {
+            e.stopPropagation();
+        });
+        $("#client_domains").on('click', '.service_info', function() {
+            $(this).blestaUpdateRow("<?php echo (isset($this->base_uri) ? $this->Html->safe($this->base_uri) : null) . 'plugin/domains/client_main/serviceinfo/';?>" + $(this).next("tr").attr("id").split("_")[1], ".subtable");
+        });
+    });
+</script>

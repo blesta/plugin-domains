@@ -1,65 +1,85 @@
 <?php
-echo (isset($message) ? $message : null);
-
-$tabs = [
-    [
-        'name' => $this->_('AdminDomains.configuration.tab_general', true),
-        'current' => false,
-        'attributes' => [
-            'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=general'),
-            'id' => 'general_tab'
-        ]
-    ],
-    [
-        'name' => $this->_('AdminDomains.configuration.tab_notifications', true),
-        'current' => false,
-        'attributes' => [
-            'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=notifications'),
-            'id' => 'notifications_tab'
-        ]
-    ],
-    [
-        'name' => $this->_('AdminDomains.configuration.tab_advanced', true),
-        'current' => false,
-        'attributes' => [
-            'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=advanced'),
-            'id' => 'advanced_tab'
-        ]
-    ],
-    [
-        'name' => $this->_('AdminDomains.configuration.tab_importpackages', true),
-        'current' => true,
-        'attributes' => [
-            'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/')
-        ]
-    ]
-];
-
-$this->Widget->clear();
-$this->Widget->setTabs($tabs);
-$this->Widget->create($this->_('AdminDomains.importpackages.boxtitle', true), ['id' => 'admin_domains_importpackages'], (isset($render_section) ? $render_section : null));
-
-$this->Form->create(null, ['id' => 'importpackages', 'class' => 'disable-on-submit']);
+if (!(isset($is_ajax) ? $is_ajax : false)) {
+    echo (isset($left_nav) ? $left_nav : null);
 ?>
+<div id="right_outer">
+    <?php
+    if (!(isset($render_section) ? $render_section : null)) {
+        echo (isset($message) ? $message : null);
+    }
+    ?>
+    <section id="right_container">
+<?php
+}
 
-<div class="inner">
-    <p><?php $this->_('AdminDomains.importpackages.description');?></p>
-    <div class="pad">
-        <?php
-        $this->Form->fieldCheckbox('migrate_services', '1', (isset($vars['migrate_services']) ? $vars['migrate_services'] : null) === '1', ['id' => 'migrate_services', 'class' => 'inline']);
-        $this->Form->label($this->_('AdminDomains.importpackages.field_migrate_services', true), 'migrate_services', ['class' => 'inline']);
-        ?>
-        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.importpackages.tooltip_migrate_services');?></div></span><br/>
+    echo (isset($message) ? $message : null);
+    $tabs = [
+        [
+            'name' => $this->_('AdminDomains.configuration.tab_general', true),
+            'current' => false,
+            'attributes' => [
+                'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=general'),
+                'id' => 'general_tab'
+            ]
+        ],
+        [
+            'name' => $this->_('AdminDomains.configuration.tab_notifications', true),
+            'current' => false,
+            'attributes' => [
+                'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=notifications'),
+                'id' => 'notifications_tab'
+            ]
+        ],
+        [
+            'name' => $this->_('AdminDomains.configuration.tab_advanced', true),
+            'current' => false,
+            'attributes' => [
+                'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=advanced'),
+                'id' => 'advanced_tab'
+            ]
+        ],
+        [
+            'name' => $this->_('AdminDomains.configuration.tab_importpackages', true),
+            'current' => true,
+            'attributes' => [
+                'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/')
+            ]
+        ]
+    ];
+
+    $this->Widget->clear();
+    $this->Widget->setTabs($tabs);
+    $this->Widget->create($this->_('AdminDomains.importpackages.boxtitle', true), ['id' => 'admin_domains_importpackages'], (isset($render_section) ? $render_section : null));
+
+    $this->Form->create(null, ['id' => 'importpackages', 'class' => 'disable-on-submit']);
+    ?>
+
+    <div class="inner">
+        <p><?php $this->_('AdminDomains.importpackages.description');?></p>
+        <div class="pad">
+            <?php
+            $this->Form->fieldCheckbox('migrate_services', '1', (isset($vars['migrate_services']) ? $vars['migrate_services'] : null) === '1', ['id' => 'migrate_services', 'class' => 'inline']);
+            $this->Form->label($this->_('AdminDomains.importpackages.field_migrate_services', true), 'migrate_services', ['class' => 'inline']);
+            ?>
+            <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.importpackages.tooltip_migrate_services');?></div></span><br/>
+        </div>
+        <div class="button_row">
+            <button class="btn btn-primary pull-right">
+                <i class="fa fa-edit"></i> <?php $this->_('AdminDomains.importpackages.field_submit');?>
+            </button>
+        </div>
     </div>
-    <div class="button_row">
-        <button class="btn btn-primary pull-right">
-            <i class="fa fa-edit"></i> <?php $this->_('AdminDomains.importpackages.field_submit');?>
-        </button>
-    </div>
+    <?php
+    $this->Form->end();
+    $this->Widget->end();
+    ?>
+<?php
+if (!(isset($is_ajax) ? $is_ajax : false)) {
+?>
+    </section>
 </div>
 <?php
-$this->Form->end();
-$this->Widget->end();
+}
 ?>
 <script type="text/javascript">
 $(document).ready(function() {
