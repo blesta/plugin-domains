@@ -33,7 +33,7 @@ class AdminDomains extends DomainsController
      */
     public function browse()
     {
-        $this->uses(['Companies', 'ModuleManager', 'Services']);
+        $this->uses(['Domains.DomainsTlds', 'Companies', 'ModuleManager', 'Services']);
 
         if (!empty($this->post) && isset($this->post['service_ids'])) {
             if (($errors = $this->updateServices($this->post))) {
@@ -66,7 +66,6 @@ class AdminDomains extends DomainsController
         );
         $service_filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
 
-
         $status = (isset($this->get[0]) ? $this->get[0] : 'active');
         $page = (isset($this->get[1]) ? (int)$this->get[1] : 1);
         $sort = (isset($this->get['sort']) ? $this->get['sort'] : 'date_added');
@@ -81,6 +80,11 @@ class AdminDomains extends DomainsController
         // Get only parent services
         $services = $this->Services->getList(null, $status, $page, [$sort => $order], false, $service_filters);
         $total_results = $this->Services->getListCount(null, $status, false, null, $service_filters);
+
+        // Get TLD for each service
+        foreach ($services as &$service) {
+            $service->tld = $this->DomainsTlds->getByPackage($service->package_id);
+        }
 
         // Set the number of services of each type, not including children
         $status_count = [
