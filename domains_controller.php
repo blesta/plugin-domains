@@ -28,6 +28,13 @@ class DomainsController extends AppController
             dirname(__FILE__) . DS . 'language' . DS
         );
 
+        // If this is an admin controller, set the portal type to admin
+        $this->portal = 'client';
+
+        if (substr($this->controller, 0, 5) == 'admin') {
+            $this->portal = 'admin';
+        }
+
         // Override default view directory
         $this->view->view = "default";
         $this->orig_structure_view = $this->structure->view;
@@ -36,5 +43,25 @@ class DomainsController extends AppController
         // Restore structure view location of the admin portal
         $this->structure->setDefaultView(APPDIR);
         $this->structure->setView(null, $this->orig_structure_view);
+
+        // Set the left nav for all settings pages to affiliate_leftnav
+        if ($this->portal == 'admin') {
+            $this->set(
+                'left_nav',
+                $this->getLeftNav()
+            );
+        }
+    }
+
+    /**
+     * Get the domains left navigation bar
+     *
+     * @return string The partial view of the domains left navigation bar
+     */
+    protected function getLeftNav()
+    {
+        Language::loadLang('admin_domains', null, PLUGINDIR . 'domains' . DS . 'language' . DS);
+
+        return $this->partial('admin_domains_leftnav', ['current_tab' => $this->controller]);
     }
 }
