@@ -28,7 +28,7 @@ $lang['DomainsPlugin.card_client.getDomainCount'] = 'Domains';
 
 // Permission Groups
 $lang['DomainsPlugin.permission.admin_domains'] = 'Domains';
-$lang['DomainsPlugin.permission.admin_domains.browse'] = 'Browse Domains';
+$lang['DomainsPlugin.permission.admin_domains.browse'] = 'Domains';
 $lang['DomainsPlugin.permission.admin_domains.tlds'] = 'TLD Pricing';
 $lang['DomainsPlugin.permission.admin_domains.registrars'] = 'Registrars';
 $lang['DomainsPlugin.permission.admin_domains.whois'] = 'Whois';
