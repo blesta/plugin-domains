@@ -10,7 +10,7 @@ $lang['AdminDomains.!success.tld_updated'] = 'The TLD was successfully updated!'
 $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
 
 
-$lang['AdminDomains.browse.boxtitle_browse'] = 'Domain Manager - Browse Domains';
+$lang['AdminDomains.browse.boxtitle_browse'] = 'Domains';
 $lang['AdminDomains.browse.heading_domain'] = 'Domain';
 $lang['AdminDomains.browse.heading_client'] = 'Client';
 $lang['AdminDomains.browse.heading_registrar'] = 'Registrar';
@@ -23,10 +23,8 @@ $lang['AdminDomains.browse.option_delete'] = 'Delete';
 $lang['AdminDomains.browse.option_manage'] = 'Manage';
 $lang['AdminDomains.browse.confirm_delete'] = 'Are you sure you want to delete this domain service?';
 $lang['AdminDomains.browse.text_none'] = 'There are no registered domains.';
-$lang['AdminDomains.browse.text_yes'] = 'Yes';
-$lang['AdminDomains.browse.text_no'] = 'No';
-$lang['AdminDomains.browse.on'] = 'On';
-$lang['AdminDomains.browse.off'] = 'Off';
+$lang['AdminDomains.browse.text_on'] = 'On';
+$lang['AdminDomains.browse.text_off'] = 'Off';
 
 $lang['AdminDomains.browse.category_active'] = 'Active';
 $lang['AdminDomains.browse.category_canceled'] = 'Canceled';
@@ -40,7 +38,7 @@ $lang['AdminDomains.browse.field_actionsubmit'] = 'Submit';
 $lang['AdminDomains.getdomainactions.change_auto_renewal'] = 'Change Auto Renewal';
 
 
-$lang['AdminDomains.registrars.boxtitle_registrars'] = 'Domain Manager - Registrars';
+$lang['AdminDomains.registrars.boxtitle_registrars'] = 'Registrars';
 $lang['AdminDomains.registrars.text_author'] = 'Author:';
 $lang['AdminDomains.registrars.text_author_url'] = 'Author URL';
 $lang['AdminDomains.registrars.text_version'] = '(ver %1$s)'; // %1$s is the module's version number
@@ -53,7 +51,7 @@ $lang['AdminDomains.registrars.text_none'] = 'There are no available registrars.
 $lang['AdminDomains.registrars.confirm_uninstall'] = 'Are you sure you want to uninstall this registrar?';
 
 
-$lang['AdminDomains.configuration.boxtitle'] = 'Domain Manager - Configuration';
+$lang['AdminDomains.configuration.boxtitle'] = 'Configuration';
 $lang['AdminDomains.configuration.tab_general'] = 'General';
 $lang['AdminDomains.configuration.tab_notifications'] = 'Notifications';
 $lang['AdminDomains.configuration.tab_advanced'] = 'Advanced';
@@ -82,7 +80,7 @@ $lang['AdminDomains.configuration.tooltip_expiration_notice_days_after'] = 'Sele
 $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that we may highlight on order forms through the Order Plugin.  This feature is not yet supported';
 
 
-$lang['AdminDomains.tlds.boxtitle_tld_pricing'] = 'Domain Manager - TLD Pricing';
+$lang['AdminDomains.tlds.boxtitle_tld_pricing'] = 'TLD Pricing';
 $lang['AdminDomains.tlds.categorylink_tldsadd'] = 'Add TLD';
 $lang['AdminDomains.tlds.heading_tld'] = 'TLD';
 $lang['AdminDomains.tlds.heading_dns_management'] = 'DNS Management';
@@ -130,7 +128,7 @@ $lang['AdminDomains.pricing.field_cancel'] = 'Cancel';
 $lang['AdminDomains.pricing.field_update'] = 'Update';
 
 
-$lang['AdminDomains.whois.boxtitle_whois'] = 'Domain Manager - Whois Domain Lookup';
+$lang['AdminDomains.whois.boxtitle_whois'] = 'Whois Domain Lookup';
 $lang['AdminDomains.whois.title_row'] = 'Domain Lookup';
 $lang['AdminDomains.whois.available'] = 'Domain Available';
 $lang['AdminDomains.whois.unavailable'] = 'Domain Unavailable';
