@@ -439,6 +439,10 @@ class AdminDomains extends DomainsController
                 'asc',
                 ['type' => 'registrar']
             );
+
+            // Set whether to override current TLD packages with new cloned ones
+            $overwrite_packages = isset($this->post['overwrite_packages']);
+
             foreach ($installed_registrars as $installed_registrar) {
                 // Get all packages for the registrar module
                 $packages = $this->Packages->getAll(
@@ -457,14 +461,27 @@ class AdminDomains extends DomainsController
 
                     // Clone the package once for each assigned TLD
                     foreach ($package->meta->tlds as $tld) {
+                        // If set to override packages, delete previous TLD package
+                        $tld_conflict = array_key_exists($tld, $tlds);
+                        if ($tld_conflict && $overwrite_packages) {
+                            $this->Packages->delete($tlds[$tld]);
+                            $errors = $this->Packages->errors();
+                            $tld_conflict = !empty($errors);
+                        }
+
                         // Skip this TLD if a package already exists for it
-                        if (array_key_exists($tld, $tlds) || array_key_exists($tld, $created_tlds)) {
+                        if ($tld_conflict || array_key_exists($tld, $created_tlds)) {
                             continue;
                         }
 
                         $package_id = $this->clonePackage($package, $tld, $company_settings);
                         if ($package_id) {
                             $created_tlds[$tld] = $package_id;
+
+                            // Migrate the services from the cloned package to the new one if they match the TLD
+                            if (isset($this->post['migrate_services'])) {
+                                $this->migrateServices($package->id, $package_id, $tld);
+                            }
                         }
                     }
                 }
@@ -472,12 +489,24 @@ class AdminDomains extends DomainsController
 
             // Create new TLDs
             foreach ($created_tlds as $created_tld => $package_id) {
-                // Add the TLD
-                $tld_vars = [
-                    'tld' => $created_tld,
-                    'package_id' => $package_id
-                ];
-                $this->DomainsTlds->add($tld_vars);
+                if (array_key_exists($created_tld, $tlds)) {
+                    // Edit the TLD
+                    $tld_vars = [
+                        'package_id' => $package_id,
+                        'dns_management' => 0,
+                        'email_forwarding' => 0,
+                        'id_protection' => 0,
+                        'epp_code' => 0
+                    ];
+                    $this->DomainsTlds->edit($created_tld, $tld_vars);
+                } else {
+                    // Add the TLD
+                    $tld_vars = [
+                        'tld' => $created_tld,
+                        'package_id' => $package_id
+                    ];
+                    $this->DomainsTlds->add($tld_vars);
+                }
             }
 
             // Set success message
@@ -578,11 +607,6 @@ class AdminDomains extends DomainsController
         }
 
         $package_id = $this->Packages->add($package_vars);
-
-        // Migrate the services from the cloned package to the new one if they match the TLD
-        if (isset($this->post['migrate_services'])) {
-            $this->migrateServices($package->id, $package_id, $tld);
-        }
 
         return $package_id;
     }

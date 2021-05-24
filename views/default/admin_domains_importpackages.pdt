@@ -57,11 +57,22 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
     <div class="inner">
         <p><?php $this->_('AdminDomains.importpackages.description');?></p>
         <div class="pad">
-            <?php
-            $this->Form->fieldCheckbox('migrate_services', '1', (isset($vars['migrate_services']) ? $vars['migrate_services'] : null) === '1', ['id' => 'migrate_services', 'class' => 'inline']);
-            $this->Form->label($this->_('AdminDomains.importpackages.field_migrate_services', true), 'migrate_services', ['class' => 'inline']);
-            ?>
-            <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.importpackages.tooltip_migrate_services');?></div></span><br/>
+            <ul>
+                <li>
+                    <?php
+                    $this->Form->fieldCheckbox('migrate_services', '1', (isset($vars['migrate_services']) ? $vars['migrate_services'] : '1') === '1', ['id' => 'migrate_services', 'class' => 'inline']);
+                    $this->Form->label($this->_('AdminDomains.importpackages.field_migrate_services', true), 'migrate_services', ['class' => 'inline']);
+                    ?>
+                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.importpackages.tooltip_migrate_services');?></div></span><br/>
+                </li>
+                <li>
+                    <?php
+                    $this->Form->fieldCheckbox('overwrite_packages', '1', (isset($vars['overwrite_packages']) ? $vars['overwrite_packages'] : null) === '1', ['id' => 'overwrite_packages', 'class' => 'inline']);
+                    $this->Form->label($this->_('AdminDomains.importpackages.field_overwrite_packages', true), 'overwrite_packages', ['class' => 'inline']);
+                    ?>
+                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.importpackages.tooltip_overwrite_packages');?></div></span><br/>
+                </li>
+            </ul>
         </div>
         <div class="button_row">
             <button class="btn btn-primary pull-right">

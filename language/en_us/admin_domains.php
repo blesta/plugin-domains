@@ -86,7 +86,9 @@ $lang['AdminDomains.importpackages.boxtitle'] = 'Configuration';
 $lang['AdminDomains.importpackages.description'] = 'This tool will search for any packages that use a registrar module and clone the package once for each of the TLDs assigned to it.  If multiple packages are assigned to the same TLD, then the domain manager will clone the first one it encounters and ignore the others.  Only yearly pricings will be cloned.  If a package has no yearly pricings it will be skipped.';
 
 $lang['AdminDomains.importpackages.field_migrate_services'] = 'Migrate Services';
-$lang['AdminDomains.importpackages.tooltip_migrate_services'] = 'When checked, any services assigned to the cloned packages will be migrated to the newly create packages.  This will only apply to services with a yearly pricing period.';
+$lang['AdminDomains.importpackages.tooltip_migrate_services'] = 'When checked, any services assigned to the cloned packages will be migrated to the newly created packages.  This will only apply to services with a yearly pricing period.';
+$lang['AdminDomains.importpackages.field_overwrite_packages'] = 'Overwrite TLD Packages';
+$lang['AdminDomains.importpackages.tooltip_overwrite_packages'] = 'When checked, current Domain Manager TLD packages will be replaced by external TLD packages.  Domain Manager packages with services assigned to them will be skipped during this process.';
 
 $lang['AdminDomains.importpackages.field_submit'] = 'Import Packages';
 
