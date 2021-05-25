@@ -482,6 +482,17 @@ class AdminDomains extends DomainsController
                             if (isset($this->post['migrate_services'])) {
                                 $this->migrateServices($package->id, $package_id, $tld);
                             }
+
+                            // Deactivate cloned packages that no longer have services assigned
+                            $remaining_services =  $this->Services->getAll(
+                                ['date_added' => 'DESC'],
+                                true,
+                                ['package_id' => $package->id, 'status' => 'all']
+                            );
+
+                            if (empty($remaining_services)) {
+                                $this->Packages->edit($from_package_id, ['status' => 'inactive']);
+                            }
                         }
                     }
                 }
