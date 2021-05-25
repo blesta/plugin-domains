@@ -130,6 +130,18 @@ $lang['AdminDomains.pricing.field_cancel'] = 'Cancel';
 $lang['AdminDomains.pricing.field_update'] = 'Update';
 
 
+$lang['AdminDomains.meta.boxtitle_meta_tld'] = 'Update Package Meta for TLD %1$s'; // %1$s is the TLD
+$lang['AdminDomains.meta.heading_module_options'] = 'Module Options';
+$lang['AdminDomains.meta.heading_update_required'] = 'Update of package meta may be required.';
+$lang['AdminDomains.meta.heading_update_no_required'] = 'Update of package meta is not required for this module.';
+$lang['AdminDomains.meta.text_update_required_note'] = 'When updating the registrar module of a TLD it may be necessary in some cases to update the package meta. Blesta will attempt to automatically map as many fields as possible but some fields may require a manual update.';
+$lang['AdminDomains.meta.text_update_no_required_note'] = 'The new registrar module does not have package meta fields to update.';
+$lang['AdminDomains.meta.field_modulegroup_any'] = 'Any';
+$lang['AdminDomains.meta.field_continue'] = 'Continue';
+$lang['AdminDomains.meta.field_finish'] = 'Finish';
+$lang['AdminDomains.meta.field_update'] = 'Update';
+
+
 $lang['AdminDomains.whois.boxtitle_whois'] = 'Domain Manager - Whois Domain Lookup';
 $lang['AdminDomains.whois.title_row'] = 'Domain Lookup';
 $lang['AdminDomains.whois.available'] = 'Domain Available';
