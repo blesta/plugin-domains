@@ -92,7 +92,3 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
 <?php
 }
 ?>
-<script type="text/javascript">
-$(document).ready(function() {
-});
-</script>

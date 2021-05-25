@@ -527,7 +527,10 @@ class AdminDomains extends DomainsController
     /**
      * Formats details from a package to
      *
-     * @param stdClass $package
+     * @param stdClass $package The package to clone
+     * @param string The TLD that should be assigned to the new package
+     * @param array $company_settings An array of company settings
+     * @return int The ID of the new package
      */
     private function clonePackage(stdClass $package, $tld, array $company_settings)
     {
