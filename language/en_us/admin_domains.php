@@ -77,7 +77,7 @@ $lang['AdminDomains.configuration.tooltip_epp_code_option_group'] = 'The configu
 $lang['AdminDomains.configuration.tooltip_first_reminder_days_before'] = 'Select the number of days before a domain expires to send the first renewal email (26-35 as per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_second_reminder_days_before'] = 'Select the number of days before a domain expires to send the second renewal email (4-10 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_expiration_notice_days_after'] = 'Select the number of days after a domain expires to send the expiration notice email (1-5 per ICANN specs). Use the Email Template link to modify/disable this email.';
-$lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that we may highlight on order forms through the Order Plugin.  This feature is not yet supported';
+$lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that will be highlighted on order forms through the Order Plugin.';
 
 
 $lang['AdminDomains.tlds.boxtitle_tld_pricing'] = 'TLD Pricing';
