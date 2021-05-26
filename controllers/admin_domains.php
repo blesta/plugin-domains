@@ -1002,6 +1002,7 @@ class AdminDomains extends DomainsController
         try {
             // Get TLD package fields
             $package_fields = $this->DomainsTlds->getTldFields($this->get[0]);
+            $package_fields_view = 'admin' . DS . 'default';
 
             // Add a pricing for terms 1-10 years for each currency
             foreach ($currencies as $currency) {
@@ -1043,6 +1044,7 @@ class AdminDomains extends DomainsController
             compact(
                 'package',
                 'package_fields',
+                'package_fields_view',
                 'tld',
                 'currencies',
                 'default_currency',
@@ -1102,14 +1104,19 @@ class AdminDomains extends DomainsController
 
         // Get TLD package fields
         $package_fields = $this->DomainsTlds->getTldFields($this->get[0]);
+        $package_fields_view = 'admin' . DS . 'default';
 
+        // Return partial view
         echo $this->partial(
             'admin_domains_meta',
             compact(
                 'package_fields',
+                'package_fields_view',
                 'tld'
             )
         );
+
+        $this->view->view= 'ddd';
 
         return false;
     }

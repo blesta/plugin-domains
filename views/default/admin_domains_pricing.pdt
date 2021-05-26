@@ -176,94 +176,16 @@
                         } else {
                             $this->Form->fieldHidden('module_row', (isset($package->module_row) ? $package->module_row : 0), ['id' => 'module_row']);
                         }
-                        ?>
 
-                        <?php
-                        foreach ($package_fields['fields'] as $field) {
-                        ?>
-                        <li>
-                            <?php
-                            // Determine all field tooltips
-                            $tooltips = [];
-                            foreach ($field->fields as $input) {
-                                // Collect all tooltips to be displayed for the field
-                                if ($input->type == 'tooltip') {
-                                    $tooltips[] = $input;
-                                }
-                            }
-
-                            // Draw the primary label/field
-                            call_user_func_array(
-                                [$this->Form, $field->type],
-                                array_merge_recursive((array)$field->params, (!empty($tooltips) ? ['attributes' => ['class' => 'inline']] : []))
-                            );
-
-                            // Draw each form field associated with this label
-                            foreach ($field->fields as $input) {
-                                // Collect all tooltips to be displayed at the end
-                                if ($input->type == 'tooltip') {
-                                    continue;
-                                }
-
-                                // Display a tooltip after the label if there is a label or the field is not a checkbox/radio
-                                $params = [];
-                                if (!empty($tooltips) && (!empty($field->params['name']) || !in_array($input->type, ['fieldCheckbox', 'fieldRadio']))) {
-                                    $params = (!in_array($input->type, ['fieldCheckbox', 'fieldRadio']) ? ['attributes' => ['class' => 'block']] : []);
-
-                                    foreach ($tooltips as $tooltip) {
-                                    ?>
-                                    <span class="tooltip block">
-                                        <?php $this->_('AppController.tooltip.text');?>
-                                        <div><?php echo isset($tooltip->params['message']) ? $this->Html->safe($tooltip->params['message']) : null;?></div>
-                                    </span>
-                                    <?php
-                                    }
-
-                                    // Radio/checkbox lists should break at a new line
-                                    if (in_array($input->type, ['fieldCheckbox', 'fieldRadio'])) {
-                                    ?>
-                                    <br />
-                                    <?php
-                                    }
-
-                                    // Reset tooltips, they've already been displayed
-                                    $tooltips = [];
-                                }
-
-                                // Display the form input field
-                                call_user_func_array(
-                                    [$this->Form, $input->type],
-                                    array_merge_recursive((array)$input->params, $params)
-                                );
-
-                                // Draw the form field's secondary label if checkbox or radio item
-                                if (($input->type == 'fieldCheckbox' || $input->type == 'fieldRadio') && isset($input->label)) {
-                                    if (isset($input->label->params['attributes']['class'])) {
-                                        if (is_array($input->label->params['attributes']['class'])) {
-                                            $input->label->params['attributes']['class'][] = 'inline';
-                                        } else {
-                                            $input->label->params['attributes']['class'] .= ' inline';
-                                        }
-                                    } else {
-                                        $input->label->params['attributes']['class'] = 'inline';
-                                    }
-
-                                    call_user_func_array([$this->Form, 'label'], $input->label->params);
-                                }
-                            }
-
-                            // Display tooltips at the end of the field if any exist
-                            foreach ($tooltips as $tooltip) {
+                        // Show module fields
+                        if (isset($package_fields['input_html']) && ($module_field_html = $package_fields['input_html']->generate(null, $package_fields_view))) {
                             ?>
-                            <span class="tooltip">
-                                <?php $this->_('AppController.tooltip.text');?>
-                                <div><?php echo isset($tooltip->params['message']) ? $this->Html->safe($tooltip->params['message']) : null;?></div>
-                            </span>
+                            <li>
+                                <?php
+                                echo $module_field_html;
+                                ?>
+                            </li>
                             <?php
-                            }
-                            ?>
-                        </li>
-                        <?php
                         }
                         ?>
                     </ul>
