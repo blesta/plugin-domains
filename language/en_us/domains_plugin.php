@@ -21,21 +21,14 @@ $lang['DomainsPlugin.getCronTasks.domain_renewal_reminders'] = 'Send Renewal Rem
 $lang['DomainsPlugin.getCronTasks.domain_renewal_reminders_description'] = 'Send email reminders for domains that are drawing close to their renewal date';
 
 // Plugin Actions
-$lang['DomainsPlugin.nav_primary_staff.main'] = 'Domains';
-$lang['DomainsPlugin.nav_primary_staff.browse'] = 'Browse Domains';
-$lang['DomainsPlugin.nav_primary_staff.tlds'] = 'TLD Pricing';
-$lang['DomainsPlugin.nav_primary_staff.registrars'] = 'Registrars';
-$lang['DomainsPlugin.nav_primary_staff.whois'] = 'Whois';
-$lang['DomainsPlugin.nav_primary_staff.configuration'] = 'Configuration';
-$lang['DomainsPlugin.widget_staff_home.main'] = 'Domains';
-$lang['DomainsPlugin.widget_client_home.main'] = 'Domains';
+$lang['DomainsPlugin.nav_secondary_staff.domains'] = 'Domains';
 
 // Plugin Cards
 $lang['DomainsPlugin.card_client.getDomainCount'] = 'Domains';
 
 // Permission Groups
 $lang['DomainsPlugin.permission.admin_domains'] = 'Domains';
-$lang['DomainsPlugin.permission.admin_domains.browse'] = 'Browse Domains';
+$lang['DomainsPlugin.permission.admin_domains.browse'] = 'Domains';
 $lang['DomainsPlugin.permission.admin_domains.tlds'] = 'TLD Pricing';
 $lang['DomainsPlugin.permission.admin_domains.registrars'] = 'Registrars';
 $lang['DomainsPlugin.permission.admin_domains.whois'] = 'Whois';

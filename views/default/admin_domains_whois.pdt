@@ -1,39 +1,60 @@
 
-        <?php echo isset($message) ? $message : null;?>
         <?php
-        $this->Widget->clear();
-        $this->Widget->create(
-            $this->_('AdminDomains.whois.boxtitle_whois', true),
-            ['id' => 'admin_domains_whois'],
-            (isset($render_section) ? $render_section : null)
-        );
+        if (!(isset($is_ajax) ? $is_ajax : false)) {
+            echo (isset($left_nav) ? $left_nav : null);
         ?>
-        <div class="inner">
-            <div class="title_row first">
-                <h3><?php echo $this->_('AdminDomains.whois.title_row', true);?></h3>
-            </div>
-            <div class="pad">
-                <?php
-                $this->Form->create(null, ['class' => 'disable-on-submit']);
-                $this->Form->label($this->_('AdminDomains.whois.field_domain', true), 'domain');
-                $this->Form->fieldText('domain', isset($vars['domain']) ? $vars['domain'] : null, ['id' => 'domain']);
-                $this->Form->fieldSubmit('save', $this->_('AdminDomains.whois.field_submit', true), ['class' => 'btn btn-sm btn-primary']);
-                $this->Form->end();
-                ?>
+        <div id="right_outer">
+            <?php
+            if (!(isset($render_section) ? $render_section : null)) {
+                echo (isset($message) ? $message : null);
+            }
+            ?>
+            <section id="right_container">
+        <?php
+        }
+        ?>
+            <?php
+            $this->Widget->clear();
+            $this->Widget->create(
+                $this->_('AdminDomains.whois.boxtitle_whois', true),
+                ['id' => 'admin_domains_whois'],
+                (isset($render_section) ? $render_section : null)
+            );
+            ?>
+            <div class="inner">
+                <div class="title_row first">
+                    <h3><?php echo $this->_('AdminDomains.whois.title_row', true);?></h3>
+                </div>
+                <div class="pad">
+                    <?php
+                    $this->Form->create(null, ['class' => 'disable-on-submit']);
+                    $this->Form->label($this->_('AdminDomains.whois.field_domain', true), 'domain');
+                    $this->Form->fieldText('domain', isset($vars['domain']) ? $vars['domain'] : null, ['id' => 'domain']);
+                    $this->Form->fieldSubmit('save', $this->_('AdminDomains.whois.field_submit', true), ['class' => 'btn btn-sm btn-primary']);
+                    $this->Form->end();
+                    ?>
 
-                <?php
-                if (!empty($domain_info)) {
-                ?>
-                <div class="clear"></div>
-                <h3 class="mt-2 error_box <?php echo $domain_info['available'] ? '' : 'error';?>">
-                    <?php $this->_('AdminDomains.whois.' . ($domain_info['available'] ? 'available' : 'unavailable'));?>
-                </h3>
-                <pre class="well" style="overflow-x: auto;"><?php echo trim($domain_info['text'], "\r\n");?></pre>
-                <?php
-                }
-                ?>
+                    <?php
+                    if (!empty($domain_info)) {
+                    ?>
+                    <div class="clear"></div>
+                    <h3 class="mt-2 error_box <?php echo $domain_info['available'] ? '' : 'error';?>">
+                        <?php $this->_('AdminDomains.whois.' . ($domain_info['available'] ? 'available' : 'unavailable'));?>
+                    </h3>
+                    <pre class="well" style="overflow-x: auto;"><?php echo trim($domain_info['text'], "\r\n");?></pre>
+                    <?php
+                    }
+                    ?>
+                </div>
             </div>
+            <?php
+            $this->Widget->end();
+            ?>
+        <?php
+        if (!(isset($is_ajax) ? $is_ajax : false)) {
+        ?>
+            </section>
         </div>
         <?php
-        $this->Widget->end();
+        }
         ?>

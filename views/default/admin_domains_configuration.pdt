@@ -1,155 +1,176 @@
 <?php
-echo (isset($message) ? $message : null);
-
-$tabs = [
-    [
-        'name' => $this->_('AdminDomains.configuration.tab_general', true),
-        'current' => true,
-        'attributes' => [
-            'id' => 'general_tab'
-        ]
-    ],
-    [
-        'name' => $this->_('AdminDomains.configuration.tab_notifications', true),
-        'current' => false,
-        'attributes' => [
-            'id' => 'notifications_tab'
-        ]
-    ],
-    [
-        'name' => $this->_('AdminDomains.configuration.tab_advanced', true),
-        'current' => false,
-        'attributes' => [
-            'id' => 'advanced_tab'
-        ]
-    ]
-];
-
-$this->Widget->clear();
-$this->Widget->setTabs($tabs);
-$this->Widget->create($this->_('AdminDomains.configuration.boxtitle', true), ['id' => 'admin_domains_configuration'], (isset($render_section) ? $render_section : null));
-
-$this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submit']);
+if (!(isset($is_ajax) ? $is_ajax : false)) {
+    echo (isset($left_nav) ? $left_nav : null);
 ?>
+<div id="right_outer">
+    <?php
+    if (!(isset($render_section) ? $render_section : null)) {
+        echo (isset($message) ? $message : null);
+    }
+    ?>
+    <section id="right_container">
+<?php
+}
 
-<div class="inner">
-    <div id="tab_general">
-        <div class="pad">
-            <ul>
-                <li>
-                    <?php $this->Form->label($this->_('AdminDomains.configuration.field_spotlight_tlds', true), 'spotlight_tlds', ['class' => 'inline']); ?>
-                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_spotlight_tlds');?></div></span><br/>
-                    <?php
-                    foreach ((isset($tlds) ? $tlds : []) as $tld) {
-                        $this->Form->fieldCheckbox('domains_spotlight_tlds[' . $tld->tld . ']', '1', (isset($vars['domains_spotlight_tlds'][$tld->tld]) ? $vars['domains_spotlight_tlds'][$tld->tld] : null) === '1', ['id' => 'spotlight_tld_' . $tld->tld, 'class' => 'inline', 'disabled' => 'disabled']);
-                        $this->Form->label($tld->tld, 'spotlight_tld_' . $tld->tld, ['class' => 'inline']);
-                    }
-                    ?>
-                </li>
-            </ul>
-        </div>
-    </div>
-    <div id="tab_notifications">
-        <div class="pad">
-            <ul>
-                <li>
-                    <?php $this->Form->label($this->_('AdminDomains.configuration.field_package_group', true), 'package_group', ['class' => 'inline']); ?>
-                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_domains_package_group');?></div></span>
-                    <?php $this->Form->fieldSelect('domains_package_group', ($package_groups ?? null), (isset($vars['domains_package_group']) ? $vars['domains_package_group'] : null), ['id' => 'package_group', 'class' => 'block']); ?>
-                </li>
-                <li>
-                    <?php $this->Form->label($this->_('AdminDomains.configuration.field_dns_management_option_group', true), 'dns_management_option_group', ['class' => 'inline']); ?>
-                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_dns_management_option_group');?></div></span>
-                    <?php $this->Form->fieldSelect('domains_dns_management_option_group', ($package_option_groups ?? null), (isset($vars['domains_dns_management_option_group']) ? $vars['domains_dns_management_option_group'] : null), ['id' => 'dns_management_option_group', 'class' => 'block']); ?>
-                </li>
-                <li>
-                    <?php $this->Form->label($this->_('AdminDomains.configuration.field_email_forwarding_option_group', true), 'email_forwarding_option_group', ['class' => 'inline']); ?>
-                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_email_forwarding_option_group');?></div></span>
-                    <?php $this->Form->fieldSelect('domains_email_forwarding_option_group', ($package_option_groups ?? null), (isset($vars['domains_email_forwarding_option_group']) ? $vars['domains_email_forwarding_option_group'] : null), ['id' => 'email_forwarding_option_group', 'class' => 'block']); ?>
-                </li>
-                <li>
-                    <?php $this->Form->label($this->_('AdminDomains.configuration.field_id_protection_option_group', true), 'id_protection_option_group', ['class' => 'inline']); ?>
-                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_id_protection_option_group');?></div></span>
-                    <?php $this->Form->fieldSelect('domains_id_protection_option_group', ($package_option_groups ?? null), (isset($vars['domains_id_protection_option_group']) ? $vars['domains_id_protection_option_group'] : null), ['id' => 'id_protection_option_group', 'class' => 'block']); ?>
-                </li>
-                <li>
-                    <?php $this->Form->label($this->_('AdminDomains.configuration.field_epp_code_option_group', true), 'epp_code_option_group', ['class' => 'inline']); ?>
-                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_epp_code_option_group');?></div></span>
-                    <?php $this->Form->fieldSelect('domains_epp_code_option_group', ($package_option_groups ?? null), (isset($vars['domains_epp_code_option_group']) ? $vars['domains_epp_code_option_group'] : null), ['id' => 'epp_code_option_group', 'class' => 'block']); ?>
-                </li>
-            </ul>
-        </div>
-    </div>
-    <div id="tab_advanced">
-        <div class="pad">
-            <ul>
-                <li>
-                    <?php $this->Form->label($this->_('AdminDomains.configuration.field_first_reminder_days_before', true), 'first_reminder_days_before', ['class' => 'inline']); ?>
-                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_first_reminder_days_before');?></div></span>
-                    <?php $this->Form->fieldSelect('domains_first_reminder_days_before', ($first_reminder_days ?? null), ($vars['domains_first_reminder_days_before'] ?? null), ['id' => 'first_reminder_days_before', 'class' => 'block']); ?>
+    $tabs = [
+        [
+            'name' => $this->_('AdminDomains.configuration.tab_general', true),
+            'current' => (($tab ?? 'general') == 'general'),
+            'attributes' => [
+                'class' => 'general',
+                'href' => '#'
+            ]
+        ],
+        [
+            'name' => $this->_('AdminDomains.configuration.tab_notifications', true),
+            'current' => (($tab ?? 'notifications') == 'notifications'),
+            'attributes' => [
+                'class' => 'notifications',
+                'href' => '#'
+            ]
+        ],
+        [
+            'name' => $this->_('AdminDomains.configuration.tab_advanced', true),
+            'current' => (($tab ?? 'advanced') == 'advanced'),
+            'attributes' => [
+                'class' => 'advanced',
+                'href' => '#'
+            ]
+        ],
+        [
+            'name' => $this->_('AdminDomains.configuration.tab_importpackages', true),
+            'current' => false,
+            'attributes' => [
+                'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/')
+            ]
+        ]
+    ];
 
-                </li>
-                <li>
-                    <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($first_reminder_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
-                </li>
-                <li>
-                    <?php $this->Form->label($this->_('AdminDomains.configuration.field_second_reminder_days_before', true), 'second_reminder_days_before', ['class' => 'inline']); ?>
-                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_second_reminder_days_before');?></div></span>
-                    <?php $this->Form->fieldSelect('domains_second_reminder_days_before', ($second_reminder_days ?? null), ($vars['domains_second_reminder_days_before'] ?? null), ['id' => 'second_reminder_days_before', 'class' => 'block']); ?>
-                </li>
-                <li>
-                    <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($second_reminder_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
-                </li>
-                <li>
-                    <?php $this->Form->label($this->_('AdminDomains.configuration.field_expiration_notice_days_after', true), 'expiration_notice_days_after', ['class' => 'inline']); ?>
-                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_expiration_notice_days_after');?></div></span>
-                    <?php $this->Form->fieldSelect('domains_expiration_notice_days_after', ($expiration_notice_days ?? null), ($vars['domains_expiration_notice_days_after'] ?? null), ['id' => 'expiration_notice_days_after', 'class' => 'block']); ?>
-                </li>
-                <li>
-                    <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($expiration_notice_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
-                </li>
-            </ul>
+    $this->Widget->clear();
+    $this->Widget->setTabs($tabs);
+    $this->Widget->create($this->_('AdminDomains.configuration.boxtitle', true), ['id' => 'admin_domains_configuration'], (isset($render_section) ? $render_section : null));
+
+    $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submit']);
+    ?>
+
+    <div class="inner">
+        <div class="tab" id="tab_general">
+            <div class="pad">
+                <ul>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_spotlight_tlds', true), 'spotlight_tlds', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_spotlight_tlds');?></div></span><br/>
+                        <?php
+                        foreach ((isset($tlds) ? $tlds : []) as $tld) {
+                            $this->Form->fieldCheckbox('domains_spotlight_tlds[' . $tld->tld . ']', '1', (isset($vars['domains_spotlight_tlds'][$tld->tld]) ? $vars['domains_spotlight_tlds'][$tld->tld] : null) === '1', ['id' => 'spotlight_tld_' . $tld->tld, 'class' => 'inline']);
+                            $this->Form->label($tld->tld, 'spotlight_tld_' . $tld->tld, ['class' => 'inline']);
+                        }
+                        ?>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="tab" id="tab_notifications">
+            <div class="pad">
+                <ul>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_first_reminder_days_before', true), 'first_reminder_days_before', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_first_reminder_days_before');?></div></span>
+                        <?php $this->Form->fieldSelect('domains_first_reminder_days_before', ($first_reminder_days ?? null), ($vars['domains_first_reminder_days_before'] ?? null), ['id' => 'first_reminder_days_before', 'class' => 'block']); ?>
+
+                    </li>
+                    <li>
+                        <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($first_reminder_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
+                    </li>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_second_reminder_days_before', true), 'second_reminder_days_before', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_second_reminder_days_before');?></div></span>
+                        <?php $this->Form->fieldSelect('domains_second_reminder_days_before', ($second_reminder_days ?? null), ($vars['domains_second_reminder_days_before'] ?? null), ['id' => 'second_reminder_days_before', 'class' => 'block']); ?>
+                    </li>
+                    <li>
+                        <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($second_reminder_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
+                    </li>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_expiration_notice_days_after', true), 'expiration_notice_days_after', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_expiration_notice_days_after');?></div></span>
+                        <?php $this->Form->fieldSelect('domains_expiration_notice_days_after', ($expiration_notice_days ?? null), ($vars['domains_expiration_notice_days_after'] ?? null), ['id' => 'expiration_notice_days_after', 'class' => 'block']); ?>
+                    </li>
+                    <li>
+                        <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($expiration_notice_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="tab" id="tab_advanced">
+            <div class="pad">
+                <ul>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_package_group', true), 'package_group', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_domains_package_group');?></div></span>
+                        <?php $this->Form->fieldSelect('domains_package_group', ($package_groups ?? null), (isset($vars['domains_package_group']) ? $vars['domains_package_group'] : null), ['id' => 'package_group', 'class' => 'block']); ?>
+                    </li>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_dns_management_option_group', true), 'dns_management_option_group', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_dns_management_option_group');?></div></span>
+                        <?php $this->Form->fieldSelect('domains_dns_management_option_group', ($package_option_groups ?? null), (isset($vars['domains_dns_management_option_group']) ? $vars['domains_dns_management_option_group'] : null), ['id' => 'dns_management_option_group', 'class' => 'block']); ?>
+                    </li>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_email_forwarding_option_group', true), 'email_forwarding_option_group', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_email_forwarding_option_group');?></div></span>
+                        <?php $this->Form->fieldSelect('domains_email_forwarding_option_group', ($package_option_groups ?? null), (isset($vars['domains_email_forwarding_option_group']) ? $vars['domains_email_forwarding_option_group'] : null), ['id' => 'email_forwarding_option_group', 'class' => 'block']); ?>
+                    </li>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_id_protection_option_group', true), 'id_protection_option_group', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_id_protection_option_group');?></div></span>
+                        <?php $this->Form->fieldSelect('domains_id_protection_option_group', ($package_option_groups ?? null), (isset($vars['domains_id_protection_option_group']) ? $vars['domains_id_protection_option_group'] : null), ['id' => 'id_protection_option_group', 'class' => 'block']); ?>
+                    </li>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_epp_code_option_group', true), 'epp_code_option_group', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_epp_code_option_group');?></div></span>
+                        <?php $this->Form->fieldSelect('domains_epp_code_option_group', ($package_option_groups ?? null), (isset($vars['domains_epp_code_option_group']) ? $vars['domains_epp_code_option_group'] : null), ['id' => 'epp_code_option_group', 'class' => 'block']); ?>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="button_row">
+            <button class="btn btn-primary pull-right">
+                <i class="fa fa-edit"></i> <?php $this->_('AdminDomains.configuration.field_submit');?>
+            </button>
         </div>
     </div>
-    <div class="button_row">
-        <button class="btn btn-primary pull-right">
-            <i class="fa fa-edit"></i> <?php $this->_('AdminDomains.configuration.field_submit');?>
-        </button>
-    </div>
+    <?php
+    $this->Form->end();
+    $this->Widget->end();
+    ?>
+<?php
+if (!(isset($is_ajax) ? $is_ajax : false)) {
+?>
+    </section>
 </div>
 <?php
-$this->Form->end();
-$this->Widget->end();
+}
 ?>
 <script type="text/javascript">
 $(document).ready(function() {
     $('#html').blestaBindWysiwygEditor({language: '<?php echo substr(Configure::get('Blesta.language'), 0, 2); ?>'});
 
     // Set tabs
-    $('#tab_notifications').hide();
-    $('#tab_advanced').hide();
+    function hideAllTabs() {
+        $('.tabs_content .tab').hide();
+    }
 
+    hideAllTabs();
+    $('.tabs_content .tab').first().show();
     $('.tab_slider ul li').on('click', function() {
+        var tab = $(this).find('a').attr('class');
+
         $('.tab_slider ul li').removeClass('current');
         $(this).addClass('current');
+
+        hideAllTabs();
+        $('.tabs_content .tab#tab_' + tab).show();
     });
 
-    $('#general_tab').on('click', function() {
-        $('#tab_general').show();
-        $('#tab_notifications').hide();
-        $('#tab_advanced').hide();
-    });
-
-    $('#notifications_tab').on('click', function() {
-        $('#tab_general').hide();
-        $('#tab_notifications').show();
-        $('#tab_advanced').hide();
-    });
-
-    $('#advanced_tab').on('click', function() {
-        $('#tab_general').hide();
-        $('#tab_notifications').hide();
-        $('#tab_advanced').show();
-    });
+    $('#<?php echo ($tab ?? 'general');?>_tab').click();
 });
 </script>

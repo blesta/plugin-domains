@@ -676,45 +676,10 @@ class DomainsPlugin extends Plugin
         return [
             // Domains Nav
             [
-                'action' => 'nav_primary_staff',
-                'uri' => 'plugin/domains/admin_domains/index/',
-                'name' => 'DomainsPlugin.nav_primary_staff.main',
-                'options' => [
-                    'sub' => [
-                        [
-                            'uri' => 'plugin/domains/admin_domains/browse',
-                            'name' => 'DomainsPlugin.nav_primary_staff.browse'
-                        ],
-                        [
-                            'uri' => 'plugin/domains/admin_domains/tlds',
-                            'name' => 'DomainsPlugin.nav_primary_staff.tlds'
-                        ],
-                        [
-                            'uri' => 'plugin/domains/admin_domains/registrars',
-                            'name' => 'DomainsPlugin.nav_primary_staff.registrars'
-                        ],
-                        [
-                            'uri' => 'plugin/domains/admin_domains/whois',
-                            'name' => 'DomainsPlugin.nav_primary_staff.whois'
-                        ],
-                        [
-                            'uri' => 'plugin/domains/admin_domains/configuration',
-                            'name' => 'DomainsPlugin.nav_primary_staff.configuration'
-                        ]
-                    ]
-                ]
-            ],
-            // Widget
-            [
-                'action' => 'widget_staff_home',
-                'uri' => 'plugin/domains/admin_main/index/',
-                'name' => 'DomainsPlugin.widget_staff_home.main',
-            ],
-            // Client Widget
-            [
-                'action' => 'widget_client_home',
-                'uri' => 'plugin/domains/client_main/index/',
-                'name' => 'DomainsPlugin.widget_client_home.main',
+                'action' => 'nav_secondary_staff',
+                'uri' => 'plugin/domains/admin_domains/browse/',
+                'name' => 'DomainsPlugin.nav_secondary_staff.domains',
+                'options' => ['parent' => 'packages/']
             ]
         ];
     }
@@ -825,6 +790,45 @@ class DomainsPlugin extends Plugin
                 'alias' => 'domains.admin_domains'
             ]
         ];
+    }
+
+    /**
+     * Returns all events to be registered for this plugin
+     * (invoked after install() or upgrade(), overwrites all existing events)
+     *
+     * @return array A numerically indexed array containing:
+     *  - event The event to register for
+     *  - callback A string or array representing a callback function or class/method.
+     *      If a user (e.g. non-native PHP) function or class/method, the plugin must
+     *      automatically define it when the plugin is loaded. To invoke an instance
+     *      methods pass "this" instead of the class name as the 1st callback element.
+     */
+    public function getEvents()
+    {
+        return [
+            [
+                'event' => 'Packages.delete',
+                'callback' => ['this', 'deletePackageTld']
+            ]
+        ];
+    }
+
+    /**
+     * Deletes TLD associated with a deleted package
+     *
+     * @param Blesta\Core\Util\Events\Common\EventInterface $event The event to process
+     */
+    public function deletePackageTld($event)
+    {
+        Loader::loadModels($this, ['Domains.DomainsTlds']);
+        $params = $event->getParams();
+
+        if (isset($params['package_id'])) {
+            $tlds = $this->DomainsTlds->getAll(['package_id' => $params['package_id']]);
+            foreach ($tlds as $tld) {
+                $this->DomainsTlds->delete($tld->tld);
+            }
+        }
     }
 
     /**

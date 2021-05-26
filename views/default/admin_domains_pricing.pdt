@@ -6,35 +6,39 @@
                 'name' => $this->_('AdminDomains.pricing.tab_pricing', true),
                 'current' => true,
                 'attributes' => [
-                    'class' => 'pricing'
+                    'class' => 'pricing',
+                    'href' => '#'
                 ]
             ],
             [
                 'name' => $this->_('AdminDomains.pricing.tab_nameservers', true),
                 'current' => false,
                 'attributes' => [
-                    'class' => 'nameservers'
+                    'class' => 'nameservers',
+                    'href' => '#'
                 ]
             ],
             [
                 'name' => $this->_('AdminDomains.pricing.tab_welcome_email', true),
                 'current' => false,
                 'attributes' => [
-                    'class' => 'welcome_email'
+                    'class' => 'welcome_email',
+                    'href' => '#'
                 ]
             ],
             [
                 'name' => $this->_('AdminDomains.pricing.tab_advanced', true),
                 'current' => false,
                 'attributes' => [
-                    'class' => 'advanced'
+                    'class' => 'advanced',
+                    'href' => '#'
                 ]
             ]
         ];
 
         $this->Widget->clear();
         $this->Widget->setTabs($tabs);
-        $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, $tld->tld), ['id' => 'edit_tld' . str_replace('.', '_', $tld->tld)], (isset($render_section) ? $render_section : null));
+        $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, (isset($tld->tld) ? $tld->tld : null)), ['id' => 'edit_tld' . str_replace('.', '_', (isset($tld->tld) ? $tld->tld : null))], (isset($render_section) ? $render_section : null));
 
         $this->Form->create(null, ['id' => 'edit_tld']);
         ?>
@@ -446,7 +450,7 @@
                 function(response) {
                     // Show messages
                     if (response.hasOwnProperty('message')) {
-                        var parent = $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').parents().find('#body_container .gap_row');
+                        var parent = $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').parents().find('#body_container .gap_row #right_outer');
 
                         parent.find('.error_section').remove();
                         parent.prepend(response.message);

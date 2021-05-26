@@ -22,8 +22,6 @@ class AdminMain extends DomainsController
      */
     public function index()
     {
-        return $this->renderAjaxWidgetIfAsync(
-            isset($this->get['sort']) ? true : (isset($this->get[1]) || isset($this->get[0]) ? false : null)
-        );
+        $this->redirect($this->base_uri . 'plugin/domains/admin_domains/browse/');
     }
 }
