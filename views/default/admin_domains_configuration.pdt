@@ -11,8 +11,7 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
     <section id="right_container">
 <?php
 }
-?>
-    <?php
+
     $tabs = [
         [
             'name' => $this->_('AdminDomains.configuration.tab_general', true),
@@ -63,7 +62,7 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_spotlight_tlds');?></div></span><br/>
                         <?php
                         foreach ((isset($tlds) ? $tlds : []) as $tld) {
-                            $this->Form->fieldCheckbox('domains_spotlight_tlds[' . $tld->tld . ']', '1', (isset($vars['domains_spotlight_tlds'][$tld->tld]) ? $vars['domains_spotlight_tlds'][$tld->tld] : null) === '1', ['id' => 'spotlight_tld_' . $tld->tld, 'class' => 'inline', 'disabled' => 'disabled']);
+                            $this->Form->fieldCheckbox('domains_spotlight_tlds[' . $tld->tld . ']', '1', (isset($vars['domains_spotlight_tlds'][$tld->tld]) ? $vars['domains_spotlight_tlds'][$tld->tld] : null) === '1', ['id' => 'spotlight_tld_' . $tld->tld, 'class' => 'inline']);
                             $this->Form->label($tld->tld, 'spotlight_tld_' . $tld->tld, ['class' => 'inline']);
                         }
                         ?>

@@ -793,6 +793,45 @@ class DomainsPlugin extends Plugin
     }
 
     /**
+     * Returns all events to be registered for this plugin
+     * (invoked after install() or upgrade(), overwrites all existing events)
+     *
+     * @return array A numerically indexed array containing:
+     *  - event The event to register for
+     *  - callback A string or array representing a callback function or class/method.
+     *      If a user (e.g. non-native PHP) function or class/method, the plugin must
+     *      automatically define it when the plugin is loaded. To invoke an instance
+     *      methods pass "this" instead of the class name as the 1st callback element.
+     */
+    public function getEvents()
+    {
+        return [
+            [
+                'event' => 'Packages.delete',
+                'callback' => ['this', 'deletePackageTld']
+            ]
+        ];
+    }
+
+    /**
+     * Deletes TLD associated with a deleted package
+     *
+     * @param Blesta\Core\Util\Events\Common\EventInterface $event The event to process
+     */
+    public function deletePackageTld($event)
+    {
+        Loader::loadModels($this, ['Domains.DomainsTlds']);
+        $params = $event->getParams();
+
+        if (isset($params['package_id'])) {
+            $tlds = $this->DomainsTlds->getAll(['package_id' => $params['package_id']]);
+            foreach ($tlds as $tld) {
+                $this->DomainsTlds->delete($tld->tld);
+            }
+        }
+    }
+
+    /**
      * Retrieves the value for a client card
      *
      * @param int $client_id The ID of the client for which to fetch the card value
