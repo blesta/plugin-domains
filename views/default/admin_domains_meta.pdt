@@ -26,19 +26,6 @@
                 ?>
                 <div class="title_row first"><h3><?php $this->_('AdminDomains.meta.heading_module_options');?></h3></div>
                 <div class="pad">
-                    <?php
-                    // Set any hidden fields
-                    foreach ((isset($package_fields['fields']) ? $package_fields['fields'] : []) as $index => $field) {
-                        foreach ($field->fields as $input) {
-                            if ($input->type == 'fieldHidden') {
-                                call_user_func_array([$this->Form, $input->type], $input->params);
-                                unset($package_fields['fields'][$index]);
-                                continue 2;
-                            }
-                        }
-                    }
-                    ?>
-
                     <ul>
                         <li>
                             <?php
