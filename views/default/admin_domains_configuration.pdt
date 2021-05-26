@@ -1,4 +1,3 @@
-
 <?php
 if (!(isset($is_ajax) ? $is_ajax : false)) {
     echo (isset($left_nav) ? $left_nav : null);
@@ -12,10 +11,11 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
     <section id="right_container">
 <?php
 }
+
     $tabs = [
         [
             'name' => $this->_('AdminDomains.configuration.tab_general', true),
-            'current' => true,
+            'current' => (($tab ?? 'general') == 'general'),
             'attributes' => [
                 'class' => 'general',
                 'href' => '#'
@@ -23,7 +23,7 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
         ],
         [
             'name' => $this->_('AdminDomains.configuration.tab_notifications', true),
-            'current' => false,
+            'current' => (($tab ?? 'notifications') == 'notifications'),
             'attributes' => [
                 'class' => 'notifications',
                 'href' => '#'
@@ -31,10 +31,17 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
         ],
         [
             'name' => $this->_('AdminDomains.configuration.tab_advanced', true),
-            'current' => false,
+            'current' => (($tab ?? 'advanced') == 'advanced'),
             'attributes' => [
                 'class' => 'advanced',
                 'href' => '#'
+            ]
+        ],
+        [
+            'name' => $this->_('AdminDomains.configuration.tab_importpackages', true),
+            'current' => false,
+            'attributes' => [
+                'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/')
             ]
         ]
     ];
@@ -163,5 +170,7 @@ $(document).ready(function() {
         hideAllTabs();
         $('.tabs_content .tab#tab_' + tab).show();
     });
+
+    $('#<?php echo ($tab ?? 'general');?>_tab').click();
 });
 </script>

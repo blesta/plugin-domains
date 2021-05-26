@@ -14,8 +14,6 @@
         }
         ?>
             <?php
-            echo (isset($message) ? $message : null);
-
             $link_buttons = [
                 [
                     'icon' => 'fas fa-plus',

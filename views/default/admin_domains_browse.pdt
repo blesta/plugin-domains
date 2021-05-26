@@ -14,8 +14,6 @@
         }
         ?>
             <?php
-            echo (isset($message) ? $message : null);
-
             $links = [
                 ['name' => $this->_('AdminDomains.browse.category_active', true) . ' <span>(' . $this->Html->safe(isset($status_count['active']) ? $status_count['active'] : null) . ')</span>', 'current' => ((isset($status) ? $status : null) == 'active' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/active/'), 'class' => 'ajax']],
                 ['name' => $this->_('AdminDomains.browse.category_pending', true) . ' <span>(' . $this->Html->safe(isset($status_count['pending']) ? $status_count['pending'] : null) . ')</span>', 'current' => ((isset($status) ? $status : null) == 'pending' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/pending/'), 'class' => 'ajax']],
