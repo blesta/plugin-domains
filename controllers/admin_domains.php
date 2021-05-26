@@ -491,7 +491,7 @@ class AdminDomains extends DomainsController
                             );
 
                             if (empty($remaining_services)) {
-                                $this->Packages->edit($from_package_id, ['status' => 'inactive']);
+                                $this->Packages->edit($package->id, ['status' => 'inactive']);
                             }
                         }
                     }
