@@ -1002,6 +1002,7 @@ class AdminDomains extends DomainsController
         try {
             // Get TLD package fields
             $package_fields = $this->DomainsTlds->getTldFields($this->get[0]);
+            $package_fields_view = 'admin' . DS . 'default';
 
             // Add a pricing for terms 1-10 years for each currency
             foreach ($currencies as $currency) {
@@ -1043,12 +1044,79 @@ class AdminDomains extends DomainsController
             compact(
                 'package',
                 'package_fields',
+                'package_fields_view',
                 'tld',
                 'currencies',
                 'default_currency',
                 'languages'
             )
         );
+
+        return false;
+    }
+
+    /**
+     * Update TLD package meta
+     */
+    public function meta()
+    {
+        $this->uses(['Domains.DomainsTlds']);
+        $this->helpers(['Form', 'CurrencyFormat']);
+
+        // Fetch the package belonging to this TLD
+        if (
+            !$this->isAjax()
+            || !isset($this->get[0])
+            || !($tld = $this->DomainsTlds->getByPackage($this->get[0]))
+        ) {
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
+        }
+
+        if (!empty($this->post)) {
+            $tld = $this->DomainsTlds->getByPackage($this->get[0]);
+
+            // Update TLD package
+            $this->DomainsTlds->edit($tld->tld, $this->post);
+
+            if (($errors = $this->DomainsTlds->errors())) {
+                echo json_encode([
+                    'message' => $this->setMessage(
+                        'error',
+                        $errors,
+                        true,
+                        ['show_close' => false],
+                        false
+                    )
+                ]);
+            } else {
+                $tld->message = $this->setMessage(
+                    'message',
+                    Language::_('AdminDomains.!success.tld_updated', true),
+                    true,
+                    ['show_close' => false],
+                    false
+                );
+                echo json_encode($tld);
+            }
+
+            return false;
+        }
+
+        // Get TLD package fields
+        $package_fields = $this->DomainsTlds->getTldFields($this->get[0]);
+        $package_fields_view = 'admin' . DS . 'default';
+
+        // Return partial view
+        echo $this->partial(
+            'admin_domains_meta',
+            compact(
+                'package_fields',
+                'package_fields_view',
+                'tld'
+            )
+        );
+
+        $this->view->view= 'ddd';
 
         return false;
     }
