@@ -49,3 +49,29 @@
 .tab_slider ul li:hover {
     cursor: pointer;
 }
+
+#meta_tld .modal_page h1 {
+    font-size: 1.5rem;
+}
+
+#meta_tld .modal_page p {
+    margin-left: 22px;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+#meta_tld .error_box {
+    border-radius: 0px;
+}
+
+#meta_tld .error_box p {
+    margin-bottom: 0px;
+}
+
+#meta_tld .page_meta h1 {
+    font-size: 1.5rem;
+}
+
+#meta_tld .text-center i {
+    font-size: 55px;
+}

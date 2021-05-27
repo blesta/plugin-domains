@@ -1,0 +1,133 @@
+        <?php
+        echo (isset($message) ? $message : null);
+
+        $this->Widget->clear();
+        $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css', ['id' => 'domains_styles']);
+        $this->Widget->create($this->_('AdminDomains.meta.boxtitle_meta_tld', true, $tld->tld), ['id' => 'meta_tld' . str_replace('.', '_', $tld->tld)], (isset($render_section) ? $render_section : null));
+
+        $this->Form->create(null, ['id' => 'meta_tld']);
+        ?>
+
+        <div class="inner">
+            <div class="modal_page" id="page_warning">
+                <div class="p-3">
+                    <h1><i class="fab fa-whmcs fa-fw"></i> <?php $this->_('AdminDomains.meta.heading_update_required');?></h1>
+                    <p class="text-black-50"><?php $this->_('AdminDomains.meta.text_update_required_note');?></p>
+                </div>
+
+                <div class="button_row">
+                    <a href="#" id="continue" class="btn btn-success float-right"><i class="fas fa-arrow-right"></i> <?php $this->_('AdminDomains.meta.field_continue');?></a>
+                </div>
+            </div>
+
+            <div class="modal_page" id="page_meta" style="display: none;">
+                <?php
+                if (!empty($package_fields['fields'])) {
+                ?>
+                <div class="title_row first"><h3><?php $this->_('AdminDomains.meta.heading_module_options');?></h3></div>
+                <div class="pad">
+                    <ul>
+                        <li>
+                            <?php
+                            $this->Form->label($package_fields['group_name'], 'module_group');
+                            $this->Form->fieldSelect('module_group', ['select' => $this->_('AppController.select.please', true)] + ['' => $this->_('AdminDomains.meta.field_modulegroup_any', true)] + (isset($package_fields['groups']) ? $package_fields['groups'] : []), (isset($package->module_group) ? $package->module_group : ''), ['id' => 'module_group']);
+                            ?>
+                        </li>
+
+                        <?php
+                        if (!empty($package_fields['rows'])) {
+                            ?>
+                            <li class="module_row_field">
+                                <?php
+                                $this->Form->label($package_fields['row_name'], 'module_row');
+                                $this->Form->fieldSelect('module_row', $package_fields['rows'], (isset($package->module_row) ? $package->module_row : 0), ['id' => 'module_row']);
+                                ?>
+                            </li>
+                            <?php
+                        } else {
+                            $this->Form->fieldHidden('module_row', (isset($package->module_row) ? $package->module_row : 0), ['id' => 'module_row']);
+                        }
+
+                        // Show module fields
+                        if (isset($package_fields['input_html']) && ($module_field_html = $package_fields['input_html']->generate(null, $package_fields_view))) {
+                            ?>
+                            <li>
+                                <?php
+                                echo $module_field_html;
+                                ?>
+                            </li>
+                            <?php
+                        }
+                        ?>
+                    </ul>
+                </div>
+
+                <div class="button_row">
+                    <?php
+                    $this->Form->fieldSubmit('save', $this->_('AdminDomains.meta.field_update', true), ['class' => 'btn btn-primary float-right']);
+                    ?>
+                    <a href="#" id="finish" class="btn btn-success close float-right" style="display: none;"><i class="fas fa-check"></i> <?php $this->_('AdminDomains.meta.field_finish');?></a>
+                </div>
+                <?php
+                } else {
+                ?>
+                <div class="text-center p-4">
+                    <div class="text-black-50"><i class="far fa-smile"></i></div>
+                    <h1 class="text-black-50 mt-3"><?php $this->_('AdminDomains.meta.heading_update_no_required');?></h1>
+                    <p class="text-black-50 pb-0 mb-0"><?php $this->_('AdminDomains.meta.text_update_no_required_note');?></p>
+                </div>
+                <div class="button_row">
+                    <a href="#" class="btn btn-success close float-right"><i class="fas fa-check"></i> <?php $this->_('AdminDomains.meta.field_finish');?></a>
+                </div>
+                <?php
+                }
+                ?>
+            </div>
+        </div>
+        <?php
+        $this->Form->end();
+        $this->Widget->end();
+        ?>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Set pages
+        $('#meta_tld #continue').on('click', function() {
+            $('#meta_tld #page_warning').hide(100);
+            $('#meta_tld #page_meta').show(200);
+        });
+
+        // Close modal
+        $('#meta_tld .btn.close, #qtip-overlay').on('click', function() {
+            $(this).closest('.qtip').find('.qtip-close').click();
+            location.reload();
+        });
+
+        // Update package meta
+        $('form').on('submit', function(event) {
+            event.preventDefault();
+
+            $(this).blestaRequest(
+                "POST",
+                $('#meta_tld').attr('action'),
+                $('#meta_tld').serialize("serialize"),
+                function(response) {
+                    // Show messages
+                    if (response.hasOwnProperty('message')) {
+                        var parent = $('#meta_tld');
+
+                        parent.find('.error_section').remove();
+                        parent.prepend(response.message);
+                    }
+
+                    if (!response.message.includes('error_box error')) {
+                        $('#meta_tld #page_meta input[name="save"]').hide();
+                        $('#meta_tld #page_meta #finish').show();
+                    }
+                },
+                null,
+                {dataType: 'json'}
+            );
+        });
+    });
+</script>

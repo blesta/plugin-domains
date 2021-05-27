@@ -1,163 +1,184 @@
+
         <?php
-        echo (isset($message) ? $message : null);
-
-        $link_buttons = [
-            [
-                'icon' => 'fas fa-plus',
-                'name' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true),
-                'attributes' => [
-                    'title' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true),
-                    'href' => '#',
-                    'id' => 'add_tld'
-                ]
-            ]
-        ];
-
-        $this->Widget->clear();
-        $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css', ['id' => 'domains_styles']);
-        $this->Widget->setLinkButtons($link_buttons);
-        $this->Widget->create($this->_('AdminDomains.tlds.boxtitle_tld_pricing', true), ['id' => 'admin_domains_tlds'], (isset($render_section) ? $render_section : null));
+        if (!(isset($is_ajax) ? $is_ajax : false)) {
+            echo (isset($left_nav) ? $left_nav : null);
         ?>
-        <table class="table option_table">
-            <thead>
-                <tr class="heading_row">
-                    <td class="icon"></td>
-                    <td class="icon"></td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_tld');?></span></td>
-                    <td>
-                        <span><?php $this->_('AdminDomains.tlds.heading_dns_management');?></span>
-                        <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_dns_management');?></div></span>
-                    </td>
-                    <td>
-                        <span><?php $this->_('AdminDomains.tlds.heading_email_forwarding');?></span>
-                        <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_email_forwarding');?></div></span>
-                    </td>
-                    <td>
-                        <span><?php $this->_('AdminDomains.tlds.heading_id_protection');?></span>
-                        <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_id_protection');?></div></span>
-                    </td>
-                    <td>
-                        <span><?php $this->_('AdminDomains.tlds.heading_epp_code');?></span>
-                        <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_epp_code');?></div></span>
-                    </td>
-                    <td><span><?php $this->_('AdminDomains.tlds.heading_module');?></span></td>
-                    <td class="last"><span><?php $this->_('AdminDomains.tlds.heading_options');?></span></td>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                if (!empty($tlds)) {
-                    foreach ($tlds as $i => $tld) {
-                ?>
-                <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
-                    <td class="icon center"><i class="fas fa-arrows-alt movable"></i></td>
-                    <td class="icon center"><i class="fas <?php echo ($tld->package->status !== 'inactive') ? 'fa-check' : 'fa-times';?>"></i></td>
-                    <td class="small"><?php echo $this->Html->safe($tld->tld);?></td>
-                    <td>
-                        <?php
-                        $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][dns_management]', '1', ((isset($tld->dns_management) ? $tld->dns_management : '0') == '1'), ['class' => 'quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_dns_management']);
-                        ?>
-                    </td>
-                    <td>
-                        <?php
-                        $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][email_forwarding]', '1', ((isset($tld->email_forwarding) ? $tld->email_forwarding : '0') == '1'), ['class' => 'quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_email_forwarding']);
-                        ?>
-                    </td>
-                    <td>
-                        <?php
-                        $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][id_protection]', '1', ((isset($tld->id_protection) ? $tld->id_protection : '0') == '1'), ['class' => 'quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_id_protection']);
-                        ?>
-                    </td>
-                    <td>
-                        <?php
-                        $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][epp_code]', '1', ((isset($tld->epp_code) ? $tld->epp_code : '0') == '1'), ['class' => 'quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_epp_code']);
-                        ?>
-                    </td>
-                    <td>
-                        <?php
-                        $this->Form->fieldSelect('tlds[' . $tld->tld . '][module]', (isset($modules) ? $modules : []), (isset($tld->module->id) ? $tld->module->id : ''), ['class' => 'quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_module']);
-                        ?>
-                    </td>
-                    <td>
-                        <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/';?>" class="modal"><?php $this->_('AdminDomains.tlds.option_edit');?></a>,
-
-                        <?php
-                        if ($tld->package->status == 'inactive') {
-                        ?>
-                            <?php
-                            $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/enabletld/');
-                            $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
-                            ?>
-                            <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/enabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true));?>"><?php $this->_('AdminDomains.tlds.option_enable');?></a>
-                            <?php
-                            $this->Form->end();
-                            ?>
-                        <?php
-                        } else {
-                        ?>
-                            <?php
-                            $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/disabletld/');
-                            $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
-                            ?>
-                            <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/disabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true));?>"><?php $this->_('AdminDomains.tlds.option_disable');?></a>
-                            <?php
-                            $this->Form->end();
-                            ?>
-                        <?php
-                        }
-                        ?>
-                    </td>
-                </tr>
-                <?php
-                    }
-                }
-                ?>
-            </tbody>
-
-            <tfoot>
-                <tr id="add_tld_row">
-                    <td class="icon center"></td>
-                    <td class="icon center">
-                        <a href="#" class="close"><i class="fas fa-times"></i></a>
-                    </td>
-                    <td class="small">
-                        <?php
-                        $this->Form->fieldText('add_tld[tld]', '', ['class' => 'stretch', 'id' => 'add_tld_tld']);
-                        ?>
-                    </td>
-                    <td>
-                        <?php
-                        $this->Form->fieldCheckbox('add_tld[dns_management]', '1', false, ['id' => 'add_tld_dns_management']);
-                        ?>
-                    </td>
-                    <td>
-                        <?php
-                        $this->Form->fieldCheckbox('add_tld[email_forwarding]', '1', false, ['id' => 'add_tld_email_forwarding']);
-                        ?>
-                    </td>
-                    <td>
-                        <?php
-                        $this->Form->fieldCheckbox('add_tld[id_protection]', '1', false, ['id' => 'add_tld_id_protection']);
-                        ?>
-                    </td>
-                    <td>
-                        <?php
-                        $this->Form->fieldCheckbox('add_tld[epp_code]', '1', false, ['id' => 'add_tld_epp_code']);
-                        ?>
-                    </td>
-                    <td>
-                        <?php
-                        $this->Form->fieldSelect('add_tld[module]', $modules, null, ['id' => 'add_tld_module']);
-                        ?>
-                    </td>
-                    <td>
-                        <a class="add_tld" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/tlds/';?>"><?php $this->_('AdminDomains.tlds.option_add');?></a>
-                    </td>
-                </tr>
-            </tfoot>
-        </table>
+        <div id="right_outer">
+            <?php
+            if (!(isset($render_section) ? $render_section : null)) {
+                echo (isset($message) ? $message : null);
+            }
+            ?>
+            <section id="right_container">
         <?php
-        $this->Widget->end();
+        }
+        ?>
+            <?php
+            $link_buttons = [
+                [
+                    'icon' => 'fas fa-plus',
+                    'name' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true),
+                    'attributes' => [
+                        'title' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true),
+                        'href' => '#',
+                        'id' => 'add_tld'
+                    ]
+                ]
+            ];
+
+            $this->Widget->clear();
+            $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css', ['id' => 'domains_styles']);
+            $this->Widget->setLinkButtons($link_buttons);
+            $this->Widget->create($this->_('AdminDomains.tlds.boxtitle_tld_pricing', true), ['id' => 'admin_domains_tlds'], (isset($render_section) ? $render_section : null));
+            ?>
+            <table class="table option_table">
+                <thead>
+                    <tr class="heading_row">
+                        <td class="icon"></td>
+                        <td class="icon"></td>
+                        <td><span><?php $this->_('AdminDomains.tlds.heading_tld');?></span></td>
+                        <td>
+                            <span><?php $this->_('AdminDomains.tlds.heading_dns_management');?></span>
+                            <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_dns_management');?></div></span>
+                        </td>
+                        <td>
+                            <span><?php $this->_('AdminDomains.tlds.heading_email_forwarding');?></span>
+                            <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_email_forwarding');?></div></span>
+                        </td>
+                        <td>
+                            <span><?php $this->_('AdminDomains.tlds.heading_id_protection');?></span>
+                            <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_id_protection');?></div></span>
+                        </td>
+                        <td>
+                            <span><?php $this->_('AdminDomains.tlds.heading_epp_code');?></span>
+                            <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.tlds.tooltip_epp_code');?></div></span>
+                        </td>
+                        <td><span><?php $this->_('AdminDomains.tlds.heading_module');?></span></td>
+                        <td class="last"><span><?php $this->_('AdminDomains.tlds.heading_options');?></span></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    if (!empty($tlds)) {
+                        foreach ($tlds as $i => $tld) {
+                    ?>
+                    <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>" data-package-id="<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
+                        <td class="icon center"><i class="fas fa-arrows-alt movable"></i></td>
+                        <td class="icon center"><i class="fas <?php echo ($tld->package->status !== 'inactive') ? 'fa-check' : 'fa-times';?>"></i></td>
+                        <td class="small"><?php echo $this->Html->safe($tld->tld);?></td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][dns_management]', '1', ((isset($tld->dns_management) ? $tld->dns_management : '0') == '1'), ['class' => 'quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_dns_management']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][email_forwarding]', '1', ((isset($tld->email_forwarding) ? $tld->email_forwarding : '0') == '1'), ['class' => 'quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_email_forwarding']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][id_protection]', '1', ((isset($tld->id_protection) ? $tld->id_protection : '0') == '1'), ['class' => 'quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_id_protection']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][epp_code]', '1', ((isset($tld->epp_code) ? $tld->epp_code : '0') == '1'), ['class' => 'quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_epp_code']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldSelect('tlds[' . $tld->tld . '][module]', (isset($modules) ? $modules : []), (isset($tld->module->id) ? $tld->module->id : ''), ['class' => 'quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_module']);
+                            ?>
+                        </td>
+                        <td>
+                            <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/';?>" class="modal"><?php $this->_('AdminDomains.tlds.option_edit');?></a>,
+
+                            <?php
+                            if ($tld->package->status == 'inactive') {
+                            ?>
+                                <?php
+                                $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/enabletld/');
+                                $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
+                                ?>
+                                <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/enabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true));?>"><?php $this->_('AdminDomains.tlds.option_enable');?></a>
+                                <?php
+                                $this->Form->end();
+                                ?>
+                            <?php
+                            } else {
+                            ?>
+                                <?php
+                                $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/disabletld/');
+                                $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
+                                ?>
+                                <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/disabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true));?>"><?php $this->_('AdminDomains.tlds.option_disable');?></a>
+                                <?php
+                                $this->Form->end();
+                                ?>
+                            <?php
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                    <?php
+                        }
+                    }
+                    ?>
+                </tbody>
+
+                <tfoot>
+                    <tr id="add_tld_row">
+                        <td class="icon center"></td>
+                        <td class="icon center">
+                            <a href="#" class="close"><i class="fas fa-times"></i></a>
+                        </td>
+                        <td class="small">
+                            <?php
+                            $this->Form->fieldText('add_tld[tld]', '', ['class' => 'stretch', 'id' => 'add_tld_tld']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('add_tld[dns_management]', '1', false, ['id' => 'add_tld_dns_management']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('add_tld[email_forwarding]', '1', false, ['id' => 'add_tld_email_forwarding']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('add_tld[id_protection]', '1', false, ['id' => 'add_tld_id_protection']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('add_tld[epp_code]', '1', false, ['id' => 'add_tld_epp_code']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldSelect('add_tld[module]', $modules, null, ['id' => 'add_tld_module']);
+                            ?>
+                        </td>
+                        <td>
+                            <a class="add_tld" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/tlds/';?>"><?php $this->_('AdminDomains.tlds.option_add');?></a>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+            <?php
+            $this->Widget->end();
+            ?>
+        <?php
+        if (!(isset($is_ajax) ? $is_ajax : false)) {
+        ?>
+            </section>
+        </div>
+        <?php
+        }
         ?>
 
 <script type="text/javascript">
@@ -239,7 +260,9 @@
         }
 
         // Update TLDs
-        $('body').on('change', '#admin_domains_tlds .table tbody input.quickupdate, .table tbody select.quickupdate', function() {
+        $('body').on('change', '#admin_domains_tlds .table tbody .quickupdate', function() {
+            var field = this;
+
             $(this).blestaRequest(
                 "POST",
                 '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updatetlds/');?>',
@@ -261,6 +284,28 @@
                         null,
                         {dataType: 'json'}
                     );
+
+                    // If the module has been updated, ask the user to update the package meta
+                    if ($(field).attr('name').includes('[module]') && !response.message.includes('error_box error')) {
+                        // Get TLD package id
+                        var package_id = $(field).parent().parent().attr('data-package-id');
+
+                        if(!isNaN(package_id)) {
+                            $('.common_box').blestaModal({
+                                close: '<?php $this->_('AppController.modal.text_close');?>',
+                                url: '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/meta/');?>' + package_id + '/',
+                                onShow: function (event, api) {
+                                    var qtip = $('#' + api._id);
+
+                                    qtip.addClass('common_box_modal');
+                                    qtip.find('.qtip-content').removeClass('qtip-content');
+                                },
+                                min_width: Math.max((window.innerWidth / 4) * 2, 400),
+                                max_width: Math.max((window.innerWidth / 4) * 2, 400)
+                            });
+                            $('.common_box').trigger('click');
+                        }
+                    }
                 },
                 null,
                 {dataType: 'json'}

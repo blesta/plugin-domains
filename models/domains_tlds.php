@@ -1,5 +1,6 @@
 <?php
 use Blesta\Core\Util\Input\Fields\InputFields;
+use Blesta\Core\Util\Input\Fields\Html as FieldsHtml;
 
 /**
  * Domain Manager TLDs Management Model
@@ -800,9 +801,18 @@ class DomainsTlds extends DomainsModel
         }
         $tags = $package_email_tags;
 
+        // Build input fields HTML
+        $input_fields = new InputFields();
+        foreach ($fields as $field) {
+            $input_fields->setField($field);
+        }
+        $input_fields->setHtml($html);
+        $input_html = new FieldsHtml($input_fields);
+
         return compact(
             'fields',
             'html',
+            'input_html',
             'tags',
             'template',
             'row_name',
