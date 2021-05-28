@@ -102,7 +102,19 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
             </div>
         </div>
         <div class="tab" id="tab_advanced">
-            <div class="title_row first"><h3><?php $this->_('AdminDomains.configuration.heading_package_options');?></h3></div>
+            <div class="title_row first"><h3><?php $this->_('AdminDomains.configuration.heading_taxes');?></h3></div>
+            <div class="pad">
+                <ul>
+                    <li>
+                        <?php
+                        $this->Form->fieldCheckbox('domains_taxable', '1', ((isset($vars['domains_taxable']) ? $vars['domains_taxable'] : 0) == 1), ['id' => 'taxable']);
+                        $this->Form->label($this->_('AdminDomains.configuration.field_taxable', true), 'taxable', ['class' => 'inline']);
+                        ?>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="title_row"><h3><?php $this->_('AdminDomains.configuration.heading_package_options');?></h3></div>
             <div class="pad">
                 <ul>
                     <li>
@@ -129,18 +141,6 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                         <?php $this->Form->label($this->_('AdminDomains.configuration.field_epp_code_option_group', true), 'epp_code_option_group', ['class' => 'inline']); ?>
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_epp_code_option_group');?></div></span>
                         <?php $this->Form->fieldSelect('domains_epp_code_option_group', ($package_option_groups ?? null), (isset($vars['domains_epp_code_option_group']) ? $vars['domains_epp_code_option_group'] : null), ['id' => 'epp_code_option_group', 'class' => 'block']); ?>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="title_row"><h3><?php $this->_('AdminDomains.configuration.heading_taxes');?></h3></div>
-            <div class="pad">
-                <ul>
-                    <li>
-                        <?php
-                        $this->Form->fieldCheckbox('domains_taxable', '1', ((isset($vars['domains_taxable']) ? $vars['domains_taxable'] : 0) == 1), ['id' => 'taxable']);
-                        $this->Form->label($this->_('AdminDomains.configuration.field_taxable', true), 'taxable', ['class' => 'inline']);
-                        ?>
                     </li>
                 </ul>
             </div>
