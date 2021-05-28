@@ -414,7 +414,7 @@
         // Set the module email template as the email content
         var templates = <?php echo json_encode($package_fields['template'], JSON_PRETTY_PRINT);?>;
 
-        if (typeof templates == 'undefined' || templates.length == 0) {
+        if (typeof templates == 'undefined' || templates === null || templates.length == 0) {
             $('.load_sample_email').parent().hide();
         } else {
             $('.load_sample_email').parent().show();
