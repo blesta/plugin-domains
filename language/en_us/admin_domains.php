@@ -62,7 +62,6 @@ $lang['AdminDomains.configuration.tab_importpackages'] = 'Import Packages';
 $lang['AdminDomains.configuration.heading_package_options'] = 'Package Options';
 $lang['AdminDomains.configuration.heading_taxes'] = 'Taxes';
 
-$lang['AdminDomains.configuration.field_package_group'] = 'TLD Package Group';
 $lang['AdminDomains.configuration.field_dns_management_option_group'] = 'DNS Management Option Group';
 $lang['AdminDomains.configuration.field_email_forwarding_option_group'] = 'Email Forwarding Option Group';
 $lang['AdminDomains.configuration.field_id_protection_option_group'] = 'ID Protection Option Group';
@@ -76,7 +75,6 @@ $lang['AdminDomains.configuration.field_submit'] = 'Update Configuration';
 
 $lang['AdminDomains.configuration.link_template'] = 'Edit Email Template';
 
-$lang['AdminDomains.configuration.tooltip_domains_package_group'] = 'The package group to which all TLD price management packages will be assigned.';
 $lang['AdminDomains.configuration.tooltip_dns_management_option_group'] = 'The configurable option group used to control whether a domain will have DNS management services.';
 $lang['AdminDomains.configuration.tooltip_email_forwarding_option_group'] = 'The configurable option group used to control whether a domain will have email forwarding services.';
 $lang['AdminDomains.configuration.tooltip_id_protection_option_group'] = 'The configurable option group used to control whether a domain will have ID protection services.';
