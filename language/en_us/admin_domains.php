@@ -153,7 +153,7 @@ $lang['AdminDomains.meta.field_finish'] = 'Finish';
 $lang['AdminDomains.meta.field_update'] = 'Update';
 
 
-$lang['AdminDomains.whois.boxtitle_whois'] = 'Whois Domain Lookup';
+$lang['AdminDomains.whois.boxtitle_whois'] = 'Whois';
 $lang['AdminDomains.whois.title_row'] = 'Domain Lookup';
 $lang['AdminDomains.whois.available'] = 'Domain Available';
 $lang['AdminDomains.whois.unavailable'] = 'Domain Unavailable';
@@ -184,7 +184,7 @@ $lang['AdminDomains.getfilters.field_service_meta'] = 'Domain Name';
 
 $lang['AdminDomains.leftnav.nav_domains'] = 'Domains';
 $lang['AdminDomains.leftnav.nav_domains_domains'] = 'Domains';
-$lang['AdminDomains.leftnav.nav_domains_whois'] = 'Whois Domain Lookup';
+$lang['AdminDomains.leftnav.nav_domains_whois'] = 'Whois';
 $lang['AdminDomains.leftnav.nav_tlds'] = 'TLDs';
 $lang['AdminDomains.leftnav.nav_tlds_pricing'] = 'TLD Pricing';
 $lang['AdminDomains.leftnav.nav_tlds_registrars'] = 'Registrars';
