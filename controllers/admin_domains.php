@@ -361,7 +361,6 @@ class AdminDomains extends DomainsController
         if (!empty($this->post)) {
             $accepted_settings = [
                 'domains_spotlight_tlds',
-                'domains_package_group',
                 'domains_dns_management_option_group',
                 'domains_email_forwarding_option_group',
                 'domains_id_protection_option_group',

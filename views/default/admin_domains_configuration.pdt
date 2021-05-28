@@ -105,11 +105,6 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
             <div class="pad">
                 <ul>
                     <li>
-                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_package_group', true), 'package_group', ['class' => 'inline']); ?>
-                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_domains_package_group');?></div></span>
-                        <?php $this->Form->fieldSelect('domains_package_group', ($package_groups ?? null), (isset($vars['domains_package_group']) ? $vars['domains_package_group'] : null), ['id' => 'package_group', 'class' => 'block']); ?>
-                    </li>
-                    <li>
                         <?php $this->Form->label($this->_('AdminDomains.configuration.field_dns_management_option_group', true), 'dns_management_option_group', ['class' => 'inline']); ?>
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_dns_management_option_group');?></div></span>
                         <?php $this->Form->fieldSelect('domains_dns_management_option_group', ($package_option_groups ?? null), (isset($vars['domains_dns_management_option_group']) ? $vars['domains_dns_management_option_group'] : null), ['id' => 'dns_management_option_group', 'class' => 'block']); ?>
