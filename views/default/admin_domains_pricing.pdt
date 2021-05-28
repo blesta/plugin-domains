@@ -347,7 +347,7 @@
         });
 
         // Update TLD
-        $('form').on('submit', function(event) {
+        $('#edit_tld').on('submit', function(event) {
             event.preventDefault();
 
             $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .assigned_option_groups option').prop('selected', true);

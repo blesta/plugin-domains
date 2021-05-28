@@ -155,22 +155,15 @@ $(document).ready(function() {
     $('#html').blestaBindWysiwygEditor({language: '<?php echo substr(Configure::get('Blesta.language'), 0, 2); ?>'});
 
     // Set tabs
-    function hideAllTabs() {
-        $('.tabs_content .tab').hide();
-    }
-
-    hideAllTabs();
-    $('.tabs_content .tab').first().show();
+    $('.tabs_content .tab').hide();
+    $('.tabs_content #tab_<?php echo ($tab ?? 'general');?>').show();
     $('.tab_slider ul li').on('click', function() {
         var tab = $(this).find('a').attr('class');
 
         $('.tab_slider ul li').removeClass('current');
         $(this).addClass('current');
-
-        hideAllTabs();
+        $('.tabs_content .tab').hide();
         $('.tabs_content .tab#tab_' + tab).show();
     });
-
-    $('#<?php echo ($tab ?? 'general');?>_tab').click();
 });
 </script>
