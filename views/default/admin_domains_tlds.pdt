@@ -279,7 +279,7 @@
                         '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/tlds/');?>',
                         null,
                         function(tlds) {
-                            $(tlds.replacer).html(tlds.content);
+                            $('#right_container ' + tlds.replacer).html(tlds.content);
                         },
                         null,
                         {dataType: 'json'}

@@ -102,6 +102,19 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
             </div>
         </div>
         <div class="tab" id="tab_advanced">
+            <div class="title_row first"><h3><?php $this->_('AdminDomains.configuration.heading_taxes');?></h3></div>
+            <div class="pad">
+                <ul>
+                    <li>
+                        <?php
+                        $this->Form->fieldCheckbox('domains_taxable', '1', ((isset($vars['domains_taxable']) ? $vars['domains_taxable'] : 0) == 1), ['id' => 'taxable']);
+                        $this->Form->label($this->_('AdminDomains.configuration.field_taxable', true), 'taxable', ['class' => 'inline']);
+                        ?>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="title_row"><h3><?php $this->_('AdminDomains.configuration.heading_package_options');?></h3></div>
             <div class="pad">
                 <ul>
                     <li>
@@ -150,22 +163,15 @@ $(document).ready(function() {
     $('#html').blestaBindWysiwygEditor({language: '<?php echo substr(Configure::get('Blesta.language'), 0, 2); ?>'});
 
     // Set tabs
-    function hideAllTabs() {
-        $('.tabs_content .tab').hide();
-    }
-
-    hideAllTabs();
-    $('.tabs_content .tab').first().show();
+    $('.tabs_content .tab').hide();
+    $('.tabs_content #tab_<?php echo ($tab ?? 'general');?>').show();
     $('.tab_slider ul li').on('click', function() {
         var tab = $(this).find('a').attr('class');
 
         $('.tab_slider ul li').removeClass('current');
         $(this).addClass('current');
-
-        hideAllTabs();
+        $('.tabs_content .tab').hide();
         $('.tabs_content .tab#tab_' + tab).show();
     });
-
-    $('#<?php echo ($tab ?? 'general');?>_tab').click();
 });
 </script>
