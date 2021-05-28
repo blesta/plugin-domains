@@ -4,7 +4,7 @@
  */
 // Basics
 $lang['DomainsPlugin.name'] = 'Domain Manager';
-$lang['DomainsPlugin.description'] = 'Used to handle various aspects of domain management and sales';
+$lang['DomainsPlugin.description'] = 'Used to handle various aspects of domain management and sales. This plugin is currently in beta phase.';
 
 
 // Change Password
