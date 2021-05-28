@@ -368,16 +368,25 @@ class AdminDomains extends DomainsController
                 'domains_epp_code_option_group',
                 'domains_first_reminder_days_before',
                 'domains_second_reminder_days_before',
-                'domains_expiration_notice_days_after'
+                'domains_expiration_notice_days_after',
+                'domains_taxable'
             ];
             if (!isset($this->post['domains_spotlight_tlds'])) {
                 $this->post['domains_spotlight_tlds'] = [];
+            }
+            if (!isset($this->post['domains_taxable'])) {
+                $this->post['domains_taxable'] = '0';
             }
             $this->post['domains_spotlight_tlds'] = json_encode($this->post['domains_spotlight_tlds']);
             $this->Companies->setSettings(
                 $company_id,
                 array_intersect_key($this->post, array_flip($accepted_settings))
             );
+
+            // Update tax status
+            if (isset($this->post['domains_taxable'])) {
+                $this->DomainsTlds->updateTax($this->post['domains_taxable']);
+            }
 
             $this->flashMessage(
                 'message',

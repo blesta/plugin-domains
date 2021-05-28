@@ -58,6 +58,9 @@ $lang['AdminDomains.configuration.tab_notifications'] = 'Notifications';
 $lang['AdminDomains.configuration.tab_advanced'] = 'Advanced';
 $lang['AdminDomains.configuration.tab_importpackages'] = 'Import Packages';
 
+$lang['AdminDomains.configuration.heading_package_options'] = 'Package Options';
+$lang['AdminDomains.configuration.heading_taxes'] = 'Taxes';
+
 $lang['AdminDomains.configuration.field_package_group'] = 'TLD Package Group';
 $lang['AdminDomains.configuration.field_dns_management_option_group'] = 'DNS Management Option Group';
 $lang['AdminDomains.configuration.field_email_forwarding_option_group'] = 'Email Forwarding Option Group';
@@ -67,6 +70,7 @@ $lang['AdminDomains.configuration.field_first_reminder_days_before'] = '1st Rene
 $lang['AdminDomains.configuration.field_second_reminder_days_before'] = '2nd Renewal Reminder Days Before';
 $lang['AdminDomains.configuration.field_expiration_notice_days_after'] = 'Expiration Notice Days After';
 $lang['AdminDomains.configuration.field_spotlight_tlds'] = 'Spotlight TLDs';
+$lang['AdminDomains.configuration.field_taxable'] = 'Enable Tax for Domains';
 $lang['AdminDomains.configuration.field_submit'] = 'Update Configuration';
 
 $lang['AdminDomains.configuration.link_template'] = 'Edit Email Template';

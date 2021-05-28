@@ -253,6 +253,7 @@ class DomainsTlds extends DomainsModel
         // Create package
         $package_params = [
             'module_id' => $vars['module_id'],
+            'taxable' => isset($company_settings['domains_taxable']) ? (int)$company_settings['domains_taxable'] : 0,
             'names' => [],
             'descriptions' => [],
             'hidden' => '1',
@@ -335,6 +336,7 @@ class DomainsTlds extends DomainsModel
      *  - module_id The ID of the module this package belongs to (optional, default NULL)
      *  - module_row The module row this package belongs to (optional, default 0)
      *  - module_group The module group this package belongs to (optional, default NULL)
+     *  - taxable Whether or not this package is taxable (optional, default 0)
      *  - email_content A numerically indexed array of email content including:
      *      - lang The language of the email content
      *      - html The html content for the email (optional)
@@ -371,6 +373,7 @@ class DomainsTlds extends DomainsModel
                 'module_group' => isset($vars['module_group'])
                     ? $vars['module_group']
                     : (isset($package->module_group) ? $package->module_group : null),
+                'taxable' => isset($vars['taxable']) ? (int)$vars['taxable'] : 0,
                 'status' => $package->status,
                 'email_content' => isset($vars['email_content'])
                     ? $vars['email_content']
@@ -390,7 +393,7 @@ class DomainsTlds extends DomainsModel
             $fields = json_decode(json_encode($fields), true);
 
             foreach ($fields as $key => $value) {
-                if (empty($value) && !is_array($value)) {
+                if (is_null($value)) {
                     unset($fields[$key]);
                 }
             }
@@ -646,6 +649,20 @@ class DomainsTlds extends DomainsModel
             'package_id' => $package_id,
             'pricing_id' => $pricing_id
         ]);
+    }
+
+    /**
+     * Updates the taxation status of the TLD packages
+     *
+     * @param int $taxable Whether or not this package is taxable (optional, default 0)
+     */
+    public function updateTax($taxable)
+    {
+        $tlds = $this->getAll();
+
+        foreach ($tlds as $tld) {
+            $this->edit($tld->tld, ['taxable' => (int)$taxable]);
+        }
     }
 
     /**
