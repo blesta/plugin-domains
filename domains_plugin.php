@@ -187,9 +187,6 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels($this, ['ModuleManager', 'Packages', 'Domains.DomainsTlds']);
 
-        // Get the none module for this company
-        $none_modules = $this->ModuleManager->getByClass('none', $company_id);
-
         // Create a package for each tld and add it to the database
         $default_tlds = $this->DomainsTlds->getDefaultTlds();
         $tld_packages_setting = $this->Companies->getSetting($company_id, 'domains_tld_packages');

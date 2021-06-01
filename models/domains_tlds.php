@@ -140,12 +140,12 @@ class DomainsTlds extends DomainsModel
 
                 // If a module id is not provided, use the None module by default
                 if (!isset($vars['module_id'])) {
-                    if (!$this->ModuleManager->isInstalled('none', $vars['company_id'])) {
-                        $this->ModuleManager->add(['class' => 'none', 'company_id' => $vars['company_id']]);
+                    if (!$this->ModuleManager->isInstalled('generic_domain', $vars['company_id'])) {
+                        $this->ModuleManager->add(['class' => 'generic_domain', 'company_id' => $vars['company_id']]);
                     }
 
-                    if (($none_module = $this->ModuleManager->getByClass('none', $vars['company_id']))) {
-                        $module = isset($none_module[0]) ? $none_module[0] : null;
+                    if (($generic_domain_module = $this->ModuleManager->getByClass('generic_domain', $vars['company_id']))) {
+                        $module = isset($generic_domain_module[0]) ? $generic_domain_module[0] : null;
                     }
                 }
 

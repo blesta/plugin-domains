@@ -778,11 +778,11 @@ class AdminDomains extends DomainsController
             'asc',
             ['type' => 'registrar']
         );
-        $none_module = $this->ModuleManager->getByClass('none', $company_id);
-        $none_module = isset($none_module[0]) ? $none_module[0] : null;
+        $generic_domain_module = $this->ModuleManager->getByClass('generic_domain', $company_id);
+        $generic_domain_module = isset($generic_domain_module[0]) ? $generic_domain_module[0] : null;
         $select = ['' => Language::_('AppController.select.please', true)];
-        $none = [$none_module->id => $none_module->name];
-        $modules = $select + $none + $this->Form->collapseObjectArray($modules, 'name', 'id');
+        $generic_domain = [$generic_domain_module->id => $generic_domain_module->name];
+        $modules = $select + $generic_domain + $this->Form->collapseObjectArray($modules, 'name', 'id');
 
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
@@ -1152,10 +1152,7 @@ class AdminDomains extends DomainsController
 
         // Set module ID filter
         $modules = $this->Form->collapseObjectArray(
-            array_merge(
-                $this->ModuleManager->getByClass('none', $options['company_id']),
-                $this->ModuleManager->getAll($options['company_id'], 'name', 'asc', ['type' => 'registrar'])
-            ),
+            $this->ModuleManager->getAll($options['company_id'], 'name', 'asc', ['type' => 'registrar']),
             'name',
             'id'
         );
