@@ -187,17 +187,33 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels($this, ['ModuleManager', 'Packages', 'Domains.DomainsTlds']);
 
+        // Get generic domain module
+        if (!$this->ModuleManager->isInstalled('generic_domain', $company_id)) {
+            $this->ModuleManager->add(['class' => 'generic_domain', 'company_id' => $company_id]);
+        }
+        $module = $this->ModuleManager->getByClass('generic_domain', $company_id);
+        $module = isset($module[0]) ? $module[0] : null;
+
+        if (!isset($module->id)) {
+            return;
+        }
+
         // Create a package for each tld and add it to the database
         $default_tlds = $this->DomainsTlds->getDefaultTlds();
         $tld_packages_setting = $this->Companies->getSetting($company_id, 'domains_tld_packages');
-        $tld_packages = (array) ($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
+        $tld_packages = (array)($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
 
         foreach ($default_tlds as $default_tld) {
             // Skip package creation for this TLD if there is already a package assigned to it
             if (array_key_exists($default_tld, $tld_packages)
                 && ($package = $this->Packages->get($tld_packages[$default_tld]))
             ) {
-                $tld_params = ['tld' => $default_tld, 'company_id' => $company_id, 'package_id' => $package->id];
+                $tld_params = [
+                    'tld' => $default_tld,
+                    'company_id' => $company_id,
+                    'package_id' => $package->id,
+                    'module_id' => $module->id
+                ];
                 $this->DomainsTlds->add($tld_params);
 
                 $errors = $this->DomainsTlds->errors();
@@ -210,7 +226,12 @@ class DomainsPlugin extends Plugin
             }
 
             // Create new package
-            $tld_params = ['tld' => $default_tld, 'company_id' => $company_id, 'package_group_id' => $package_group_id];
+            $tld_params = [
+                'tld' => $default_tld,
+                'company_id' => $company_id,
+                'package_group_id' => $package_group_id,
+                'module_id' => $module->id
+            ];
             $tld = $this->DomainsTlds->add($tld_params);
             $package_id = isset($tld['package_id']) ? $tld['package_id'] : null;
 
@@ -333,9 +354,9 @@ class DomainsPlugin extends Plugin
             );
             $tld_packages = ($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
             $tlds = $this->Record->select()->
-                from('domains_tlds')->
-                where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
-                fetchAll();
+            from('domains_tlds')->
+            where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
+            fetchAll();
 
             foreach ($tlds as $tld) {
                 $tld_packages[$tld->tld] = $tld->package_id;
@@ -349,8 +370,8 @@ class DomainsPlugin extends Plugin
 
             // Remove company TLDs
             $this->Record->from('domains_tlds')->
-                where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
-                delete();
+            where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
+            delete();
         }
 
         // Remove individual cron task runs
