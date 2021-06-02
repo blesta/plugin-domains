@@ -195,6 +195,11 @@ class DomainsPlugin extends Plugin
         $module = isset($module[0]) ? $module[0] : null;
 
         if (!isset($module->id)) {
+            $this->Input->setErrors([
+                'module_id' => [
+                    'invalid' => Language::_('DomainsPlugin.!error.module_id.exists', true)
+                ]
+            ]);
             return;
         }
 
