@@ -79,9 +79,9 @@ class DomainsTlds extends DomainsModel
     public function get($tld)
     {
         return $this->getTlds([
-            'tld' => $tld,
-            'company_id' => Configure::get('Blesta.company_id')
-        ])->fetch();
+                'tld' => $tld,
+                'company_id' => Configure::get('Blesta.company_id')
+            ])->fetch();
     }
 
     /**
@@ -93,9 +93,9 @@ class DomainsTlds extends DomainsModel
     public function getByPackage($package_id)
     {
         return $this->getTlds([
-            'package_id' => $package_id,
-            'company_id' => Configure::get('Blesta.company_id')
-        ])->fetch();
+                'package_id' => $package_id,
+                'company_id' => Configure::get('Blesta.company_id')
+            ])->fetch();
     }
 
     /**
@@ -137,10 +137,6 @@ class DomainsTlds extends DomainsModel
             if (!isset($vars['package_id'])) {
                 // Get module
                 $module = $this->ModuleManager->get($vars['module_id']);
-
-                if (empty($module->id)) {
-                    return;
-                }
 
                 // Create the package
                 $params = [
@@ -369,7 +365,7 @@ class DomainsTlds extends DomainsModel
                 'descriptions' => $package->descriptions,
                 'module_row' => isset($vars['module_row'])
                     ? $vars['module_row']
-                    : (isset($package->module_row) ? $package->module_row : null),
+                    : null,
                 'module_group' => isset($vars['module_group'])
                     ? $vars['module_group']
                     : (isset($package->module_group) ? $package->module_group : null),
@@ -380,26 +376,23 @@ class DomainsTlds extends DomainsModel
                     : (isset($package->email_content) ? $package->email_content : null),
                 'pricing' => $package->pricing,
                 'option_groups' => (array)(
-                isset($package->option_groups)
-                    ? $this->Form->collapseObjectArray($package->option_groups, 'id', 'id')
-                    : []
+                    isset($package->option_groups)
+                        ? $this->Form->collapseObjectArray($package->option_groups, 'id', 'id')
+                        : []
                 ),
                 'meta' => (array)(
-                isset($vars['meta'])
-                    ? array_merge((isset($package->meta) ? (array)$package->meta : []), $vars['meta'])
-                    : (isset($package->meta) ? $package->meta : [])
+                    isset($vars['meta'])
+                        ? array_merge((isset($package->meta) ? (array)$package->meta : []), $vars['meta'])
+                        : (isset($package->meta) ? $package->meta : [])
                 )
             ];
             $fields = json_decode(json_encode($fields), true);
 
             foreach ($fields as $key => $value) {
-                if (empty($value)) {
+                if (is_null($value)) {
                     unset($fields[$key]);
                 }
             }
-
-            // Set if the package is taxable
-            $fields['taxable'] = isset($vars['taxable']) ? (int)$vars['taxable'] : 0;
 
             $this->Packages->edit($package->id, $fields);
 
@@ -854,9 +847,9 @@ class DomainsTlds extends DomainsModel
     {
         // Delete a TLD
         $this->Record->from('domains_tlds')->
-        where('domains_tlds.tld', '=', $tld)->
-        where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
-        delete();
+            where('domains_tlds.tld', '=', $tld)->
+            where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
+            delete();
     }
 
     /**

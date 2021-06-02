@@ -359,9 +359,9 @@ class DomainsPlugin extends Plugin
             );
             $tld_packages = ($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
             $tlds = $this->Record->select()->
-            from('domains_tlds')->
-            where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
-            fetchAll();
+                from('domains_tlds')->
+                where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
+                fetchAll();
 
             foreach ($tlds as $tld) {
                 $tld_packages[$tld->tld] = $tld->package_id;
@@ -375,8 +375,8 @@ class DomainsPlugin extends Plugin
 
             // Remove company TLDs
             $this->Record->from('domains_tlds')->
-            where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
-            delete();
+                where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
+                delete();
         }
 
         // Remove individual cron task runs
