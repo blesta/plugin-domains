@@ -512,10 +512,6 @@ class DomainsPlugin extends Plugin
                 $modules[$module_id] = $this->ModuleManager->initModule($module_id);
             }
 
-            if (!method_exists($modules[$module_id], 'getExpirationDate')) {
-                continue;
-            }
-
             // Get the domain name from the module
             $domain = $service->name;
             if (method_exists($modules[$module_id], 'getServiceDomain')) {
@@ -523,7 +519,10 @@ class DomainsPlugin extends Plugin
             }
 
             // Get the expiration date of this service from the registrar
-            $renew_date = $modules[$module_id]->getExpirationDate($domain, 'c', $service->module_row_id);
+            $renew_date = $service->date_renews;
+            if (method_exists($modules[$module_id], 'getExpirationDate')) {
+                $renew_date = $modules[$module_id]->getExpirationDate($service, 'c');
+            }
 
             // Update the renew date if the expiration date is greater than the renew date
             if (strtotime($renew_date) > strtotime($service->date_renews)) {
