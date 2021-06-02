@@ -221,19 +221,6 @@ class DomainsTlds extends DomainsModel
         Loader::loadModels($this, ['ModuleManager', 'Currencies', 'Languages', 'Companies']);
         Loader::loadHelpers($this, ['Form']);
 
-        // Validate if the TLD is supported by the provided module
-        if (isset($vars['module_id'])) {
-            $module_tlds = $this->ModuleManager->moduleRpc($vars['module_id'], 'getTlds');
-
-            if (is_array($module_tlds) && !empty($module_tlds) && !in_array($vars['tld'], $module_tlds)) {
-                $this->Input->setErrors([
-                    'tld' => ['unsupported' => Language::_('DomainsTlds.!error.unsupported_tld', true)]
-                ]);
-
-                return;
-            }
-        }
-
         // Set company id
         if (!isset($vars['company_id'])) {
             $vars['company_id'] = Configure::get('Blesta.company_id');
@@ -363,19 +350,6 @@ class DomainsTlds extends DomainsModel
     {
         Loader::loadModels($this, ['Packages', 'ModuleManager', 'Companies']);
         Loader::loadHelpers($this, ['Form']);
-
-        // Validate if the TLD is supported by the provided module
-        if (isset($vars['module_id'])) {
-            $module_tlds = $this->ModuleManager->moduleRpc($vars['module_id'], 'getTlds');
-
-            if (is_array($module_tlds) && !empty($module_tlds) && !in_array($tld, $module_tlds)) {
-                $this->Input->setErrors([
-                    'tld' => ['unsupported' => Language::_('DomainsTlds.!error.unsupported_tld', true)]
-                ]);
-
-                return;
-            }
-        }
 
         $vars['tld'] = $tld;
         $tld = $this->get($vars['tld']);
@@ -1025,6 +999,23 @@ class DomainsTlds extends DomainsModel
                     'if_set' => true,
                     'rule' => ['minLength', 3],
                     'message' => Language::_('DomainsTlds.!error.tld.length', true)
+                ],
+                'supported' => [
+                    'if_set' => true,
+                    'rule' => function($tld) use (&$vars) {
+                        // Validate if the TLD is supported by the provided module
+                        if (isset($vars['module_id'])) {
+                            $parent = new stdClass();
+                            Loader::loadModels($parent, ['ModuleManager']);
+
+                            $module_tlds = $parent->ModuleManager->moduleRpc($vars['module_id'], 'getTlds');
+
+                            return !(is_array($module_tlds) && !empty($module_tlds) && !in_array($vars['tld'], $module_tlds));
+                        }
+
+                        return true;
+                    },
+                    'message' => Language::_('DomainsTlds.!error.unsupported_tld', true)
                 ]
             ],
             'package_id' => [
