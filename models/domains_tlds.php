@@ -364,9 +364,19 @@ class DomainsTlds extends DomainsModel
                 $vars['module_row'] = $module_row;
             }
 
+            // Set module row and module group to null, if one isn't provided
+            if (empty($vars['module_row'])) {
+                $vars['module_row'] = null;
+            }
+            if (empty($vars['module_group'])) {
+                $vars['module_group'] = null;
+            }
+
             // Update package
             $fields = [
-                'module_id' => $vars['module_id'] ?? null,
+                'module_id' => isset($vars['module_id'])
+                    ? $vars['module_id']
+                    : (isset($package->module_id) ? $package->module_id : null),
                 'module_row' => $vars['module_row'] ?? null,
                 'module_group' => $vars['module_group'] ?? null,
                 'taxable' => isset($vars['taxable'])
