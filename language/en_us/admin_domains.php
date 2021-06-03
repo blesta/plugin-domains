@@ -35,6 +35,7 @@ $lang['AdminDomains.browse.category_in_review'] = 'In Review';
 $lang['AdminDomains.browse.category_scheduled_cancellation'] = 'Scheduled';
 $lang['AdminDomains.browse.field_actionsubmit'] = 'Submit';
 
+$lang['AdminDomains.browse.tooltip_renew'] = 'Auto Renewal for Blesta means that the user will be invoiced automatically and that the domain will be renewed once the invoice is paid.';
 
 $lang['AdminDomains.getdomainactions.change_auto_renewal'] = 'Change Auto Renewal';
 
@@ -58,7 +59,9 @@ $lang['AdminDomains.configuration.tab_notifications'] = 'Notifications';
 $lang['AdminDomains.configuration.tab_advanced'] = 'Advanced';
 $lang['AdminDomains.configuration.tab_importpackages'] = 'Import Packages';
 
-$lang['AdminDomains.configuration.field_package_group'] = 'TLD Package Group';
+$lang['AdminDomains.configuration.heading_package_options'] = 'Package Options';
+$lang['AdminDomains.configuration.heading_taxes'] = 'Taxes';
+
 $lang['AdminDomains.configuration.field_dns_management_option_group'] = 'DNS Management Option Group';
 $lang['AdminDomains.configuration.field_email_forwarding_option_group'] = 'Email Forwarding Option Group';
 $lang['AdminDomains.configuration.field_id_protection_option_group'] = 'ID Protection Option Group';
@@ -67,11 +70,11 @@ $lang['AdminDomains.configuration.field_first_reminder_days_before'] = '1st Rene
 $lang['AdminDomains.configuration.field_second_reminder_days_before'] = '2nd Renewal Reminder Days Before';
 $lang['AdminDomains.configuration.field_expiration_notice_days_after'] = 'Expiration Notice Days After';
 $lang['AdminDomains.configuration.field_spotlight_tlds'] = 'Spotlight TLDs';
+$lang['AdminDomains.configuration.field_taxable'] = 'Enable Tax for Domains';
 $lang['AdminDomains.configuration.field_submit'] = 'Update Configuration';
 
 $lang['AdminDomains.configuration.link_template'] = 'Edit Email Template';
 
-$lang['AdminDomains.configuration.tooltip_domains_package_group'] = 'The package group to which all TLD price management packages will be assigned.';
 $lang['AdminDomains.configuration.tooltip_dns_management_option_group'] = 'The configurable option group used to control whether a domain will have DNS management services.';
 $lang['AdminDomains.configuration.tooltip_email_forwarding_option_group'] = 'The configurable option group used to control whether a domain will have email forwarding services.';
 $lang['AdminDomains.configuration.tooltip_id_protection_option_group'] = 'The configurable option group used to control whether a domain will have ID protection services.';
@@ -153,7 +156,7 @@ $lang['AdminDomains.meta.field_finish'] = 'Finish';
 $lang['AdminDomains.meta.field_update'] = 'Update';
 
 
-$lang['AdminDomains.whois.boxtitle_whois'] = 'Whois Domain Lookup';
+$lang['AdminDomains.whois.boxtitle_whois'] = 'Whois';
 $lang['AdminDomains.whois.title_row'] = 'Domain Lookup';
 $lang['AdminDomains.whois.available'] = 'Domain Available';
 $lang['AdminDomains.whois.unavailable'] = 'Domain Unavailable';
@@ -184,7 +187,7 @@ $lang['AdminDomains.getfilters.field_service_meta'] = 'Domain Name';
 
 $lang['AdminDomains.leftnav.nav_domains'] = 'Domains';
 $lang['AdminDomains.leftnav.nav_domains_domains'] = 'Domains';
-$lang['AdminDomains.leftnav.nav_domains_whois'] = 'Whois Domain Lookup';
+$lang['AdminDomains.leftnav.nav_domains_whois'] = 'Whois';
 $lang['AdminDomains.leftnav.nav_tlds'] = 'TLDs';
 $lang['AdminDomains.leftnav.nav_tlds_pricing'] = 'TLD Pricing';
 $lang['AdminDomains.leftnav.nav_tlds_registrars'] = 'Registrars';

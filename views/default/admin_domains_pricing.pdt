@@ -347,7 +347,7 @@
         });
 
         // Update TLD
-        $('form').on('submit', function(event) {
+        $('#edit_tld').on('submit', function(event) {
             event.preventDefault();
 
             $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .assigned_option_groups option').prop('selected', true);
@@ -412,9 +412,15 @@
         });
 
         // Set the module email template as the email content
-        $('.load_sample_email').on('click', function() {
-            var templates = <?php echo json_encode($package_fields['template'], JSON_PRETTY_PRINT);?>;
+        var templates = <?php echo json_encode($package_fields['template'], JSON_PRETTY_PRINT);?>;
 
+        if (typeof templates == 'undefined' || templates === null || templates.length == 0) {
+            $('.load_sample_email').parent().hide();
+        } else {
+            $('.load_sample_email').parent().show();
+        }
+
+        $('.load_sample_email').on('click', function() {
             if (confirm('<?php $this->_('AdminDomains.pricing.text_confirm_load_email');?>')) {
                 <?php
                 foreach ((isset($languages) ? $languages : []) as $i => $lang) {

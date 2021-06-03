@@ -187,20 +187,38 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels($this, ['ModuleManager', 'Packages', 'Domains.DomainsTlds']);
 
-        // Get the none module for this company
-        $none_modules = $this->ModuleManager->getByClass('none', $company_id);
+        // Get generic domain module
+        if (!$this->ModuleManager->isInstalled('generic_domain', $company_id)) {
+            $this->ModuleManager->add(['class' => 'generic_domain', 'company_id' => $company_id]);
+        }
+        $module = $this->ModuleManager->getByClass('generic_domain', $company_id);
+        $module = isset($module[0]) ? $module[0] : null;
+
+        if (!isset($module->id)) {
+            $this->Input->setErrors([
+                'module_id' => [
+                    'invalid' => Language::_('DomainsPlugin.!error.module_id.exists', true)
+                ]
+            ]);
+            return;
+        }
 
         // Create a package for each tld and add it to the database
         $default_tlds = $this->DomainsTlds->getDefaultTlds();
         $tld_packages_setting = $this->Companies->getSetting($company_id, 'domains_tld_packages');
-        $tld_packages = (array) ($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
+        $tld_packages = (array)($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
 
         foreach ($default_tlds as $default_tld) {
             // Skip package creation for this TLD if there is already a package assigned to it
             if (array_key_exists($default_tld, $tld_packages)
                 && ($package = $this->Packages->get($tld_packages[$default_tld]))
             ) {
-                $tld_params = ['tld' => $default_tld, 'company_id' => $company_id, 'package_id' => $package->id];
+                $tld_params = [
+                    'tld' => $default_tld,
+                    'company_id' => $company_id,
+                    'package_id' => $package->id,
+                    'module_id' => $module->id
+                ];
                 $this->DomainsTlds->add($tld_params);
 
                 $errors = $this->DomainsTlds->errors();
@@ -213,7 +231,12 @@ class DomainsPlugin extends Plugin
             }
 
             // Create new package
-            $tld_params = ['tld' => $default_tld, 'company_id' => $company_id, 'package_group_id' => $package_group_id];
+            $tld_params = [
+                'tld' => $default_tld,
+                'company_id' => $company_id,
+                'package_group_id' => $package_group_id,
+                'module_id' => $module->id
+            ];
             $tld = $this->DomainsTlds->add($tld_params);
             $package_id = isset($tld['package_id']) ? $tld['package_id'] : null;
 
@@ -512,10 +535,6 @@ class DomainsPlugin extends Plugin
                 $modules[$module_id] = $this->ModuleManager->initModule($module_id);
             }
 
-            if (!method_exists($modules[$module_id], 'getExpirationDate')) {
-                continue;
-            }
-
             // Get the domain name from the module
             $domain = $service->name;
             if (method_exists($modules[$module_id], 'getServiceDomain')) {
@@ -523,7 +542,10 @@ class DomainsPlugin extends Plugin
             }
 
             // Get the expiration date of this service from the registrar
-            $renew_date = $modules[$module_id]->getExpirationDate($domain, 'c', $service->module_row_id);
+            $renew_date = $service->date_renews;
+            if (method_exists($modules[$module_id], 'getExpirationDate')) {
+                $renew_date = $modules[$module_id]->getExpirationDate($service, 'c');
+            }
 
             // Update the renew date if the expiration date is greater than the renew date
             if (strtotime($renew_date) > strtotime($service->date_renews)) {
