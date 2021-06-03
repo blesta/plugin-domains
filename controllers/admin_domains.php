@@ -1070,7 +1070,7 @@ class AdminDomains extends DomainsController
      */
     public function meta()
     {
-        $this->uses(['Domains.DomainsTlds']);
+        $this->uses(['Domains.DomainsTlds', 'Packages']);
         $this->helpers(['Form', 'CurrencyFormat']);
 
         // Fetch the package belonging to this TLD
@@ -1086,7 +1086,7 @@ class AdminDomains extends DomainsController
             $tld = $this->DomainsTlds->getByPackage($this->get[0]);
 
             // Update TLD package
-            $this->DomainsTlds->edit($tld->tld, $this->post);
+            $this->Packages->edit($tld->package_id, $this->post);
 
             if (($errors = $this->DomainsTlds->errors())) {
                 echo json_encode([

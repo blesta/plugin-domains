@@ -345,41 +345,36 @@ class DomainsTlds extends DomainsModel
             // Get package
             $package = $this->Packages->get(isset($vars['package_id']) ? $vars['package_id'] : $tld->package_id);
 
-            // Set the default module row, if any
-            if (isset($vars['module_id']) && !isset($vars['module_row'])) {
+            // Set the default module row only if the module row and module group have not been provided
+            // and the module id has been provided and this is being updated to a new value.
+            if (
+                isset($vars['module_id'])
+                && empty($vars['module_row'])
+                && empty($vars['module_group'])
+                && $package->module_id !== $vars['module_id']
+            ) {
                 $module = $this->ModuleManager->get($vars['module_id']);
                 $module_row = null;
 
                 if (!empty($module->rows)) {
                     $module_row = reset($module->rows);
-                    $vars['module_row'] = $module_row->id;
+                    $module_row = $module_row->id;
                 }
+
+                $vars['module_row'] = $module_row;
             }
 
             // Update package
             $fields = [
-                'module_id' => isset($vars['module_id'])
-                    ? $vars['module_id']
-                    : (isset($package->module_id) ? $package->module_id : null),
-                'names' => $package->names,
-                'descriptions' => $package->descriptions,
-                'module_row' => isset($vars['module_row'])
-                    ? $vars['module_row']
-                    : null,
-                'module_group' => isset($vars['module_group'])
-                    ? $vars['module_group']
-                    : (isset($package->module_group) ? $package->module_group : null),
-                'taxable' => isset($vars['taxable']) ? (int)$vars['taxable'] : 0,
-                'status' => $package->status,
+                'module_id' => $vars['module_id'] ?? null,
+                'module_row' => $vars['module_row'] ?? null,
+                'module_group' => $vars['module_group'] ?? null,
+                'taxable' => isset($vars['taxable'])
+                    ? $vars['taxable']
+                    : (isset($package->taxable) ? $package->taxable : 0),
                 'email_content' => isset($vars['email_content'])
                     ? $vars['email_content']
                     : (isset($package->email_content) ? $package->email_content : null),
-                'pricing' => $package->pricing,
-                'option_groups' => (array)(
-                    isset($package->option_groups)
-                        ? $this->Form->collapseObjectArray($package->option_groups, 'id', 'id')
-                        : []
-                ),
                 'meta' => (array)(
                     isset($vars['meta'])
                         ? array_merge((isset($package->meta) ? (array)$package->meta : []), $vars['meta'])
