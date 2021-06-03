@@ -507,19 +507,9 @@ class AdminDomains extends DomainsController
                 }
             }
 
-            // Get generic domain module
-            if (!$this->ModuleManager->isInstalled('generic_domain', $company_id)) {
-                $this->ModuleManager->add(['class' => 'generic_domain', 'company_id' => $company_id]);
-            }
-            $module = $this->ModuleManager->getByClass('generic_domain', $company_id);
-            $module = isset($module[0]) ? $module[0] : null;
-
-            if (!isset($module->id)) {
-                return;
-            }
-
             // Create new TLDs
             foreach ($created_tlds as $created_tld => $package_id) {
+                $package = $this->Packages->get($package->id);
                 if (array_key_exists($created_tld, $tlds)) {
                     // Edit the TLD
                     $tld_vars = [
@@ -535,7 +525,7 @@ class AdminDomains extends DomainsController
                     $tld_vars = [
                         'tld' => $created_tld,
                         'package_id' => $package_id,
-                        'module_id' => $module->id
+                        'module_id' => $package->module_id
                     ];
                     $this->DomainsTlds->add($tld_vars);
                 }
@@ -764,19 +754,6 @@ class AdminDomains extends DomainsController
 
             if (!empty($vars['module'])) {
                 $params['module_id'] = (int)$vars['module'];
-            } else {
-                // Get generic domain module
-                if (!$this->ModuleManager->isInstalled('generic_domain', $company_id)) {
-                    $this->ModuleManager->add(['class' => 'generic_domain', 'company_id' => $company_id]);
-                }
-                $module = $this->ModuleManager->getByClass('generic_domain', $company_id);
-                $module = isset($module[0]) ? $module[0] : null;
-
-                if (!isset($module->id)) {
-                    return;
-                }
-
-                $params['module_id'] = $module->id;
             }
 
             $this->DomainsTlds->add($params);
