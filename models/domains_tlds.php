@@ -1,4 +1,5 @@
 <?php
+
 use Blesta\Core\Util\Input\Fields\InputFields;
 use Blesta\Core\Util\Input\Fields\Html as FieldsHtml;
 
@@ -78,9 +79,9 @@ class DomainsTlds extends DomainsModel
     public function get($tld)
     {
         return $this->getTlds([
-            'tld' => $tld,
-            'company_id' => Configure::get('Blesta.company_id')
-        ])->fetch();
+                'tld' => $tld,
+                'company_id' => Configure::get('Blesta.company_id')
+            ])->fetch();
     }
 
     /**
@@ -92,9 +93,9 @@ class DomainsTlds extends DomainsModel
     public function getByPackage($package_id)
     {
         return $this->getTlds([
-            'package_id' => $package_id,
-            'company_id' => Configure::get('Blesta.company_id')
-        ])->fetch();
+                'package_id' => $package_id,
+                'company_id' => Configure::get('Blesta.company_id')
+            ])->fetch();
     }
 
     /**
@@ -107,7 +108,7 @@ class DomainsTlds extends DomainsModel
      *  - company_id The ID of the company for which this TLD is available (optional)
      *  - package_id The ID of the package to be used for pricing and sale of this TLD (optional)
      *  - package_group_id The ID of the TLDs package group (optional)
-     *  - module_id The ID of the registrar module to be used for this TLD (optional)
+     *  - module_id The ID of the registrar module to be used for this TLD
      *  - dns_management Whether to include DNS management for this TLD
      *  - email_forwarding Whether to include email forwarding for this TLD
      *  - id_protection Whether to include ID protection for this TLD
@@ -126,32 +127,16 @@ class DomainsTlds extends DomainsModel
         $this->Input->setRules($this->getRules($vars));
 
         if ($this->Input->validates($vars)) {
-            // Update the package if a package id and module id is provided
-            if (isset($vars['package_id']) && isset($vars['module_id'])) {
+            // Update the package if a package is provided
+            if (isset($vars['package_id'])) {
                 $this->Record->where('id', '=', $vars['package_id'])
                     ->update('packages', ['module_id' => $vars['module_id']]);
             }
 
             // Create a new package, if a package id is not provided
             if (!isset($vars['package_id'])) {
-                if (isset($vars['module_id'])) {
-                    $module = $this->ModuleManager->get($vars['module_id']);
-                }
-
-                // If a module id is not provided, use the None module by default
-                if (!isset($vars['module_id'])) {
-                    if (!$this->ModuleManager->isInstalled('none', $vars['company_id'])) {
-                        $this->ModuleManager->add(['class' => 'none', 'company_id' => $vars['company_id']]);
-                    }
-
-                    if (($none_module = $this->ModuleManager->getByClass('none', $vars['company_id']))) {
-                        $module = isset($none_module[0]) ? $none_module[0] : null;
-                    }
-                }
-
-                if (is_null($module)) {
-                    return;
-                }
+                // Get module
+                $module = $this->ModuleManager->get($vars['module_id']);
 
                 // Create the package
                 $params = [
@@ -185,7 +170,7 @@ class DomainsTlds extends DomainsModel
                 ->fetch();
 
             if (isset($last_tld->order)) {
-                $vars['order'] = (int) $last_tld->order + 1;
+                $vars['order'] = (int)$last_tld->order + 1;
             }
 
             $fields = [
@@ -334,7 +319,7 @@ class DomainsTlds extends DomainsModel
      *  - id_protection Whether to include ID protection for this TLD
      *  - epp_code Whether to include EPP Code for this TLD
      *  - module_id The ID of the module this package belongs to (optional, default NULL)
-     *  - module_row The module row this package belongs to (optional, default 0)
+     *  - module_row The module row this package belongs to (optional, default NULL)
      *  - module_group The module group this package belongs to (optional, default NULL)
      *  - taxable Whether or not this package is taxable (optional, default 0)
      *  - email_content A numerically indexed array of email content including:
@@ -360,33 +345,49 @@ class DomainsTlds extends DomainsModel
             // Get package
             $package = $this->Packages->get(isset($vars['package_id']) ? $vars['package_id'] : $tld->package_id);
 
+            // Set the default module row only if the module row and module group have not been provided
+            // and the module id has been provided and this is being updated to a new value.
+            if (
+                isset($vars['module_id'])
+                && empty($vars['module_row'])
+                && empty($vars['module_group'])
+                && $package->module_id !== $vars['module_id']
+            ) {
+                $module = $this->ModuleManager->get($vars['module_id']);
+                $module_row = null;
+
+                if (!empty($module->rows)) {
+                    $module_row = reset($module->rows);
+                    $module_row = $module_row->id;
+                }
+
+                $vars['module_row'] = $module_row;
+            }
+
+            // Set module row and module group to null, if one isn't provided
+            if (empty($vars['module_row'])) {
+                $vars['module_row'] = null;
+            }
+            if (empty($vars['module_group'])) {
+                $vars['module_group'] = null;
+            }
+
             // Update package
             $fields = [
                 'module_id' => isset($vars['module_id'])
                     ? $vars['module_id']
                     : (isset($package->module_id) ? $package->module_id : null),
-                'names' => $package->names,
-                'descriptions' => $package->descriptions,
-                'module_row' => isset($vars['module_row'])
-                    ? $vars['module_row']
-                    : (isset($package->module_row) ? $package->module_row : null),
-                'module_group' => isset($vars['module_group'])
-                    ? $vars['module_group']
-                    : (isset($package->module_group) ? $package->module_group : null),
-                'taxable' => isset($vars['taxable']) ? (int)$vars['taxable'] : 0,
-                'status' => $package->status,
+                'module_row' => $vars['module_row'] ?? null,
+                'module_group' => $vars['module_group'] ?? null,
+                'taxable' => isset($vars['taxable'])
+                    ? $vars['taxable']
+                    : (isset($package->taxable) ? $package->taxable : 0),
                 'email_content' => isset($vars['email_content'])
                     ? $vars['email_content']
                     : (isset($package->email_content) ? $package->email_content : null),
-                'pricing' => $package->pricing,
-                'option_groups' => (array) (
-                    isset($package->option_groups)
-                        ? $this->Form->collapseObjectArray($package->option_groups, 'id', 'id')
-                        : []
-                ),
-                'meta' => (array) (
+                'meta' => (array)(
                     isset($vars['meta'])
-                        ? array_merge((isset($package->meta) ? (array) $package->meta : []), $vars['meta'])
+                        ? array_merge((isset($package->meta) ? (array)$package->meta : []), $vars['meta'])
                         : (isset($package->meta) ? $package->meta : [])
                 )
             ];
@@ -402,6 +403,7 @@ class DomainsTlds extends DomainsModel
 
             if (($errors = $this->Packages->errors())) {
                 $this->Input->setErrors($errors);
+
                 return;
             }
 
@@ -482,7 +484,7 @@ class DomainsTlds extends DomainsModel
 
                             return;
                         }
-                    } else if ((bool) $pricing['enabled']) {
+                    } else if ((bool)$pricing['enabled']) {
                         $this->addPricing($tld->package_id, $pricing);
                     }
                 }
@@ -772,12 +774,12 @@ class DomainsTlds extends DomainsModel
 
         // Get module groups and rows
         $groups = $this->ArrayHelper->numericToKey(
-            (array) $this->ModuleManager->getGroups($package->module_id),
+            (array)$this->ModuleManager->getGroups($package->module_id),
             'id',
             'name'
         );
         $rows = $this->ArrayHelper->numericToKey(
-            (array) $this->ModuleManager->getRows($package->module_id),
+            (array)$this->ModuleManager->getRows($package->module_id),
             'id',
             'meta'
         );
@@ -891,7 +893,7 @@ class DomainsTlds extends DomainsModel
      */
     public function sortTlds(array $tlds = [])
     {
-        foreach($tlds as $order => $package_id) {
+        foreach ($tlds as $order => $package_id) {
             $this->Record->where('package_id', '=', $package_id)
                 ->update('domains_tlds', ['order' => $order]);
         }
@@ -981,7 +983,7 @@ class DomainsTlds extends DomainsModel
                 ],
                 'exists' => [
                     'if_set' => $edit,
-                    'rule' => function($tld) {
+                    'rule' => function ($tld) {
                         $parent = new stdClass();
                         Loader::loadComponents($parent, ['Record']);
 
@@ -1034,13 +1036,13 @@ class DomainsTlds extends DomainsModel
             ],
             'module_id' => [
                 'exists' => [
-                    'if_set' => true,
+                    'if_set' => $edit,
                     'rule' => [[$this, 'validateExists'], 'id', 'modules'],
                     'message' => Language::_('DomainsTlds.!error.module_id.exists', true)
                 ],
                 'service' => [
-                    'if_set' => true,
-                    'rule' => function($module_id) use (&$vars) {
+                    'if_set' => $edit,
+                    'rule' => function ($module_id) use (&$vars) {
                         $parent = new stdClass();
                         Loader::loadComponents($parent, ['Record']);
 

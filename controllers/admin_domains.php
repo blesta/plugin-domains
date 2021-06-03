@@ -1,4 +1,5 @@
 <?php
+
 use Iodev\Whois\Factory;
 use Blesta\Core\Util\Input\Fields\InputFields;
 
@@ -37,7 +38,7 @@ class AdminDomains extends DomainsController
 
         if (!empty($this->post) && isset($this->post['service_ids'])) {
             if (($errors = $this->updateServices($this->post))) {
-                $this->set('vars', (object) $this->post);
+                $this->set('vars', (object)$this->post);
                 $this->setMessage('error', $errors, false, null, false);
             } else {
                 $term = 'AdminDomains.!success.';
@@ -52,7 +53,7 @@ class AdminDomains extends DomainsController
             $post_filters = $this->post['filters'];
             unset($this->post['filters']);
 
-            foreach($post_filters as $filter => $value) {
+            foreach ($post_filters as $filter => $value) {
                 if (empty($value)) {
                     unset($post_filters[$filter]);
                 }
@@ -193,7 +194,7 @@ class AdminDomains extends DomainsController
         // Only include service IDs in the list
         $service_ids = [];
         if (isset($data['service_ids'])) {
-            foreach ((array) $data['service_ids'] as $service_id) {
+            foreach ((array)$data['service_ids'] as $service_id) {
                 if (is_numeric($service_id)) {
                     $service_ids[] = $service_id;
                 }
@@ -420,7 +421,8 @@ class AdminDomains extends DomainsController
      */
     public function importPackages()
     {
-        $this->uses(['Companies', 'Domains.DomainsTlds', 'Packages']);
+        $this->uses(['ModuleManager', 'Companies', 'Domains.DomainsTlds', 'Packages']);
+
         if (!empty($this->post)) {
             $this->Packages->begin();
             // Get company settings
@@ -491,7 +493,7 @@ class AdminDomains extends DomainsController
                             }
 
                             // Deactivate cloned packages that no longer have services assigned
-                            $remaining_services =  $this->Services->getAll(
+                            $remaining_services = $this->Services->getAll(
                                 ['date_added' => 'DESC'],
                                 true,
                                 ['package_id' => $package->id, 'status' => 'all']
@@ -507,6 +509,7 @@ class AdminDomains extends DomainsController
 
             // Create new TLDs
             foreach ($created_tlds as $created_tld => $package_id) {
+                $package = $this->Packages->get($package->id);
                 if (array_key_exists($created_tld, $tlds)) {
                     // Edit the TLD
                     $tld_vars = [
@@ -521,7 +524,8 @@ class AdminDomains extends DomainsController
                     // Add the TLD
                     $tld_vars = [
                         'tld' => $created_tld,
-                        'package_id' => $package_id
+                        'package_id' => $package_id,
+                        'module_id' => $package->module_id
                     ];
                     $this->DomainsTlds->add($tld_vars);
                 }
@@ -552,12 +556,14 @@ class AdminDomains extends DomainsController
      */
     private function clonePackage(stdClass $package, $tld, array $company_settings)
     {
-        $package_vars = ['pricing' => [], 'groups' => [], 'plugins' => [], 'option_groups' => [],
+        $package_vars = [
+            'pricing' => [], 'groups' => [], 'plugins' => [], 'option_groups' => [],
             'names' => [], 'descriptions' => [], 'email_content' => []
         ];
 
         // Clone the simple package fields
-        $clone_fields = ['module_id', 'qty', 'client_qty', 'module_row', 'module_group',
+        $clone_fields = [
+            'module_id', 'qty', 'client_qty', 'module_row', 'module_group',
             'taxable', 'single_term', 'status', 'company_id', 'prorata_day', 'prorata_cutoff',
 
         ];
@@ -701,7 +707,7 @@ class AdminDomains extends DomainsController
             $days[$i] = Language::_(
                 'AdminDomains.getDays.text_day'
                 . (
-                    $i === 1
+                $i === 1
                     ? ''
                     : 's'
                 ),
@@ -747,7 +753,7 @@ class AdminDomains extends DomainsController
             $params = array_merge($vars, $params);
 
             if (!empty($vars['module'])) {
-                $params['module_id'] = (int) $vars['module'];
+                $params['module_id'] = (int)$vars['module'];
             }
 
             $this->DomainsTlds->add($params);
@@ -778,11 +784,8 @@ class AdminDomains extends DomainsController
             'asc',
             ['type' => 'registrar']
         );
-        $none_module = $this->ModuleManager->getByClass('none', $company_id);
-        $none_module = isset($none_module[0]) ? $none_module[0] : null;
         $select = ['' => Language::_('AppController.select.please', true)];
-        $none = [$none_module->id => $none_module->name];
-        $modules = $select + $none + $this->Form->collapseObjectArray($modules, 'name', 'id');
+        $modules = $select + $this->Form->collapseObjectArray($modules, 'name', 'id');
 
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
@@ -895,7 +898,6 @@ class AdminDomains extends DomainsController
                 $vars = array_merge($vars, [
                     'module_id' => $vars['module'],
                 ]);
-
                 $this->DomainsTlds->edit($tld, $vars);
 
                 if (($errors = $this->DomainsTlds->errors())) {
@@ -1068,7 +1070,7 @@ class AdminDomains extends DomainsController
      */
     public function meta()
     {
-        $this->uses(['Domains.DomainsTlds']);
+        $this->uses(['Domains.DomainsTlds', 'Packages']);
         $this->helpers(['Form', 'CurrencyFormat']);
 
         // Fetch the package belonging to this TLD
@@ -1084,7 +1086,7 @@ class AdminDomains extends DomainsController
             $tld = $this->DomainsTlds->getByPackage($this->get[0]);
 
             // Update TLD package
-            $this->DomainsTlds->edit($tld->tld, $this->post);
+            $this->Packages->edit($tld->package_id, $this->post);
 
             if (($errors = $this->DomainsTlds->errors())) {
                 echo json_encode([
@@ -1124,8 +1126,6 @@ class AdminDomains extends DomainsController
             )
         );
 
-        $this->view->view= 'ddd';
-
         return false;
     }
 
@@ -1152,10 +1152,7 @@ class AdminDomains extends DomainsController
 
         // Set module ID filter
         $modules = $this->Form->collapseObjectArray(
-            array_merge(
-                $this->ModuleManager->getByClass('none', $options['company_id']),
-                $this->ModuleManager->getAll($options['company_id'], 'name', 'asc', ['type' => 'registrar'])
-            ),
+            $this->ModuleManager->getAll($options['company_id'], 'name', 'asc', ['type' => 'registrar']),
             'name',
             'id'
         );

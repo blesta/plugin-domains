@@ -6,11 +6,8 @@
 $lang['DomainsPlugin.name'] = 'Domain Manager';
 $lang['DomainsPlugin.description'] = 'Used to handle various aspects of domain management and sales. This plugin is currently in beta phase.';
 
-
-// Change Password
-$lang['Domains.tab_change_password'] = 'Change Password';
-$lang['Domains.tab_change_password.header'] = 'Change Password';
-$lang['Domains.tab_change_password.submit'] = 'Submit';
+// Errors
+$lang['DomainsPlugin.!error.module_id.exists'] = 'Invalid module ID.';
 
 // Cron Tasks
 $lang['DomainsPlugin.getCronTasks.domain_synchronization'] = 'Domain Synchronization';
