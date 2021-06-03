@@ -188,10 +188,10 @@ class DomainsPlugin extends Plugin
         Loader::loadModels($this, ['ModuleManager', 'Packages', 'Domains.DomainsTlds']);
 
         // Get generic domain module
-        if (!$this->ModuleManager->isInstalled('generic_domain', $company_id)) {
-            $this->ModuleManager->add(['class' => 'generic_domain', 'company_id' => $company_id]);
+        if (!$this->ModuleManager->isInstalled('generic_domains', $company_id)) {
+            $this->ModuleManager->add(['class' => 'generic_domains', 'company_id' => $company_id]);
         }
-        $module = $this->ModuleManager->getByClass('generic_domain', $company_id);
+        $module = $this->ModuleManager->getByClass('generic_domains', $company_id);
         $module = isset($module[0]) ? $module[0] : null;
 
         if (!isset($module->id)) {
