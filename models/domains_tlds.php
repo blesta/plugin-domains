@@ -1015,7 +1015,7 @@ class DomainsTlds extends DomainsModel
 
                         return true;
                     },
-                    'message' => Language::_('DomainsTlds.!error.unsupported_tld', true)
+                    'message' => Language::_('DomainsTlds.!error.tld.supported', true)
                 ]
             ],
             'package_id' => [
