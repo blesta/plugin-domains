@@ -218,7 +218,7 @@ class DomainsTlds extends DomainsModel
      */
     private function createPackage(array $vars)
     {
-        Loader::loadModels($this, ['Currencies', 'Languages', 'Companies']);
+        Loader::loadModels($this, ['ModuleManager', 'Currencies', 'Languages', 'Companies']);
         Loader::loadHelpers($this, ['Form']);
 
         // Set company id
@@ -999,6 +999,23 @@ class DomainsTlds extends DomainsModel
                     'if_set' => true,
                     'rule' => ['minLength', 3],
                     'message' => Language::_('DomainsTlds.!error.tld.length', true)
+                ],
+                'supported' => [
+                    'if_set' => true,
+                    'rule' => function($tld) use (&$vars) {
+                        // Validate if the TLD is supported by the provided module
+                        if (isset($vars['module_id'])) {
+                            $parent = new stdClass();
+                            Loader::loadModels($parent, ['ModuleManager']);
+
+                            $module_tlds = $parent->ModuleManager->moduleRpc($vars['module_id'], 'getTlds');
+
+                            return !(is_array($module_tlds) && !empty($module_tlds) && !in_array($vars['tld'], $module_tlds));
+                        }
+
+                        return true;
+                    },
+                    'message' => Language::_('DomainsTlds.!error.tld.supported', true)
                 ]
             ],
             'package_id' => [
