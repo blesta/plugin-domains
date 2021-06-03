@@ -366,9 +366,9 @@ class DomainsTlds extends DomainsModel
 
             // Update package
             $fields = [
-                'module_id' => isset($vars['module_id']) ? $vars['module_id'] : null,
-                'module_row' => isset($vars['module_row']) ? $vars['module_row'] : null,
-                'module_group' => isset($vars['module_group']) ? $vars['module_group'] : null,
+                'module_id' => $vars['module_id'] ?? null,
+                'module_row' => $vars['module_row'] ?? null,
+                'module_group' => $vars['module_group'] ?? null,
                 'taxable' => isset($vars['taxable'])
                     ? $vars['taxable']
                     : (isset($package->taxable) ? $package->taxable : 0),
