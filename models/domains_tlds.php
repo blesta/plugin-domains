@@ -393,6 +393,11 @@ class DomainsTlds extends DomainsModel
             ];
             $fields = json_decode(json_encode($fields), true);
 
+            // If the tld somehow got unset, reset it
+            if (!isset($fields['meta']['tld'])) {
+                $fields['meta']['tlds'] = [$vars['tld']];
+            }
+
             foreach ($fields as $key => $value) {
                 if (is_null($value)) {
                     unset($fields[$key]);
