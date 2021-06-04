@@ -83,7 +83,7 @@ class AdminDomains extends DomainsController
         $total_results = $this->Services->getListCount(null, $status, false, null, $service_filters);
 
         // Get TLD for each service
-        foreach ($services as &$service) {
+        foreach ($services as $service) {
             $service->tld = $this->DomainsTlds->getByPackage($service->package_id);
         }
 
