@@ -131,6 +131,54 @@ class DomainsPlugin extends Plugin
     }
 
     /**
+     * Performs migration of data from $current_version (the current installed version)
+     * to the given file set version
+     *
+     * @param string $current_version The current installed version of this plugin
+     * @param int $plugin_id The ID of the plugin being upgraded
+     */
+    public function upgrade($current_version, $plugin_id)
+    {
+        Loader::loadModels($this, ['Actions', 'Companies', 'Navigation']);
+        Configure::load('domains', dirname(__FILE__) . DS . 'config' . DS);
+
+        // Upgrade if possible
+        if (version_compare($this->getVersion(), $current_version, '>')) {
+            // Handle the upgrade, set errors using $this->Input->setErrors() if any errors encountered
+
+            // Upgrade to 1.1.0
+            if (version_compare($current_version, '1.1.0', '<')) {
+                $companies = $this->Companies->getAll();
+                foreach ($companies as $company) {
+                    // Get the current Packages > Domains action
+                    $action = $this->Actions->getByUrl(
+                        'plugin/domains/admin_domains/browse/',
+                        'nav_staff',
+                        $company->id
+                    );
+
+                    // Gets the nav item for Billing > Services
+                    $services_nav = $this->Navigation->getAll(
+                        ['url' => 'billing/services/', 'location' => 'nav_staff', 'company_id' => $company->id]
+                    );
+
+                    if ($action) {
+                        // Delete the current Packages > Domains nav item
+                        $this->Navigation->delete(['url' => $action->url, 'location' => 'nav_staff', $company->id]);
+
+                        // Add a new browse domains nav item below Billing > Services
+                        $navigation_vars = ['action_id' => $action->id, 'parent_url' => 'billing/'];
+                        if (!empty($services_nav)) {
+                            $navigation_vars['order'] = $services_nav[0]->order + 1;
+                        }
+                        $this->Navigation->add($navigation_vars);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Add a package group for hiding and managing TLDs
      *
      * @param int $company_id The ID of the company for which to add the package group
@@ -698,11 +746,18 @@ class DomainsPlugin extends Plugin
         return [
             // Domains Nav
             [
-                'action' => 'nav_secondary_staff',
+                'location' => 'nav_staff',
                 'uri' => 'plugin/domains/admin_domains/browse/',
                 'name' => 'DomainsPlugin.nav_secondary_staff.domains',
+                'options' => ['parent' => 'billing/']
+            ],
+            // Domain Configuration Nav
+            [
+                'location' => 'nav_staff',
+                'uri' => 'plugin/domains/admin_domains/tlds/',
+                'name' => 'DomainsPlugin.nav_secondary_staff.domain_configuration',
                 'options' => ['parent' => 'packages/']
-            ]
+            ],
         ];
     }
 
