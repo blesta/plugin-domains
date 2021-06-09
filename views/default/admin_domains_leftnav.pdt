@@ -4,22 +4,6 @@
                 <?php
                 $nav = [
                     [
-                        'name' => Language::_('AdminDomains.leftnav.nav_domains', true),
-                        'class' => '',
-                        'icon' => 'globe',
-                        'uri' => $this->base_uri . 'plugin/domains/admin_domains/browse/',
-                        'children' => [
-                            [
-                                'name' => Language::_('AdminDomains.leftnav.nav_domains_domains', true),
-                                'uri' => $this->base_uri . 'plugin/domains/admin_domains/browse/'
-                            ],
-                            [
-                                'name' => Language::_('AdminDomains.leftnav.nav_domains_whois', true),
-                                'uri' => $this->base_uri . 'plugin/domains/admin_domains/whois/'
-                            ]
-                        ]
-                    ],
-                    [
                         'name' => Language::_('AdminDomains.leftnav.nav_tlds', true),
                         'class' => '',
                         'icon' => 'globe-americas',
@@ -32,6 +16,18 @@
                             [
                                 'name' => Language::_('AdminDomains.leftnav.nav_tlds_registrars', true),
                                 'uri' => $this->base_uri . 'plugin/domains/admin_domains/registrars/'
+                            ]
+                        ]
+                    ],
+                    [
+                        'name' => Language::_('AdminDomains.leftnav.nav_utilities', true),
+                        'class' => '',
+                        'icon' => 'wrench',
+                        'uri' => $this->base_uri . 'plugin/domains/admin_domains/whois/',
+                        'children' => [
+                            [
+                                'name' => Language::_('AdminDomains.leftnav.nav_domains_whois', true),
+                                'uri' => $this->base_uri . 'plugin/domains/admin_domains/whois/'
                             ]
                         ]
                     ],
