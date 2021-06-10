@@ -46,8 +46,6 @@ class DomainsDomains extends DomainsModel
         $status = $filters['status'] ?? 'active';
 
         return $this->Services->getList(null, $status, $page, $order, false, $filters);
-
-        //$total_results =
     }
 
     /**
