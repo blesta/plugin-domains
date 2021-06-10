@@ -861,6 +861,11 @@ class DomainsPlugin extends Plugin
      */
     public function getDomainCount($client_id)
     {
-        return '0';
+        Loader::loadModels($this, ['Domains.DomainsDomains']);
+
+        return $this->DomainsDomains->getListCount([
+            'client_id' => $client_id,
+            'status' => 'active'
+        ]);
     }
 }

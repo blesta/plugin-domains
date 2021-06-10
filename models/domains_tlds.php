@@ -99,6 +99,20 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Sort the TLDs
+     *
+     * @param array $tlds A key => value array, where the key is the order of
+     *  the TLD and the value the ID of the package belonging to the TLD
+     */
+    public function sort(array $tlds = [])
+    {
+        foreach ($tlds as $order => $package_id) {
+            $this->Record->where('package_id', '=', $package_id)
+                ->update('domains_tlds', ['order' => $order]);
+        }
+    }
+
+    /**
      * Add a TLD
      *
      * @param array $vars An array of input data including:
@@ -433,6 +447,74 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Permanently deletes the given TLD
+     *
+     * @param int $tld The identifier of the TLD to delete
+     */
+    public function delete($tld)
+    {
+        // Delete a TLD
+        $this->Record->from('domains_tlds')->
+        where('domains_tlds.tld', '=', $tld)->
+        where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
+        delete();
+    }
+
+    /**
+     * Enables the given TLD
+     *
+     * @param int $tld The identifier of the TLD to enable
+     */
+    public function enable($tld)
+    {
+        // Get TLD
+        $tld = $this->get($tld);
+
+        $this->Record->where('id', '=', $tld->package_id)
+            ->update('packages', ['status' => 'active']);
+    }
+
+    /**
+     * Disables the given TLD
+     *
+     * @param int $tld The identifier of the TLD to disable
+     */
+    public function disable($tld)
+    {
+        // Get TLD
+        $tld = $this->get($tld);
+
+        $this->Record->where('id', '=', $tld->package_id)
+            ->update('packages', ['status' => 'inactive']);
+    }
+
+    /**
+     * Get the pricing of a TLD by term and currency
+     *
+     * @param int $package_id The ID of the package belonging ot the TLD
+     * @param int $term The term of the pricing to look for
+     * @param string $currency The currency of the pricing to look for
+     * @return stdClass An object containing the pricing matching the given term and currency,
+     *  void if a match could not be found
+     */
+    public function getPricing($package_id, $term, $currency)
+    {
+        // Verify if the given package id belongs to a TLD
+        if (!($tld = $this->getByPackage($package_id))) {
+            return false;
+        }
+
+        return $this->Record->select('pricings.*')
+            ->from('pricings')
+            ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
+            ->where('package_pricing.package_id', '=', $package_id)
+            ->where('pricings.term', '=', $term)
+            ->where('pricings.period', '=', 'year')
+            ->where('pricings.currency', '=', $currency)
+            ->fetch();
+    }
+
+    /**
      * Updates the pricings of a TLD
      *
      * @param int $tld The identifier of the TLD to edit
@@ -498,29 +580,26 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
-     * Get the pricing of a TLD by term and currency
+     * Updates an existing pricing
      *
-     * @param int $package_id The ID of the package belonging ot the TLD
-     * @param int $term The term of the pricing to look for
-     * @param string $currency The currency of the pricing to look for
-     * @return stdClass An object containing the pricing matching the given term and currency,
-     *  void if a match could not be found
+     * @param int $pricing_id The ID of the pricing to update
+     * @param array $vars An array of pricing info including:
+     *
+     *  - term The term as an integer 1-65535 (optional, default 1)
+     *  - price The price of this term (optional, default 0.00)
+     *  - price_renews The renewal price of this term (optional, default null)
+     *  - price_transfer The transfer price of this term (optional, default null)
+     *  - currency The ISO 4217 currency code for this pricing (optional, default USD)
      */
-    public function getPricing($package_id, $term, $currency)
+    private function updatePricing($pricing_id, array $vars)
     {
-        // Verify if the given package id belongs to a TLD
-        if (!($tld = $this->getByPackage($package_id))) {
-            return false;
-        }
+        Loader::loadModels($this, ['Pricings']);
 
-        return $this->Record->select('pricings.*')
-            ->from('pricings')
-            ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
-            ->where('package_pricing.package_id', '=', $package_id)
-            ->where('pricings.term', '=', $term)
-            ->where('pricings.period', '=', 'year')
-            ->where('pricings.currency', '=', $currency)
-            ->fetch();
+        $vars = array_merge($vars, [
+            'company_id' => Configure::get('Blesta.company_id'),
+            'period' => 'year'
+        ]);
+        $this->Pricings->edit($pricing_id, $vars);
     }
 
     /**
@@ -598,29 +677,6 @@ class DomainsTlds extends DomainsModel
             ->delete();
 
         return $pricing_id;
-    }
-
-    /**
-     * Updates an existing pricing
-     *
-     * @param int $pricing_id The ID of the pricing to update
-     * @param array $vars An array of pricing info including:
-     *
-     *  - term The term as an integer 1-65535 (optional, default 1)
-     *  - price The price of this term (optional, default 0.00)
-     *  - price_renews The renewal price of this term (optional, default null)
-     *  - price_transfer The transfer price of this term (optional, default null)
-     *  - currency The ISO 4217 currency code for this pricing (optional, default USD)
-     */
-    private function updatePricing($pricing_id, array $vars)
-    {
-        Loader::loadModels($this, ['Pricings']);
-
-        $vars = array_merge($vars, [
-            'company_id' => Configure::get('Blesta.company_id'),
-            'period' => 'year'
-        ]);
-        $this->Pricings->edit($pricing_id, $vars);
     }
 
     /**
@@ -848,61 +904,7 @@ class DomainsTlds extends DomainsModel
         );
     }
 
-    /**
-     * Permanently deletes the given TLD
-     *
-     * @param int $tld The identifier of the TLD to delete
-     */
-    public function delete($tld)
-    {
-        // Delete a TLD
-        $this->Record->from('domains_tlds')->
-            where('domains_tlds.tld', '=', $tld)->
-            where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
-            delete();
-    }
 
-    /**
-     * Enables the given TLD
-     *
-     * @param int $tld The identifier of the TLD to enable
-     */
-    public function enable($tld)
-    {
-        // Get TLD
-        $tld = $this->get($tld);
-
-        $this->Record->where('id', '=', $tld->package_id)
-            ->update('packages', ['status' => 'active']);
-    }
-
-    /**
-     * Disables the given TLD
-     *
-     * @param int $tld The identifier of the TLD to disable
-     */
-    public function disable($tld)
-    {
-        // Get TLD
-        $tld = $this->get($tld);
-
-        $this->Record->where('id', '=', $tld->package_id)
-            ->update('packages', ['status' => 'inactive']);
-    }
-
-    /**
-     * Sort the TLDs
-     *
-     * @param array $tlds A key => value array, where the key is the order of
-     *  the TLD and the value the ID of the package belonging to the TLD
-     */
-    public function sortTlds(array $tlds = [])
-    {
-        foreach ($tlds as $order => $package_id) {
-            $this->Record->where('package_id', '=', $package_id)
-                ->update('domains_tlds', ['order' => $order]);
-        }
-    }
 
     /**
      * Returns a partial query
