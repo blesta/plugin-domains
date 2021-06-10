@@ -755,7 +755,7 @@ class DomainsPlugin extends Plugin
             [
                 'location' => 'nav_staff',
                 'uri' => 'plugin/domains/admin_domains/tlds/',
-                'name' => 'DomainsPlugin.nav_secondary_staff.domain_configuration',
+                'name' => 'DomainsPlugin.nav_secondary_staff.domain_options',
                 'options' => ['parent' => 'packages/']
             ],
         ];
