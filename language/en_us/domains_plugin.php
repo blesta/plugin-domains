@@ -18,7 +18,7 @@ $lang['DomainsPlugin.getCronTasks.domain_renewal_reminders'] = 'Send Renewal Rem
 $lang['DomainsPlugin.getCronTasks.domain_renewal_reminders_description'] = 'Send email reminders for domains that are drawing close to their renewal date';
 
 // Plugin Actions
-$lang['DomainsPlugin.nav_secondary_staff.domain_configuration'] = 'Domain Configuration';
+$lang['DomainsPlugin.nav_secondary_staff.domain_configuration'] = 'Domain Options';
 $lang['DomainsPlugin.nav_secondary_staff.domains'] = 'Domains';
 
 // Plugin Cards
