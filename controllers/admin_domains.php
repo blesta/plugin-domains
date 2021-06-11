@@ -993,13 +993,15 @@ class AdminDomains extends DomainsController
         $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
 
         // Get company currencies
-        $currencies = $this->Form->collapseObjectArray(
-            $this->Currencies->getAll($company_id),
-            'code',
-            'code'
-        );
+        $currencies = $this->Currencies->getAll($company_id);
+
+        foreach ($currencies as $key => $currency) {
+            $currencies[$currency->code] = $currency;
+            unset($currencies[$key]);
+        }
+
         if (isset($currencies[$default_currency])) {
-            $currencies = [$default_currency => $default_currency] + $currencies;
+            $currencies = [$default_currency => $currencies[$default_currency]] + $currencies;
         }
 
         // Get company languages
@@ -1020,7 +1022,7 @@ class AdminDomains extends DomainsController
                     // Check if the term already exists
                     $exists_pricing = false;
                     foreach ($package->pricing as &$pricing) {
-                        if ($pricing->term == $i && $pricing->period == 'year' && $pricing->currency == $currency) {
+                        if ($pricing->term == $i && $pricing->period == 'year' && $pricing->currency == $currency->code) {
                             $exists_pricing = true;
                             $pricing->enabled = true;
                         }
@@ -1031,7 +1033,7 @@ class AdminDomains extends DomainsController
                         $package->pricing[] = (object)[
                             'term' => $i,
                             'period' => 'year',
-                            'currency' => $currency,
+                            'currency' => $currency->code,
                             'enabled' => false
                         ];
                     }
