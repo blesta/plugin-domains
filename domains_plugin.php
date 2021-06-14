@@ -158,26 +158,67 @@ class DomainsPlugin extends Plugin
         if (version_compare($this->getVersion(), $current_version, '>')) {
             // Upgrade to v1.1.0
             if (version_compare($current_version, '1.1.0', '<')) {
-                // Update domains tlds table
-                $this->Record->query(
-                    'ALTER TABLE domains_tlds DROP PRIMARY KEY, ADD id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,'
-                        . ' ADD UNIQUE `tld`(`tld`, `company_id`)'
+//                // Update domains tlds table
+//                $this->Record->query(
+//                    'ALTER TABLE domains_tlds DROP PRIMARY KEY, ADD id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,'
+//                        . ' ADD UNIQUE `tld`(`tld`, `company_id`)'
+//                );
+//
+//                // Create domains packages table
+//                try {
+//                    $this->Record
+//                        ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+//                        ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+//                        ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+//                        ->setKey(['id'], 'primary')
+//                        ->setKey(['tld_id', 'package_id'], 'unique')
+//                        ->create('domains_packages', true);
+//                } catch (Exception $e) {
+//                    // Error adding... no permission?
+//                    $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
+//                    return;
+//                }
+
+                $this->upgrade1_1_0();
+            }
+        }
+    }
+
+    /**
+     * Update to v1.1.0
+     */
+    private function upgrade1_1_0()
+    {
+        if (!isset($this->Form)) {
+            Loader::loadHelpers($this, ['Form']);
+        }
+
+        Loader::loadModels($this, ['Companies', 'Packages']);
+        $companies = $this->Companies->getAll();
+        foreach ($companies as $company) {
+            if (($setting = $this->Companies->getSetting($company->id, 'domains_package_group'))) {
+                $tlds = $this->Record->select()->
+                    from('domains_tlds')->
+                    where('company_id', '=', $company->id)->
+                    fetchAll();
+
+                usort(
+                    $tlds,
+                    function ($tld1, $tld2) {
+                        if ($tld1->order == $tld2->order) {
+                            return 0;
+                        }
+                        return ($tld1->order < $tld2->order) ? -1 : 1;
+                    }
                 );
 
-                // Create domains packages table
-                try {
-                    $this->Record
-                        ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-                        ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                        ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                        ->setKey(['id'], 'primary')
-                        ->setKey(['tld_id', 'package_id'], 'unique')
-                        ->create('domains_packages', true);
-                } catch (Exception $e) {
-                    // Error adding... no permission?
-                    $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
-                    return;
-                }
+                $package_ids = array_values($this->Form->collapseObjectArray($tlds, 'package_id', 'id'));
+
+                $this->Packages->orderPackages($setting->value, $package_ids);
+
+                $this->Record->query(
+                    'ALTER TABLE domains_tlds DROP COLUMN `order`;'
+                );
             }
         }
     }
