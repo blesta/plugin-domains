@@ -1079,7 +1079,7 @@ class AdminDomains extends DomainsController
         if (
             !$this->isAjax()
             || !isset($this->get[0])
-            || !($tld = $this->DomainsTlds->getByPackage($this->get[0]))
+            || !($tld = $this->DomainsTlds->get($this->get[0]))
         ) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
@@ -1113,7 +1113,7 @@ class AdminDomains extends DomainsController
         }
 
         // Get TLD package fields
-        $package_fields = $this->DomainsTlds->getTldFields($this->get[0]);
+        $package_fields = $this->DomainsTlds->getTldFields($tld->package_id);
         $package_fields_view = 'admin' . DS . 'default';
 
         // Return partial view
