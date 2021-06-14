@@ -44,6 +44,7 @@ class DomainsPlugin extends Plugin
         try {
             // domains_tlds
             $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
                 ->setField('tld', ['type' => 'VARCHAR', 'size' => "64"])
                 ->setField('company_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
                 ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
@@ -52,8 +53,18 @@ class DomainsPlugin extends Plugin
                 ->setField('email_forwarding', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setField('id_protection', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setField('epp_code', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
-                ->setKey(['tld', 'company_id'], 'primary')
+                ->setKey(['id'], 'primary')
+                ->setKey(['tld', 'company_id'], 'unique')
                 ->create('domains_tlds', true);
+
+            // domains_packages
+            $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setKey(['id'], 'primary')
+                ->setKey(['tld_id', 'package_id'], 'unique')
+                ->create('domains_packages', true);
         } catch (Exception $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -141,6 +152,9 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels($this, ['Actions', 'Companies', 'Navigation']);
         Configure::load('domains', dirname(__FILE__) . DS . 'config' . DS);
+        if (!isset($this->Record)) {
+            Loader::loadComponents($this, ['Record']);
+        }
 
         // Upgrade if possible
         if (version_compare($this->getVersion(), $current_version, '>')) {
@@ -173,6 +187,27 @@ class DomainsPlugin extends Plugin
                         }
                         $this->Navigation->add($navigation_vars);
                     }
+                }
+                  
+                // Update domains tlds table
+                $this->Record->query(
+                    'ALTER TABLE domains_tlds DROP PRIMARY KEY, ADD id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,'
+                        . ' ADD UNIQUE `tld`(`tld`, `company_id`)'
+                );
+
+                // Create domains packages table
+                try {
+                    $this->Record
+                        ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                        ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                        ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                        ->setKey(['id'], 'primary')
+                        ->setKey(['tld_id', 'package_id'], 'unique')
+                        ->create('domains_packages', true);
+                } catch (Exception $e) {
+                    // Error adding... no permission?
+                    $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
+                    return;
                 }
             }
         }
@@ -902,6 +937,7 @@ class DomainsPlugin extends Plugin
 
         if (isset($params['package_id'])) {
             $tlds = $this->DomainsTlds->getAll(['package_id' => $params['package_id']]);
+
             foreach ($tlds as $tld) {
                 $this->DomainsTlds->delete($tld->tld);
             }

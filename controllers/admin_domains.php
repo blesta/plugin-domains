@@ -993,13 +993,15 @@ class AdminDomains extends DomainsController
         $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
 
         // Get company currencies
-        $currencies = $this->Form->collapseObjectArray(
-            $this->Currencies->getAll($company_id),
-            'code',
-            'code'
-        );
+        $currencies = $this->Currencies->getAll($company_id);
+
+        foreach ($currencies as $key => $currency) {
+            $currencies[$currency->code] = $currency;
+            unset($currencies[$key]);
+        }
+
         if (isset($currencies[$default_currency])) {
-            $currencies = [$default_currency => $default_currency] + $currencies;
+            $currencies = [$default_currency => $currencies[$default_currency]] + $currencies;
         }
 
         // Get company languages
@@ -1020,7 +1022,7 @@ class AdminDomains extends DomainsController
                     // Check if the term already exists
                     $exists_pricing = false;
                     foreach ($package->pricing as &$pricing) {
-                        if ($pricing->term == $i && $pricing->period == 'year' && $pricing->currency == $currency) {
+                        if ($pricing->term == $i && $pricing->period == 'year' && $pricing->currency == $currency->code) {
                             $exists_pricing = true;
                             $pricing->enabled = true;
                         }
@@ -1031,7 +1033,7 @@ class AdminDomains extends DomainsController
                         $package->pricing[] = (object)[
                             'term' => $i,
                             'period' => 'year',
-                            'currency' => $currency,
+                            'currency' => $currency->code,
                             'enabled' => false
                         ];
                     }
@@ -1077,7 +1079,7 @@ class AdminDomains extends DomainsController
         if (
             !$this->isAjax()
             || !isset($this->get[0])
-            || !($tld = $this->DomainsTlds->getByPackage($this->get[0]))
+            || !($tld = $this->DomainsTlds->get($this->get[0]))
         ) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
@@ -1111,7 +1113,7 @@ class AdminDomains extends DomainsController
         }
 
         // Get TLD package fields
-        $package_fields = $this->DomainsTlds->getTldFields($this->get[0]);
+        $package_fields = $this->DomainsTlds->getTldFields($tld->package_id);
         $package_fields_view = 'admin' . DS . 'default';
 
         // Return partial view
