@@ -354,7 +354,7 @@ class DomainsTlds extends DomainsModel
         if ($this->Input->validates($vars)) {
             // Migrate module
             if (isset($vars['module_id']) && $this->requiresModuleMigration($vars['tld'], $vars['module_id'])) {
-                $this->migrateModule($vars['tld'], $vars['module_id']);
+                $vars['package_id'] = $this->migrateModule($vars['tld'], $vars['module_id']);
             }
 
             // Get package
@@ -452,7 +452,7 @@ class DomainsTlds extends DomainsModel
      *
      * @param string $tld The TLD to validate
      * @param int $new_module_id The ID of the new module
-     * @param int $company_id The ID of the company for which to filter by
+     * @param int $company_id The ID of the company for which to filter by (optional)
      * @return bool True if the package needs to be migrated to the new module, false otherwise
      */
     private function requiresModuleMigration($tld, $new_module_id, $company_id = null)
@@ -503,6 +503,7 @@ class DomainsTlds extends DomainsModel
      *
      * @param string $tld The TLD to migrate
      * @param int $new_module_id The ID of the new module for the TLD
+     * @return int The ID of the new package for the TLD
      */
     private function migrateModule($tld, $new_module_id)
     {
@@ -554,8 +555,7 @@ class DomainsTlds extends DomainsModel
             ->insert('domains_packages', ['tld_id' => $tld->id, 'package_id' => $old_package_id]);
         $this->Packages->edit($old_package_id, ['status' => 'inactive']);
 
-        // Update TLD
-        $this->edit($tld->tld, ['package_id' => $package_id]);
+        return $package_id;
     }
 
     /**
