@@ -18,7 +18,6 @@ $lang['ClientMain.index.heading_expiration_date'] = 'Expiration Date';
 $lang['ClientMain.index.heading_suspension_date'] = 'Suspension Date';
 $lang['ClientMain.index.heading_deletion_date'] = 'Deletion Date';
 $lang['ClientMain.index.heading_options'] = 'Options';
-$lang['ClientMain.index.heading_tld'] = 'TLD';
 $lang['ClientMain.index.heading_domain'] = 'Domain';
 $lang['ClientMain.index.option_manage'] = 'Manage';
 $lang['ClientMain.index.recurring_term'] = '%1$s %2$s @ %3$s'; // %1$s is the service term length (number), %2$s is the service period, %3$s is the formatted service renewal price
