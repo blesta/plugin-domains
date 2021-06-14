@@ -343,7 +343,7 @@ class DomainsTlds extends DomainsModel
      *  - option_groups A numerically indexed array of package option group assignments (optional)
      *  - meta A set of miscellaneous fields to pass, in addition to the above
      *      fields, to the module when adding the package (optional)
-     * @return int The identifier of the TLD that was updated, void on error
+     * @return string The identifier of the TLD that was updated, void on error
      */
     public function edit($tld, array $vars)
     {
@@ -449,7 +449,7 @@ class DomainsTlds extends DomainsModel
     /**
      * Permanently deletes the given TLD
      *
-     * @param int $tld The identifier of the TLD to delete
+     * @param string $tld The identifier of the TLD to delete
      */
     public function delete($tld)
     {
@@ -463,7 +463,7 @@ class DomainsTlds extends DomainsModel
     /**
      * Enables the given TLD
      *
-     * @param int $tld The identifier of the TLD to enable
+     * @param string $tld The identifier of the TLD to enable
      */
     public function enable($tld)
     {
@@ -477,7 +477,7 @@ class DomainsTlds extends DomainsModel
     /**
      * Disables the given TLD
      *
-     * @param int $tld The identifier of the TLD to disable
+     * @param string $tld The identifier of the TLD to disable
      */
     public function disable($tld)
     {

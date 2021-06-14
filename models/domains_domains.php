@@ -13,6 +13,7 @@ class DomainsDomains extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - client_id The client ID (optional)
+     *  - company_id The ID of the company for which this domain is available (optional)
      *  - excluded_pricing_term The pricing term by which to exclude results (optional)
      *  - module_id The module ID on which to filter packages (optional)
      *  - pricing_period The pricing period for which to fetch services (optional)
@@ -35,11 +36,10 @@ class DomainsDomains extends DomainsModel
     {
         Loader::loadModels($this, ['Services', 'Companies']);
 
+        $company_id = $filters['company_id'] ?? Configure::get('Blesta.company_id');
+
         // Filter by package group
-        $package_group_id = $this->Companies->getSetting(
-            Configure::get('Blesta.company_id'),
-            'domains_package_group'
-        );
+        $package_group_id = $this->Companies->getSetting($company_id, 'domains_package_group');
         $filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
 
         // Set service status
@@ -54,6 +54,7 @@ class DomainsDomains extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - client_id The client ID (optional)
+     *  - company_id The ID of the company for which this domain is available (optional)
      *  - excluded_pricing_term The pricing term by which to exclude results (optional)
      *  - module_id The module ID on which to filter packages (optional)
      *  - pricing_period The pricing period for which to fetch services (optional)
@@ -74,11 +75,10 @@ class DomainsDomains extends DomainsModel
     {
         Loader::loadModels($this, ['Services', 'Companies']);
 
+        $company_id = $filters['company_id'] ?? Configure::get('Blesta.company_id');
+
         // Filter by package group
-        $package_group_id = $this->Companies->getSetting(
-            Configure::get('Blesta.company_id'),
-            'domains_package_group'
-        );
+        $package_group_id = $this->Companies->getSetting($company_id, 'domains_package_group');
         $filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
 
         // Set service status
