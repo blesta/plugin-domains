@@ -105,6 +105,20 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Sort the TLDs
+     *
+     * @param array $tlds A key => value array, where the key is the order of
+     *  the TLD and the value the ID of the package belonging to the TLD
+     */
+    public function sort(array $tlds = [])
+    {
+        foreach ($tlds as $order => $package_id) {
+            $this->Record->where('package_id', '=', $package_id)
+                ->update('domains_tlds', ['order' => $order]);
+        }
+    }
+
+    /**
      * Add a TLD
      *
      * @param array $vars An array of input data including:
@@ -337,7 +351,7 @@ class DomainsTlds extends DomainsModel
      *  - option_groups A numerically indexed array of package option group assignments (optional)
      *  - meta A set of miscellaneous fields to pass, in addition to the above
      *      fields, to the module when adding the package (optional)
-     * @return int The identifier of the TLD that was updated, void on error
+     * @return string The identifier of the TLD that was updated, void on error
      */
     public function edit($tld, array $vars)
     {
@@ -445,6 +459,33 @@ class DomainsTlds extends DomainsModel
 
             return $vars['tld'];
         }
+    }
+
+
+    /**
+     * Get the pricing of a TLD by term and currency
+     *
+     * @param int $package_id The ID of the package belonging ot the TLD
+     * @param int $term The term of the pricing to look for
+     * @param string $currency The currency of the pricing to look for
+     * @return stdClass An object containing the pricing matching the given term and currency,
+     *  void if a match could not be found
+     */
+    public function getPricing($package_id, $term, $currency)
+    {
+        // Verify if the given package id belongs to a TLD
+        if (!($tld = $this->getByPackage($package_id))) {
+            return false;
+        }
+
+        return $this->Record->select('pricings.*')
+            ->from('pricings')
+            ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
+            ->where('package_pricing.package_id', '=', $package_id)
+            ->where('pricings.term', '=', $term)
+            ->where('pricings.period', '=', 'year')
+            ->where('pricings.currency', '=', $currency)
+            ->fetch();
     }
 
     /**
@@ -670,32 +711,6 @@ class DomainsTlds extends DomainsModel
                 }
             }
         }
-    }
-
-    /**
-     * Get the pricing of a TLD by term and currency
-     *
-     * @param int $package_id The ID of the package belonging ot the TLD
-     * @param int $term The term of the pricing to look for
-     * @param string $currency The currency of the pricing to look for
-     * @return stdClass An object containing the pricing matching the given term and currency,
-     *  void if a match could not be found
-     */
-    public function getPricing($package_id, $term, $currency)
-    {
-        // Verify if the given package id belongs to a TLD
-        if (!($tld = $this->getByPackage($package_id))) {
-            return false;
-        }
-
-        return $this->Record->select('pricings.*')
-            ->from('pricings')
-            ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
-            ->where('package_pricing.package_id', '=', $package_id)
-            ->where('pricings.term', '=', $term)
-            ->where('pricings.period', '=', 'year')
-            ->where('pricings.currency', '=', $currency)
-            ->fetch();
     }
 
     /**
@@ -1038,18 +1053,19 @@ class DomainsTlds extends DomainsModel
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
-        // Delete a TLD
-        $this->Record->from('domains_tlds')->
-            where('domains_tlds.tld', '=', $tld)->
-            where('domains_tlds.company_id', '=', $company_id)->
-            delete();
-
         // Delete TLD packages assignments
         $this->Record->from('domains_packages')->
             innerJoin('domains_tlds', 'domains_tlds.id', '=', 'domains_packages.tld_id', false)->
             where('domains_tlds.tld', '=', $tld)->
             where('domains_tlds.company_id', '=', $company_id)->
             delete();
+
+        // Delete a TLD
+        $this->Record->from('domains_tlds')->
+            where('domains_tlds.tld', '=', $tld)->
+            where('domains_tlds.company_id', '=', $company_id)->
+            delete();
+
     }
 
     /**
@@ -1080,20 +1096,6 @@ class DomainsTlds extends DomainsModel
 
         $this->Record->where('id', '=', $tld->package_id)
             ->update('packages', ['status' => 'inactive']);
-    }
-
-    /**
-     * Sort the TLDs
-     *
-     * @param array $tlds A key => value array, where the key is the order of
-     *  the TLD and the value the ID of the package belonging to the TLD
-     */
-    public function sortTlds(array $tlds = [])
-    {
-        foreach ($tlds as $order => $package_id) {
-            $this->Record->where('package_id', '=', $package_id)
-                ->update('domains_tlds', ['order' => $order]);
-        }
     }
 
     /**
