@@ -158,26 +158,26 @@ class DomainsPlugin extends Plugin
         if (version_compare($this->getVersion(), $current_version, '>')) {
             // Upgrade to v1.1.0
             if (version_compare($current_version, '1.1.0', '<')) {
-//                // Update domains tlds table
-//                $this->Record->query(
-//                    'ALTER TABLE domains_tlds DROP PRIMARY KEY, ADD id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,'
-//                        . ' ADD UNIQUE `tld`(`tld`, `company_id`)'
-//                );
-//
-//                // Create domains packages table
-//                try {
-//                    $this->Record
-//                        ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-//                        ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-//                        ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-//                        ->setKey(['id'], 'primary')
-//                        ->setKey(['tld_id', 'package_id'], 'unique')
-//                        ->create('domains_packages', true);
-//                } catch (Exception $e) {
-//                    // Error adding... no permission?
-//                    $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
-//                    return;
-//                }
+                // Update domains tlds table
+                $this->Record->query(
+                    'ALTER TABLE domains_tlds DROP PRIMARY KEY, ADD id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,'
+                        . ' ADD UNIQUE `tld`(`tld`, `company_id`)'
+                );
+
+                // Create domains packages table
+                try {
+                    $this->Record
+                        ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                        ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                        ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                        ->setKey(['id'], 'primary')
+                        ->setKey(['tld_id', 'package_id'], 'unique')
+                        ->create('domains_packages', true);
+                } catch (Exception $e) {
+                    // Error adding... no permission?
+                    $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
+                    return;
+                }
 
                 $this->upgrade1_1_0();
             }
