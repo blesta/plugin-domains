@@ -120,9 +120,16 @@ class DomainsTlds extends DomainsModel
         $package_group_id = isset($domains_package_group->value)
             ? $domains_package_group->value
             : null;
-        ksort($tlds);
 
-        $this->Packages->orderPackages($package_group_id, $tlds);
+        $package_ids = [];
+        foreach ($tlds as $tld) {
+            $packages = $this->getTldPackages($tld, null, $company_id);
+            foreach ($packages as $package) {
+                $package_ids[] = $package->package_id;
+            }
+        }
+
+        $this->Packages->orderPackages($package_group_id, $package_ids);
     }
 
     /**
@@ -200,6 +207,10 @@ class DomainsTlds extends DomainsModel
                 'epp_code'
             ];
             $this->Record->insert('domains_tlds', $vars, $fields);
+            $this->Record->insert(
+                'domains_packages',
+                ['package_id' => $vars['package_id'], 'tld_id' => $this->lastInsertId()]
+            );
 
             return $vars;
         }
@@ -1049,19 +1060,12 @@ class DomainsTlds extends DomainsModel
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
-        // Delete TLD packages assignments
-        $this->Record->from('domains_packages')->
-            innerJoin('domains_tlds', 'domains_tlds.id', '=', 'domains_packages.tld_id', false)->
-            where('domains_tlds.tld', '=', $tld)->
-            where('domains_tlds.company_id', '=', $company_id)->
-            delete();
-
-        // Delete a TLD
+        // Delete TLD and packages assignments
         $this->Record->from('domains_tlds')->
+            leftJoin('domains_packages', 'domains_packages.tld_id', '=', 'domains_tlds.id', false)->
             where('domains_tlds.tld', '=', $tld)->
             where('domains_tlds.company_id', '=', $company_id)->
-            delete();
-
+            delete(['domains_packages.*', 'domains_tlds.*']);
     }
 
     /**
@@ -1112,7 +1116,7 @@ class DomainsTlds extends DomainsModel
     {
         $this->Record->select(['domains_tlds.*'])->
             from('domains_tlds')->
-            innerJoin('package_group', 'package_group.package_id', '=', 'domains_tlds.package_id', false);
+            leftJoin('package_group', 'package_group.package_id', '=', 'domains_tlds.package_id', false);
 
         if (isset($filters['tld'])) {
             $this->Record->where('domains_tlds.tld', '=', $filters['tld']);
