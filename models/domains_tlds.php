@@ -220,9 +220,6 @@ class DomainsTlds extends DomainsModel
      */
     private function createPackage(array $vars)
     {
-        ##
-        # Set the order by the package group
-        ##
         Loader::loadModels($this, ['ModuleManager', 'Currencies', 'Languages', 'Companies']);
         Loader::loadHelpers($this, ['Form']);
 
