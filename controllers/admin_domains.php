@@ -877,9 +877,15 @@ class AdminDomains extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
+        $updated_tld = $this->get[0] ?? null;
+
         if (!empty($this->post)) {
             $error = null;
             foreach ($this->post['tlds'] as $tld => $vars) {
+                if ($updated_tld && $tld != $updated_tld) {
+                    continue;
+                }
+
                 // Set checkboxes
                 if (empty($vars['dns_management'])) {
                     $vars['dns_management'] = '0';

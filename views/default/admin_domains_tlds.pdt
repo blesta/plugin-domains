@@ -262,10 +262,11 @@
         // Update TLDs
         $('#admin_domains_tlds .table tbody .quickupdate').change(function() {
             var field = this;
+            var tld = $(field).parent().parent().attr('data-package-tld');
 
             $(this).blestaRequest(
                 "POST",
-                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updatetlds/');?>',
+                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updatetlds/');?>' + tld,
                 getPartialForm('tlds'),
                 function(response) {
                     if (response.hasOwnProperty('message')) {
@@ -288,7 +289,6 @@
                     // If the module has been updated, ask the user to update the package meta
                     if ($(field).attr('name').includes('[module]') && !response.message.includes('error_box error')) {
                         // Get TLD
-                        var tld = $(field).parent().parent().attr('data-package-tld');
 
                         if(tld !== '') {
                             $('.common_box').blestaModal({

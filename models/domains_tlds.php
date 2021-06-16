@@ -498,13 +498,6 @@ class DomainsTlds extends DomainsModel
                 return;
             }
 
-            // Get company settings
-            $company_settings = $this->Form->collapseObjectArray(
-                $this->Companies->getSettings($company_id),
-                'value',
-                'key'
-            );
-
             // Update configurable options
             $this->assignConfigurableOptions($package->id, $vars);
 
