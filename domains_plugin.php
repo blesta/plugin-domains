@@ -48,7 +48,6 @@ class DomainsPlugin extends Plugin
                 ->setField('tld', ['type' => 'VARCHAR', 'size' => "64"])
                 ->setField('company_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
                 ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
-                ->setField('order', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
                 ->setField('dns_management', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setField('email_forwarding', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setField('id_protection', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
