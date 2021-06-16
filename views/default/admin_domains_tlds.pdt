@@ -62,7 +62,7 @@
                     if (!empty($tlds)) {
                         foreach ($tlds as $i => $tld) {
                     ?>
-                    <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>" data-package-tld="<?php echo $this->Html->safe($tld->tld);?>">
+                    <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->tld) ? $tld->tld : null);?>" data-package-tld="<?php echo $this->Html->safe($tld->tld);?>">
                         <td class="icon center"><i class="fas fa-arrows-alt movable"></i></td>
                         <td class="icon center"><i class="fas <?php echo ($tld->package->status !== 'inactive') ? 'fa-check' : 'fa-times';?>"></i></td>
                         <td class="small"><?php echo $this->Html->safe($tld->tld);?></td>

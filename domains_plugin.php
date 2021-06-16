@@ -48,7 +48,6 @@ class DomainsPlugin extends Plugin
                 ->setField('tld', ['type' => 'VARCHAR', 'size' => "64"])
                 ->setField('company_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
                 ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
-                ->setField('order', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
                 ->setField('dns_management', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setField('email_forwarding', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setField('id_protection', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
@@ -178,6 +177,47 @@ class DomainsPlugin extends Plugin
                     $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
                     return;
                 }
+
+                $this->upgrade1_1_0();
+            }
+        }
+    }
+
+    /**
+     * Update to v1.1.0
+     */
+    private function upgrade1_1_0()
+    {
+        if (!isset($this->Form)) {
+            Loader::loadHelpers($this, ['Form']);
+        }
+
+        Loader::loadModels($this, ['Companies', 'Packages']);
+        $companies = $this->Companies->getAll();
+        foreach ($companies as $company) {
+            if (($setting = $this->Companies->getSetting($company->id, 'domains_package_group'))) {
+                $tlds = $this->Record->select()->
+                    from('domains_tlds')->
+                    where('company_id', '=', $company->id)->
+                    fetchAll();
+
+                usort(
+                    $tlds,
+                    function ($tld1, $tld2) {
+                        if ($tld1->order == $tld2->order) {
+                            return 0;
+                        }
+                        return ($tld1->order < $tld2->order) ? -1 : 1;
+                    }
+                );
+
+                $package_ids = array_values($this->Form->collapseObjectArray($tlds, 'package_id', 'id'));
+
+                $this->Packages->orderPackages($setting->value, $package_ids);
+
+                $this->Record->query(
+                    'ALTER TABLE domains_tlds DROP COLUMN `order`;'
+                );
             }
         }
     }
