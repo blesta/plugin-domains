@@ -67,11 +67,6 @@ class ClientMain extends DomainsController
         );
         $total_results = $this->Services->getListCount($this->client->id, $status, false, null, $services_filters);
 
-        // Get TLD for each service
-        foreach ($services as &$service) {
-            $service->tld = $this->DomainsTlds->getByPackage($service->package_id);
-        }
-
         // Set the number of services of each type, not including children
         $status_count = [
             'active' => $this->Services->getStatusCount($this->client->id, 'active', false, $services_filters),

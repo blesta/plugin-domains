@@ -60,7 +60,7 @@ class DomainsTlds extends DomainsModel
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
-    public function getList(array $filters = [], $page = 1, array $order = ['order' => 'asc'])
+    public function getList(array $filters = [], $page = 1, array $order = ['package_group.order' => 'asc'])
     {
         $results = $this->getTlds($filters)
             ->order($order)
@@ -100,7 +100,7 @@ class DomainsTlds extends DomainsModel
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
-    public function getAll(array $filters = [], array $order = ['order' => 'asc'])
+    public function getAll(array $filters = [], array $order = ['package_group.order' => 'asc'])
     {
         $results = $this->getTlds($filters)->order($order)->fetchAll();
 
@@ -164,12 +164,26 @@ class DomainsTlds extends DomainsModel
      * @param array $tlds A key => value array, where the key is the order of
      *  the TLD and the value the ID of the package belonging to the TLD
      */
-    public function sort(array $tlds = [])
+    public function sort(array $tlds = [], $company_id = null)
     {
-        foreach ($tlds as $order => $package_id) {
-            $this->Record->where('package_id', '=', $package_id)
-                ->update('domains_tlds', ['order' => $order]);
+        Loader::loadModels($this, ['Companies']);
+        Loader::loadModels($this, ['Packages']);
+
+        $company_id = $company_id ?? Configure::get('Blesta.company_id');
+        $domains_package_group = $this->Companies->getSetting($company_id, 'domains_package_group');
+        $package_group_id = isset($domains_package_group->value)
+            ? $domains_package_group->value
+            : null;
+
+        $package_ids = [];
+        foreach ($tlds as $tld) {
+            $packages = $this->getTldPackages($tld, null, $company_id);
+            foreach ($packages as $package) {
+                $package_ids[] = $package->package_id;
+            }
         }
+
+        $this->Packages->orderPackages($package_group_id, $package_ids);
     }
 
     /**
@@ -237,23 +251,16 @@ class DomainsTlds extends DomainsModel
             // Set the package configurable options
             $this->assignConfigurableOptions($vars['package_id'], $vars);
 
-            // Set the TLD order
-            $vars['order'] = 0;
-            $last_tld = $this->getTlds(['company_id' => $vars['company_id']])
-                ->order(['order' => 'desc'])
-                ->fetch();
-
-            if (isset($last_tld->order)) {
-                $vars['order'] = (int)$last_tld->order + 1;
-            }
-
             $fields = [
                 'tld',
                 'company_id',
                 'package_id',
-                'order',
             ];
             $this->Record->insert('domains_tlds', $vars, $fields);
+            $this->Record->insert(
+                'domains_packages',
+                ['package_id' => $vars['package_id'], 'tld_id' => $this->lastInsertId()]
+            );
 
             return $vars;
         }
@@ -1114,19 +1121,12 @@ class DomainsTlds extends DomainsModel
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
-        // Delete TLD packages assignments
-        $this->Record->from('domains_packages')->
-            innerJoin('domains_tlds', 'domains_tlds.id', '=', 'domains_packages.tld_id', false)->
-            where('domains_tlds.tld', '=', $tld)->
-            where('domains_tlds.company_id', '=', $company_id)->
-            delete();
-
-        // Delete a TLD
+        // Delete TLD and packages assignments
         $this->Record->from('domains_tlds')->
+            leftJoin('domains_packages', 'domains_packages.tld_id', '=', 'domains_tlds.id', false)->
             where('domains_tlds.tld', '=', $tld)->
             where('domains_tlds.company_id', '=', $company_id)->
-            delete();
-
+            delete(['domains_packages.*', 'domains_tlds.*']);
     }
 
     /**
@@ -1171,7 +1171,9 @@ class DomainsTlds extends DomainsModel
      */
     private function getTlds(array $filters = [])
     {
-        $this->Record->select()->from('domains_tlds');
+        $this->Record->select(['domains_tlds.*'])->
+            from('domains_tlds')->
+            leftJoin('package_group', 'package_group.package_id', '=', 'domains_tlds.package_id', false);
 
         if (isset($filters['tld'])) {
             $this->Record->where('domains_tlds.tld', '=', $filters['tld']);
