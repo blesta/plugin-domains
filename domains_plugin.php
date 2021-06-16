@@ -49,10 +49,6 @@ class DomainsPlugin extends Plugin
                 ->setField('company_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
                 ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
                 ->setField('order', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
-                ->setField('dns_management', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
-                ->setField('email_forwarding', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
-                ->setField('id_protection', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
-                ->setField('epp_code', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setKey(['id'], 'primary')
                 ->setKey(['tld', 'company_id'], 'unique')
                 ->create('domains_tlds', true);
@@ -178,8 +174,24 @@ class DomainsPlugin extends Plugin
                     $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
                     return;
                 }
+
+                $this->upgrade1_1_0();
             }
         }
+    }
+
+    /**
+     * Update to v1.1.0
+     */
+    private function upgrade1_1_0()
+    {
+        $this->Record->query(
+            'ALTER TABLE domains_tlds
+                DROP COLUMN `dns_management`,
+                DROP COLUMN `email_forwarding`,
+                DROP COLUMN `id_protection`,
+                DROP COLUMN `epp_code`;'
+        );
     }
 
     /**

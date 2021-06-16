@@ -260,7 +260,7 @@
         }
 
         // Update TLDs
-        $('body').on('change', '#admin_domains_tlds .table tbody .quickupdate', function() {
+        $('#admin_domains_tlds .table tbody .quickupdate').change(function() {
             var field = this;
 
             $(this).blestaRequest(

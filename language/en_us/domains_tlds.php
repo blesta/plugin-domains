@@ -16,6 +16,7 @@ $lang['DomainsTlds.!error.epp_code.valid'] = 'Invalid value for EPP Code, must b
 $lang['DomainsTlds.!error.package_pricing.count'] = 'The pricing cannot be disabled, the TLD must have at least one pricing.';
 $lang['DomainsTlds.!error.package_pricing.service'] = 'The pricing could not be disabled because a service is currently using it.';
 $lang['DomainsTlds.!error.tld.supported'] = 'The provided TLD is unsupported by the selected registrar module.';
+$lang['DomainsTlds.!error.feature.unsupported'] = 'The %1$s feature is unsupported by the selected registrar module.'; // %1$s is the feature name
 
 
 // TLD Fields

@@ -11,6 +11,44 @@ use Blesta\Core\Util\Input\Fields\Html as FieldsHtml;
 class DomainsTlds extends DomainsModel
 {
     /**
+     * @var array A list of potential features
+     */
+    private $features = ['dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
+
+    /**
+     * Append features to the TLD and marks them based on which configurable option groups are assigned to the package
+     *
+     * @param stdClass $tld The TLD object to which features are appended
+     * @return stdClass The modified TLD object
+     */
+    private function appendFeatures($tld)
+    {
+        Loader::loadModels($this, ['Companies']);
+        Loader::loadHelpers($this, ['Form']);
+        // Get company settings
+        $company_settings = $this->Form->collapseObjectArray(
+            $this->Companies->getSettings($tld->company_id),
+            'value',
+            'key'
+        );
+
+        // Get all the option groups assigned to the package
+        $package_option_groups = $this->Form->collapseObjectArray(
+            $this->Record->select()->from('package_option')->where('package_id', '=', $tld->package_id)->fetchAll(),
+            'package_id',
+            'option_group_id'
+        );
+
+        // Assign a feature if the TLD package is assigned the correct option_group
+        foreach ($this->features as $feature) {
+            $option_group_id = $company_settings['domains_' . $feature . '_option_group'] ?? null;
+            $tld->{$feature} = (array_key_exists($option_group_id, $package_option_groups) ? '1' : '0');
+        }
+
+        return $tld;
+    }
+
+    /**
      * Returns a list of TLDs for the given company
      *
      * @param array $filters A list of filters for the query
@@ -18,19 +56,22 @@ class DomainsTlds extends DomainsModel
      *  - tld The TLD
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
-     *  - dns_management Whether DNS management is included for the TLDs
-     *  - email_forwarding Whether email forwarding is included for the TLDs
-     *  - id_protection Whether ID protection is included for the TLDs
      * @param int $page The page number of results to fetch
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
-    public function getList(array $filters = [], $page = 1, array $order = ['order' => 'asc'])
+    public function getList(array $filters = [], $page = 1, array $order = ['id' => 'asc'])
     {
-        return $this->getTlds($filters)
+        $results = $this->getTlds($filters)
             ->order($order)
             ->limit($this->getPerPage(), (max(1, $page) - 1) * $this->getPerPage())
             ->fetchAll();
+
+        foreach ($results as &$result) {
+            $result = $this->appendFeatures($result);
+        }
+
+        return $results;
     }
 
     /**
@@ -41,9 +82,6 @@ class DomainsTlds extends DomainsModel
      *  - tld The TLD
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
-     *  - dns_management Whether DNS management is included for the TLDs
-     *  - email_forwarding Whether email forwarding is included for the TLDs
-     *  - id_protection Whether ID protection is included for the TLDs
      * @return int The total number of TLDs for the given filters
      */
     public function getListCount(array $filters = [])
@@ -59,15 +97,18 @@ class DomainsTlds extends DomainsModel
      *  - tld The TLD
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
-     *  - dns_management Whether DNS management is included for the TLDs
-     *  - email_forwarding Whether email forwarding is included for the TLDs
-     *  - id_protection Whether ID protection is included for the TLDs
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
-    public function getAll(array $filters = [], array $order = ['order' => 'asc'])
+    public function getAll(array $filters = [], array $order = ['id' => 'asc'])
     {
-        return $this->getTlds($filters)->order($order)->fetchAll();
+        $results = $this->getTlds($filters)->order($order)->fetchAll();
+
+        foreach ($results as &$result) {
+            $result = $this->appendFeatures($result);
+        }
+
+        return $results;
     }
 
     /**
@@ -81,11 +122,18 @@ class DomainsTlds extends DomainsModel
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
-        return $this->getTlds([
+        $result = $this->getTlds([
             'tld' => $tld,
             'company_id' => $company_id
         ])->fetch();
+
+        if ($result) {
+            $result = $this->appendFeatures($result);
+        }
+
+        return $result;
     }
+
 
     /**
      * Fetches a TLD by the given package id
@@ -98,10 +146,16 @@ class DomainsTlds extends DomainsModel
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
-        return $this->getTlds([
+        $result = $this->getTlds([
             'package_id' => $package_id,
             'company_id' => $company_id
         ])->fetch();
+
+        if ($result) {
+            $result = $this->appendFeatures($result);
+        }
+
+        return $result;
     }
 
     /**
@@ -198,10 +252,6 @@ class DomainsTlds extends DomainsModel
                 'company_id',
                 'package_id',
                 'order',
-                'dns_management',
-                'email_forwarding',
-                'id_protection',
-                'epp_code'
             ];
             $this->Record->insert('domains_tlds', $vars, $fields);
 
@@ -452,7 +502,7 @@ class DomainsTlds extends DomainsModel
             $this->assignConfigurableOptions($package->id, $vars);
 
             // Update TLD
-            $fields = ['tld', 'package_id', 'dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
+            $fields = ['tld', 'package_id'];
             $this->Record->where('tld', '=', $vars['tld'])
                 ->where('company_id', '=', $company_id)
                 ->update('domains_tlds', $vars, $fields);
@@ -883,8 +933,11 @@ class DomainsTlds extends DomainsModel
             return false;
         }
 
-        Loader::loadModels($this, ['Companies']);
+        Loader::loadModels($this, ['Companies', 'ModuleManager', 'Packages']);
         Loader::loadHelpers($this, ['Form']);
+
+        $package = $this->Packages->get($package_id);
+        $registrar = $this->ModuleManager->initModule($package->module_id);
 
         $company_id = $vars['company_id'] ?? Configure::get('Blesta.company_id');
 
@@ -896,13 +949,21 @@ class DomainsTlds extends DomainsModel
         );
 
         // Update configurable options
-        $options = ['dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
+        foreach ($this->features as $option) {
 
-        foreach ($options as $option) {
             if (isset($company_settings['domains_' . $option . '_option_group'])) {
                 $option_group_id = $company_settings['domains_' . $option . '_option_group'];
 
                 if (isset($vars[$option]) && (bool)$vars[$option]) {
+                    if (!$registrar->supportsFeature($option)) {
+                        $this->Input->setErrors([
+                            'feature' => [
+                                'message' => Language::_('DomainsTlds.!error.feature.unsupported', true, $option)
+                            ]
+                        ]);
+                        continue;
+                    }
+
                     $fields = [
                         'package_id' => $package_id,
                         'option_group_id' => $option_group_id
@@ -1106,10 +1167,6 @@ class DomainsTlds extends DomainsModel
      *  - tld The TLD
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
-     *  - dns_management Whether DNS management is included for the TLDs
-     *  - email_forwarding Whether email forwarding is included for the TLDs
-     *  - id_protection Whether ID protection is included for the TLDs
-     *  - epp_code Whether to include EPP Code for this TLD
      * @return Record A partially built query
      */
     private function getTlds(array $filters = [])
@@ -1126,22 +1183,6 @@ class DomainsTlds extends DomainsModel
 
         if (isset($filters['package_id'])) {
             $this->Record->where('domains_tlds.package_id', '=', $filters['package_id']);
-        }
-
-        if (isset($filters['dns_management'])) {
-            $this->Record->where('domains_tlds.dns_management', '=', $filters['dns_management']);
-        }
-
-        if (isset($filters['email_forwarding'])) {
-            $this->Record->where('domains_tlds.email_forwarding', '=', $filters['email_forwarding']);
-        }
-
-        if (isset($filters['id_protection'])) {
-            $this->Record->where('domains_tlds.id_protection', '=', $filters['id_protection']);
-        }
-
-        if (isset($filters['epp_code'])) {
-            $this->Record->where('domains_tlds.epp_code', '=', $filters['epp_code']);
         }
 
         return $this->Record;
