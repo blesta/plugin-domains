@@ -60,7 +60,7 @@ class DomainsTlds extends DomainsModel
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
-    public function getList(array $filters = [], $page = 1, array $order = ['id' => 'asc'])
+    public function getList(array $filters = [], $page = 1, array $order = ['order' => 'asc'])
     {
         $results = $this->getTlds($filters)
             ->order($order)
@@ -100,7 +100,7 @@ class DomainsTlds extends DomainsModel
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
-    public function getAll(array $filters = [], array $order = ['id' => 'asc'])
+    public function getAll(array $filters = [], array $order = ['order' => 'asc'])
     {
         $results = $this->getTlds($filters)->order($order)->fetchAll();
 
