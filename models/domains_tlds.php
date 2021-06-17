@@ -446,6 +446,8 @@ class DomainsTlds extends DomainsModel
 
                         if ($setting && !$registrar->supportsFeature($feature)) {
                             $vars[$feature] = '0';
+                        } elseif ($tld->{$feature} == '1') {
+                            $vars[$feature] = '1';
                         }
                     }
                 }
@@ -978,27 +980,29 @@ class DomainsTlds extends DomainsModel
             if (isset($company_settings['domains_' . $option . '_option_group'])) {
                 $option_group_id = $company_settings['domains_' . $option . '_option_group'];
 
-                if (isset($vars[$option]) && (bool)$vars[$option]) {
-                    if (!$registrar->supportsFeature($option)) {
-                        $this->Input->setErrors([
-                            'feature' => [
-                                'message' => Language::_('DomainsTlds.!error.feature.unsupported', true, $option)
-                            ]
-                        ]);
-                        continue;
-                    }
+                if (isset($vars[$option])) {
+                    if ((bool)$vars[$option]) {
+                        if (!$registrar->supportsFeature($option)) {
+                            $this->Input->setErrors([
+                                'feature' => [
+                                    'message' => Language::_('DomainsTlds.!error.feature.unsupported', true, $option)
+                                ]
+                            ]);
+                            continue;
+                        }
 
-                    $fields = [
-                        'package_id' => $package_id,
-                        'option_group_id' => $option_group_id
-                    ];
-                    $this->Record->duplicate('package_option.option_group_id', '=', $fields['option_group_id'])
-                        ->insert('package_option', $fields);
-                } else {
-                    $this->Record->from('package_option')
-                        ->where('package_option.package_id', '=', $package_id)
-                        ->where('package_option.option_group_id', '=', $option_group_id)
-                        ->delete();
+                        $fields = [
+                            'package_id' => $package_id,
+                            'option_group_id' => $option_group_id
+                        ];
+                        $this->Record->duplicate('package_option.option_group_id', '=', $fields['option_group_id'])
+                            ->insert('package_option', $fields);
+                    } else {
+                        $this->Record->from('package_option')
+                            ->where('package_option.package_id', '=', $package_id)
+                            ->where('package_option.option_group_id', '=', $option_group_id)
+                            ->delete();
+                    }
                 }
             }
         }
