@@ -423,13 +423,37 @@ class DomainsTlds extends DomainsModel
         $this->Input->setRules($this->getRules($vars, true));
 
         if ($this->Input->validates($vars)) {
+            // Get package
+            $old_package = $this->Packages->get($tld->package_id);
+
             // Migrate module
-            if (isset($vars['module_id']) && $this->requiresModuleMigration($vars['tld'], $vars['module_id'])) {
-                $vars['package_id'] = $this->migrateModule($vars['tld'], $vars['module_id']);
+            if (isset($vars['module_id'])) {
+                if ($this->requiresModuleMigration($vars['tld'], $vars['module_id'])) {
+                    $vars['package_id'] = $this->migrateModule($vars['tld'], $vars['module_id']);
+                }
+
+                // Remove unsupported features
+                if ($old_package->module_id !== $vars['module_id']) {
+                    $company_settings = $this->Form->collapseObjectArray(
+                        $this->Companies->getSettings($tld->company_id),
+                        'value',
+                        'key'
+                    );
+
+                    $registrar = $this->ModuleManager->initModule($vars['module_id']);
+                    foreach ($this->features as $feature) {
+                        $setting = $company_settings['domains_' . $feature . '_option_group'] ?? null;
+
+                        if ($setting && !$registrar->supportsFeature($feature)) {
+                            $vars[$feature] = '0';
+                        }
+                    }
+                }
             }
 
             // Get package
-            $package = $this->Packages->get(isset($vars['package_id']) ? $vars['package_id'] : $tld->package_id);
+            $package = isset($vars['package_id']) ? $this->Packages->get($vars['package_id']) : $old_package;
+
 
             // Set the default module row only if the module row and module group have not been provided
             // and the module id has been provided and this is being updated to a new value.
