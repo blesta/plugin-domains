@@ -860,7 +860,7 @@ class AdminDomains extends DomainsController
         }
 
         if (!empty($this->post)) {
-            $this->DomainsTlds->sortTlds($this->post['tlds']);
+            $this->DomainsTlds->sort($this->post['tlds']);
         }
 
         return false;
