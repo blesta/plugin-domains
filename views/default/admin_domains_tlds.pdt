@@ -262,6 +262,8 @@
         // Update TLDs
         $('#admin_domains_tlds .table tbody .quickupdate').change(function() {
             var field = this;
+
+            // Get TLD
             var tld = $(field).parent().parent().attr('data-package-tld');
 
             $(this).blestaRequest(
@@ -288,8 +290,6 @@
 
                     // If the module has been updated, ask the user to update the package meta
                     if ($(field).attr('name').includes('[module]') && !response.message.includes('error_box error')) {
-                        // Get TLD
-
                         if(tld !== '') {
                             $('.common_box').blestaModal({
                                 close: '<?php $this->_('AppController.modal.text_close');?>',

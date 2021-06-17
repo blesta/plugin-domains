@@ -581,16 +581,14 @@ class DomainsTlds extends DomainsModel
         // Check if there is any existing package using the new module
         $package = $this->getTldPackageByModuleId($tld, $new_module_id);
 
-        if (!empty($package)) {
-            return true;
-        }
-
         // Get package id
         $tld = $this->get($tld);
         $package_id = isset($tld->package_id) ? $tld->package_id : null;
 
         if (empty($package_id)) {
             return false;
+        } elseif ($package && $package->id != $package_id) {
+            return true;
         }
 
         // Check if the package is using the same module id
