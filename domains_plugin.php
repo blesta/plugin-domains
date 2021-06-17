@@ -161,33 +161,6 @@ class DomainsPlugin extends Plugin
 
             // Upgrade to 1.1.0
             if (version_compare($current_version, '1.1.0', '<')) {
-                $companies = $this->Companies->getAll();
-                foreach ($companies as $company) {
-                    // Get the current Packages > Domains action
-                    $action = $this->Actions->getByUrl(
-                        'plugin/domains/admin_domains/browse/',
-                        'nav_staff',
-                        $company->id
-                    );
-
-                    // Gets the nav item for Billing > Services
-                    $services_nav = $this->Navigation->getAll(
-                        ['url' => 'billing/services/', 'location' => 'nav_staff', 'company_id' => $company->id]
-                    );
-
-                    if ($action) {
-                        // Delete the current Packages > Domains nav item
-                        $this->Navigation->delete(['url' => $action->url, 'location' => 'nav_staff', $company->id]);
-
-                        // Add a new browse domains nav item below Billing > Services
-                        $navigation_vars = ['action_id' => $action->id, 'parent_url' => 'billing/'];
-                        if (!empty($services_nav)) {
-                            $navigation_vars['order'] = $services_nav[0]->order + 1;
-                        }
-                        $this->Navigation->add($navigation_vars);
-                    }
-                }
-                  
                 // Update domains tlds table
                 $this->Record->query(
                     'ALTER TABLE domains_tlds DROP PRIMARY KEY, ADD id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,'
@@ -249,6 +222,79 @@ class DomainsPlugin extends Plugin
                 $this->Record->query(
                     'ALTER TABLE domains_tlds DROP COLUMN `order`;'
                 );
+            }
+
+            // Put the Domain Manager nav items in the appropriate spot
+            $this->reorderNavigationItems($company->id);
+        }
+    }
+
+    /**
+     * Move the Domain Manager navigation items to the appropriate spot in the nav
+     *
+     * @param int $company_id The company for which to move navigation items
+     */
+    private function reorderNavigationItems($company_id)
+    {
+        Loader::loadModels($this, ['Actions', 'Navigation']);
+        // Get the current navigation items
+        $navigation_items = $this->Navigation->getAll(
+            ['location' => 'nav_staff', 'company_id' => $company_id]
+        );
+
+        // Delete existing staff navigation items for this company
+        $this->Navigation->delete(['company_id' => $company_id, 'location' => 'nav_staff']);
+
+        // Re-add the navigation items, with the Domain Manager items in the proper place
+        $order = 0;
+        foreach ($navigation_items as $navigation_item) {
+            // Don't re-add existing Domain Manager nav items
+            if ($navigation_item->url == 'plugin/domains/admin_domains/browse/'
+                || $navigation_item->url == 'plugin/domains/admin_domains/tlds/'
+            ) {
+                continue;
+            }
+
+            $params = [
+                'action_id' => $navigation_item->action_id,
+                'order' => $order++,
+                'parent_url' => $navigation_item->parent_url
+            ];
+            $this->Navigation->add($params);
+
+            // Add the Domain Manager nav items
+            if ($navigation_item->url == 'billing/services/') {
+                // Get the current Browse Domains action
+                $action = $this->Actions->getByUrl(
+                    'plugin/domains/admin_domains/browse/',
+                    'nav_staff',
+                    $company_id
+                );
+
+                if ($action) {
+                    $params = [
+                        'action_id' => $action->id,
+                        'order' => $order++,
+                        'parent_url' => $navigation_item->parent_url
+                    ];
+                    $this->Navigation->add($params);
+                }
+            } elseif ($navigation_item->url == 'package_options/') {
+                // Get the current TLD Pricing action
+                $action = $this->Actions->getByUrl(
+                    'plugin/domains/admin_domains/tlds/',
+                    'nav_staff',
+                    $company_id
+                );
+
+                if ($action) {
+                    $params = [
+                        'action_id' => $action->id,
+                        'order' => $order++,
+                        'parent_url' => $navigation_item->parent_url
+                    ];
+                    $this->Navigation->add($params);
+                }
             }
         }
     }
@@ -461,6 +507,7 @@ class DomainsPlugin extends Plugin
             try {
                 // Remove database tables
                 $this->Record->drop('domains_tlds');
+                $this->Record->drop('domains_packages');
             } catch (Exception $e) {
                 // Error dropping... no permission?
                 $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -498,8 +545,9 @@ class DomainsPlugin extends Plugin
 
             // Remove company TLDs
             $this->Record->from('domains_tlds')->
+                leftJoin('domains_packages', 'domains_packages.tld_id', '=', 'domains_tlds.id', false)->
                 where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
-                delete();
+                delete(['domains_tlds.*', 'domains_packages.*']);
         }
 
         // Remove individual cron task runs
