@@ -75,3 +75,20 @@
 #meta_tld .text-center i {
     font-size: 55px;
 }
+
+.tab_table {
+    border: 1px solid #e2e2e2;
+    border-radius: 5px;
+}
+
+.tab_table_title {
+    background: #fff;
+    border-radius: 5px 5px 0px 0px;
+    padding: 7px 9px 0px 9px;
+}
+
+.tab_table_body {
+    background: #fff;
+    padding: 10px;
+    border-radius: 0px 0px 5px 5px;
+}

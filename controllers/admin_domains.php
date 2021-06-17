@@ -397,7 +397,9 @@ class AdminDomains extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configuration/');
         }
 
-        $this->set('tab', isset($this->get['tab']) ? $this->get['tab'] : 'general');
+        $tab = isset($this->get['tab']) ? $this->get['tab'] : 'general';
+        $this->set('tabs', $this->configurationTabs($tab));
+        $this->set('tab', $tab);
         $this->set('vars', $vars);
         $this->set('tlds', $this->DomainsTlds->getAll(['company_id' => $company_id]));
         $this->set(
@@ -425,13 +427,9 @@ class AdminDomains extends DomainsController
 
         if (!empty($this->post)) {
             $this->Packages->begin();
-            // Get company settings
+            // Get plugin company settings
             $company_id = Configure::get('Blesta.company_id');
-            $company_settings = $this->Form->collapseObjectArray(
-                $this->Companies->getSettings($company_id),
-                'value',
-                'key'
-            );
+            $company_settings = $this->getDomainsCompanySettings();
 
             // Get the current TLDs
             $tlds = $this->Form->collapseObjectArray(
@@ -543,7 +541,247 @@ class AdminDomains extends DomainsController
             $this->Packages->commit();
         }
 
+        $this->set('tabs', $this->configurationTabs('importpackages', false));
         $this->set('vars', ($vars ?? []));
+    }
+
+    /**
+     * Manages the pricing of the TLDs configurable options
+     */
+    public function configurableOptions()
+    {
+        $this->uses(['Domains.DomainsTlds', 'PackageOptions', 'PackageOptionGroups']);
+
+        // Get plugin company settings
+        $plugin_settings = $this->getDomainsCompanySettings();
+
+        // Get configurable options
+        $tld_features = $this->DomainsTlds->getFeatures();
+        $configurable_options = [];
+
+        foreach ($tld_features as $feature) {
+            if (isset($plugin_settings['domains_' . $feature . '_option_group'])) {
+                $option_group_id = $plugin_settings['domains_' . $feature . '_option_group'];
+                $option_group = $this->PackageOptionGroups->getAllOptions($option_group_id);
+
+                foreach ($option_group as $option) {
+                    $configurable_options[] = $this->PackageOptions->get($option->id);
+                }
+            }
+        }
+
+        $this->set('tabs', $this->configurationTabs('configurableoptions', false));
+        $this->set('configurable_options', $configurable_options);
+    }
+
+    /**
+     * Update configurable option pricing
+     */
+    public function configurableOptionsPricing()
+    {
+        $this->uses(['PackageOptions', 'Companies', 'Currencies']);
+
+        // Fetch the configurable option
+        if (
+            !$this->isAjax()
+            || !isset($this->get[0])
+            || !($configurable_option = $this->PackageOptions->get($this->get[0]))
+        ) {
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/');
+        }
+
+        // Get company settings
+        $company_id = Configure::get('Blesta.company_id');
+        $company_settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
+
+        // Get company default currency
+        $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
+
+        // Get company currencies
+        $currencies = $this->Currencies->getAll($company_id);
+
+        foreach ($currencies as $key => $currency) {
+            $currencies[$currency->code] = $currency;
+            unset($currencies[$key]);
+        }
+
+        if (isset($currencies[$default_currency])) {
+            $currencies = [$default_currency => $currencies[$default_currency]] + $currencies;
+        }
+
+        // Get configurable option pricing
+        try {
+            // Add a pricing for terms 1-10 years for each currency
+            foreach ($currencies as $currency) {
+                for ($i = 1; $i <= 10; $i++) {
+                    foreach ($configurable_option->values as &$value) {
+                        // Check if the term already exists
+                        $exists_pricing = false;
+
+                        foreach ($value->pricing as &$pricing) {
+                            if ($pricing->term == $i && $pricing->period == 'year' && $pricing->currency == $currency->code) {
+                                $exists_pricing = true;
+                            }
+                        }
+
+                        // If the pricing not exists, add a placeholder for that pricing
+                        if (!$exists_pricing) {
+                            $value->pricing[] = (object)[
+                                'term' => $i,
+                                'period' => 'year',
+                                'currency' => $currency->code
+                            ];
+                        }
+                    }
+                }
+            }
+        } catch (Throwable $e) {
+            echo $this->setMessage(
+                'error',
+                ['exception' => [$e->getMessage()]],
+                true,
+                ['show_close' => false],
+                false
+            );
+
+            return false;
+        }
+
+        echo $this->partial(
+            'admin_domains_configurableoptions_pricing',
+            compact(
+                'configurable_option',
+                'currencies',
+                'default_currency'
+            )
+        );
+
+        return false;
+    }
+
+    /**
+     * Updates the pricing of a configurable option
+     */
+    public function updateConfigurableOption()
+    {
+        $this->uses(['Domains.DomainsTlds', 'PackageOptions', 'Companies', 'Currencies']);
+
+        print_r($this->post); exit;
+
+        // Fetch the module to upgrade
+        if (!isset($this->post['id']) || !($module = $this->ModuleManager->get($this->post['id']))) {
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/');
+        }
+
+        $this->ModuleManager->upgrade($this->post['id']);
+
+        if (($errors = $this->ModuleManager->errors())) {
+            $this->flashMessage('error', $errors, null, false);
+        } else {
+            $this->flashMessage(
+                'message',
+                Language::_('AdminDomains.!success.registrar_upgraded', true),
+                null,
+                false
+            );
+        }
+        $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/');
+    }
+
+    /**
+     * Get a list of the tabs for the configuration view
+     *
+     * @param string $tab The URN of the current tab
+     * @param bool $ajax True if the tabs are called from an AJAX-enabled view
+     * @return array An array containing the tabs for the configuration view
+     */
+    private function configurationTabs($tab = 'general', $ajax = true)
+    {
+        return [
+            [
+                'name' => Language::_('AdminDomains.configuration.tab_general', true),
+                'current' => (($tab ?? 'general') == 'general'),
+                'attributes' => [
+                    'class' => 'general',
+                    'href' => $ajax ? '#' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=general'),
+                    'id' => 'general_tab'
+                ]
+            ],
+            [
+                'name' => Language::_('AdminDomains.configuration.tab_notifications', true),
+                'current' => (($tab ?? 'general') == 'notifications'),
+                'attributes' => [
+                    'class' => 'notifications',
+                    'href' => $ajax ? '#' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=notifications'),
+                    'id' => 'notifications_tab'
+                ]
+            ],
+            [
+                'name' => Language::_('AdminDomains.configuration.tab_advanced', true),
+                'current' => (($tab ?? 'general') == 'advanced'),
+                'attributes' => [
+                    'class' => 'advanced',
+                    'href' => $ajax ? '#' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=advanced'),
+                    'id' => 'advanced_tab'
+                ]
+            ],
+            [
+                'name' => Language::_('AdminDomains.configuration.tab_importpackages', true),
+                'current' => (($tab ?? 'general') == 'importpackages'),
+                'attributes' => [
+                    'class' => 'importpackages',
+                    'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/'),
+                    'id' => 'importpackages_tab'
+                ]
+            ],
+            [
+                'name' => Language::_('AdminDomains.configuration.tab_configurableoptions', true),
+                'current' => (($tab ?? 'general') == 'configurableoptions'),
+                'attributes' => [
+                    'class' => 'configurableoptions',
+                    'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/'),
+                    'id' => 'configurableoptions_tab'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * Gets the Domains plugin company settings
+     *
+     * @return array An array containing all the Domains plugin company settings
+     */
+    private function getDomainsCompanySettings()
+    {
+        $this->uses(['Companies']);
+        $this->helpers(['Form']);
+
+        // Get company settings
+        $company_id = Configure::get('Blesta.company_id');
+        $company_settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
+
+        $domains_settings = [];
+        $accepted_settings = [
+            'domains_spotlight_tlds',
+            'domains_dns_management_option_group',
+            'domains_email_forwarding_option_group',
+            'domains_id_protection_option_group',
+            'domains_epp_code_option_group',
+            'domains_first_reminder_days_before',
+            'domains_second_reminder_days_before',
+            'domains_expiration_notice_days_after',
+            'domains_taxable',
+            'domains_package_group',
+            'domains_tld_packages'
+        ];
+
+        foreach ($company_settings as $key => $setting) {
+            if (in_array($key, $accepted_settings)) {
+                $domains_settings[$key] = $setting;
+            }
+        }
+
+        return $domains_settings;
     }
 
     /**

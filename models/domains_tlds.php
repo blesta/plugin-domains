@@ -11,6 +11,11 @@ use Blesta\Core\Util\Input\Fields\Html as FieldsHtml;
 class DomainsTlds extends DomainsModel
 {
     /**
+     * @var array A list of potential features
+     */
+    private $features = ['dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
+
+    /**
      * Returns a list of TLDs for the given company
      *
      * @param array $filters A list of filters for the query
@@ -1157,6 +1162,16 @@ class DomainsTlds extends DomainsModel
     public function getDefaultTlds()
     {
         return ['.com', '.net', '.org'];
+    }
+
+    /**
+     * Returns a list of the features supported by the domain manager
+     *
+     * @return array A list of the supported features by the plugin
+     */
+    public function getFeatures()
+    {
+        return $this->features;
     }
 
     /**
