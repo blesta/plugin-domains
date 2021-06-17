@@ -149,7 +149,6 @@ class DomainsPlugin extends Plugin
      */
     public function upgrade($current_version, $plugin_id)
     {
-        Configure::load('domains', dirname(__FILE__) . DS . 'config' . DS);
         if (!isset($this->Record)) {
             Loader::loadComponents($this, ['Record']);
         }
