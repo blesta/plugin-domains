@@ -48,10 +48,6 @@ class DomainsPlugin extends Plugin
                 ->setField('tld', ['type' => 'VARCHAR', 'size' => "64"])
                 ->setField('company_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
                 ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
-                ->setField('dns_management', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
-                ->setField('email_forwarding', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
-                ->setField('id_protection', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
-                ->setField('epp_code', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
                 ->setKey(['id'], 'primary')
                 ->setKey(['tld', 'company_id'], 'unique')
                 ->create('domains_tlds', true);
@@ -159,26 +155,6 @@ class DomainsPlugin extends Plugin
 
             // Upgrade to 1.1.0
             if (version_compare($current_version, '1.1.0', '<')) {
-                // Update domains tlds table
-                $this->Record->query(
-                    'ALTER TABLE domains_tlds DROP PRIMARY KEY, ADD id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,'
-                        . ' ADD UNIQUE `tld`(`tld`, `company_id`)'
-                );
-
-                // Create domains packages table
-                try {
-                    $this->Record
-                        ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-                        ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                        ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                        ->setKey(['id'], 'primary')
-                        ->setKey(['tld_id', 'package_id'], 'unique')
-                        ->create('domains_packages', true);
-                } catch (Exception $e) {
-                    // Error adding... no permission?
-                    $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
-                    return;
-                }
 
                 $this->upgrade1_1_0();
             }
@@ -195,7 +171,16 @@ class DomainsPlugin extends Plugin
         }
 
         Loader::loadModels($this, ['Companies', 'Packages']);
+
+        // Update domains tlds table
+        $this->Record->query(
+            'ALTER TABLE domains_tlds DROP PRIMARY KEY, ADD id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,'
+                . ' ADD UNIQUE `tld`(`tld`, `company_id`)'
+        );
+
         $companies = $this->Companies->getAll();
+
+        // Shift the TLD order from the domains_tlds table to the package_group table
         foreach ($companies as $company) {
             if (($setting = $this->Companies->getSetting($company->id, 'domains_package_group'))) {
                 $tlds = $this->Record->select()->
@@ -217,9 +202,6 @@ class DomainsPlugin extends Plugin
 
                 $this->Packages->orderPackages($setting->value, $package_ids);
 
-                $this->Record->query(
-                    'ALTER TABLE domains_tlds DROP COLUMN `order`;'
-                );
             }
 
             // Put the Domain Manager nav items in the appropriate spot
@@ -294,6 +276,35 @@ class DomainsPlugin extends Plugin
                     $this->Navigation->add($params);
                 }
             }
+        }
+
+        try {
+            // Create domains packages table
+            $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setKey(['id'], 'primary')
+                ->setKey(['tld_id', 'package_id'], 'unique')
+                ->create('domains_packages', true);
+
+            // Remove the order column
+            $this->Record->query(
+                'ALTER TABLE domains_tlds DROP COLUMN `order`;'
+            );
+
+            // Remove the extra feature columns
+            $this->Record->query(
+                'ALTER TABLE domains_tlds
+                    DROP COLUMN `dns_management`,
+                    DROP COLUMN `email_forwarding`,
+                    DROP COLUMN `id_protection`,
+                    DROP COLUMN `epp_code`;'
+            );
+        } catch (Exception $e) {
+            // Error adding... no permission?
+            $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
+            return;
         }
     }
 
