@@ -4,12 +4,12 @@
             echo (isset($left_nav) ? $left_nav : null);
         ?>
         <div id="right_outer">
+            <section id="right_container">
             <?php
             if (!(isset($render_section) ? $render_section : null)) {
                 echo (isset($message) ? $message : null);
             }
             ?>
-            <section id="right_container">
         <?php
         }
         ?>
