@@ -7,7 +7,6 @@ $lang['DomainsTlds.!error.tld.length'] = 'The TLD must be at least 3 characters 
 $lang['DomainsTlds.!error.package_id.exists'] = 'Invalid package ID.';
 $lang['DomainsTlds.!error.package_group_id.exists'] = 'Invalid package group ID.';
 $lang['DomainsTlds.!error.module_id.exists'] = 'Invalid module ID.';
-$lang['DomainsTlds.!error.module_id.service'] = 'The module cannot be changed because there are one or more services already using this TLD.';
 $lang['DomainsTlds.!error.commpany_id.exists'] = 'Invalid company ID.';
 $lang['DomainsTlds.!error.dns_management.valid'] = 'Invalid value for DNS Management, must be 0 or 1.';
 $lang['DomainsTlds.!error.email_forwarding.valid'] = 'Invalid value for Email Forwarding, must be 0 or 1.';
@@ -17,6 +16,7 @@ $lang['DomainsTlds.!error.epp_code.valid'] = 'Invalid value for EPP Code, must b
 $lang['DomainsTlds.!error.package_pricing.count'] = 'The pricing cannot be disabled, the TLD must have at least one pricing.';
 $lang['DomainsTlds.!error.package_pricing.service'] = 'The pricing could not be disabled because a service is currently using it.';
 $lang['DomainsTlds.!error.tld.supported'] = 'The provided TLD is unsupported by the selected registrar module.';
+$lang['DomainsTlds.!error.feature.unsupported'] = 'The %1$s feature is unsupported by the selected registrar module.'; // %1$s is the feature name
 
 
 // TLD Fields

@@ -4,12 +4,12 @@
             echo (isset($left_nav) ? $left_nav : null);
         ?>
         <div id="right_outer">
+            <section id="right_container">
             <?php
             if (!(isset($render_section) ? $render_section : null)) {
                 echo (isset($message) ? $message : null);
             }
             ?>
-            <section id="right_container">
         <?php
         }
         ?>
@@ -62,7 +62,7 @@
                     if (!empty($tlds)) {
                         foreach ($tlds as $i => $tld) {
                     ?>
-                    <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>" data-package-id="<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
+                    <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->tld) ? $tld->tld : null);?>" data-package-tld="<?php echo $this->Html->safe($tld->tld);?>">
                         <td class="icon center"><i class="fas fa-arrows-alt movable"></i></td>
                         <td class="icon center"><i class="fas <?php echo ($tld->package->status !== 'inactive') ? 'fa-check' : 'fa-times';?>"></i></td>
                         <td class="small"><?php echo $this->Html->safe($tld->tld);?></td>
@@ -260,12 +260,15 @@
         }
 
         // Update TLDs
-        $('body').on('change', '#admin_domains_tlds .table tbody .quickupdate', function() {
+        $('#admin_domains_tlds .table tbody .quickupdate').change(function() {
             var field = this;
+
+            // Get TLD
+            var tld = $(field).parent().parent().attr('data-package-tld');
 
             $(this).blestaRequest(
                 "POST",
-                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updatetlds/');?>',
+                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updatetlds/');?>' + tld,
                 getPartialForm('tlds'),
                 function(response) {
                     if (response.hasOwnProperty('message')) {
@@ -287,13 +290,10 @@
 
                     // If the module has been updated, ask the user to update the package meta
                     if ($(field).attr('name').includes('[module]') && !response.message.includes('error_box error')) {
-                        // Get TLD package id
-                        var package_id = $(field).parent().parent().attr('data-package-id');
-
-                        if(!isNaN(package_id)) {
+                        if(tld !== '') {
                             $('.common_box').blestaModal({
                                 close: '<?php $this->_('AppController.modal.text_close');?>',
-                                url: '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/meta/');?>' + package_id + '/',
+                                url: '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/meta/');?>' + tld + '/',
                                 onShow: function (event, api) {
                                     var qtip = $('#' + api._id);
 

@@ -44,16 +44,22 @@ class DomainsPlugin extends Plugin
         try {
             // domains_tlds
             $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
                 ->setField('tld', ['type' => 'VARCHAR', 'size' => "64"])
                 ->setField('company_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
                 ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
-                ->setField('order', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
-                ->setField('dns_management', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
-                ->setField('email_forwarding', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
-                ->setField('id_protection', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
-                ->setField('epp_code', ['type' => 'TINYINT', 'size' => "1", 'default' => 0])
-                ->setKey(['tld', 'company_id'], 'primary')
+                ->setKey(['id'], 'primary')
+                ->setKey(['tld', 'company_id'], 'unique')
                 ->create('domains_tlds', true);
+
+            // domains_packages
+            $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setKey(['id'], 'primary')
+                ->setKey(['tld_id', 'package_id'], 'unique')
+                ->create('domains_packages', true);
         } catch (Exception $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -127,6 +133,178 @@ class DomainsPlugin extends Plugin
                     'html' => $email['html']
                 ]);
             }
+        }
+    }
+
+    /**
+     * Performs migration of data from $current_version (the current installed version)
+     * to the given file set version
+     *
+     * @param string $current_version The current installed version of this plugin
+     * @param int $plugin_id The ID of the plugin being upgraded
+     */
+    public function upgrade($current_version, $plugin_id)
+    {
+        if (!isset($this->Record)) {
+            Loader::loadComponents($this, ['Record']);
+        }
+
+        // Upgrade if possible
+        if (version_compare($this->getVersion(), $current_version, '>')) {
+            // Handle the upgrade, set errors using $this->Input->setErrors() if any errors encountered
+
+            // Upgrade to 1.1.0
+            if (version_compare($current_version, '1.1.0', '<')) {
+
+                $this->upgrade1_1_0();
+            }
+        }
+    }
+
+    /**
+     * Update to v1.1.0
+     */
+    private function upgrade1_1_0()
+    {
+        if (!isset($this->Form)) {
+            Loader::loadHelpers($this, ['Form']);
+        }
+
+        Loader::loadModels($this, ['Companies', 'Packages']);
+
+        // Update domains tlds table
+        $this->Record->query(
+            'ALTER TABLE domains_tlds DROP PRIMARY KEY, ADD id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,'
+                . ' ADD UNIQUE `tld`(`tld`, `company_id`)'
+        );
+
+        $companies = $this->Companies->getAll();
+
+        // Shift the TLD order from the domains_tlds table to the package_group table
+        foreach ($companies as $company) {
+            if (($setting = $this->Companies->getSetting($company->id, 'domains_package_group'))) {
+                $tlds = $this->Record->select()->
+                    from('domains_tlds')->
+                    where('company_id', '=', $company->id)->
+                    fetchAll();
+
+                usort(
+                    $tlds,
+                    function ($tld1, $tld2) {
+                        if ($tld1->order == $tld2->order) {
+                            return 0;
+                        }
+                        return ($tld1->order < $tld2->order) ? -1 : 1;
+                    }
+                );
+
+                $package_ids = array_values($this->Form->collapseObjectArray($tlds, 'package_id', 'id'));
+
+                $this->Packages->orderPackages($setting->value, $package_ids);
+
+            }
+
+            // Put the Domain Manager nav items in the appropriate spot
+            $this->reorderNavigationItems($company->id);
+        }
+    }
+
+    /**
+     * Move the Domain Manager navigation items to the appropriate spot in the nav
+     *
+     * @param int $company_id The company for which to move navigation items
+     */
+    private function reorderNavigationItems($company_id)
+    {
+        Loader::loadModels($this, ['Actions', 'Navigation']);
+        // Get the current navigation items
+        $navigation_items = $this->Navigation->getAll(
+            ['location' => 'nav_staff', 'company_id' => $company_id]
+        );
+
+        // Delete existing staff navigation items for this company
+        $this->Navigation->delete(['company_id' => $company_id, 'location' => 'nav_staff']);
+
+        // Re-add the navigation items, with the Domain Manager items in the proper place
+        $order = 0;
+        foreach ($navigation_items as $navigation_item) {
+            // Don't re-add existing Domain Manager nav items
+            if ($navigation_item->url == 'plugin/domains/admin_domains/browse/'
+                || $navigation_item->url == 'plugin/domains/admin_domains/tlds/'
+            ) {
+                continue;
+            }
+
+            $params = [
+                'action_id' => $navigation_item->action_id,
+                'order' => $order++,
+                'parent_url' => $navigation_item->parent_url
+            ];
+            $this->Navigation->add($params);
+
+            // Add the Domain Manager nav items
+            if ($navigation_item->url == 'billing/services/') {
+                // Get the current Browse Domains action
+                $action = $this->Actions->getByUrl(
+                    'plugin/domains/admin_domains/browse/',
+                    'nav_staff',
+                    $company_id
+                );
+
+                if ($action) {
+                    $params = [
+                        'action_id' => $action->id,
+                        'order' => $order++,
+                        'parent_url' => $navigation_item->parent_url
+                    ];
+                    $this->Navigation->add($params);
+                }
+            } elseif ($navigation_item->url == 'package_options/') {
+                // Get the current TLD Pricing action
+                $action = $this->Actions->getByUrl(
+                    'plugin/domains/admin_domains/tlds/',
+                    'nav_staff',
+                    $company_id
+                );
+
+                if ($action) {
+                    $params = [
+                        'action_id' => $action->id,
+                        'order' => $order++,
+                        'parent_url' => $navigation_item->parent_url
+                    ];
+                    $this->Navigation->add($params);
+                }
+            }
+        }
+
+        try {
+            // Create domains packages table
+            $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setKey(['id'], 'primary')
+                ->setKey(['tld_id', 'package_id'], 'unique')
+                ->create('domains_packages', true);
+
+            // Remove the order column
+            $this->Record->query(
+                'ALTER TABLE domains_tlds DROP COLUMN `order`;'
+            );
+
+            // Remove the extra feature columns
+            $this->Record->query(
+                'ALTER TABLE domains_tlds
+                    DROP COLUMN `dns_management`,
+                    DROP COLUMN `email_forwarding`,
+                    DROP COLUMN `id_protection`,
+                    DROP COLUMN `epp_code`;'
+            );
+        } catch (Exception $e) {
+            // Error adding... no permission?
+            $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
+            return;
         }
     }
 
@@ -338,6 +516,7 @@ class DomainsPlugin extends Plugin
             try {
                 // Remove database tables
                 $this->Record->drop('domains_tlds');
+                $this->Record->drop('domains_packages');
             } catch (Exception $e) {
                 // Error dropping... no permission?
                 $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -375,8 +554,9 @@ class DomainsPlugin extends Plugin
 
             // Remove company TLDs
             $this->Record->from('domains_tlds')->
+                leftJoin('domains_packages', 'domains_packages.tld_id', '=', 'domains_tlds.id', false)->
                 where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
-                delete();
+                delete(['domains_tlds.*', 'domains_packages.*']);
         }
 
         // Remove individual cron task runs
@@ -698,11 +878,18 @@ class DomainsPlugin extends Plugin
         return [
             // Domains Nav
             [
-                'action' => 'nav_secondary_staff',
+                'location' => 'nav_staff',
                 'uri' => 'plugin/domains/admin_domains/browse/',
                 'name' => 'DomainsPlugin.nav_secondary_staff.domains',
+                'options' => ['parent' => 'billing/']
+            ],
+            // Domain Configuration Nav
+            [
+                'location' => 'nav_staff',
+                'uri' => 'plugin/domains/admin_domains/tlds/',
+                'name' => 'DomainsPlugin.nav_secondary_staff.domain_options',
                 'options' => ['parent' => 'packages/']
-            ]
+            ],
         ];
     }
 
@@ -847,6 +1034,7 @@ class DomainsPlugin extends Plugin
 
         if (isset($params['package_id'])) {
             $tlds = $this->DomainsTlds->getAll(['package_id' => $params['package_id']]);
+
             foreach ($tlds as $tld) {
                 $this->DomainsTlds->delete($tld->tld);
             }
@@ -861,6 +1049,11 @@ class DomainsPlugin extends Plugin
      */
     public function getDomainCount($client_id)
     {
-        return '0';
+        Loader::loadModels($this, ['Domains.DomainsDomains']);
+
+        return $this->DomainsDomains->getListCount([
+            'client_id' => $client_id,
+            'status' => 'active'
+        ]);
     }
 }
