@@ -617,7 +617,6 @@ class AdminDomains extends DomainsController
                     foreach ($configurable_option->values as &$value) {
                         // Check if the term already exists
                         $exists_pricing = false;
-
                         foreach ($value->pricing as &$pricing) {
                             if ($pricing->term == $i && $pricing->period == 'year' && $pricing->currency == $currency->code) {
                                 $exists_pricing = true;
@@ -634,6 +633,21 @@ class AdminDomains extends DomainsController
                         }
                     }
                 }
+            }
+
+            // Order pricing rows
+            foreach ($configurable_option->values as &$value) {
+                usort($value->pricing, function ($a, $b) {
+                    if ($a->term == $b->term) {
+                        return 0;
+                    }
+
+                    if ($a->term < $b->term) {
+                        return -1;
+                    }
+
+                    return 1;
+                });
             }
         } catch (Throwable $e) {
             echo $this->setMessage(
@@ -664,27 +678,138 @@ class AdminDomains extends DomainsController
      */
     public function updateConfigurableOption()
     {
-        $this->uses(['Domains.DomainsTlds', 'PackageOptions', 'Companies', 'Currencies']);
+        $this->uses(['PackageOptions', 'Currencies']);
+        $this->components(['Record']);
 
-        print_r($this->post); exit;
-
-        // Fetch the module to upgrade
-        if (!isset($this->post['id']) || !($module = $this->ModuleManager->get($this->post['id']))) {
-            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/');
+        // Fetch the configurable option
+        if (
+            !$this->isAjax()
+            || !isset($this->get[0])
+            || !($option = $this->PackageOptions->get($this->get[0]))
+        ) {
+            //$this->redirect($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/');
         }
 
-        $this->ModuleManager->upgrade($this->post['id']);
+        if (!empty($this->post['pricing'])) {
+            // Build values array
+            $value_vars = [];
+            foreach ($this->post['pricing'] as $value_id => $pricing) {
+                // Get value
+                $value = $this->Record->select(['package_option_values.*', 'package_options.type' => 'option_type'])
+                    ->from('package_option_values')
+                    ->innerJoin('package_options', 'package_options.id', '=', 'package_option_values.option_id', false)
+                    ->where('package_option_values.id', '=', $value_id)
+                    ->fetch();
 
-        if (($errors = $this->ModuleManager->errors())) {
-            $this->flashMessage('error', $errors, null, false);
-        } else {
-            $this->flashMessage(
-                'message',
-                Language::_('AdminDomains.!success.registrar_upgraded', true),
-                null,
-                false
-            );
+                // Build value pricing array
+                $value_pricing = [];
+                foreach ($pricing as $term => $item) {
+                    foreach ($item as $currency => $price) {
+                        // Check if already exists a pricing for the same combination of term, period and currency
+                        $pricing_row_match = $this->Record->select('package_option_pricing.*')
+                            ->from('pricings')
+                            ->innerJoin('package_option_pricing', 'package_option_pricing.pricing_id', '=', 'pricings.id', false)
+                            ->innerJoin('package_option_values', 'package_option_values.id', '=', 'package_option_pricing.option_value_id', false)
+                            ->where('package_option_values.id', '=', $value_id)
+                            ->where('pricings.period', '=', 'year')
+                            ->where('pricings.term', '=', $term)
+                            ->where('pricings.currency', '=', $currency)
+                            ->fetch();
+
+                        // Build pricing row array
+                        $pricing_row = [
+                            'term' => $term,
+                            'period' => 'year',
+                            'currency' => $currency,
+                            'price' => $price['price'],
+                            'price_renews' => $price['price_renews']
+                        ];
+
+                        if (isset($pricing_row_match->id)) {
+                            $pricing_row['id'] = $pricing_row_match->id;
+                        }
+
+                        $value_pricing[] = $pricing_row;
+                    }
+                }
+
+                // Build value var
+                $value_vars[] = [
+                    'id' => $value->id,
+                    'name' => $value->name,
+                    'value' => $value->value,
+                    'default' => $value->default,
+                    'status' => $value->status,
+                    'min' => $value->min,
+                    'max' => $value->max,
+                    'step' => $value->step,
+                    'pricing' => $value_pricing
+                ];
+            }
+
+            // Build option vars
+            $option = $this->PackageOptions->get($this->get[0]);
+            $option_vars = [
+                'label' => $option->label,
+                'name' => $option->name,
+                'type' => $option->type,
+                'addable' => $option->addable,
+                'editable' => $option->editable,
+                'values' => $value_vars,
+                'groups' => []
+            ];
+
+            foreach ($option->groups as $group) {
+                $option_vars['groups'][] = $group->id;
+            }
+
+            // Get company currencies
+            $company_id = Configure::get('Blesta.company_id');
+            $currencies = $this->Currencies->getAll($company_id);
+
+            // Remove disabled prices
+            foreach ($currencies as $currency) {
+                for ($i = 1; $i <= 10; $i++) {
+                    foreach ($this->post['pricing'] as $value_id => $pricing) {
+                        if (!isset($this->post['pricing'][$value_id][$i][$currency->code])) {
+                            // The pricing has been marked as disabled, check if the pricing exists on
+                            // the database and if exists, remove it
+                            $pricing = $this->Record->select('package_option_pricing.*')
+                                ->from('pricings')
+                                ->innerJoin('package_option_pricing', 'package_option_pricing.pricing_id', '=', 'pricings.id', false)
+                                ->innerJoin('package_option_values', 'package_option_values.id', '=', 'package_option_pricing.option_value_id', false)
+                                ->where('package_option_values.id', '=', $value_id)
+                                ->where('pricings.period', '=', 'year')
+                                ->where('pricings.term', '=', $i)
+                                ->where('pricings.currency', '=', $currency->code)
+                                ->fetch();
+
+                            if (!empty($pricing)) {
+                                $this->Record->from('package_option_pricing')->
+                                    leftJoin('pricings', 'pricings.id', '=', 'package_option_pricing.pricing_id', false)->
+                                    where('package_option_pricing.id', '=', $pricing->id)->
+                                    delete(['package_option_pricing.*', 'pricings.*']);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Update configurable option
+            $this->PackageOptions->edit($this->get[0], $option_vars);
+
+            if (($errors = $this->PackageOptions->errors())) {
+                $this->flashMessage('error', $errors, null, false);
+            } else {
+                $this->flashMessage(
+                    'message',
+                    Language::_('AdminDomains.!success.configurable_option_updated', true),
+                    null,
+                    false
+                );
+            }
         }
+
         $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/');
     }
 
@@ -1394,7 +1519,6 @@ class AdminDomains extends DomainsController
             'name',
             'id'
         );
-
 
         $module = $fields->label(
             Language::_('AdminDomains.getfilters.field_module_id', true),

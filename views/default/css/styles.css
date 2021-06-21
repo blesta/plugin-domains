@@ -79,6 +79,7 @@
 .tab_table {
     border: 1px solid #e2e2e2;
     border-radius: 5px;
+    margin: 5px;
 }
 
 .tab_table_title {
