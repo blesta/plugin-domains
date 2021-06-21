@@ -16,6 +16,39 @@ class DomainsTlds extends DomainsModel
     private $features = ['dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
 
     /**
+     * Append features to the TLD and marks them based on which configurable option groups are assigned to the package
+     *
+     * @param stdClass $tld The TLD object to which features are appended
+     * @return stdClass The modified TLD object
+     */
+    private function appendFeatures($tld)
+    {
+        Loader::loadModels($this, ['Companies']);
+        Loader::loadHelpers($this, ['Form']);
+        // Get company settings
+        $company_settings = $this->Form->collapseObjectArray(
+            $this->Companies->getSettings($tld->company_id),
+            'value',
+            'key'
+        );
+
+        // Get all the option groups assigned to the package
+        $package_option_groups = $this->Form->collapseObjectArray(
+            $this->Record->select()->from('package_option')->where('package_id', '=', $tld->package_id)->fetchAll(),
+            'package_id',
+            'option_group_id'
+        );
+
+        // Assign a feature if the TLD package is assigned the correct option_group
+        foreach ($this->features as $feature) {
+            $option_group_id = $company_settings['domains_' . $feature . '_option_group'] ?? null;
+            $tld->{$feature} = (array_key_exists($option_group_id, $package_option_groups) ? '1' : '0');
+        }
+
+        return $tld;
+    }
+
+    /**
      * Returns a list of TLDs for the given company
      *
      * @param array $filters A list of filters for the query
@@ -23,19 +56,22 @@ class DomainsTlds extends DomainsModel
      *  - tld The TLD
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
-     *  - dns_management Whether DNS management is included for the TLDs
-     *  - email_forwarding Whether email forwarding is included for the TLDs
-     *  - id_protection Whether ID protection is included for the TLDs
      * @param int $page The page number of results to fetch
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
     public function getList(array $filters = [], $page = 1, array $order = ['package_group.order' => 'asc'])
     {
-        return $this->getTlds($filters)
+        $results = $this->getTlds($filters)
             ->order($order)
             ->limit($this->getPerPage(), (max(1, $page) - 1) * $this->getPerPage())
             ->fetchAll();
+
+        foreach ($results as &$result) {
+            $result = $this->appendFeatures($result);
+        }
+
+        return $results;
     }
 
     /**
@@ -46,9 +82,6 @@ class DomainsTlds extends DomainsModel
      *  - tld The TLD
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
-     *  - dns_management Whether DNS management is included for the TLDs
-     *  - email_forwarding Whether email forwarding is included for the TLDs
-     *  - id_protection Whether ID protection is included for the TLDs
      * @return int The total number of TLDs for the given filters
      */
     public function getListCount(array $filters = [])
@@ -64,15 +97,18 @@ class DomainsTlds extends DomainsModel
      *  - tld The TLD
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
-     *  - dns_management Whether DNS management is included for the TLDs
-     *  - email_forwarding Whether email forwarding is included for the TLDs
-     *  - id_protection Whether ID protection is included for the TLDs
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
     public function getAll(array $filters = [], array $order = ['package_group.order' => 'asc'])
     {
-        return $this->getTlds($filters)->order($order)->fetchAll();
+        $results = $this->getTlds($filters)->order($order)->fetchAll();
+
+        foreach ($results as &$result) {
+            $result = $this->appendFeatures($result);
+        }
+
+        return $results;
     }
 
     /**
@@ -86,11 +122,18 @@ class DomainsTlds extends DomainsModel
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
-        return $this->getTlds([
+        $result = $this->getTlds([
             'tld' => $tld,
             'company_id' => $company_id
         ])->fetch();
+
+        if ($result) {
+            $result = $this->appendFeatures($result);
+        }
+
+        return $result;
     }
+
 
     /**
      * Fetches a TLD by the given package id
@@ -103,10 +146,16 @@ class DomainsTlds extends DomainsModel
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
-        return $this->getTlds([
+        $result = $this->getTlds([
             'package_id' => $package_id,
             'company_id' => $company_id
         ])->fetch();
+
+        if ($result) {
+            $result = $this->appendFeatures($result);
+        }
+
+        return $result;
     }
 
     /**
@@ -206,10 +255,6 @@ class DomainsTlds extends DomainsModel
                 'tld',
                 'company_id',
                 'package_id',
-                'dns_management',
-                'email_forwarding',
-                'id_protection',
-                'epp_code'
             ];
             $this->Record->insert('domains_tlds', $vars, $fields);
             $this->Record->insert(
@@ -378,13 +423,39 @@ class DomainsTlds extends DomainsModel
         $this->Input->setRules($this->getRules($vars, true));
 
         if ($this->Input->validates($vars)) {
+            // Get package
+            $old_package = $this->Packages->get($tld->package_id);
+
             // Migrate module
-            if (isset($vars['module_id']) && $this->requiresModuleMigration($vars['tld'], $vars['module_id'])) {
-                $vars['package_id'] = $this->migrateModule($vars['tld'], $vars['module_id']);
+            if (isset($vars['module_id'])) {
+                if ($this->requiresModuleMigration($vars['tld'], $vars['module_id'])) {
+                    $vars['package_id'] = $this->migrateModule($vars['tld'], $vars['module_id']);
+                }
+
+                // Remove unsupported features
+                if ($old_package->module_id !== $vars['module_id']) {
+                    $company_settings = $this->Form->collapseObjectArray(
+                        $this->Companies->getSettings($tld->company_id),
+                        'value',
+                        'key'
+                    );
+
+                    $registrar = $this->ModuleManager->initModule($vars['module_id']);
+                    foreach ($this->features as $feature) {
+                        $setting = $company_settings['domains_' . $feature . '_option_group'] ?? null;
+
+                        if ($setting && !$registrar->supportsFeature($feature)) {
+                            $vars[$feature] = '0';
+                        } elseif ($tld->{$feature} == '1') {
+                            $vars[$feature] = '1';
+                        }
+                    }
+                }
             }
 
             // Get package
-            $package = $this->Packages->get(isset($vars['package_id']) ? $vars['package_id'] : $tld->package_id);
+            $package = isset($vars['package_id']) ? $this->Packages->get($vars['package_id']) : $old_package;
+
 
             // Set the default module row only if the module row and module group have not been provided
             // and the module id has been provided and this is being updated to a new value.
@@ -453,18 +524,11 @@ class DomainsTlds extends DomainsModel
                 return;
             }
 
-            // Get company settings
-            $company_settings = $this->Form->collapseObjectArray(
-                $this->Companies->getSettings($company_id),
-                'value',
-                'key'
-            );
-
             // Update configurable options
             $this->assignConfigurableOptions($package->id, $vars);
 
             // Update TLD
-            $fields = ['tld', 'package_id', 'dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
+            $fields = ['tld', 'package_id'];
             $this->Record->where('tld', '=', $vars['tld'])
                 ->where('company_id', '=', $company_id)
                 ->update('domains_tlds', $vars, $fields);
@@ -517,16 +581,14 @@ class DomainsTlds extends DomainsModel
         // Check if there is any existing package using the new module
         $package = $this->getTldPackageByModuleId($tld, $new_module_id);
 
-        if (!empty($package)) {
-            return true;
-        }
-
         // Get package id
         $tld = $this->get($tld);
         $package_id = isset($tld->package_id) ? $tld->package_id : null;
 
         if (empty($package_id)) {
             return false;
+        } elseif ($package && $package->id != $package_id) {
+            return true;
         }
 
         // Check if the package is using the same module id
@@ -895,8 +957,11 @@ class DomainsTlds extends DomainsModel
             return false;
         }
 
-        Loader::loadModels($this, ['Companies']);
+        Loader::loadModels($this, ['Companies', 'ModuleManager', 'Packages']);
         Loader::loadHelpers($this, ['Form']);
+
+        $package = $this->Packages->get($package_id);
+        $registrar = $this->ModuleManager->initModule($package->module_id);
 
         $company_id = $vars['company_id'] ?? Configure::get('Blesta.company_id');
 
@@ -908,24 +973,34 @@ class DomainsTlds extends DomainsModel
         );
 
         // Update configurable options
-        $options = ['dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
+        foreach ($this->features as $option) {
 
-        foreach ($options as $option) {
             if (isset($company_settings['domains_' . $option . '_option_group'])) {
                 $option_group_id = $company_settings['domains_' . $option . '_option_group'];
 
-                if (isset($vars[$option]) && (bool)$vars[$option]) {
-                    $fields = [
-                        'package_id' => $package_id,
-                        'option_group_id' => $option_group_id
-                    ];
-                    $this->Record->duplicate('package_option.option_group_id', '=', $fields['option_group_id'])
-                        ->insert('package_option', $fields);
-                } else {
-                    $this->Record->from('package_option')
-                        ->where('package_option.package_id', '=', $package_id)
-                        ->where('package_option.option_group_id', '=', $option_group_id)
-                        ->delete();
+                if (isset($vars[$option])) {
+                    if ((bool)$vars[$option]) {
+                        if (!$registrar->supportsFeature($option)) {
+                            $this->Input->setErrors([
+                                'feature' => [
+                                    'message' => Language::_('DomainsTlds.!error.feature.unsupported', true, $option)
+                                ]
+                            ]);
+                            continue;
+                        }
+
+                        $fields = [
+                            'package_id' => $package_id,
+                            'option_group_id' => $option_group_id
+                        ];
+                        $this->Record->duplicate('package_option.option_group_id', '=', $fields['option_group_id'])
+                            ->insert('package_option', $fields);
+                    } else {
+                        $this->Record->from('package_option')
+                            ->where('package_option.package_id', '=', $package_id)
+                            ->where('package_option.option_group_id', '=', $option_group_id)
+                            ->delete();
+                    }
                 }
             }
         }
@@ -1111,10 +1186,6 @@ class DomainsTlds extends DomainsModel
      *  - tld The TLD
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
-     *  - dns_management Whether DNS management is included for the TLDs
-     *  - email_forwarding Whether email forwarding is included for the TLDs
-     *  - id_protection Whether ID protection is included for the TLDs
-     *  - epp_code Whether to include EPP Code for this TLD
      * @return Record A partially built query
      */
     private function getTlds(array $filters = [])
@@ -1133,22 +1204,6 @@ class DomainsTlds extends DomainsModel
 
         if (isset($filters['package_id'])) {
             $this->Record->where('domains_tlds.package_id', '=', $filters['package_id']);
-        }
-
-        if (isset($filters['dns_management'])) {
-            $this->Record->where('domains_tlds.dns_management', '=', $filters['dns_management']);
-        }
-
-        if (isset($filters['email_forwarding'])) {
-            $this->Record->where('domains_tlds.email_forwarding', '=', $filters['email_forwarding']);
-        }
-
-        if (isset($filters['id_protection'])) {
-            $this->Record->where('domains_tlds.id_protection', '=', $filters['id_protection']);
-        }
-
-        if (isset($filters['epp_code'])) {
-            $this->Record->where('domains_tlds.epp_code', '=', $filters['epp_code']);
         }
 
         return $this->Record;

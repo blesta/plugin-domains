@@ -201,8 +201,7 @@ $lang['AdminDomains.getfilters.field_package_name'] = 'TLD';
 $lang['AdminDomains.getfilters.field_service_meta'] = 'Domain Name';
 
 
-$lang['AdminDomains.leftnav.nav_domains'] = 'Domains';
-$lang['AdminDomains.leftnav.nav_domains_domains'] = 'Domains';
+$lang['AdminDomains.leftnav.nav_utilities'] = 'Utilities';
 $lang['AdminDomains.leftnav.nav_domains_whois'] = 'Whois';
 $lang['AdminDomains.leftnav.nav_tlds'] = 'TLDs';
 $lang['AdminDomains.leftnav.nav_tlds_pricing'] = 'TLD Pricing';
