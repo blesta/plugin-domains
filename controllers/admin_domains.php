@@ -708,6 +708,8 @@ class AdminDomains extends DomainsController
                         null,
                         false
                     );
+                    
+                    continue;
                 }
 
                 // Build value pricing array
