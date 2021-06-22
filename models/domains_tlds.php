@@ -94,7 +94,6 @@ class DomainsTlds extends DomainsModel
      *
      * @param array $filters A list of filters for the query
      *
-     *  - tld The TLD
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @param array $order A key/value pair array of fields to order the results by
@@ -134,7 +133,6 @@ class DomainsTlds extends DomainsModel
         return $result;
     }
 
-
     /**
      * Fetches a TLD by the given package id
      *
@@ -159,15 +157,85 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Returns all the pricings for a given TLD in the system for the given filters
+     *
+     * @param array $filters A list of filters for the query
+     *
+     *  - tld The TLD
+     *  - company_id The ID of the company for which this TLD is available (optional)
+     *  - term The term for which to filter by (optional)
+     *  - currency The currency for which to filter by (optional)
+     * @return array An array of stdClass objects
+     */
+    public function getPricings(array $filters = [])
+    {
+        // Get company id
+        $company_id = $filters['company_id'] ?? Configure::get('Blesta.company_id');
+
+        // Get TLD
+        $tld = $this->get($filters['tld']);
+
+        // Verify if the given package id belongs to a TLD
+        if (!($package = $this->getByPackage($tld->package_id))) {
+            return false;
+        }
+
+        // Get package pricings
+        $pricings = $this->Record->select('pricings.*')
+            ->from('pricings')
+            ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
+            ->where('package_pricing.package_id', '=', $tld->package_id)
+            ->where('pricings.period', '=', 'year');
+
+        if (isset($filters['term'])) {
+            $pricings->where('pricings.term', '=', $filters['term']);
+        }
+
+        if (isset($filters['currency'])) {
+            $pricings->where('pricings.currency', '=', $filters['currency']);
+        }
+
+        return $pricings->fetchAll();
+    }
+
+    /**
+     * Returns all the pricings for all the TLDs for the given filters
+     *
+     * @param array $filters A list of filters for the query
+     *
+     *  - company_id The ID of the company for which this TLD is available (optional)
+     *  - term The term for which to filter by (optional)
+     *  - currency The currency for which to filter by (optional)
+     * @return array An array of stdClass objects
+     */
+    public function getAllPricings(array $filters = [])
+    {
+        // Get company id
+        $company_id = $filters['company_id'] ?? Configure::get('Blesta.company_id');
+
+        // Get all TLDs
+        $tlds = $this->getAll(['company_id' => $company_id]);
+
+        // Get TLDs pricings
+        $pricings = [];
+
+        foreach ($tlds as $tld) {
+            $pricings[$tld->tld] = $this->getPricings(array_merge($filters, ['tld' => $tld->tld]));
+        }
+
+        return $pricings;
+    }
+
+    /**
      * Sort the TLDs
      *
      * @param array $tlds A key => value array, where the key is the order of
      *  the TLD and the value the ID of the package belonging to the TLD
+     * @param int $company_id The ID of the company for which to filter by (optional)
      */
     public function sort(array $tlds = [], $company_id = null)
     {
-        Loader::loadModels($this, ['Companies']);
-        Loader::loadModels($this, ['Packages']);
+        Loader::loadModels($this, ['Companies', 'Packages']);
 
         $company_id = $company_id ?? Configure::get('Blesta.company_id');
         $domains_package_group = $this->Companies->getSetting($company_id, 'domains_package_group');
