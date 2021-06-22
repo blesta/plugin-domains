@@ -2,7 +2,7 @@
         echo (isset($message) ? $message : null);
 
         $this->Widget->clear();
-        $this->Widget->create($this->_('AdminDomains.configurableoptions_pricing.boxtitle_edit_configurable_option', true, (isset($configurable_option->label) ? $configurable_option->label : null)), ['id' => 'edit_configurable_option_' . (isset($configurable_option->name) ? $configurable_option->name : null)], (isset($render_section) ? $render_section : null));
+        $this->Widget->create($this->_('AdminDomains.configurableoptions_pricing.boxtitle_edit_configurable_option', true, ($configurable_option->label ?? null)), ['id' => 'edit_configurable_option_' . (isset($configurable_option->name) ? $configurable_option->name : null)], (isset($render_section) ? $render_section : null));
 
         $this->Form->create($this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updateconfigurableoption/' . $configurable_option->id . '/'), ['id' => 'edit_configurable_option']);
         ?>
@@ -10,9 +10,9 @@
             <div class="tab_content">
                 <ul class="tabs">
                     <?php
-                    foreach ((isset($currencies) ? $currencies : []) as $currency) {
+                    foreach (($currencies ?? []) as $currency) {
                     ?>
-                    <li<?php echo ($currency->code == (isset($default_currency) ? $default_currency : '')) ? ' class="current"' : '';?>>
+                    <li<?php echo ($currency->code == ($default_currency ?? '')) ? ' class="current"' : '';?>>
                         <a href="#"><?php echo $this->Html->safe($currency->code);?></a>
                     </li>
                     <?php
@@ -21,11 +21,11 @@
                 </ul>
                 <div class="inner_content">
                     <?php
-                    foreach ((isset($currencies) ? $currencies : []) as $currency) {
+                    foreach (($currencies ?? []) as $currency) {
                     ?>
                         <div>
                             <?php
-                            foreach ($configurable_option->values as $i => $value) {
+                            foreach (($configurable_option->values ?? []) as $i => $value) {
                             ?>
                                 <?php
                                 if (count($configurable_option->values) > 1) {

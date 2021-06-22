@@ -687,7 +687,7 @@ class AdminDomains extends DomainsController
             || !isset($this->get[0])
             || !($option = $this->PackageOptions->get($this->get[0]))
         ) {
-            //$this->redirect($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/');
         }
 
         if (!empty($this->post['pricing'])) {
@@ -700,6 +700,15 @@ class AdminDomains extends DomainsController
                     ->innerJoin('package_options', 'package_options.id', '=', 'package_option_values.option_id', false)
                     ->where('package_option_values.id', '=', $value_id)
                     ->fetch();
+
+                if (empty($value)) {
+                    $this->flashMessage(
+                        'error',
+                        Language::_('AdminDomains.!error.value_id_invalid', true),
+                        null,
+                        false
+                    );
+                }
 
                 // Build value pricing array
                 $value_pricing = [];

@@ -11,6 +11,7 @@ $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal ha
 $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
 $lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
 
+$lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not valid.';
 
 $lang['AdminDomains.browse.boxtitle_browse'] = 'Domains';
 $lang['AdminDomains.browse.heading_domain'] = 'Domain';
