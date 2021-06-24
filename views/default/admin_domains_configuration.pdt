@@ -12,40 +12,6 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
 <?php
 }
 
-    $tabs = [
-        [
-            'name' => $this->_('AdminDomains.configuration.tab_general', true),
-            'current' => (($tab ?? 'general') == 'general'),
-            'attributes' => [
-                'class' => 'general',
-                'href' => '#'
-            ]
-        ],
-        [
-            'name' => $this->_('AdminDomains.configuration.tab_notifications', true),
-            'current' => (($tab ?? 'notifications') == 'notifications'),
-            'attributes' => [
-                'class' => 'notifications',
-                'href' => '#'
-            ]
-        ],
-        [
-            'name' => $this->_('AdminDomains.configuration.tab_advanced', true),
-            'current' => (($tab ?? 'advanced') == 'advanced'),
-            'attributes' => [
-                'class' => 'advanced',
-                'href' => '#'
-            ]
-        ],
-        [
-            'name' => $this->_('AdminDomains.configuration.tab_importpackages', true),
-            'current' => false,
-            'attributes' => [
-                'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/')
-            ]
-        ]
-    ];
-
     $this->Widget->clear();
     $this->Widget->setTabs($tabs);
     $this->Widget->create($this->_('AdminDomains.configuration.boxtitle', true), ['id' => 'admin_domains_configuration'], (isset($render_section) ? $render_section : null));

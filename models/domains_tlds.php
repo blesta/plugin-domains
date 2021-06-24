@@ -1220,6 +1220,16 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Returns a list of the features supported by the domain manager
+     *
+     * @return array A list of the supported features by the plugin
+     */
+    public function getFeatures()
+    {
+        return $this->features;
+    }
+
+    /**
      * Returns all validation rules for adding/editing extensions
      *
      * @param array $vars An array of input key/value pairs

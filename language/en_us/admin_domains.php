@@ -9,7 +9,9 @@ $lang['AdminDomains.!success.tld_added'] = 'The TLD was successfully added!';
 $lang['AdminDomains.!success.tld_updated'] = 'The TLD was successfully updated!';
 $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
 $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
+$lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
 
+$lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not valid.';
 
 $lang['AdminDomains.browse.boxtitle_browse'] = 'Domains';
 $lang['AdminDomains.browse.heading_domain'] = 'Domain';
@@ -58,6 +60,7 @@ $lang['AdminDomains.configuration.tab_general'] = 'General';
 $lang['AdminDomains.configuration.tab_notifications'] = 'Notifications';
 $lang['AdminDomains.configuration.tab_advanced'] = 'Advanced';
 $lang['AdminDomains.configuration.tab_importpackages'] = 'Import Packages';
+$lang['AdminDomains.configuration.tab_configurableoptions'] = 'Configurable Options';
 
 $lang['AdminDomains.configuration.heading_package_options'] = 'Package Options';
 $lang['AdminDomains.configuration.heading_taxes'] = 'Taxes';
@@ -94,6 +97,20 @@ $lang['AdminDomains.importpackages.field_overwrite_packages'] = 'Overwrite TLD P
 $lang['AdminDomains.importpackages.tooltip_overwrite_packages'] = 'When checked, current Domain Manager TLD packages will be replaced by external TLD packages.  Domain Manager packages with services assigned to them will be skipped during this process.';
 
 $lang['AdminDomains.importpackages.field_submit'] = 'Import Packages';
+
+
+$lang['AdminDomains.configurableoptions.boxtitle'] = 'Configuration';
+$lang['AdminDomains.configurableoptions.heading_configurable_option'] = 'Configurable Option';
+$lang['AdminDomains.configurableoptions.heading_options'] = 'Options';
+$lang['AdminDomains.configurableoptions.option_edit'] = 'Edit';
+
+
+$lang['AdminDomains.configurableoptions_pricing.boxtitle_edit_configurable_option'] = 'Edit %1$s';
+$lang['AdminDomains.configurableoptions_pricing.field_update'] = 'Update';
+$lang['AdminDomains.configurableoptions_pricing.field_cancel'] = 'Cancel';
+$lang['AdminDomains.configurableoptions_pricing.heading_term'] = 'Term';
+$lang['AdminDomains.configurableoptions_pricing.heading_price'] = 'Price';
+$lang['AdminDomains.configurableoptions_pricing.heading_renew_price'] = 'Renew Price';
 
 
 $lang['AdminDomains.tlds.boxtitle_tld_pricing'] = 'TLD Pricing';
