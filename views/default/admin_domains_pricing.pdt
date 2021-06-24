@@ -432,8 +432,8 @@
                     $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_html textarea').val(templates.<?php echo $lang->code;?>.html);
                     $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_text textarea').val(templates.<?php echo $lang->code;?>.text);
 
-                    const ck_editor = document.querySelector('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_html .ck-editor__editable');
-                    const ck_editor_instance = ck_editor.ckeditorInstance;
+                    var ck_editor = document.querySelector('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_html .ck-editor__editable');
+                    var ck_editor_instance = ck_editor.ckeditorInstance;
 
                     ck_editor_instance.setData(templates.<?php echo $lang->code;?>.html);
                 <?php
