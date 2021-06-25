@@ -1103,7 +1103,7 @@ class AdminDomains extends DomainsController
         $company_id = Configure::get('Blesta.company_id');
 
         // Add new TLD
-        if (!empty($this->post)) {
+        if (!empty($this->post['add_tld'])) {
             $vars = $this->post['add_tld'];
 
             // Set checkboxes
@@ -1140,6 +1140,29 @@ class AdminDomains extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
+        // Process TLD bulk actions
+        if (!empty($this->post['tlds_bulk'])) {
+            $action = $this->post['tlds_bulk']['action'] ?? null;
+
+            if (!empty($this->post['tlds_bulk']['tlds']) && is_array($this->post['tlds_bulk']['tlds'])) {
+                foreach ($this->post['tlds_bulk']['tlds'] as $tld) {
+                    if ($action == 'enable') {
+                        $this->DomainsTlds->enable($tld);
+                    } elseif ($action == 'disable') {
+                        $this->DomainsTlds->disable($tld);
+                    }
+                }
+            }
+
+            if (!array_key_exists($action, $this->getTldActions())) {
+                $this->flashMessage('error', Language::_('AdminDomains.!error.tlds_bulk[action].valid', true));
+            } else {
+                $this->flashMessage('message', Language::_('AdminDomains.!success.tlds_updated', true));
+            }
+
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
+        }
+
         // Fetch all the TLDs and their pricing for this company
         $tlds = $this->DomainsTlds->getAll(['company_id' => $company_id]);
 
@@ -1161,13 +1184,30 @@ class AdminDomains extends DomainsController
         $select = ['' => Language::_('AppController.select.please', true)];
         $modules = $select + $this->Form->collapseObjectArray($modules, 'name', 'id');
 
+        // Fetch TLD actions
+        $tld_actions = $this->getTldActions();
+
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
+        $this->set('tld_actions', $tld_actions);
 
         // Include WYSIWYG
         $this->Javascript->setFile('blesta/ckeditor/build/ckeditor.js', 'head', VENDORWEBDIR);
 
         return $this->renderAjaxWidgetIfAsync($this->isAjax());
+    }
+
+    /**
+     * Gets a list of the available bulk actions for TLDs
+     *
+     * @return array An array containing the available bulk actions for TLDs
+     */
+    private function getTldActions()
+    {
+        return [
+            'enable' => Language::_('AdminDomains.getTldActions.option_enable', true),
+            'disable' => Language::_('AdminDomains.getTldActions.option_disable', true)
+        ];
     }
 
     /**

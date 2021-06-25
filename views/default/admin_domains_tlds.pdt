@@ -35,6 +35,11 @@
                 <thead>
                     <tr class="heading_row">
                         <td class="icon"></td>
+                        <td class="icon">
+                            <?php
+                            $this->Form->fieldCheckbox('tlds_bulk[all]', 'all', false);
+                            ?>
+                        </td>
                         <td class="icon"></td>
                         <td><span><?php $this->_('AdminDomains.tlds.heading_tld');?></span></td>
                         <td>
@@ -64,6 +69,11 @@
                     ?>
                     <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->tld) ? $tld->tld : null);?>" data-package-tld="<?php echo $this->Html->safe($tld->tld);?>">
                         <td class="icon center"><i class="fas fa-arrows-alt movable"></i></td>
+                        <td>
+                            <?php
+                            $this->Form->fieldCheckbox('tlds_bulk[tlds][]', $this->Html->safe($tld->tld), false);
+                            ?>
+                        </td>
                         <td class="icon center"><i class="fas <?php echo ($tld->package->status !== 'inactive') ? 'fa-check text-success' : 'fa-times text-danger';?>"></i></td>
                         <td class="small"><?php echo $this->Html->safe($tld->tld);?></td>
                         <td>
@@ -169,6 +179,13 @@
                     </tr>
                 </tfoot>
             </table>
+
+            <div id="tld_action" class="button_row pad_top">
+                <a class="btn btn-primary btn-sm float-right bulk_tld" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/tlds/';?>"><?php $this->_('AdminDomains.tlds.option_submit');?></a>
+                <?php
+                $this->Form->fieldSelect('tlds_bulk[action]', (isset($tld_actions) ? $tld_actions : []), (isset($tld->module->id) ? $tld->module->id : ''), ['class' => 'float-right']);
+                ?>
+            </div>
             <?php
             $this->Widget->end();
             ?>
@@ -236,12 +253,12 @@
             var form = document.createElement('form');
 
             // Add input fields
-            $('#admin_domains_tlds .table input[name^="' + input_array + '"]').each(function() {
+            $('#admin_domains_tlds input[name^="' + input_array + '"]').each(function() {
                 form.appendChild(this.cloneNode());
             });
 
             // Add select fields
-            $('#admin_domains_tlds .table select[name^="' + input_array + '"]').each(function() {
+            $('#admin_domains_tlds select[name^="' + input_array + '"]').each(function() {
                 var select = document.createElement('input');
                 select.setAttribute('type', 'hidden');
                 select.setAttribute('name', $(this).attr('name'));
@@ -369,6 +386,66 @@
                 min_width: Math.max((window.innerWidth / 4) * 3, 400),
                 max_width: Math.max((window.innerWidth / 4) * 3, 400)
             });
+        });
+
+        // Show bulk actions
+        $('#tld_action').hide();
+        $('#admin_domains_tlds input[name^="tlds_bulk"]').click(function() {
+            // Show/hide action input
+            if ($('#admin_domains_tlds input[name^="tlds_bulk"]:checked').size() > 0) {
+                // Check all checkboxes
+                if ($(this).val() == 'all') {
+                    if ($(this).prop('checked')) {
+                        // Check all checkboxes
+                        $('#admin_domains_tlds input[name^="tlds_bulk"]').each(function() {
+                            $(this).prop('checked', true);
+                        });
+
+                        // Show action input
+                        $('#tld_action').show();
+                    } else {
+                        // Uncheck all checkboxes
+                        $('#admin_domains_tlds input[name^="tlds_bulk"]').each(function() {
+                            $(this).prop('checked', false);
+                        });
+
+                        // Hide action input
+                        $('#tld_action').hide();
+                    }
+                } else {
+                    // Check individual checkboxes
+                    if ($(this).prop('checked')) {
+                        $('#tld_action').show();
+                    } else {
+                        // Uncheck 'all'
+                        $('#admin_domains_tlds input[value=all]').prop('checked', false);
+                    }
+                }
+            } else {
+                // Hide action input
+                $('#tld_action').hide();
+            }
+        });
+
+        // Process bulk actions
+        $('#admin_domains_tlds a.bulk_tld').click(function(event) {
+            event.preventDefault();
+
+            $(this).blestaRequest(
+                "POST",
+                $(this).attr('href'),
+                getPartialForm('tlds_bulk'),
+                function(tlds) {
+                    $(tlds.replacer).html(tlds.content);
+
+                    if (tlds.hasOwnProperty('message')) {
+                        $('.common_box').parent().find('.error_section').remove();
+                        $('.common_box').parent().prepend(tlds.message);
+                    }
+                },
+                null,
+                {dataType: 'json'}
+            );
         });
     });
 </script>
