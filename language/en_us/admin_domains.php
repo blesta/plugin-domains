@@ -17,6 +17,7 @@ $lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not va
 $lang['AdminDomains.!error.tlds_bulk[action].valid'] = 'Invalid value for TLDs Bulk Action, must be "enable" or "disable".';
 
 
+$lang['AdminDomains.browse.page_title'] = 'Domains > Browse';
 $lang['AdminDomains.browse.boxtitle_browse'] = 'Domains';
 $lang['AdminDomains.browse.heading_domain'] = 'Domain';
 $lang['AdminDomains.browse.heading_client'] = 'Client';
@@ -46,6 +47,7 @@ $lang['AdminDomains.browse.tooltip_renew'] = 'Auto Renewal for Blesta means that
 $lang['AdminDomains.getdomainactions.change_auto_renewal'] = 'Change Auto Renewal';
 
 
+$lang['AdminDomains.registrars.page_title'] = 'Domains > Registrars';
 $lang['AdminDomains.registrars.boxtitle_registrars'] = 'Registrars';
 $lang['AdminDomains.registrars.text_author'] = 'Author:';
 $lang['AdminDomains.registrars.text_author_url'] = 'Author URL';
@@ -59,6 +61,7 @@ $lang['AdminDomains.registrars.text_none'] = 'There are no available registrars.
 $lang['AdminDomains.registrars.confirm_uninstall'] = 'Are you sure you want to uninstall this registrar?';
 
 
+$lang['AdminDomains.configuration.page_title'] = 'Domains > Configuration';
 $lang['AdminDomains.configuration.boxtitle'] = 'Configuration';
 $lang['AdminDomains.configuration.tab_general'] = 'General';
 $lang['AdminDomains.configuration.tab_notifications'] = 'Notifications';
@@ -92,6 +95,7 @@ $lang['AdminDomains.configuration.tooltip_expiration_notice_days_after'] = 'Sele
 $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that will be highlighted on order forms through the Order Plugin.';
 
 
+$lang['AdminDomains.importpackages.page_title'] = 'Domains > Configuration';
 $lang['AdminDomains.importpackages.boxtitle'] = 'Configuration';
 $lang['AdminDomains.importpackages.description'] = 'This tool will search for any packages that use a registrar module and clone the package once for each of the TLDs assigned to it.  If multiple packages are assigned to the same TLD, then the domain manager will clone the first one it encounters and ignore the others.  Only yearly pricings will be cloned.  If a package has no yearly pricings it will be skipped.  Cloned packages will be deactivated if they have no services after import.';
 
@@ -103,6 +107,7 @@ $lang['AdminDomains.importpackages.tooltip_overwrite_packages'] = 'When checked,
 $lang['AdminDomains.importpackages.field_submit'] = 'Import Packages';
 
 
+$lang['AdminDomains.configurableoptions.page_title'] = 'Domains > Configuration';
 $lang['AdminDomains.configurableoptions.boxtitle'] = 'Configuration';
 $lang['AdminDomains.configurableoptions.heading_configurable_option'] = 'Configurable Option';
 $lang['AdminDomains.configurableoptions.heading_options'] = 'Options';
@@ -117,6 +122,7 @@ $lang['AdminDomains.configurableoptions_pricing.heading_price'] = 'Price';
 $lang['AdminDomains.configurableoptions_pricing.heading_renew_price'] = 'Renew Price';
 
 
+$lang['AdminDomains.tlds.page_title'] = 'Domains > TLDs';
 $lang['AdminDomains.tlds.boxtitle_tld_pricing'] = 'TLD Pricing';
 $lang['AdminDomains.tlds.categorylink_tldsadd'] = 'Add TLD';
 $lang['AdminDomains.tlds.heading_tld'] = 'TLD';
@@ -182,6 +188,7 @@ $lang['AdminDomains.meta.field_finish'] = 'Finish';
 $lang['AdminDomains.meta.field_update'] = 'Update';
 
 
+$lang['AdminDomains.whois.page_title'] = 'Domains > Whois';
 $lang['AdminDomains.whois.boxtitle_whois'] = 'Whois';
 $lang['AdminDomains.whois.title_row'] = 'Domain Lookup';
 $lang['AdminDomains.whois.available'] = 'Domain Available';

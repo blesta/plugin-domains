@@ -158,6 +158,9 @@ class AdminDomains extends DomainsController
         );
         $this->setPagination($this->get, $settings);
 
+        // Set the page title
+        $this->structure->set('page_title', Language::_('AdminDomains.browse.page_title', true));
+
         // Render the request if ajax
         return $this->renderAjaxWidgetIfAsync(isset($this->get[1]) || isset($this->get['sort']));
     }
@@ -252,6 +255,9 @@ class AdminDomains extends DomainsController
             }
         }
         $this->set('registrars', array_values($registrars));
+
+        // Set the page title
+        $this->structure->set('page_title', Language::_('AdminDomains.registrars.page_title', true));
     }
 
     /**
@@ -344,6 +350,9 @@ class AdminDomains extends DomainsController
         }
         $this->set('vars', $this->post);
         $this->set('domain_info', isset($domain_info) ? $domain_info : []);
+
+        // Set the page title
+        $this->structure->set('page_title', Language::_('AdminDomains.whois.page_title', true));
     }
 
     /**
@@ -416,6 +425,9 @@ class AdminDomains extends DomainsController
         $this->set('first_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_1'));
         $this->set('second_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_2'));
         $this->set('expiration_notice_template', $this->EmailGroups->getByAction('Domains.domain_expiration'));
+
+        // Set the page title
+        $this->structure->set('page_title', Language::_('AdminDomains.configuration.page_title', true));
     }
 
     /**
@@ -543,6 +555,9 @@ class AdminDomains extends DomainsController
 
         $this->set('tabs', $this->configurationTabs('importpackages', false));
         $this->set('vars', ($vars ?? []));
+
+        // Set the page title
+        $this->structure->set('page_title', Language::_('AdminDomains.importpackages.page_title', true));
     }
 
     /**
@@ -572,6 +587,9 @@ class AdminDomains extends DomainsController
 
         $this->set('tabs', $this->configurationTabs('configurableoptions', false));
         $this->set('configurable_options', $configurable_options);
+
+        // Set the page title
+        $this->structure->set('page_title', Language::_('AdminDomains.configurableoptions.page_title', true));
     }
 
     /**
@@ -1190,6 +1208,9 @@ class AdminDomains extends DomainsController
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
         $this->set('tld_actions', $tld_actions);
+
+        // Set the page title
+        $this->structure->set('page_title', Language::_('AdminDomains.tlds.page_title', true));
 
         // Include WYSIWYG
         $this->Javascript->setFile('blesta/ckeditor/build/ckeditor.js', 'head', VENDORWEBDIR);
