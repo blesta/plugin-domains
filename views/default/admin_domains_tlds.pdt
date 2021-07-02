@@ -140,6 +140,7 @@
                 <tfoot>
                     <tr id="add_tld_row">
                         <td class="icon center"></td>
+                        <td class="icon center"></td>
                         <td class="icon center">
                             <a href="#" class="close"><i class="fas fa-times"></i></a>
                         </td>

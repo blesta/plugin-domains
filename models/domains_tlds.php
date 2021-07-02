@@ -1283,7 +1283,7 @@ class DomainsTlds extends DomainsModel
 
                             $module_tlds = $parent->ModuleManager->moduleRpc($vars['module_id'], 'getTlds');
 
-                            return !(is_array($module_tlds) && !empty($module_tlds) && !in_array($vars['tld'], $module_tlds));
+                            return is_array($module_tlds) && !empty($module_tlds) && in_array($vars['tld'], $module_tlds);
                         }
 
                         return true;
