@@ -6,6 +6,12 @@
     height: 22px;
 }
 
+.table tr.locked td {
+    background: #f9f9f9;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 .table #add_tld_row {
     display: none;
 }

@@ -68,7 +68,10 @@
                         foreach ($tlds as $i => $tld) {
                     ?>
                     <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->tld) ? $tld->tld : null);?>" data-package-tld="<?php echo $this->Html->safe($tld->tld);?>">
-                        <td class="icon center"><i class="fas fa-arrows-alt movable"></i></td>
+                        <td class="icon center">
+                            <i class="fas fa-arrows-alt movable"></i>
+                            <i class="fas fa-spinner fa-spin" style="display: none;"></i>
+                        </td>
                         <td>
                             <?php
                             $this->Form->fieldCheckbox('tlds_bulk[tlds][]', $this->Html->safe($tld->tld), false);
@@ -283,6 +286,11 @@
 
             // Get TLD
             var tld = $(field).parent().parent().attr('data-package-tld');
+
+            // Lock TLD
+            $(field).parent().parent().addClass('locked');
+            $(field).parent().parent().find('.movable').hide();
+            $(field).parent().parent().find('.fa-spinner').show();
 
             $(this).blestaRequest(
                 "POST",
