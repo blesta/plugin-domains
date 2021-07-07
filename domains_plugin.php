@@ -890,6 +890,18 @@ class DomainsPlugin extends Plugin
                 'name' => 'DomainsPlugin.nav_secondary_staff.domain_options',
                 'options' => ['parent' => 'packages/']
             ],
+            // Staff Widget
+            [
+                'action' => 'widget_staff_client',
+                'uri' => 'plugin/domains/admin_main/domains/',
+                'name' => 'DomainsPlugin.widget_staff_home.main'
+            ],
+            // Client Widget
+            [
+                'action' => 'widget_client_home',
+                'uri' => 'plugin/domains/client_main/index/',
+                'name' => 'DomainsPlugin.widget_client_home.main'
+            ]
         ];
     }
 
