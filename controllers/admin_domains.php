@@ -18,7 +18,6 @@ class AdminDomains extends DomainsController
         parent::preAction();
 
         $this->uses(['ModuleManager']);
-        $this->structure->set('page_title', Language::_('AdminDomains.index.page_title', true));
     }
 
     /**
