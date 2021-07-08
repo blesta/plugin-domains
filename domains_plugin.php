@@ -883,6 +883,19 @@ class DomainsPlugin extends Plugin
                 'name' => 'DomainsPlugin.nav_secondary_staff.domains',
                 'options' => ['parent' => 'billing/']
             ],
+            // Domains Client Nav
+            [
+                'location' => 'nav_client',
+                'uri' => 'services/index/',
+                'name' => 'DomainsPlugin.nav_client.services',
+                'options' => ['parent' => 'services/index/active/', 'base_uri' => 'client']
+            ],
+            [
+                'location' => 'nav_client',
+                'uri' => 'plugin/domains/client_main/',
+                'name' => 'DomainsPlugin.nav_client.domains',
+                'options' => ['parent' => 'services/index/active/']
+            ],
             // Domain Configuration Nav
             [
                 'location' => 'nav_staff',
