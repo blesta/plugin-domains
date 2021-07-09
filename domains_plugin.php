@@ -886,12 +886,6 @@ class DomainsPlugin extends Plugin
             // Domains Client Nav
             [
                 'location' => 'nav_client',
-                'uri' => 'services/index/',
-                'name' => 'DomainsPlugin.nav_client.services',
-                'options' => ['parent' => 'services/index/active/', 'base_uri' => 'client']
-            ],
-            [
-                'location' => 'nav_client',
                 'uri' => 'plugin/domains/client_main/',
                 'name' => 'DomainsPlugin.nav_client.domains',
                 'options' => ['parent' => 'services/index/active/']
