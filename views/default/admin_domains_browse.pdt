@@ -108,8 +108,6 @@ if (!empty($domains)) {
     </tbody>
 </table>
 <?php
-            // Set pagination
-            $this->Pagination->build();
 } else {
 ?>
 <div class="empty_section">
