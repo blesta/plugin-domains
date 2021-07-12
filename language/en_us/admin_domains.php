@@ -7,10 +7,17 @@ $lang['AdminDomains.!success.tld_disabled'] = 'The TLD was successfully disabled
 $lang['AdminDomains.!success.tld_enabled'] = 'The TLD was successfully enabled!';
 $lang['AdminDomains.!success.tld_added'] = 'The TLD was successfully added!';
 $lang['AdminDomains.!success.tld_updated'] = 'The TLD was successfully updated!';
+$lang['AdminDomains.!success.tlds_updated'] = 'The TLDs were successfully updated!';
 $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
 $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
+$lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
+
+$lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not valid.';
+
+$lang['AdminDomains.!error.tlds_bulk[action].valid'] = 'Invalid value for TLDs Bulk Action, must be "enable" or "disable".';
 
 
+$lang['AdminDomains.browse.page_title'] = 'Domains > Browse';
 $lang['AdminDomains.browse.boxtitle_browse'] = 'Domains';
 $lang['AdminDomains.browse.heading_domain'] = 'Domain';
 $lang['AdminDomains.browse.heading_client'] = 'Client';
@@ -40,6 +47,7 @@ $lang['AdminDomains.browse.tooltip_renew'] = 'Auto Renewal for Blesta means that
 $lang['AdminDomains.getdomainactions.change_auto_renewal'] = 'Change Auto Renewal';
 
 
+$lang['AdminDomains.registrars.page_title'] = 'Domains > Registrars';
 $lang['AdminDomains.registrars.boxtitle_registrars'] = 'Registrars';
 $lang['AdminDomains.registrars.text_author'] = 'Author:';
 $lang['AdminDomains.registrars.text_author_url'] = 'Author URL';
@@ -53,11 +61,13 @@ $lang['AdminDomains.registrars.text_none'] = 'There are no available registrars.
 $lang['AdminDomains.registrars.confirm_uninstall'] = 'Are you sure you want to uninstall this registrar?';
 
 
+$lang['AdminDomains.configuration.page_title'] = 'Domains > Configuration';
 $lang['AdminDomains.configuration.boxtitle'] = 'Configuration';
 $lang['AdminDomains.configuration.tab_general'] = 'General';
 $lang['AdminDomains.configuration.tab_notifications'] = 'Notifications';
 $lang['AdminDomains.configuration.tab_advanced'] = 'Advanced';
 $lang['AdminDomains.configuration.tab_importpackages'] = 'Import Packages';
+$lang['AdminDomains.configuration.tab_configurableoptions'] = 'Configurable Options';
 
 $lang['AdminDomains.configuration.heading_package_options'] = 'Package Options';
 $lang['AdminDomains.configuration.heading_taxes'] = 'Taxes';
@@ -85,6 +95,7 @@ $lang['AdminDomains.configuration.tooltip_expiration_notice_days_after'] = 'Sele
 $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that will be highlighted on order forms through the Order Plugin.';
 
 
+$lang['AdminDomains.importpackages.page_title'] = 'Domains > Configuration';
 $lang['AdminDomains.importpackages.boxtitle'] = 'Configuration';
 $lang['AdminDomains.importpackages.description'] = 'This import will:<br/>
 * Find all packages assigned to a registrar module (3rd party modules may not identify themselves as registrars and thus may not be recognized)<br/>
@@ -102,6 +113,22 @@ $lang['AdminDomains.importpackages.tooltip_overwrite_packages'] = 'When checked,
 $lang['AdminDomains.importpackages.field_submit'] = 'Import Packages';
 
 
+$lang['AdminDomains.configurableoptions.page_title'] = 'Domains > Configuration';
+$lang['AdminDomains.configurableoptions.boxtitle'] = 'Configuration';
+$lang['AdminDomains.configurableoptions.heading_configurable_option'] = 'Configurable Option';
+$lang['AdminDomains.configurableoptions.heading_options'] = 'Options';
+$lang['AdminDomains.configurableoptions.option_edit'] = 'Edit';
+
+
+$lang['AdminDomains.configurableoptions_pricing.boxtitle_edit_configurable_option'] = 'Edit %1$s';
+$lang['AdminDomains.configurableoptions_pricing.field_update'] = 'Update';
+$lang['AdminDomains.configurableoptions_pricing.field_cancel'] = 'Cancel';
+$lang['AdminDomains.configurableoptions_pricing.heading_term'] = 'Term';
+$lang['AdminDomains.configurableoptions_pricing.heading_price'] = 'Price';
+$lang['AdminDomains.configurableoptions_pricing.heading_renew_price'] = 'Renew Price';
+
+
+$lang['AdminDomains.tlds.page_title'] = 'Domains > TLDs';
 $lang['AdminDomains.tlds.boxtitle_tld_pricing'] = 'TLD Pricing';
 $lang['AdminDomains.tlds.categorylink_tldsadd'] = 'Add TLD';
 $lang['AdminDomains.tlds.heading_tld'] = 'TLD';
@@ -115,6 +142,7 @@ $lang['AdminDomains.tlds.option_edit'] = 'Edit';
 $lang['AdminDomains.tlds.option_disable'] = 'Disable';
 $lang['AdminDomains.tlds.option_enable'] = 'Enable';
 $lang['AdminDomains.tlds.option_add'] = 'Add';
+$lang['AdminDomains.tlds.option_submit'] = 'Submit';
 $lang['AdminDomains.tlds.confirm_disable'] = 'Are you sure you want to disable this TLD?';
 $lang['AdminDomains.tlds.confirm_enable'] = 'Are you sure you want to enable this TLD?';
 
@@ -122,6 +150,10 @@ $lang['AdminDomains.tlds.tooltip_dns_management'] = 'The availability of DNS man
 $lang['AdminDomains.tlds.tooltip_email_forwarding'] = 'The availability of Email Forwarding will depend on whether the registrar module implements such functionality and may not be available for all TLDs or registrars';
 $lang['AdminDomains.tlds.tooltip_id_protection'] = 'The availability of ID Protection will depend on whether the registrar module implements such functionality and may not be available for all TLDs or registrars';
 $lang['AdminDomains.tlds.tooltip_epp_code'] = 'The availability of the EPP Code will depend on whether the registrar module implements such functionality and may not be available for all TLDs or registrars';
+
+
+$lang['AdminDomains.getTldActions.option_disable'] = 'Disable';
+$lang['AdminDomains.getTldActions.option_enable'] = 'Enable';
 
 
 $lang['AdminDomains.pricing.boxtitle_edit_tld'] = 'Update TLD %1$s'; // %1$s is the TLD
@@ -162,6 +194,7 @@ $lang['AdminDomains.meta.field_finish'] = 'Finish';
 $lang['AdminDomains.meta.field_update'] = 'Update';
 
 
+$lang['AdminDomains.whois.page_title'] = 'Domains > Whois';
 $lang['AdminDomains.whois.boxtitle_whois'] = 'Whois';
 $lang['AdminDomains.whois.title_row'] = 'Domain Lookup';
 $lang['AdminDomains.whois.available'] = 'Domain Available';
