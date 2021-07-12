@@ -21,6 +21,9 @@ $lang['DomainsPlugin.getCronTasks.domain_renewal_reminders_description'] = 'Send
 $lang['DomainsPlugin.nav_secondary_staff.domain_options'] = 'Domain Options';
 $lang['DomainsPlugin.nav_secondary_staff.domains'] = 'Domains';
 
+$lang['DomainsPlugin.nav_client.services'] = 'Services';
+$lang['DomainsPlugin.nav_client.domains'] = 'Domains';
+
 // Plugin Cards
 $lang['DomainsPlugin.card_client.getDomainCount'] = 'Domains';
 
