@@ -73,7 +73,7 @@ class AdminDomains extends DomainsController
         $order = (isset($this->get['order']) ? $this->get['order'] : 'desc');
 
         $alt_sort = false;
-        if (in_array($sort, ['registrar', 'expiration_date', 'renewal_price'])) {
+        if (in_array($sort, ['name', 'registrar', 'expiration_date', 'renewal_price'])) {
             $alt_sort = $sort;
             $sort = 'date_added';
         }
@@ -144,7 +144,7 @@ class AdminDomains extends DomainsController
         $this->set('status_count', $status_count);
         $this->set('actions', $this->getDomainActions());
         $this->set('widget_state', isset($this->widgets_state['services']) ? $this->widgets_state['services'] : null);
-        $this->set('sort', $sort);
+        $this->set('sort', $alt_sort ? $alt_sort : $sort);
         $this->set('order', $order);
         $this->set('negate_order', ($order == 'asc' ? 'desc' : 'asc'));
         // Overwrite default pagination settings
@@ -152,8 +152,8 @@ class AdminDomains extends DomainsController
             Configure::get('Blesta.pagination'),
             [
                 'total_results' => $total_results,
-                'uri' => $this->base_uri . 'plugin/domains/admin_domains/browse/',
-                'params' => ['sort' => $sort, 'order' => $order]
+                'uri' => $this->base_uri . 'plugin/domains/admin_domains/browse/' . $status . '/[p]/',
+                'params' => ['sort' => $alt_sort ? $alt_sort : $sort, 'order' => $order]
             ]
         );
         $this->setPagination($this->get, $settings);
