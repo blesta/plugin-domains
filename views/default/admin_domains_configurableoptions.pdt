@@ -1,0 +1,77 @@
+        <?php
+        if (!(isset($is_ajax) ? $is_ajax : false)) {
+            echo (isset($left_nav) ? $left_nav : null);
+        ?>
+        <div id="right_outer">
+            <?php
+            if (!(isset($render_section) ? $render_section : null)) {
+                echo (isset($message) ? $message : null);
+            }
+            ?>
+            <section id="right_container">
+        <?php
+            }
+        ?>
+            <?php
+            $this->Widget->clear();
+            $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css', ['id' => 'domains_styles']);
+            $this->Widget->setTabs($tabs);
+            $this->Widget->create($this->_('AdminDomains.configurableoptions.boxtitle', true), ['id' => 'admin_domains_configurableoptions'], (isset($render_section) ? $render_section : null));
+            ?>
+            <div class="inner">
+                <table class="table option_table">
+                    <thead>
+                        <tr class="heading_row">
+                            <td><span><?php $this->_('AdminDomains.configurableoptions.heading_configurable_option');?></span></td>
+                            <td class="last"><span><?php $this->_('AdminDomains.configurableoptions.heading_options');?></span></td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        if (!empty($configurable_options)) {
+                            foreach ($configurable_options as $i => $configurable_option) {
+                        ?>
+                        <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?>>
+                            <td><?php echo $this->Html->safe($configurable_option->label);?></td>
+                            <td>
+                                <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/configurableoptionspricing/' . $this->Html->safe($configurable_option->id) . '/';?>" class="modal"><?php $this->_('AdminDomains.configurableoptions.option_edit');?></a>
+                            </td>
+                        </tr>
+                        <?php
+                            }
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php
+            $this->Widget->end();
+            ?>
+        <?php
+        if (!(isset($is_ajax) ? $is_ajax : false)) {
+        ?>
+            </section>
+        </div>
+        <?php
+        }
+        ?>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Load modal content
+        $('#admin_domains_configurableoptions .table a.modal').each(function() {
+            $(this).blestaModal({
+                close: '<?php $this->_('AppController.modal.text_close');?>',
+                url: $(this).attr('href'),
+                onShow: function (event, api) {
+                    var qtip = $('#' + api._id);
+
+                    qtip.addClass('common_box_modal');
+                    qtip.find('.qtip-content').removeClass('qtip-content');
+                },
+                min_width: Math.max((window.innerWidth / 4) * 3, 400),
+                max_width: Math.max((window.innerWidth / 4) * 3, 400)
+            });
+        });
+    });
+</script>

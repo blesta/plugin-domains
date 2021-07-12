@@ -328,6 +328,9 @@ class DomainsTlds extends DomainsModel
             'groups' => [$vars['package_group_id']]
         ];
 
+        // Fetch sample welcome email from the module
+        $email_template = $this->ModuleManager->moduleRpc($vars['module_id'], 'getEmailTemplate');
+
         // Add a package name and email content for each language
         foreach ($languages as $language) {
             $package_params['names'][] = [
@@ -335,9 +338,9 @@ class DomainsTlds extends DomainsModel
                 'name' => $vars['tld']
             ];
             $package_params['email_content'][] = [
-                'lang' => $language->code,
-                'html' => '',
-                'text' => ''
+                'lang' => $email_template[$language->code]['lang'] ?? 'en_us',
+                'html' => $email_template[$language->code]['html'] ?? '',
+                'text' => $email_template[$language->code]['text'] ?? ''
             ];
         }
 
@@ -1220,6 +1223,16 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Returns a list of the features supported by the domain manager
+     *
+     * @return array A list of the supported features by the plugin
+     */
+    public function getFeatures()
+    {
+        return $this->features;
+    }
+
+    /**
      * Returns all validation rules for adding/editing extensions
      *
      * @param array $vars An array of input key/value pairs
@@ -1273,7 +1286,7 @@ class DomainsTlds extends DomainsModel
 
                             $module_tlds = $parent->ModuleManager->moduleRpc($vars['module_id'], 'getTlds');
 
-                            return !(is_array($module_tlds) && !empty($module_tlds) && !in_array($vars['tld'], $module_tlds));
+                            return is_array($module_tlds) && !empty($module_tlds) && in_array($vars['tld'], $module_tlds);
                         }
 
                         return true;
