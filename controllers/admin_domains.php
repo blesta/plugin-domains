@@ -422,13 +422,13 @@ class AdminDomains extends DomainsController
      */
     public function importPackages()
     {
-        $this->uses(['ModuleManager', 'Companies', 'Domains.DomainsTlds', 'Packages', 'Services']);
+        $this->uses(['ModuleManager', 'Companies', 'Domains.DomainsTlds', 'Packages', 'PackageGroups', 'Services']);
+        $company_settings = $this->getDomainsCompanySettings();
 
         if (!empty($this->post)) {
             $this->Packages->begin();
             // Get plugin company settings
             $company_id = Configure::get('Blesta.company_id');
-            $company_settings = $this->getDomainsCompanySettings();
 
             // Get the current TLDs
             $existing_tlds = $this->DomainsTlds->getAll(['company_id' => $company_id]);
@@ -528,6 +528,14 @@ class AdminDomains extends DomainsController
             $vars = $this->post;
         }
 
+        $package_group = $this->PackageGroups->get($company_settings['domains_package_group']);
+        $this->setMessage(
+            'notice',
+            Language::_('AdminDomains.importpackages.order_form', true, $package_group->name),
+            false,
+            null,
+            false
+        );
         $this->set('tabs', $this->configurationTabs('importpackages', false));
         $this->set('vars', ($vars ?? []));
     }

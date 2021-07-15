@@ -97,6 +97,7 @@ $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that will be 
 
 $lang['AdminDomains.importpackages.page_title'] = 'Domains > Configuration';
 $lang['AdminDomains.importpackages.boxtitle'] = 'Configuration';
+$lang['AdminDomains.importpackages.order_form'] = 'Domain order forms should be updated to use the %1$s package group'; // %1$s is the name of the Domain Manager package group
 $lang['AdminDomains.importpackages.description'] = 'This import will:<br/>
 * Find all packages assigned to a registrar module (3rd party modules may not identify themselves as registrars and thus may not be recognized)<br/>
 * For each TLD assigned to the package, create a new TLD Pricing package with the same details in the Domain Manager<br/>
