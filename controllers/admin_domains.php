@@ -471,7 +471,8 @@ class AdminDomains extends DomainsController
                 );
 
                 // Attempt to import the TLDs from each package
-                foreach ($packages as $package) {                    $this->importPackage(
+                foreach ($packages as $package) {
+                    $this->importPackage(
                         $package->id,
                         $imported_tld_packages,
                         $existing_tld_packages,
@@ -532,6 +533,7 @@ class AdminDomains extends DomainsController
 
         $this->set('vars', ($vars ?? []));
     }
+
     /**
      * Imports all the TLDs from a package as new Domain Manager TLD packages
      *
