@@ -267,6 +267,48 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Adds a package to a given tld
+     *
+     * @param array $vars An array of input data including:
+     *
+     *  - tld The TLD to add (opional)
+     *  - tld_id The id of the TLD to add (required if 'tld' is not submitted)
+     *  - package_id The ID of the package to add
+     */
+    public function addPackage($vars)
+    {
+        // Get the tld based on the TLD
+        if (isset($vars['tld'])) {
+            $tld = $this->get($vars['tld']);
+            $vars['tld_id'] = ($tld ? $tld->id : null);
+            unset($vars['tld']);
+        }
+
+        $rules = [
+            'tld_id' => [
+                'exists' => [
+                    'if_set' => true,
+                    'rule' => [[$this, 'validateExists'], 'id', 'domains_tlds'],
+                    'message' => Language::_('DomainsTlds.!error.tld_id.exists', true)
+                ]
+            ],
+            'package_id' => [
+                'exists' => [
+                    'if_set' => true,
+                    'rule' => [[$this, 'validateExists'], 'id', 'packages'],
+                    'message' => Language::_('DomainsTlds.!error.package_id.exists', true)
+                ]
+            ]
+        ];
+
+        $this->Input->setRules($rules);
+        if ($this->Input->validates($vars)) {
+            // Assign the new package to the TLD
+            $this->Record->insert('domains_packages', $vars, ['tld_id', 'package_id']);
+        }
+    }
+
+    /**
      * Creates a package for a given TLD
      *
      * @param array $vars An array of input data including:
@@ -706,7 +748,7 @@ class DomainsTlds extends DomainsModel
     public function getTldPackages($tld, $status = null, $company_id = null)
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
-        $packages = $this->Record->select(['domains_packages.*'])
+        $packages = $this->Record->select(['domains_packages.*', 'packages.module_id'])
             ->from('domains_packages')
             ->innerJoin('packages', 'packages.id', '=', 'domains_packages.package_id', false)
             ->innerJoin('domains_tlds', 'domains_tlds.id', '=', 'domains_packages.tld_id', false)
