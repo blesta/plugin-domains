@@ -530,7 +530,6 @@ class AdminDomains extends DomainsController
             $vars = $this->post;
         }
 
-        $this->set('tabs', $this->configurationTabs('importpackages', false));
         $this->set('vars', ($vars ?? []));
     }
     /**
