@@ -496,7 +496,20 @@ class AdminDomains extends DomainsController
             } else {
                 // Create the TLDs
                 foreach ($imported_tld_packages as $tld => $module_packages) {
-                    foreach ($module_packages as $module_id => $package_id) {
+                    // Sort the imported packages by the number of migrated services
+                    uasort(
+                        $module_packages,
+                        function ($a, $b) {
+                            $swap = $a['migrated_services'] < $b['migrated_services'];
+                            return $swap ? 1 : -1;
+                        }
+                    );
+
+                    // The first package in the imported list should be marked as the primary for the
+                    // TLD if the TLD is new or the setting to override package is enabled
+                    $set_primary_package = $overwrite_packages || !array_key_exists($tld, $existing_tld_packages);
+                    foreach ($module_packages as $module_id => $package_info) {
+                        $package_id = $package_info['package_id'];
                         // If the TLD for this package was deleted, create it again
                         if (!array_key_exists($tld, $existing_tld_packages)) {
                             // Add the TLD
@@ -508,9 +521,20 @@ class AdminDomains extends DomainsController
                             $this->DomainsTlds->add($tld_vars);
                             $existing_tld_packages[$tld] = [$module_id => $package_id];
                         } else {
-                            // The TLD already exists so just add this package as another package on the TLD instead of
-                            // the primary
+                            // The TLD already exists so just add this package as another
+                            // package on the TLD instead of the primary
                             $this->DomainsTlds->addPackage(['tld' => $tld, 'package_id' => $package_id]);
+                        }
+
+                        // Mark this package as the primary for this TLD or mark it as inactive
+                        if ($set_primary_package) {
+                            $this->DomainsTlds->edit($tld, ['package_id' => $package_id]);
+                            $set_primary_package = false;
+                        } else {
+                            $this->Packages->edit(
+                                $package_id,
+                                ['status' => 'inactive', 'meta' => (array)$package_info['meta']]
+                            );
                         }
                     }
                 }
@@ -544,10 +568,11 @@ class AdminDomains extends DomainsController
      * Imports all the TLDs from a package as new Domain Manager TLD packages
      *
      * @param int $package_id The ID of the package from which to import TLDs
-     * @param array $imported_tld_packages A list keeping tract of which TLDs and modules have already been imported
-     *  ([tld => [module_id => package_id]])
+     * @param array $imported_tld_packages A list keeping track of package details for TLDs and modules
+     *  that have already been imported
+     *  - [tld => [module_id => ['package_id' => x, 'migrated_services' => x]]]
      * @param array $existing_tld_packages A list TLDs and modules that existed before the import began
-     *  ([tld => [module_id => package_id]])
+     *  - [tld => [module_id => package_id]]
      * @param array $company_settings A list of company settings ([key => value])
      * @param bool $overwrite_packages True to delete existing TLD packages in favor of those being imported,
      *  false to keep the existing TLD packages and prevent the new ones from being created
@@ -611,10 +636,11 @@ class AdminDomains extends DomainsController
      *
      * @param stdClass $package The package from which to import the TLD
      * @param string $tld The TLD to assign to the new package
-     * @param array $imported_tld_packages A list keeping tract of which TLDs and modules have already been imported
-     *  ([tld => [module_id => package_id]])
+     * @param array $imported_tld_packages A list keeping track of package details for TLDs and modules
+     *  that have already been imported
+     *  - [tld => [module_id => ['package_id' => x, 'migrated_services' => x]]]
      * @param array $existing_tld_packages A list TLDs and modules that existed before the import began
-     *  ([tld => [module_id => package_id]])
+     *  - [tld => [module_id => package_id]]
      * @param array $company_settings A list of company settings ([key => value])
      * @param bool $overwrite_packages True to delete existing TLD packages in favor of those being imported,
      *  false to keep the existing TLD packages and prevent the new ones from being created
@@ -658,12 +684,17 @@ class AdminDomains extends DomainsController
         // Clone the package
         $package_id = $this->clonePackage($package, $tld, $company_settings);
         if ($package_id) {
-            $imported_tld_packages[$tld][$package->module_id] = $package_id;
-
             // Migrate the services from the cloned package to the new one if they match the TLD
+            $migrated_services = 0;
             if ($migrate_services) {
-                $this->migrateServices($package->id, $package_id, $tld);
+                $migrated_services = $this->migrateServices($package->id, $package_id, $tld);
             }
+
+            $imported_tld_packages[$tld][$package->module_id] = [
+                'package_id' => $package_id,
+                'migrated_services' => $migrated_services,
+                'meta' => $package->meta
+            ];
 
             // Deactivate cloned packages that no longer have services assigned
             $remaining_services = $this->Services->getAll(
@@ -758,6 +789,7 @@ class AdminDomains extends DomainsController
      * @param int $from_package_id The package from which to migrate services
      * @param int $to_package_id The package to which services should be migrated
      * @param string $tld The TLD on which to base migrations
+     * @return int The number of migrated services
      */
     private function migrateServices($from_package_id, $to_package_id, $tld)
     {
@@ -767,10 +799,10 @@ class AdminDomains extends DomainsController
             true,
             ['package_id' => $from_package_id, 'status' => 'all']
         );
+
         $to_package = $this->Packages->get($to_package_id);
-
         $package_group_id = $to_package->groups[0]->id;
-
+        $migrated_services = 0;
         foreach ($services as $service) {
             // Find the correct pricing to which to move
             $from_pricing = $this->Services->getPackagePricing($service->pricing_id);
@@ -796,6 +828,7 @@ class AdminDomains extends DomainsController
             }
 
             if (str_ends_with(strtolower($service->name), $tld)) {
+                $migrated_services++;
                 $this->Services->edit(
                     $service->id,
                     ['pricing_id' => $pricing_id, 'package_group_id' => $package_group_id],
@@ -803,6 +836,8 @@ class AdminDomains extends DomainsController
                 );
             }
         }
+
+        return $migrated_services;
     }
 
     /**
