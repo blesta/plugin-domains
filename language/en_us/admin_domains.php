@@ -97,12 +97,19 @@ $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that will be 
 
 $lang['AdminDomains.importpackages.page_title'] = 'Domains > Configuration';
 $lang['AdminDomains.importpackages.boxtitle'] = 'Configuration';
-$lang['AdminDomains.importpackages.description'] = 'This tool will search for any packages that use a registrar module and clone the package once for each of the TLDs assigned to it.  If multiple packages are assigned to the same TLD, then the domain manager will clone the first one it encounters and ignore the others.  Only yearly pricings will be cloned.  If a package has no yearly pricings it will be skipped.  Cloned packages will be deactivated if they have no services after import.';
+$lang['AdminDomains.importpackages.order_form'] = 'Domain order forms should be updated to use the %1$s package group'; // %1$s is the name of the Domain Manager package group
+$lang['AdminDomains.importpackages.description'] = 'This import will:<br/>
+* Find all packages assigned to a registrar module (3rd party modules may not identify themselves as registrars and thus may not be recognized)<br/>
+* For each TLD assigned to the package, create a new TLD Pricing package with the same details in the Domain Manager<br/>
+* Skip any package/TLD with the same registrar as a previously encountered package/TLD<br/>
+* Skip any packages with no yearly pricing periods<br/>
+* Mark the first package/Registrar encountered for each TLD as the primary one, while the other import packages will be used when the registrar is changed on the TLD Pricing page<br/>
+* Deactivate the old imported packages if they have no services after the import<br/>';
 
 $lang['AdminDomains.importpackages.field_migrate_services'] = 'Migrate Services';
 $lang['AdminDomains.importpackages.tooltip_migrate_services'] = 'When checked, any services assigned to the cloned packages will be migrated to the newly created packages.  This will only apply to services with a yearly pricing period.';
 $lang['AdminDomains.importpackages.field_overwrite_packages'] = 'Overwrite TLD Packages';
-$lang['AdminDomains.importpackages.tooltip_overwrite_packages'] = 'When checked, current Domain Manager TLD packages will be replaced by external TLD packages.  Domain Manager packages with services assigned to them will be skipped during this process.';
+$lang['AdminDomains.importpackages.tooltip_overwrite_packages'] = 'When checked, current Domain Manager TLD packages will be deleted and replaced by external TLD packages.  Domain Manager packages with services assigned to them will be skipped during this process.';
 
 $lang['AdminDomains.importpackages.field_submit'] = 'Import Packages';
 
