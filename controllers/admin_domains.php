@@ -570,7 +570,7 @@ class AdminDomains extends DomainsController
      * @param int $package_id The ID of the package from which to import TLDs
      * @param array $imported_tld_packages A list keeping track of package details for TLDs and modules
      *  that have already been imported
-     *  - [tld => [module_id => ['package_id' => x, 'migrated_services' => x]]]
+     *  - [tld => [module_id => ['package_id' => x, 'migrated_services' => x, 'meta' => x]]]
      * @param array $existing_tld_packages A list TLDs and modules that existed before the import began
      *  - [tld => [module_id => package_id]]
      * @param array $company_settings A list of company settings ([key => value])
@@ -638,7 +638,7 @@ class AdminDomains extends DomainsController
      * @param string $tld The TLD to assign to the new package
      * @param array $imported_tld_packages A list keeping track of package details for TLDs and modules
      *  that have already been imported
-     *  - [tld => [module_id => ['package_id' => x, 'migrated_services' => x]]]
+     *  - [tld => [module_id => ['package_id' => x, 'migrated_services' => x, 'meta' => x]]]
      * @param array $existing_tld_packages A list TLDs and modules that existed before the import began
      *  - [tld => [module_id => package_id]]
      * @param array $company_settings A list of company settings ([key => value])
