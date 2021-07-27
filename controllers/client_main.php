@@ -43,13 +43,9 @@ class ClientMain extends DomainsController
             }
         }
 
-        // Filter by domains package group
-        $package_group_id = $this->Companies->getSetting(
-            Configure::get('Blesta.company_id'),
-            'domains_package_group'
-        );
-        $services_filters = $post_filters;
-        $services_filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
+        // Filter by domains type
+        $domains_filters = $post_filters;
+        $domains_filters['type'] = 'domains';
 
         $status = (isset($this->get[0]) ? $this->get[0] : 'active');
         $page = (isset($this->get[1]) ? (int)$this->get[1] : 1);
@@ -63,16 +59,16 @@ class ClientMain extends DomainsController
             $page,
             [$sort => $order],
             false,
-            $services_filters
+            $domains_filters
         );
-        $total_results = $this->Services->getListCount($this->client->id, $status, false, null, $services_filters);
+        $total_results = $this->Services->getListCount($this->client->id, $status, false, null, $domains_filters);
 
         // Set the number of services of each type, not including children
         $status_count = [
-            'active' => $this->Services->getStatusCount($this->client->id, 'active', false, $services_filters),
-            'canceled' => $this->Services->getStatusCount($this->client->id, 'canceled', false, $services_filters),
-            'pending' => $this->Services->getStatusCount($this->client->id, 'pending', false, $services_filters),
-            'suspended' => $this->Services->getStatusCount($this->client->id, 'suspended', false, $services_filters),
+            'active' => $this->Services->getStatusCount($this->client->id, 'active', false, $domains_filters),
+            'canceled' => $this->Services->getStatusCount($this->client->id, 'canceled', false, $domains_filters),
+            'pending' => $this->Services->getStatusCount($this->client->id, 'pending', false, $domains_filters),
+            'suspended' => $this->Services->getStatusCount($this->client->id, 'suspended', false, $domains_filters),
         ];
 
         // Set language for periods
