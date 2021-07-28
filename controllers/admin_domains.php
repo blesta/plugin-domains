@@ -1500,7 +1500,7 @@ class AdminDomains extends DomainsController
                     }
 
                     if (isset($package_fields['rows'])) {
-                        $vars['module_group'] = array_key_first($package_fields['rows']);
+                        $vars['module_row'] = array_key_first($package_fields['rows']);
                     }
 
                     if (is_array($package_fields['fields'])) {
