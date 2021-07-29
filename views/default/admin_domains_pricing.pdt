@@ -62,6 +62,20 @@
                         foreach ((isset($currencies) ? $currencies : []) as $currency) {
                         ?>
                             <div>
+                                <?php
+                                if ($currency->automatic_currency_conversion) {
+                                ?>
+                                    <section class="error_section">
+                                        <article class="error_box alert">
+                                            <div class="icon-line fa-2x">
+                                                <i class="fas fa-exclamation-triangle fa-fw"></i>
+                                                <p class="p-0 pl-2"><?php $this->_('AdminDomains.!warning.automatic_currency_conversion', false, $default_currency);?></p>
+                                            </div>
+                                        </article>
+                                    </section>
+                                <?php
+                                }
+                                ?>
                                 <table class="table option_table">
                                     <thead>
                                         <tr class="heading_row">

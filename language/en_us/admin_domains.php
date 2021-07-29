@@ -13,8 +13,9 @@ $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported suc
 $lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
 
 $lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not valid.';
-
 $lang['AdminDomains.!error.tlds_bulk[action].valid'] = 'Invalid value for TLDs Bulk Action, must be "enable" or "disable".';
+
+$lang['AdminDomains.!warning.automatic_currency_conversion'] = 'You have an exchange rate set for this currency, so it\'s not necessary to define prices here. If no prices are defined for this currency, the currency will be converted automatically from %1$s. If you define a price here, it will be used instead.'; // %1$s is the default currency
 
 
 $lang['AdminDomains.browse.page_title'] = 'Domains > Browse';

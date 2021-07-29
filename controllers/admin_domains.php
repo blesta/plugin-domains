@@ -1621,6 +1621,29 @@ class AdminDomains extends DomainsController
             return false;
         }
 
+        // Check what non-default currencies doesn't have any price set
+        foreach ($currencies as $code => $currency) {
+            foreach ($package->pricing as $pricing) {
+                if ($pricing->currency == $code) {
+                    if (!isset($currencies[$code]->automatic_currency_conversion)) {
+                        $currencies[$code]->automatic_currency_conversion = ($code !== $default_currency);
+                    }
+                    
+                    if (
+                        (
+                            isset($pricing->price)
+                            && isset($pricing->price_renews)
+                            && $pricing->price > 0
+                            && $pricing->price_renews > 0
+                            && $currencies[$code]->automatic_currency_conversion
+                        ) || $currency->exchange_rate == 0
+                    ) {
+                        $currencies[$code]->automatic_currency_conversion = false;
+                    }
+                }
+            }
+        }
+
         echo $this->partial(
             'admin_domains_pricing',
             compact(
