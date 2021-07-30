@@ -1491,6 +1491,7 @@ class AdminDomains extends DomainsController
                     $package_fields = $this->DomainsTlds->getTldFields($tld->package_id);
 
                     $vars = [];
+                    // Automatically select the first available module row group
                     if (isset($package_fields['groups'])) {
                         if (empty($package_fields['groups'])) {
                             $vars['module_group'] = '';
@@ -1499,10 +1500,12 @@ class AdminDomains extends DomainsController
                         }
                     }
 
+                    // Automatically select the first available module row
                     if (isset($package_fields['rows'])) {
                         $vars['module_row'] = array_key_first($package_fields['rows']);
                     }
 
+                    // Automatically select the first item from select fields with only one option
                     if (is_array($package_fields['fields'])) {
                         foreach ($package_fields['fields'] as $key => $field) {
                             if ($field->type == 'fieldSelect') {
@@ -1511,6 +1514,7 @@ class AdminDomains extends DomainsController
                                 }
                             }
 
+                            // Automatically select the first item from select sub-fields with only one option
                             if (!empty($field->fields)) {
                                 foreach ($field->fields as $sub_key => $sub_field) {
                                     if ($sub_field->type == 'fieldSelect') {
