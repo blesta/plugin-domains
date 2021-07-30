@@ -663,7 +663,6 @@ class AdminDomains extends DomainsController
             return;
         }
 
-
         // If set to override packages, delete the existing package for this TLD/module
         if (array_key_exists($tld, $existing_tld_packages)
             && array_key_exists($package->module_id, $existing_tld_packages[$tld])
@@ -1435,7 +1434,7 @@ class AdminDomains extends DomainsController
      */
     public function updateTlds()
     {
-        $this->uses(['Domains.DomainsTlds']);
+        $this->uses(['Domains.DomainsTlds', 'Packages']);
 
         if (!$this->isAjax()) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
@@ -1445,6 +1444,8 @@ class AdminDomains extends DomainsController
 
         if (!empty($this->post)) {
             $error = null;
+            $update_meta = false;
+
             foreach ($this->post['tlds'] as $tld => $vars) {
                 if ($updated_tld && $tld != $updated_tld) {
                     continue;
@@ -1464,6 +1465,16 @@ class AdminDomains extends DomainsController
                     $vars['epp_code'] = '0';
                 }
 
+                // Check if the module has been updated and is required to update the package meta
+                if (!is_null($updated_tld)) {
+                    $tld_obj = $this->DomainsTlds->get($tld);
+                    $package = $this->Packages->get($tld_obj->package_id);
+
+                    if (isset($vars['module']) && $vars['module'] !== $package->module_id) {
+                        $update_meta = true;
+                    }
+                }
+
                 // Update TLD
                 $vars = array_merge($vars, [
                     'module_id' => $vars['module'],
@@ -1472,6 +1483,66 @@ class AdminDomains extends DomainsController
 
                 if (($errors = $this->DomainsTlds->errors())) {
                     $error = $errors;
+                }
+
+                // Try to automatically update the package meta
+                if ($update_meta && empty($errors)) {
+                    $tld = $this->DomainsTlds->get($tld);
+                    $package_fields = $this->DomainsTlds->getTldFields($tld->package_id);
+
+                    $vars = [];
+                    // Automatically select the first available module row group
+                    if (isset($package_fields['groups'])) {
+                        if (empty($package_fields['groups'])) {
+                            $vars['module_group'] = '';
+                        } else {
+                            $vars['module_group'] = array_key_first($package_fields['groups']);
+                        }
+                    }
+
+                    // Automatically select the first available module row
+                    if (isset($package_fields['rows'])) {
+                        $vars['module_row'] = array_key_first($package_fields['rows']);
+                    }
+
+                    // Automatically select the first item from select fields with only one option
+                    if (is_array($package_fields['fields'])) {
+                        foreach ($package_fields['fields'] as $key => $field) {
+                            if ($field->type == 'fieldSelect') {
+                                if (isset($field->params['options']) && count($field->params['options']) == 1) {
+                                    $vars[$field->params['name']] = array_key_first($field->params['options']);
+                                }
+                            }
+
+                            // Automatically select the first item from select sub-fields with only one option
+                            if (!empty($field->fields)) {
+                                foreach ($field->fields as $sub_key => $sub_field) {
+                                    if ($sub_field->type == 'fieldSelect') {
+                                        if (isset($sub_field->params['options']) && count($sub_field->params['options']) == 1) {
+                                            $vars[$sub_field->params['name']] = array_key_first($sub_field->params['options']);
+
+                                            unset($package_fields['fields'][$key]->fields[$sub_key]);
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (empty($package_fields['fields'][$key]->fields)) {
+                                unset($package_fields['fields'][$key]);
+                            }
+                        }
+                    }
+
+                    // Don't show the update meta modal box if all fields were automatically updated
+                    if (empty($package_fields['fields'])) {
+                        $this->DomainsTlds->edit($tld->tld, $vars);
+
+                        $update_meta = false;
+                        if (($errors = $this->DomainsTlds->errors())) {
+                            $update_meta = true;
+                            $error = $errors;
+                        }
+                    }
                 }
             }
         }
@@ -1484,7 +1555,8 @@ class AdminDomains extends DomainsController
                     true,
                     null,
                     false
-                )
+                ),
+                'update_meta' => false
             ]);
         } else {
             echo json_encode([
@@ -1494,7 +1566,8 @@ class AdminDomains extends DomainsController
                     true,
                     null,
                     false
-                )
+                ),
+                'update_meta' => $update_meta
             ]);
         }
 
