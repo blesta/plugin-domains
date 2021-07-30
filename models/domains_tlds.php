@@ -380,9 +380,9 @@ class DomainsTlds extends DomainsModel
                 'name' => $vars['tld']
             ];
             $package_params['email_content'][] = [
-                'lang' => $email_template[$language->code]['lang'] ?? 'en_us',
-                'html' => $email_template[$language->code]['html'] ?? '',
-                'text' => $email_template[$language->code]['text'] ?? ''
+                'lang' => $language->code,
+                'html' => $email_template[$language->code]['html'] ?? ($email_template['en_us']['html'] ?? ''),
+                'text' => $email_template[$language->code]['text'] ?? ($email_template['en_us']['text'] ?? '')
             ];
         }
 
