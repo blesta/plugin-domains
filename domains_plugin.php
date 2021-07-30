@@ -897,6 +897,18 @@ class DomainsPlugin extends Plugin
                 'name' => 'DomainsPlugin.nav_secondary_staff.domain_options',
                 'options' => ['parent' => 'packages/']
             ],
+            // Staff Widget
+            [
+                'action' => 'widget_staff_client',
+                'uri' => 'plugin/domains/admin_main/domains/',
+                'name' => 'DomainsPlugin.widget_staff_home.main'
+            ],
+            // Client Widget
+            [
+                'action' => 'widget_client_home',
+                'uri' => 'plugin/domains/client_main/index/',
+                'name' => 'DomainsPlugin.widget_client_home.main'
+            ]
         ];
     }
 
@@ -1056,11 +1068,20 @@ class DomainsPlugin extends Plugin
      */
     public function getDomainCount($client_id)
     {
-        Loader::loadModels($this, ['Domains.DomainsDomains']);
+        Loader::loadModels($this, ['Services']);
 
-        return $this->DomainsDomains->getListCount([
-            'client_id' => $client_id,
-            'status' => 'active'
-        ]);
+        return $this->Services->getListCount(
+            $client_id,
+            'all',
+            true,
+            null,
+            ['type' => 'domains']
+        ) - $this->Services->getListCount(
+            $client_id,
+            'canceled',
+            true,
+            null,
+            ['type' => 'domains']
+        );
     }
 }

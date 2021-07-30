@@ -58,13 +58,10 @@ class AdminDomains extends DomainsController
                 }
             }
         }
-        $service_filters = $post_filters;
 
-        $package_group_id = $this->Companies->getSetting(
-            Configure::get('Blesta.company_id'),
-            'domains_package_group'
-        );
-        $service_filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
+        // Filter by domains type
+        $domains_filters = $post_filters;
+        $domains_filters['type'] = 'domains';
 
         $status = (isset($this->get[0]) ? $this->get[0] : 'active');
         $page = (isset($this->get[1]) ? (int)$this->get[1] : 1);
@@ -78,8 +75,8 @@ class AdminDomains extends DomainsController
         }
 
         // Get only parent services
-        $services = $this->Services->getList(null, $status, $page, [$sort => $order], false, $service_filters);
-        $total_results = $this->Services->getListCount(null, $status, false, null, $service_filters);
+        $services = $this->Services->getList(null, $status, $page, [$sort => $order], false, $domains_filters);
+        $total_results = $this->Services->getListCount(null, $status, false, null, $domains_filters);
 
         // Get TLD for each service
         foreach ($services as $service) {
@@ -88,16 +85,16 @@ class AdminDomains extends DomainsController
 
         // Set the number of services of each type, not including children
         $status_count = [
-            'active' => $this->Services->getStatusCount(null, 'active', false, $service_filters),
-            'canceled' => $this->Services->getStatusCount(null, 'canceled', false, $service_filters),
-            'pending' => $this->Services->getStatusCount(null, 'pending', false, $service_filters),
-            'suspended' => $this->Services->getStatusCount(null, 'suspended', false, $service_filters),
-            'in_review' => $this->Services->getStatusCount(null, 'in_review', false, $service_filters),
+            'active' => $this->Services->getStatusCount(null, 'active', false, $domains_filters),
+            'canceled' => $this->Services->getStatusCount(null, 'canceled', false, $domains_filters),
+            'pending' => $this->Services->getStatusCount(null, 'pending', false, $domains_filters),
+            'suspended' => $this->Services->getStatusCount(null, 'suspended', false, $domains_filters),
+            'in_review' => $this->Services->getStatusCount(null, 'in_review', false, $domains_filters),
             'scheduled_cancellation' => $this->Services->getStatusCount(
                 null,
                 'scheduled_cancellation',
                 false,
-                $service_filters
+                $domains_filters
             ),
         ];
 

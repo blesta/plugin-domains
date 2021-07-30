@@ -50,3 +50,8 @@ $lang['DomainsPlugin.epp_code.name'] = 'EPP Code';
 $lang['DomainsPlugin.epp_code.description'] = 'EPP Code';
 $lang['DomainsPlugin.enabled'] = 'Enabled';
 
+// Staff Widget
+$lang['DomainsPlugin.widget_staff_home.main'] = 'Domains';
+
+// Client Widget
+$lang['DomainsPlugin.widget_client_home.main'] = 'Domains';
