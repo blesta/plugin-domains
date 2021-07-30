@@ -1061,11 +1061,20 @@ class DomainsPlugin extends Plugin
      */
     public function getDomainCount($client_id)
     {
-        Loader::loadModels($this, ['Domains.DomainsDomains']);
+        Loader::loadModels($this, ['Services']);
 
-        return $this->DomainsDomains->getListCount([
-            'client_id' => $client_id,
-            'status' => 'active'
-        ]);
+        return $this->Services->getListCount(
+            $client_id,
+            'all',
+            true,
+            null,
+            ['type' => 'domains']
+        ) - $this->Services->getListCount(
+            $client_id,
+            'canceled',
+            true,
+            null,
+            ['type' => 'domains']
+        );
     }
 }
