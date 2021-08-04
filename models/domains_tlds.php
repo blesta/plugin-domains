@@ -1251,6 +1251,8 @@ class DomainsTlds extends DomainsModel
             $this->Record->where('domains_tlds.package_id', '=', $filters['package_id']);
         }
 
+        $this->Record->group('package_group.package_id');
+
         return $this->Record;
     }
 
