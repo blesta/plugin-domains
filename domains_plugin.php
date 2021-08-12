@@ -84,17 +84,11 @@ class DomainsPlugin extends Plugin
         $this->addTldAddonConfigOptions($company_id, $currencies);
 
         // Set the default days to before renewal to send the first reminder
-        if (!($setting = $this->Companies->getSetting($company_id, 'domains_first_reminder_days_before'))) {
-            $this->Companies->setSetting($company_id, 'domains_first_reminder_days_before', 35);
-        }
+        $this->Companies->setSetting($company_id, 'domains_first_reminder_days_before', 35);
         // Set the default days to before renewal to send the second reminder
-        if (!($setting = $this->Companies->getSetting($company_id, 'domains_second_reminder_days_before'))) {
-            $this->Companies->setSetting($company_id, 'domains_second_reminder_days_before', 10);
-        }
+        $this->Companies->setSetting($company_id, 'domains_second_reminder_days_before', 10);
         // Set the default days to before renewal to send the expiration notice
-        if (!($setting = $this->Companies->getSetting($company_id, 'domains_expiration_notice_days_after'))) {
-            $this->Companies->setSetting($company_id, 'domains_expiration_notice_days_after', 1);
-        }
+        $this->Companies->setSetting($company_id, 'domains_expiration_notice_days_after', 1);
 
         // Add all email templates
         $emails = Configure::get('Domains.install.emails');
@@ -321,6 +315,7 @@ class DomainsPlugin extends Plugin
         // Don't create a new TLD package group if it is already set
         if (!($package_group_setting = $this->Companies->getSetting($company_id, 'domains_package_group'))
             || !($package_group = $this->PackageGroups->get($package_group_setting->value))
+            || $package_group->company_id != $company_id
         ) {
             // Assemble the parameters for adding the TLD package group
             $params = [
@@ -390,6 +385,7 @@ class DomainsPlugin extends Plugin
             // Skip package creation for this TLD if there is already a package assigned to it
             if (array_key_exists($default_tld, $tld_packages)
                 && ($package = $this->Packages->get($tld_packages[$default_tld]))
+                && $package->company_id == $company_id
             ) {
                 $tld_params = [
                     'tld' => $default_tld,
@@ -445,7 +441,10 @@ class DomainsPlugin extends Plugin
         foreach ($tld_addons as $tld_addon) {
             $setting = $this->Companies->getSetting($company_id, 'domains_' . $tld_addon . '_option_group');
             // Skip option group creation for this tld and if there is already a group assigned to it
-            if ($setting && ($option_group = $this->PackageOptionGroups->get($setting->value))) {
+            if ($setting
+                && ($option_group = $this->PackageOptionGroups->get($setting->value))
+                && $option_group == $company_id
+            ) {
                 continue;
             }
 
