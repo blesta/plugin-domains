@@ -878,7 +878,7 @@ class AdminDomains extends DomainsController
             } else {
                 $this->flashMessage('message', Language::_('AdminDomains.!success.tld_added', true));
             }
-            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/?added_tld=' . $params['tld']);
         }
 
         // Fetch all the TLDs and their pricing for this company
@@ -902,6 +902,7 @@ class AdminDomains extends DomainsController
         $select = ['' => Language::_('AppController.select.please', true)];
         $modules = $select + $this->Form->collapseObjectArray($modules, 'name', 'id');
 
+        $this->set('added_tld', $this->get['added_tld'] ?? null);
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
 

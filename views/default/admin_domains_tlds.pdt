@@ -291,19 +291,7 @@
                     // If the module has been updated, ask the user to update the package meta
                     if ($(field).attr('name').includes('[module]') && !response.message.includes('error_box error')) {
                         if(tld !== '') {
-                            $('.common_box').blestaModal({
-                                close: '<?php $this->_('AppController.modal.text_close');?>',
-                                url: '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/meta/');?>' + tld + '/',
-                                onShow: function (event, api) {
-                                    var qtip = $('#' + api._id);
-
-                                    qtip.addClass('common_box_modal');
-                                    qtip.find('.qtip-content').removeClass('qtip-content');
-                                },
-                                min_width: Math.max((window.innerWidth / 4) * 2, 400),
-                                max_width: Math.max((window.innerWidth / 4) * 2, 400)
-                            });
-                            $('.common_box').trigger('click');
+                            setTldMeta(tld);
                         }
                     }
                 },
@@ -311,6 +299,28 @@
                 {dataType: 'json'}
             );
         });
+
+        var added_tld = '<?php echo $added_tld ?? null;?>';
+        if (added_tld !== '') {
+            setTldMeta(added_tld);
+        }
+
+        function setTldMeta(tld)
+        {
+            $('.common_box').blestaModal({
+                close: '<?php $this->_('AppController.modal.text_close');?>',
+                url: '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/meta/');?>' + tld + '/',
+                onShow: function (event, api) {
+                    var qtip = $('#' + api._id);
+
+                    qtip.addClass('common_box_modal');
+                    qtip.find('.qtip-content').removeClass('qtip-content');
+                },
+                min_width: Math.max((window.innerWidth / 4) * 2, 400),
+                max_width: Math.max((window.innerWidth / 4) * 2, 400)
+            });
+            $('.common_box').trigger('click');
+        }
 
         // Toggle "Add TLD" row
         function resetAddTldRow() {
