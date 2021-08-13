@@ -1278,12 +1278,22 @@ class AdminDomains extends DomainsController
 
             $this->DomainsTlds->add($params);
 
-            if (($errors = $this->DomainsTlds->errors())) {
+
+            // Try to automatically update the package meta
+            $update_meta = false;
+            $query_string = '';
+            if (!($errors = $this->DomainsTlds->errors())) {
+                [$errors, $update_meta] = $this->autoUpdateTldMeta($params['tld']);
+            }
+
+            if (!empty($errors)) {
                 $this->flashMessage('error', $errors);
             } else {
                 $this->flashMessage('message', Language::_('AdminDomains.!success.tld_added', true));
+                $query_string = $update_meta ? '?added_tld=' . $params['tld'] : '';
             }
-            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
+
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/' . $query_string);
         }
 
         // Process TLD bulk actions
@@ -1333,6 +1343,7 @@ class AdminDomains extends DomainsController
         // Fetch TLD actions
         $tld_actions = $this->getTldActions();
 
+        $this->set('added_tld', $this->get['added_tld'] ?? null);
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
         $this->set('tld_actions', $tld_actions);
@@ -1484,62 +1495,7 @@ class AdminDomains extends DomainsController
 
                 // Try to automatically update the package meta
                 if ($update_meta && empty($errors)) {
-                    $tld = $this->DomainsTlds->get($tld);
-                    $package_fields = $this->DomainsTlds->getTldFields($tld->package_id);
-
-                    $vars = [];
-                    // Automatically select the first available module row group
-                    if (isset($package_fields['groups'])) {
-                        if (empty($package_fields['groups'])) {
-                            $vars['module_group'] = '';
-                        } else {
-                            $vars['module_group'] = array_key_first($package_fields['groups']);
-                        }
-                    }
-
-                    // Automatically select the first available module row
-                    if (isset($package_fields['rows'])) {
-                        $vars['module_row'] = array_key_first($package_fields['rows']);
-                    }
-
-                    // Automatically select the first item from select fields with only one option
-                    if (is_array($package_fields['fields'])) {
-                        foreach ($package_fields['fields'] as $key => $field) {
-                            if ($field->type == 'fieldSelect') {
-                                if (isset($field->params['options']) && count($field->params['options']) == 1) {
-                                    $vars[$field->params['name']] = array_key_first($field->params['options']);
-                                }
-                            }
-
-                            // Automatically select the first item from select sub-fields with only one option
-                            if (!empty($field->fields)) {
-                                foreach ($field->fields as $sub_key => $sub_field) {
-                                    if ($sub_field->type == 'fieldSelect') {
-                                        if (isset($sub_field->params['options']) && count($sub_field->params['options']) == 1) {
-                                            $vars[$sub_field->params['name']] = array_key_first($sub_field->params['options']);
-
-                                            unset($package_fields['fields'][$key]->fields[$sub_key]);
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (empty($package_fields['fields'][$key]->fields)) {
-                                unset($package_fields['fields'][$key]);
-                            }
-                        }
-                    }
-
-                    // Don't show the update meta modal box if all fields were automatically updated
-                    if (empty($package_fields['fields'])) {
-                        $this->DomainsTlds->edit($tld->tld, $vars);
-
-                        $update_meta = false;
-                        if (($errors = $this->DomainsTlds->errors())) {
-                            $update_meta = true;
-                            $error = $errors;
-                        }
-                    }
+                    [$error, $update_meta] = $this->autoUpdateTldMeta($tld);
                 }
             }
         }
@@ -1569,6 +1525,86 @@ class AdminDomains extends DomainsController
         }
 
         return false;
+    }
+
+    /**
+     * Attempt to automatically update the TLD package meta
+     *
+     * @param string $tld The TLD for which to try setting meta data
+     * @return array|null A list of errors from the update attempt
+     */
+    private function autoUpdateTldMeta($tld)
+    {
+        $error = null;
+        $update_meta = true;
+        $tld_obj = $this->DomainsTlds->get($tld);
+        $package_fields = $this->DomainsTlds->getTldFields($tld_obj->package_id);
+
+        $vars = [];
+        // Automatically select the first available module row group
+        if (isset($package_fields['groups'])) {
+            if (empty($package_fields['groups'])) {
+                $vars['module_group'] = '';
+            } else {
+                $vars['module_group'] = array_key_first($package_fields['groups']);
+            }
+        }
+
+        // Automatically select the first available module row
+        if (isset($package_fields['rows'])) {
+            $vars['module_row'] = array_key_first($package_fields['rows']);
+        }
+
+        // Automatically select the first item from select fields with only one option
+        if (is_array($package_fields['fields'])) {
+            foreach ($package_fields['fields'] as $key => $field) {
+                if ($field->type == 'fieldSelect') {
+                    if (isset($field->params['options']) && count($field->params['options']) == 1) {
+                        if (substr($field->params['name'], 0, 5) == 'meta[') {
+                            $vars['meta'][substr($field->params['name'], 5, -1)]
+                                = array_key_first($field->params['options']);
+                        } else {
+                            $vars[$field->params['name']] = array_key_first($field->params['options']);
+                        }
+                    }
+                }
+
+                // Automatically select the first item from select sub-fields with only one option
+                if (!empty($field->fields)) {
+                    foreach ($field->fields as $sub_key => $sub_field) {
+                        if ($sub_field->type == 'fieldSelect') {
+                            if (isset($sub_field->params['options']) && count($sub_field->params['options']) == 1) {
+                                if (substr($sub_field->params['name'], 0, 5) == 'meta[') {
+                                    $vars['meta'][substr($sub_field->params['name'], 5, -1)]
+                                        = array_key_first($sub_field->params['options']);
+                                } else {
+                                    $vars[$sub_field->params['name']] = array_key_first($sub_field->params['options']);
+                                }
+
+                                unset($package_fields['fields'][$key]->fields[$sub_key]);
+                            }
+                        }
+                    }
+                }
+
+                if (empty($package_fields['fields'][$key]->fields)) {
+                    unset($package_fields['fields'][$key]);
+                }
+            }
+        }
+
+        // Don't show the update meta modal box if all fields were automatically updated
+        if (empty($package_fields['fields'])) {
+            $this->DomainsTlds->edit($tld_obj->tld, $vars);
+
+            $update_meta = false;
+            if (($errors = $this->DomainsTlds->errors())) {
+                $update_meta = true;
+                $error = $errors;
+            }
+        }
+
+        return [$error, $update_meta];
     }
 
     /**
@@ -1698,7 +1734,7 @@ class AdminDomains extends DomainsController
                     if (!isset($currencies[$code]->automatic_currency_conversion)) {
                         $currencies[$code]->automatic_currency_conversion = ($code !== $default_currency);
                     }
-                    
+
                     if (
                         (
                             isset($pricing->price)
