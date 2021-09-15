@@ -973,9 +973,7 @@ class AdminDomains extends DomainsController
         $this->components(['Record']);
 
         // Fetch the configurable option
-        if (
-            !$this->isAjax()
-            || !isset($this->get[0])
+        if (!isset($this->get[0])
             || !($option = $this->PackageOptions->get($this->get[0]))
         ) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/');
