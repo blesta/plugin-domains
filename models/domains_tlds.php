@@ -212,6 +212,13 @@ class DomainsTlds extends DomainsModel
             $vars['company_id'] = Configure::get('Blesta.company_id');
         }
 
+        // If the module id is null, use the Generic Domains module by default
+        if ($this->ModuleManager->isInstalled('generic_domains', $vars['company_id'])) {
+            $modules = $this->ModuleManager->getByClass('generic_domains', $vars['company_id']);
+            $module = is_array($modules) ? reset($modules) : null;
+            $vars['module_id'] = $module->id ?? null;
+        }
+
         $this->Input->setRules($this->getRules($vars));
 
         if ($this->Input->validates($vars)) {

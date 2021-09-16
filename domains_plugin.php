@@ -317,7 +317,22 @@ class DomainsPlugin extends Plugin
      */
     private function addTldPackageGroup($company_id, array $languages)
     {
-        Loader::loadModels($this, ['PackageGroups']);
+        Loader::loadModels($this, ['PackageGroups', 'Companies']);
+
+        // Check if there is a package group collision between all system companies
+        $domains_package_group = $this->Companies->getSetting($company_id, 'domains_package_group');
+        $companies = $this->Companies->getAll();
+
+        foreach ($companies as $company) {
+            $company_domains_package_group = $this->Companies->getSetting($company->id, 'domains_package_group');
+
+            if ($company_domains_package_group->value == $domains_package_group->value && $company->id != $company_id) {
+                // A collision was found, unset the domains_package_group setting for the current company
+                $this->Companies->unsetSetting($company_id, 'domains_package_group');
+                break;
+            }
+        }
+
         // Don't create a new TLD package group if it is already set
         if (!($package_group_setting = $this->Companies->getSetting($company_id, 'domains_package_group'))
             || !($package_group = $this->PackageGroups->get($package_group_setting->value))
@@ -363,7 +378,7 @@ class DomainsPlugin extends Plugin
      */
     private function addTldPackages($company_id, $package_group_id)
     {
-        Loader::loadModels($this, ['ModuleManager', 'Packages', 'Domains.DomainsTlds']);
+        Loader::loadModels($this, ['ModuleManager', 'Packages', 'Companies', 'Domains.DomainsTlds']);
 
         // Get generic domain module
         if (!$this->ModuleManager->isInstalled('generic_domains', $company_id)) {
@@ -386,26 +401,27 @@ class DomainsPlugin extends Plugin
         $tld_packages_setting = $this->Companies->getSetting($company_id, 'domains_tld_packages');
         $tld_packages = (array)($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
 
+        // Check if there is a package collision between all system companies
+        $companies = $this->Companies->getAll();
+
+        foreach ($companies as $company) {
+            $company_tld_packages_setting = $this->Companies->getSetting($company->id, 'domains_tld_packages');
+            $company_tld_packages = (array)($company_tld_packages_setting ? unserialize($company_tld_packages_setting->value) : []);
+
+            if ($company_tld_packages == $tld_packages && $company->id != $company_id) {
+                // A collision was found, set the domains_tld_packages setting as an empty array for the current company
+                $this->Companies->getSetting($company_id, 'domains_tld_packages', serialize([]));
+                $tld_packages = [];
+                break;
+            }
+        }
+
         foreach ($default_tlds as $default_tld) {
             // Skip package creation for this TLD if there is already a package assigned to it
             if (array_key_exists($default_tld, $tld_packages)
                 && ($package = $this->Packages->get($tld_packages[$default_tld]))
             ) {
-                $tld_params = [
-                    'tld' => $default_tld,
-                    'company_id' => $company_id,
-                    'package_id' => $package->id,
-                    'module_id' => $module->id
-                ];
-                $this->DomainsTlds->add($tld_params);
-
-                $errors = $this->DomainsTlds->errors();
-                if (!empty($errors)) {
-                    $this->logger->error(json_encode($errors));
-                    $this->Input->setErrors($errors);
-                }
-
-                continue;
+                $package_id = $package->id;
             }
 
             // Create new package
@@ -415,9 +431,18 @@ class DomainsPlugin extends Plugin
                 'package_group_id' => $package_group_id,
                 'module_id' => $module->id
             ];
-            $tld = $this->DomainsTlds->add($tld_params);
-            $package_id = isset($tld['package_id']) ? $tld['package_id'] : null;
 
+            if (isset($package_id)) {
+                $tld_params['package_id'] = $package_id;
+                unset($tld_params['package_group_id']);
+            }
+            $tld = $this->DomainsTlds->add($tld_params);
+
+            if (!isset($package_id)) {
+                $package_id = $tld['package_id'] ?? null;
+            }
+
+            // Set errors
             $errors = $this->DomainsTlds->errors();
             if (!empty($errors)) {
                 $this->logger->error(json_encode($errors));
