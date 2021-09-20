@@ -410,7 +410,7 @@ class DomainsPlugin extends Plugin
 
             if ($company_tld_packages == $tld_packages && $company->id != $company_id) {
                 // A collision was found, set the domains_tld_packages setting as an empty array for the current company
-                $this->Companies->getSetting($company_id, 'domains_tld_packages', serialize([]));
+                $this->Companies->setSetting($company_id, 'domains_tld_packages', serialize([]));
                 $tld_packages = [];
                 break;
             }
@@ -437,10 +437,7 @@ class DomainsPlugin extends Plugin
                 unset($tld_params['package_group_id']);
             }
             $tld = $this->DomainsTlds->add($tld_params);
-
-            if (!isset($package_id)) {
-                $package_id = $tld['package_id'] ?? null;
-            }
+            $package_id = $tld['package_id'] ?? $package_id;
 
             // Set errors
             $errors = $this->DomainsTlds->errors();
@@ -450,6 +447,8 @@ class DomainsPlugin extends Plugin
             }
 
             $tld_packages[$default_tld] = $package_id;
+
+            unset($package_id);
         }
 
         // Save the TLD packages for this company

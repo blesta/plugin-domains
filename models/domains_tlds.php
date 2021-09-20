@@ -213,7 +213,7 @@ class DomainsTlds extends DomainsModel
         }
 
         // If the module id is null, use the Generic Domains module by default
-        if ($this->ModuleManager->isInstalled('generic_domains', $vars['company_id'])) {
+        if ($this->ModuleManager->isInstalled('generic_domains', $vars['company_id']) && empty($vars['module_id'])) {
             $modules = $this->ModuleManager->getByClass('generic_domains', $vars['company_id']);
             $module = is_array($modules) ? reset($modules) : null;
             $vars['module_id'] = $module->id ?? null;
