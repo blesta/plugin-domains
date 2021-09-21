@@ -469,7 +469,10 @@ class DomainsPlugin extends Plugin
         foreach ($tld_addons as $tld_addon) {
             $setting = $this->Companies->getSetting($company_id, 'domains_' . $tld_addon . '_option_group');
             // Skip option group creation for this tld and if there is already a group assigned to it
-            if ($setting && ($option_group = $this->PackageOptionGroups->get($setting->value))) {
+            if ($setting
+                && ($option_group = $this->PackageOptionGroups->get($setting->value))
+                && $option_group->company_id === $company_id
+            ) {
                 continue;
             }
 
