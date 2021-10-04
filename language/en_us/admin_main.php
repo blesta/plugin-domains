@@ -10,8 +10,7 @@ $lang['AdminMain.index.boxtitle_domains'] = 'Domains';
 $lang['AdminMain.index.heading_addons'] = 'Add-ons';
 $lang['AdminMain.index.heading_status'] = 'Status';
 
-$lang['AdminMain.index.heading_package'] = 'Package';
-$lang['AdminMain.index.heading_label'] = 'Label';
+$lang['AdminMain.index.heading_domain'] = 'Domain';
 $lang['AdminMain.index.heading_term'] = 'Term';
 $lang['AdminMain.index.heading_datecreated'] = 'Date Created';
 $lang['AdminMain.index.heading_daterenews'] = 'Date Renews';
