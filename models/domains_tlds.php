@@ -701,8 +701,8 @@ class DomainsTlds extends DomainsModel
 
             // Set the old meta data and pricing to the new package
             $params = [
-                'pricing' => (isset($old_package->pricing) ? $old_package->pricing : []),
-                'meta' => (isset($old_package->meta) ? $old_package->meta : [])
+                'pricing' => ($old_package->pricing ?? []),
+                'meta' => ($old_package->meta ?? [])
             ];
             $params = json_decode(json_encode($params), true);
             $this->Packages->edit($package_id, $params);
@@ -715,6 +715,28 @@ class DomainsTlds extends DomainsModel
 
             // Assign the new package to the TLD
             $this->Record->insert('domains_packages', ['tld_id' => $tld->id, 'package_id' => $package_id]);
+        }
+
+        // Update welcome email, if migrating from Generic Domains
+        $old_module = $this->Record->select()
+            ->from('modules')
+            ->where('id', '=', $old_package->module_id)
+            ->fetch();
+        if ($old_module->class == 'generic_domains') {
+            // Fetch sample welcome email from the module
+            Loader::loadModels($this, ['ModuleManager']);
+            $email_templates = $this->ModuleManager->moduleRpc($new_module_id, 'getEmailTemplate');
+
+            $params = [
+                'email_content' => array_values($email_templates ?? [])
+            ];
+            $this->Packages->edit($package_id, $params);
+
+            if (($errors = $this->Packages->errors())) {
+                $this->Input->setErrors($errors);
+
+                return;
+            }
         }
 
         // Set the status of the old package as inactive
