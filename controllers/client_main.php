@@ -71,6 +71,18 @@ class ClientMain extends DomainsController
             'suspended' => $this->Services->getStatusCount($this->client->id, 'suspended', false, $domains_filters),
         ];
 
+        // Set the expected service renewal price
+        $modules = [];
+        foreach ($services as $service) {
+            $module_id = $service->package->module_id;
+            if (!isset($modules[$module_id])) {
+                $modules[$module_id] = $this->ModuleManager->initModule($module_id);
+            }
+
+            $service->renewal_price = $this->Services->getRenewalPrice($service->id);
+            $service->registrar = $modules[$module_id]->getName();
+        }
+
         // Set language for periods
         $periods = $this->Packages->getPricingPeriods();
         foreach ($this->Packages->getPricingPeriods(true) as $period => $lang) {
