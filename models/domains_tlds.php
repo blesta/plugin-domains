@@ -503,11 +503,28 @@ class DomainsTlds extends DomainsModel
                         }
                     }
                 }
+
+                // Update welcome email, if migrating from Generic Domains
+                $old_module = $this->Record->select()
+                    ->from('modules')
+                    ->where('id', '=', $old_package->module_id)
+                    ->fetch();
+                if ($old_module->class == 'generic_domains') {
+                    // Fetch sample welcome email from the module
+                    $email_templates = $this->ModuleManager->moduleRpc($vars['module_id'], 'getEmailTemplate');
+                    $params = [
+                        'email_content' => array_values($email_templates ?? [])
+                    ];
+                    $this->Packages->edit($tld->package_id, $params);
+
+                    if (($errors = $this->Packages->errors())) {
+                        $this->Input->setErrors($errors);
+                    }
+                }
             }
 
             // Get package
             $package = isset($vars['package_id']) ? $this->Packages->get($vars['package_id']) : $old_package;
-
 
             // Set the default module row only if the module row and module group have not been provided
             // and the module id has been provided and this is being updated to a new value.
@@ -715,28 +732,6 @@ class DomainsTlds extends DomainsModel
 
             // Assign the new package to the TLD
             $this->Record->insert('domains_packages', ['tld_id' => $tld->id, 'package_id' => $package_id]);
-        }
-
-        // Update welcome email, if migrating from Generic Domains
-        $old_module = $this->Record->select()
-            ->from('modules')
-            ->where('id', '=', $old_package->module_id)
-            ->fetch();
-        if ($old_module->class == 'generic_domains') {
-            // Fetch sample welcome email from the module
-            Loader::loadModels($this, ['ModuleManager']);
-            $email_templates = $this->ModuleManager->moduleRpc($new_module_id, 'getEmailTemplate');
-
-            $params = [
-                'email_content' => array_values($email_templates ?? [])
-            ];
-            $this->Packages->edit($package_id, $params);
-
-            if (($errors = $this->Packages->errors())) {
-                $this->Input->setErrors($errors);
-
-                return;
-            }
         }
 
         // Set the status of the old package as inactive
