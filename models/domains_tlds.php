@@ -630,11 +630,9 @@ class DomainsTlds extends DomainsModel
      * @param string $tld The TLD to validate
      * @param int $new_module_id The ID of the new module
      * @param int $company_id The ID of the company for which to filter by (optional)
-     * @param bool $check_services Whether to check if services are assigned to an existing package
-     *  before deciding to migrate
      * @return bool True if the package needs to be migrated to the new module, false otherwise
      */
-    private function requiresModuleMigration($tld, $new_module_id, $company_id = null, $check_services = true)
+    private function requiresModuleMigration($tld, $new_module_id, $company_id = null)
     {
         Loader::loadComponents($this, ['Record']);
 
@@ -662,8 +660,6 @@ class DomainsTlds extends DomainsModel
 
         if (isset($package->module_id) && ((int)$package->module_id == (int)$new_module_id)) {
             return false;
-        } elseif (!$check_services) {
-            return true;
         }
 
         // Check if there are any services using this module and package
