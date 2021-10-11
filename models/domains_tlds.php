@@ -478,13 +478,23 @@ class DomainsTlds extends DomainsModel
             // Get package
             $old_package = $this->Packages->get($tld->package_id);
 
-            // Migrate module
             if (isset($vars['module_id'])) {
+                // If email content is not given, and a package does not exist for the new module, use the default
+                // module welcome email content
+                if (empty($vars['email_content'])
+                    && !($this->getTldPackageByModuleId($vars['tld'], $vars['module_id']))
+                ) {
+                    // Fetch sample welcome email from the module
+                    $email_templates = $this->ModuleManager->moduleRpc($vars['module_id'], 'getEmailTemplate');
+                    $vars['email_content'] = array_values($email_templates ?? []);
+                }
+
+                // Migrate module
                 if ($this->requiresModuleMigration($vars['tld'], $vars['module_id'])) {
                     $vars['package_id'] = $this->migrateModule($vars['tld'], $vars['module_id']);
                 }
 
-                // Remove unsupported features
+                // Remove features unsupported by the new module
                 if ($old_package->module_id !== $vars['module_id']) {
                     $company_settings = $this->Form->collapseObjectArray(
                         $this->Companies->getSettings($tld->company_id),
@@ -501,24 +511,6 @@ class DomainsTlds extends DomainsModel
                         } elseif ($tld->{$feature} == '1') {
                             $vars[$feature] = '1';
                         }
-                    }
-                }
-
-                // Update welcome email, if migrating from Generic Domains
-                $old_module = $this->Record->select()
-                    ->from('modules')
-                    ->where('id', '=', $old_package->module_id)
-                    ->fetch();
-                if ($old_module->class == 'generic_domains') {
-                    // Fetch sample welcome email from the module
-                    $email_templates = $this->ModuleManager->moduleRpc($vars['module_id'], 'getEmailTemplate');
-                    $params = [
-                        'email_content' => array_values($email_templates ?? [])
-                    ];
-                    $this->Packages->edit($tld->package_id, $params);
-
-                    if (($errors = $this->Packages->errors())) {
-                        $this->Input->setErrors($errors);
                     }
                 }
             }
@@ -606,7 +598,6 @@ class DomainsTlds extends DomainsModel
         }
     }
 
-
     /**
      * Get the pricing of a TLD by term and currency
      *
@@ -639,9 +630,11 @@ class DomainsTlds extends DomainsModel
      * @param string $tld The TLD to validate
      * @param int $new_module_id The ID of the new module
      * @param int $company_id The ID of the company for which to filter by (optional)
+     * @param bool $check_services Whether to check if services are assigned to an existing package
+     *  before deciding to migrate
      * @return bool True if the package needs to be migrated to the new module, false otherwise
      */
-    private function requiresModuleMigration($tld, $new_module_id, $company_id = null)
+    private function requiresModuleMigration($tld, $new_module_id, $company_id = null, $check_services = true)
     {
         Loader::loadComponents($this, ['Record']);
 
@@ -669,6 +662,8 @@ class DomainsTlds extends DomainsModel
 
         if (isset($package->module_id) && ((int)$package->module_id == (int)$new_module_id)) {
             return false;
+        } elseif (!$check_services) {
+            return true;
         }
 
         // Check if there are any services using this module and package
