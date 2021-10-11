@@ -58,12 +58,12 @@
                                 <td><?php (print (isset($domains[$i]->name) ? $this->Html->safe($domains[$i]->name) : null));?></td>
                                 <td>
                                     <?php
-                                    if ((isset($domains[$i]->package_pricing->period) ? $domains[$i]->package_pricing->period : null) == 'onetime') {
+                                    if (($domains[$i]->package_pricing->period ?? null) == 'onetime') {
                                         (print (isset($periods[$domains[$i]->package_pricing->period]) ? $this->Html->safe($periods[$domains[$i]->package_pricing->period]) : null));
                                     } else {
                                         $term = (isset($domains[$i]->package_pricing->term) ? $this->Html->safe($domains[$i]->package_pricing->term) : null);
-                                        $period = ($term == 1 ? (isset($periods[$domains[$i]->package_pricing->period]) ? $periods[$domains[$i]->package_pricing->period] : null) : (isset($periods[$domains[$i]->package_pricing->period . '_plural']) ? $periods[$domains[$i]->package_pricing->period . '_plural'] : null));
-                                        $renewal_price = $this->CurrencyFormat->format((isset($domains[$i]->renewal_price) ? $domains[$i]->renewal_price : null), (isset($domains[$i]->override_currency) ? $domains[$i]->override_currency : (isset($domains[$i]->package_pricing->currency) ? $domains[$i]->package_pricing->currency : null)));
+                                        $period = ($term == 1 ? ($periods[$domains[$i]->package_pricing->period] ?? null) : ($periods[$domains[$i]->package_pricing->period . '_plural'] ?? null));
+                                        $renewal_price = $this->CurrencyFormat->format(($domains[$i]->renewal_price ?? ($domains[$i]->package_pricing->price_renews ?? null)), ($domains[$i]->override_currency ?? ($domains[$i]->package_pricing->currency ?? null)));
                                         $this->_('ClientMain.index.recurring_term', false, $this->Html->safe($term), $this->Html->safe($period), $this->Html->safe($renewal_price));
                                     }
                                     ?>
@@ -89,7 +89,7 @@
                                 ?>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="<?php echo $this->Html->safe($this->base_uri . 'services/manage/' . (isset($domains[$i]->id) ? $domains[$i]->id : null) . '/');?>" class="btn btn-xs btn-light">
+                                        <a href="<?php echo $this->Html->safe($this->client_uri . 'services/manage/' . (isset($domains[$i]->id) ? $domains[$i]->id : null) . '/');?>" class="btn btn-xs btn-light">
                                             <i class="fas fa-cog fa-fw"></i>  <?php $this->_('ClientMain.index.option_manage');?>
                                         </a>
                                     </div>

@@ -478,13 +478,23 @@ class DomainsTlds extends DomainsModel
             // Get package
             $old_package = $this->Packages->get($tld->package_id);
 
-            // Migrate module
             if (isset($vars['module_id'])) {
+                // If email content is not given, and a package does not exist for the new module, use the default
+                // module welcome email content
+                if (empty($vars['email_content'])
+                    && !($this->getTldPackageByModuleId($vars['tld'], $vars['module_id']))
+                ) {
+                    // Fetch sample welcome email from the module
+                    $email_templates = $this->ModuleManager->moduleRpc($vars['module_id'], 'getEmailTemplate');
+                    $vars['email_content'] = array_values($email_templates ?? []);
+                }
+
+                // Migrate module
                 if ($this->requiresModuleMigration($vars['tld'], $vars['module_id'])) {
                     $vars['package_id'] = $this->migrateModule($vars['tld'], $vars['module_id']);
                 }
 
-                // Remove unsupported features
+                // Remove features unsupported by the new module
                 if ($old_package->module_id !== $vars['module_id']) {
                     $company_settings = $this->Form->collapseObjectArray(
                         $this->Companies->getSettings($tld->company_id),
@@ -507,7 +517,6 @@ class DomainsTlds extends DomainsModel
 
             // Get package
             $package = isset($vars['package_id']) ? $this->Packages->get($vars['package_id']) : $old_package;
-
 
             // Set the default module row only if the module row and module group have not been provided
             // and the module id has been provided and this is being updated to a new value.
@@ -588,7 +597,6 @@ class DomainsTlds extends DomainsModel
             return $vars['tld'];
         }
     }
-
 
     /**
      * Get the pricing of a TLD by term and currency
@@ -701,8 +709,8 @@ class DomainsTlds extends DomainsModel
 
             // Set the old meta data and pricing to the new package
             $params = [
-                'pricing' => (isset($old_package->pricing) ? $old_package->pricing : []),
-                'meta' => (isset($old_package->meta) ? $old_package->meta : [])
+                'pricing' => ($old_package->pricing ?? []),
+                'meta' => ($old_package->meta ?? [])
             ];
             $params = json_decode(json_encode($params), true);
             $this->Packages->edit($package_id, $params);
