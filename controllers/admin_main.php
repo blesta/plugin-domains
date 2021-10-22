@@ -131,7 +131,7 @@ class AdminMain extends DomainsController
             Configure::get('Blesta.pagination'),
             [
                 'total_results' => $total_results,
-                'uri' => $this->base_uri . 'plugin/domains/admin_main/index/' . $client->id . '/' . $status . '/[p]/',
+                'uri' => $this->base_uri . 'plugin/domains/admin_main/domains/' . $client->id . '/' . $status . '/[p]/',
                 'params' => ['sort' => $sort, 'order' => $order]
             ]
         );
