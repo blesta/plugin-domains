@@ -365,13 +365,26 @@ class AdminDomains extends DomainsController
                 'domains_first_reminder_days_before',
                 'domains_second_reminder_days_before',
                 'domains_expiration_notice_days_after',
-                'domains_taxable'
+                'domains_taxable',
+                'domains_sync_price_markup',
+                'domains_sync_renewal_markup',
+                'domains_sync_transfer_markup',
+                'domains_enable_rounding',
+                'domains_markup_rounding',
+                'domains_automatic_sync',
+                'domains_sync_frequency',
             ];
             if (!isset($this->post['domains_spotlight_tlds'])) {
                 $this->post['domains_spotlight_tlds'] = [];
             }
             if (!isset($this->post['domains_taxable'])) {
                 $this->post['domains_taxable'] = '0';
+            }
+            if (!isset($this->post['domains_enable_rounding'])) {
+                $this->post['domains_enable_rounding'] = '0';
+            }
+            if (!isset($this->post['domains_automatic_sync'])) {
+                $this->post['domains_automatic_sync'] = '0';
             }
             $this->post['domains_spotlight_tlds'] = json_encode($this->post['domains_spotlight_tlds']);
             $this->Companies->setSettings(
@@ -409,9 +422,24 @@ class AdminDomains extends DomainsController
         $this->set('first_reminder_days', $this->getDays(26, 35));
         $this->set('second_reminder_days', $this->getDays(4, 10));
         $this->set('expiration_notice_days', $this->getDays(1, 5));
+        $this->set('sync_days', $this->getDays(1, 30));
+        $this->set('rounding_options', $this->getRoundingOptions());
         $this->set('first_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_1'));
         $this->set('second_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_2'));
         $this->set('expiration_notice_template', $this->EmailGroups->getByAction('Domains.domain_expiration'));
+    }
+
+    /**
+     * Get a list of rounding options
+     */
+    private function getRoundingOptions()
+    {
+        return [
+            '.00' => '.00', '.10' => '.10', '.20' => '.20', '.30' => '.30',
+            '.40' => '.40', '.50' => '.50', '.60' => '.60', '.70' => '.70',
+            '.80' => '.80', '.90' => '.90', '.95' => '.95', '.99' => '.99',
+            '' => Language::_('AdminDomains.getroundingoptions.custom', true)
+        ];
     }
 
     /**
@@ -1148,6 +1176,15 @@ class AdminDomains extends DomainsController
                     'class' => 'advanced',
                     'href' => $ajax ? '#' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=advanced'),
                     'id' => 'advanced_tab'
+                ]
+            ],
+            [
+                'name' => Language::_('AdminDomains.configuration.tab_tld_sync', true),
+                'current' => (($tab ?? 'general') == 'tld_sync'),
+                'attributes' => [
+                    'class' => 'tld_sync',
+                    'href' => $ajax ? '#' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync'),
+                    'id' => 'tld_sync_tab'
                 ]
             ],
             [

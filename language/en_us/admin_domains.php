@@ -67,11 +67,14 @@ $lang['AdminDomains.configuration.boxtitle'] = 'Configuration';
 $lang['AdminDomains.configuration.tab_general'] = 'General';
 $lang['AdminDomains.configuration.tab_notifications'] = 'Notifications';
 $lang['AdminDomains.configuration.tab_advanced'] = 'Advanced';
+$lang['AdminDomains.configuration.tab_tld_sync'] = 'TLD Sync';
 $lang['AdminDomains.configuration.tab_importpackages'] = 'Import Packages';
 $lang['AdminDomains.configuration.tab_configurableoptions'] = 'Configurable Options';
 
 $lang['AdminDomains.configuration.heading_package_options'] = 'Package Options';
 $lang['AdminDomains.configuration.heading_taxes'] = 'Taxes';
+$lang['AdminDomains.configuration.heading_markup'] = 'Markup';
+$lang['AdminDomains.configuration.heading_automation'] = 'Automation';
 
 $lang['AdminDomains.configuration.field_dns_management_option_group'] = 'DNS Management Option Group';
 $lang['AdminDomains.configuration.field_email_forwarding_option_group'] = 'Email Forwarding Option Group';
@@ -82,6 +85,15 @@ $lang['AdminDomains.configuration.field_second_reminder_days_before'] = '2nd Ren
 $lang['AdminDomains.configuration.field_expiration_notice_days_after'] = 'Expiration Notice Days After';
 $lang['AdminDomains.configuration.field_spotlight_tlds'] = 'Spotlight TLDs';
 $lang['AdminDomains.configuration.field_taxable'] = 'Enable Tax for Domains';
+$lang['AdminDomains.configuration.field_sync_price_markup'] = 'Price Markup (%)';
+$lang['AdminDomains.configuration.field_sync_renewal_markup'] = 'Renewal Price Markup (%)';
+$lang['AdminDomains.configuration.field_sync_transfer_markup'] = 'Transfer Price Markup (%)';
+$lang['AdminDomains.configuration.field_enable_rounding'] = 'Enable Rounding';
+$lang['AdminDomains.configuration.field_markup_rounding'] = 'Round to Next';
+$lang['AdminDomains.configuration.field_automatic_sync'] = 'Enable Automated Synchronization';
+$lang['AdminDomains.configuration.field_sync_frequency'] = 'Sync Every';
+$lang['AdminDomains.configuration.text_manual_sync_title'] = 'Want to synchronize manually?';
+$lang['AdminDomains.configuration.text_manual_sync'] = 'To synchronize TLDs manually, visit the TLD Pricing page, use checkboxes to select the TLDs to sync, and select the Registrar Sync action.';
 $lang['AdminDomains.configuration.field_submit'] = 'Update Configuration';
 
 $lang['AdminDomains.configuration.link_template'] = 'Edit Email Template';
@@ -95,6 +107,7 @@ $lang['AdminDomains.configuration.tooltip_second_reminder_days_before'] = 'Selec
 $lang['AdminDomains.configuration.tooltip_expiration_notice_days_after'] = 'Select the number of days after a domain expires to send the expiration notice email (1-5 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that will be highlighted on order forms through the Order Plugin.';
 
+$lang['AdminDomains.getroundingoptions.custom'] = 'Custom';
 
 $lang['AdminDomains.importpackages.page_title'] = 'Domains > Configuration';
 $lang['AdminDomains.importpackages.boxtitle'] = 'Configuration';
