@@ -1333,22 +1333,36 @@ class AdminDomains extends DomainsController
 
         // Process TLD bulk actions
         if (!empty($this->post['tlds_bulk'])) {
-            $action = $this->post['tlds_bulk']['action'] ?? null;
-
-            if (!empty($this->post['tlds_bulk']['tlds']) && is_array($this->post['tlds_bulk']['tlds'])) {
-                foreach ($this->post['tlds_bulk']['tlds'] as $tld) {
-                    if ($action == 'enable') {
-                        $this->DomainsTlds->enable($tld);
-                    } elseif ($action == 'disable') {
-                        $this->DomainsTlds->disable($tld);
-                    }
-                }
-            }
+            $bulk_data = $this->post['tlds_bulk'];
+            $action = $bulk_data['action'] ?? null;
 
             if (!array_key_exists($action, $this->getTldActions())) {
                 $this->flashMessage('error', Language::_('AdminDomains.!error.tlds_bulk[action].valid', true));
             } else {
-                $this->flashMessage('message', Language::_('AdminDomains.!success.tlds_updated', true));
+                if (!empty($bulk_data['tlds']) && is_array($bulk_data['tlds'])) {
+                    switch ($action) {
+                        case 'change_status':
+                            $status = $bulk_data['status'] ?? null;
+                            foreach ($bulk_data['tlds'] as $tld) {
+                                if ($status == 'enabled') {
+                                    $this->DomainsTlds->enable($tld);
+                                } elseif ($status == 'disabled') {
+                                    $this->DomainsTlds->disable($tld);
+                                }
+                            }
+
+                            $this->flashMessage('message', Language::_('AdminDomains.!success.change_status', true));
+                            break;
+                        case 'tld_sync':
+                            Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
+                            $sync_utility = new TldSync();
+                            $sync_utility->synchronizePrices($bulk_data['tlds']);
+
+                            $this->flashMessage('message', Language::_('AdminDomains.!success.tld_sync', true));
+                            break;
+                    }
+                }
+
             }
 
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
@@ -1375,13 +1389,11 @@ class AdminDomains extends DomainsController
         $select = ['' => Language::_('AppController.select.please', true)];
         $modules = $select + $this->Form->collapseObjectArray($modules, 'name', 'id');
 
-        // Fetch TLD actions
-        $tld_actions = $this->getTldActions();
-
         $this->set('added_tld', $this->get['added_tld'] ?? null);
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
-        $this->set('tld_actions', $tld_actions);
+        $this->set('tld_actions', $this->getTldActions());
+        $this->set('tld_statuses', $this->getTldStatuses());
 
         // Include WYSIWYG
         $this->Javascript->setFile('blesta/ckeditor/build/ckeditor.js', 'head', VENDORWEBDIR);
@@ -1397,8 +1409,21 @@ class AdminDomains extends DomainsController
     private function getTldActions()
     {
         return [
-            'enable' => Language::_('AdminDomains.getTldActions.option_enable', true),
-            'disable' => Language::_('AdminDomains.getTldActions.option_disable', true)
+            'change_status' => Language::_('AdminDomains.getTldActions.option_change_status', true),
+            'tld_sync' => Language::_('AdminDomains.getTldActions.option_tld_sync', true)
+        ];
+    }
+
+    /**
+     * Gets a list of the available bulk actions for TLDs
+     *
+     * @return array An array containing the available bulk actions for TLDs
+     */
+    private function getTldStatuses()
+    {
+        return [
+            'enabled' => Language::_('AdminDomains.getTldStatuses.option_enabled', true),
+            'disabled' => Language::_('AdminDomains.getTldStatuses.option_disabled', true)
         ];
     }
 

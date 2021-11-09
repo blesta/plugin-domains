@@ -8,6 +8,8 @@ $lang['AdminDomains.!success.tld_enabled'] = 'The TLD was successfully enabled!'
 $lang['AdminDomains.!success.tld_added'] = 'The TLD was successfully added!';
 $lang['AdminDomains.!success.tld_updated'] = 'The TLD was successfully updated!';
 $lang['AdminDomains.!success.tlds_updated'] = 'The TLDs were successfully updated!';
+$lang['AdminDomains.!success.tld_sync'] = 'The TLD prices were successfully synced!';
+$lang['AdminDomains.!success.change_status'] = 'The TLD statuses were successfully updated!';
 $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
 $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
 $lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
@@ -158,6 +160,8 @@ $lang['AdminDomains.tlds.option_disable'] = 'Disable';
 $lang['AdminDomains.tlds.option_enable'] = 'Enable';
 $lang['AdminDomains.tlds.option_add'] = 'Add';
 $lang['AdminDomains.tlds.option_submit'] = 'Submit';
+$lang['AdminDomains.tlds.field_action'] = 'Action';
+$lang['AdminDomains.tlds.field_status'] = 'Status';
 $lang['AdminDomains.tlds.confirm_disable'] = 'Are you sure you want to disable this TLD?';
 $lang['AdminDomains.tlds.confirm_enable'] = 'Are you sure you want to enable this TLD?';
 
@@ -167,8 +171,14 @@ $lang['AdminDomains.tlds.tooltip_id_protection'] = 'The availability of ID Prote
 $lang['AdminDomains.tlds.tooltip_epp_code'] = 'The availability of the EPP Code will depend on whether the registrar module implements such functionality and may not be available for all TLDs or registrars';
 
 
-$lang['AdminDomains.getTldActions.option_disable'] = 'Disable';
-$lang['AdminDomains.getTldActions.option_enable'] = 'Enable';
+// Get TLD Actions
+$lang['AdminDomains.getTldActions.option_change_status'] = 'Change Status';
+$lang['AdminDomains.getTldActions.option_tld_sync'] = 'Registrar Price Sync';
+
+
+// Get TLD Statuses
+$lang['AdminDomains.getTldStatuses.option_disabled'] = 'Disabled';
+$lang['AdminDomains.getTldStatuses.option_enabled'] = 'Enabled';
 
 
 $lang['AdminDomains.pricing.boxtitle_edit_tld'] = 'Update TLD %1$s'; // %1$s is the TLD

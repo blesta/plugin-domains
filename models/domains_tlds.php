@@ -54,6 +54,7 @@ class DomainsTlds extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - tld The TLD
+     *  - tlds The TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @param int $page The page number of results to fetch
@@ -80,6 +81,7 @@ class DomainsTlds extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - tld The TLD
+     *  - tlds The TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @return int The total number of TLDs for the given filters
@@ -95,6 +97,7 @@ class DomainsTlds extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - tld The TLD
+     *  - tlds The TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @param array $order A key/value pair array of fields to order the results by
@@ -1243,19 +1246,25 @@ class DomainsTlds extends DomainsModel
      *
      * @param array $filters A list of filters for the query
      *
-     *  - tld The TLD
+     *  - tld The TLD to fetch
+     *  - tlds The TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @return Record A partially built query
      */
     private function getTlds(array $filters = [])
     {
-        $this->Record->select(['domains_tlds.*'])->
+        $this->Record->select(['domains_tlds.*', 'packages.module_id'])->
             from('domains_tlds')->
+            leftJoin('packages', 'packages.id', '=', 'domains_tlds.package_id', false)->
             leftJoin('package_group', 'package_group.package_id', '=', 'domains_tlds.package_id', false);
 
         if (isset($filters['tld'])) {
             $this->Record->where('domains_tlds.tld', '=', $filters['tld']);
+        }
+
+        if (isset($filters['tlds'])) {
+            $this->Record->where('domains_tlds.tld', 'in', $filters['tlds']);
         }
 
         if (isset($filters['company_id'])) {
