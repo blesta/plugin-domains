@@ -40,7 +40,7 @@
         $this->Widget->setTabs($tabs);
         $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, (isset($tld->tld) ? $tld->tld : null)), ['id' => 'edit_tld' . str_replace('.', '_', (isset($tld->tld) ? $tld->tld : null))], (isset($render_section) ? $render_section : null));
 
-        $this->Form->create(null, ['id' => 'edit_tld']);
+        $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe(str_replace('.', '_', $tld->tld))]);
         ?>
 
         <div class="inner">
@@ -361,15 +361,15 @@
         });
 
         // Update TLD
-        $('#edit_tld').on('submit', function(event) {
+        $('#edit_tld_form<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').on('submit', function(event) {
             event.preventDefault();
 
             $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .assigned_option_groups option').prop('selected', true);
 
             $(this).blestaRequest(
                 "POST",
-                $('#edit_tld').attr('action'),
-                $('#edit_tld').serialize("serialize"),
+                $('#edit_tld_form<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').attr('action'),
+                $('#edit_tld_form<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').serialize("serialize"),
                 function(response) {
                     // Show messages
                     if (response.hasOwnProperty('message')) {
