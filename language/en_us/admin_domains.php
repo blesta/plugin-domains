@@ -160,6 +160,7 @@ $lang['AdminDomains.tlds.option_disable'] = 'Disable';
 $lang['AdminDomains.tlds.option_enable'] = 'Enable';
 $lang['AdminDomains.tlds.option_add'] = 'Add';
 $lang['AdminDomains.tlds.option_submit'] = 'Submit';
+$lang['AdminDomains.tlds.option_configure_sync'] = 'Configure TLD Sync';
 $lang['AdminDomains.tlds.field_action'] = 'Action';
 $lang['AdminDomains.tlds.field_status'] = 'Status';
 $lang['AdminDomains.tlds.confirm_disable'] = 'Are you sure you want to disable this TLD?';

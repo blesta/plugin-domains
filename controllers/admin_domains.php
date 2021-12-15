@@ -448,7 +448,7 @@ class AdminDomains extends DomainsController
     public function importPackages()
     {
         $this->uses(['ModuleManager', 'Companies', 'Domains.DomainsTlds', 'Packages', 'PackageGroups', 'Services']);
-        $company_settings = $this->getDomainsCompanySettings();
+        $company_settings = $this->DomainsTlds->getDomainsCompanySettings();
 
         if (!empty($this->post)) {
             $this->Packages->begin();
@@ -872,7 +872,7 @@ class AdminDomains extends DomainsController
         $this->uses(['Domains.DomainsTlds', 'PackageOptions', 'PackageOptionGroups']);
 
         // Get plugin company settings
-        $plugin_settings = $this->getDomainsCompanySettings();
+        $plugin_settings = $this->DomainsTlds->getDomainsCompanySettings();
 
         // Get configurable options
         $tld_features = $this->DomainsTlds->getFeatures();
@@ -1209,44 +1209,6 @@ class AdminDomains extends DomainsController
     }
 
     /**
-     * Gets the Domains plugin company settings
-     *
-     * @return array An array containing all the Domains plugin company settings
-     */
-    private function getDomainsCompanySettings()
-    {
-        $this->uses(['Companies']);
-        $this->helpers(['Form']);
-
-        // Get company settings
-        $company_id = Configure::get('Blesta.company_id');
-        $company_settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
-
-        $domains_settings = [];
-        $accepted_settings = [
-            'domains_spotlight_tlds',
-            'domains_dns_management_option_group',
-            'domains_email_forwarding_option_group',
-            'domains_id_protection_option_group',
-            'domains_epp_code_option_group',
-            'domains_first_reminder_days_before',
-            'domains_second_reminder_days_before',
-            'domains_expiration_notice_days_after',
-            'domains_taxable',
-            'domains_package_group',
-            'domains_tld_packages'
-        ];
-
-        foreach ($company_settings as $key => $setting) {
-            if (in_array($key, $accepted_settings)) {
-                $domains_settings[$key] = $setting;
-            }
-        }
-
-        return $domains_settings;
-    }
-
-    /**
      * Fetch a range of # of days and their language
      *
      * @param int $min_days The lower bound of the day range
@@ -1338,31 +1300,28 @@ class AdminDomains extends DomainsController
 
             if (!array_key_exists($action, $this->getTldActions())) {
                 $this->flashMessage('error', Language::_('AdminDomains.!error.tlds_bulk[action].valid', true));
-            } else {
-                if (!empty($bulk_data['tlds']) && is_array($bulk_data['tlds'])) {
-                    switch ($action) {
-                        case 'change_status':
-                            $status = $bulk_data['status'] ?? null;
-                            foreach ($bulk_data['tlds'] as $tld) {
-                                if ($status == 'enabled') {
-                                    $this->DomainsTlds->enable($tld);
-                                } elseif ($status == 'disabled') {
-                                    $this->DomainsTlds->disable($tld);
-                                }
+            } else if (!empty($bulk_data['tlds']) && is_array($bulk_data['tlds'])) {
+                switch ($action) {
+                    case 'change_status':
+                        $status = $bulk_data['status'] ?? null;
+                        foreach ($bulk_data['tlds'] as $tld) {
+                            if ($status == 'enabled') {
+                                $this->DomainsTlds->enable($tld);
+                            } elseif ($status == 'disabled') {
+                                $this->DomainsTlds->disable($tld);
                             }
+                        }
 
-                            $this->flashMessage('message', Language::_('AdminDomains.!success.change_status', true));
-                            break;
-                        case 'tld_sync':
-                            Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
-                            $sync_utility = new TldSync();
-                            $sync_utility->synchronizePrices($bulk_data['tlds']);
+                        $this->flashMessage('message', Language::_('AdminDomains.!success.change_status', true));
+                        break;
+                    case 'tld_sync':
+                        Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
+                        $sync_utility = new TldSync();
+                        $sync_utility->synchronizePrices($bulk_data['tlds']);
 
-                            $this->flashMessage('message', Language::_('AdminDomains.!success.tld_sync', true));
-                            break;
-                    }
+                        $this->flashMessage('message', Language::_('AdminDomains.!success.tld_sync', true));
+                        break;
                 }
-
             }
 
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');

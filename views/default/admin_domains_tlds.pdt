@@ -197,6 +197,7 @@
                     </div>
                     <div id="tld_sync">
                         <div class="float">
+                            <a class="text-sm" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync';?>" target="_blank"><?php $this->_('AdminDomains.tlds.option_configure_sync');?></a>
                         </div>
                     </div>
                     <?php

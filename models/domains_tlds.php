@@ -54,7 +54,7 @@ class DomainsTlds extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - tld The TLD
-     *  - tlds The TLDs to fetch
+     *  - tlds A list of TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @param int $page The page number of results to fetch
@@ -81,7 +81,7 @@ class DomainsTlds extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - tld The TLD
-     *  - tlds The TLDs to fetch
+     *  - tlds A list of TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @return int The total number of TLDs for the given filters
@@ -97,7 +97,7 @@ class DomainsTlds extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - tld The TLD
-     *  - tlds The TLDs to fetch
+     *  - tlds A list of TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @param array $order A key/value pair array of fields to order the results by
@@ -1247,7 +1247,7 @@ class DomainsTlds extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - tld The TLD to fetch
-     *  - tlds The TLDs to fetch
+     *  - tlds A list of TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @return Record A partially built query
@@ -1298,6 +1298,54 @@ class DomainsTlds extends DomainsModel
     public function getFeatures()
     {
         return $this->features;
+    }
+
+    /**
+     * Returns the plugin company settings
+     *
+     * @param int $company_id The ID of the company to fetch the plugin settings
+     * @return array An array containing all the Domains plugin company settings
+     */
+    public function getDomainsCompanySettings($company_id = null)
+    {
+        Loader::loadModels(['Companies']);
+        Loader::loadHelpers(['Form']);
+
+        // Get company settings
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+        $company_settings = $this->Form->collapseObjectArray(
+            $this->Companies->getSettings($company_id),
+            'value',
+            'key'
+        );
+
+        $domains_settings = [];
+        $accepted_settings = [
+            'domains_spotlight_tlds',
+            'domains_dns_management_option_group',
+            'domains_email_forwarding_option_group',
+            'domains_id_protection_option_group',
+            'domains_epp_code_option_group',
+            'domains_first_reminder_days_before',
+            'domains_second_reminder_days_before',
+            'domains_expiration_notice_days_after',
+            'domains_taxable',
+            'domains_sync_price_markup',
+            'domains_sync_renewal_markup',
+            'domains_sync_transfer_markup',
+            'domains_enable_rounding',
+            'domains_markup_rounding',
+            'domains_automatic_sync',
+            'domains_sync_frequency'
+        ];
+
+        foreach ($company_settings as $key => $setting) {
+            if (in_array($key, $accepted_settings)) {
+                $domains_settings[$key] = $setting;
+            }
+        }
+
+        return $domains_settings;
     }
 
     /**
