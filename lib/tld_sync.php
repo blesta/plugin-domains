@@ -89,7 +89,7 @@ class TldSync
      * @param int $markup The percentage of markup to add
      * @return float The total amount of the price plus the markup
      */
-    function markup($price, $markup, $rounding = null)
+    private function markup($price, $markup, $rounding = null)
     {
         $price = number_format($price * (($markup / 100) + 1), 2, '.', '');
 
