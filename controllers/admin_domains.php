@@ -1275,7 +1275,6 @@ class AdminDomains extends DomainsController
 
             $this->DomainsTlds->add($params);
 
-
             // Try to automatically update the package meta
             $update_meta = false;
             $query_string = '';

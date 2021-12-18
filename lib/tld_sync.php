@@ -10,13 +10,18 @@ class TldSync
      * Synchronize the price for the given TLDs with those set by the registrar
      *
      * @param array $tlds A list of TLDs for which to sync registrar prices
+     * @param int $company_id The ID of the company where the TLDs will be synchronized (optional)
      */
-    public function synchronizePrices(array $tlds)
+    public function synchronizePrices(array $tlds, $company_id = null)
     {
         Loader::loadModels($this, ['Domains.DomainsTlds', 'ModuleManager']);
 
+        if (is_null($company_id)) {
+            $company_id = Configure::get('Blesta.company_id');
+        }
+
         $tld_records = $this->DomainsTlds->getAll(
-            ['tlds' => $tlds, 'company_id' => Configure::get('Blesta.company_id')]
+            ['tlds' => $tlds, 'company_id' => $company_id]
         );
 
         $module_tlds = [];
@@ -24,12 +29,12 @@ class TldSync
             $module_tlds[$tld_record->module_id][] = $tld_record->tld;
         }
 
-        foreach ($module_tlds as $module_id => $module_tlds) {
+        foreach ($module_tlds as $module_id => $list_tlds) {
             $module = $this->ModuleManager->initModule($module_id);
             $module->setModuleRow($module->getModuleRows()[0] ?? null);
             $module_pricing = $module->getTldPricing();
 
-            $tlds_pricing = array_intersect_key($module_pricing, array_keys($module_tlds));
+            $tlds_pricing = array_intersect_key($module_pricing, array_keys($list_tlds));
 
             foreach ($tlds_pricing as $tld => $pricing) {
                 $this->DomainsTlds->updatePricings($tld, $this->formatPricing($pricing));
