@@ -155,8 +155,12 @@ class DomainsPlugin extends Plugin
 
             // Upgrade to 1.1.0
             if (version_compare($current_version, '1.1.0', '<')) {
-
                 $this->upgrade1_1_0();
+            }
+
+            // Upgrade to 1.3.0
+            if (version_compare($current_version, '1.3.0', '<')) {
+                $this->upgrade1_3_0();
             }
         }
     }
@@ -201,11 +205,33 @@ class DomainsPlugin extends Plugin
                 $package_ids = array_values($this->Form->collapseObjectArray($tlds, 'package_id', 'id'));
 
                 $this->Packages->orderPackages($setting->value, $package_ids);
-
             }
 
             // Put the Domain Manager nav items in the appropriate spot
             $this->reorderNavigationItems($company->id);
+        }
+    }
+
+    /**
+     * Update to v1.3.0
+     */
+    private function upgrade1_3_0()
+    {
+        if (!isset($this->CronTasks)) {
+            Loader::loadModels($this, ['CronTasks']);
+        }
+
+        // Add new cron task to automatically synchronize TLDs
+        $cron_tasks = $this->getCronTasks();
+        $task = null;
+        foreach ($cron_tasks as $task) {
+            if ($task['key'] == 'domain_tld_synchronization') {
+                break;
+            }
+        }
+
+        if ($task) {
+            $this->addCronTasks([$task]);
         }
     }
 
@@ -667,6 +693,19 @@ class DomainsPlugin extends Plugin
                 'enabled' => 1
             ],
             [
+                'key' => 'domain_tld_synchronization',
+                'task_type' => 'plugin',
+                'dir' => 'domains',
+                'name' => Language::_('DomainsPlugin.getCronTasks.domain_tld_synchronization', true),
+                'description' => Language::_(
+                    'DomainsPlugin.getCronTasks.domain_tld_synchronization_description',
+                    true
+                ),
+                'type' => 'interval',
+                'type_value' => '1440', // 60*24 1 day
+                'enabled' => 1
+            ],
+            [
                 'key' => 'domain_term_change',
                 'task_type' => 'plugin',
                 'dir' => 'domains',
@@ -703,6 +742,9 @@ class DomainsPlugin extends Plugin
         switch ($key) {
             case 'domain_synchronization':
                 $this->synchronizeDomains();
+                break;
+            case 'domain_tld_synchronization':
+                $this->synchronizeTldDomains();
                 break;
             case 'domain_term_change':
                 $this->cronDomainTermChange();
@@ -759,6 +801,39 @@ class DomainsPlugin extends Plugin
                 $this->Services->edit($service->id, ['date_renews' => $renew_date]);
             }
         }
+    }
+
+    /**
+     * Synchronizes all TLDs with the pricing from their registrar module
+     */
+    private function synchronizeTldDomains()
+    {
+        if (!isset($this->Form)) {
+            Loader::loadHelpers($this, ['Form']);
+        }
+
+        Loader::loadModels($this, ['Companies', 'Domains.DomainsTlds']);
+
+        // Get company settings
+        $company_id = Configure::get('Blesta.company_id');
+        $settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
+        if (!isset($settings['domains_package_group'])) {
+            return;
+        }
+
+        // Get all TLDs for the current company
+        $tlds = $this->DomainsTlds->getAll(['company_id' => $company_id]);
+
+        // Build a list of the TLDs to be synchronized
+        $tld_list = [];
+        foreach ($tlds as $tld) {
+            $tld_list[] = $tld->tld;
+        }
+
+        // Load sync tool
+        Loader::load(dirname(__FILE__) . DS . 'lib' . DS . 'tld_sync.php');
+        $this->TldSync = new TldSync();
+        $this->TldSync->synchronizePrices($tld_list, $company_id);
     }
 
     /**
