@@ -1308,8 +1308,8 @@ class DomainsTlds extends DomainsModel
      */
     public function getDomainsCompanySettings($company_id = null)
     {
-        Loader::loadModels(['Companies']);
-        Loader::loadHelpers(['Form']);
+        Loader::loadModels($this, ['Companies']);
+        Loader::loadHelpers($this, ['Form']);
 
         // Get company settings
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');

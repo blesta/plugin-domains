@@ -143,6 +143,7 @@ class AdminDomains extends DomainsController
         $this->set('sort', $alt_sort ? $alt_sort : $sort);
         $this->set('order', $order);
         $this->set('negate_order', ($order == 'asc' ? 'desc' : 'asc'));
+
         // Overwrite default pagination settings
         $settings = array_merge(
             Configure::get('Blesta.pagination'),
@@ -347,14 +348,21 @@ class AdminDomains extends DomainsController
      */
     public function configuration()
     {
-        $this->uses(
-            ['Companies', 'EmailGroups', 'PackageGroups', 'PackageOptionGroups', 'Domains.DomainsTlds']
-        );
+        $this->uses([
+            'Companies',
+            'EmailGroups',
+            'PackageGroups',
+            'PackageOptionGroups',
+            'CronTasks',
+            'Domains.DomainsTlds'
+        ]);
+
         $company_id = Configure::get('Blesta.company_id');
         $vars = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
         $vars['domains_spotlight_tlds'] = isset($vars['domains_spotlight_tlds'])
             ? json_decode($vars['domains_spotlight_tlds'], true)
             : [];
+
         if (!empty($this->post)) {
             $accepted_settings = [
                 'domains_spotlight_tlds',
@@ -397,12 +405,22 @@ class AdminDomains extends DomainsController
                 $this->DomainsTlds->updateTax($this->post['domains_taxable']);
             }
 
-            $this->flashMessage(
-                'message',
-                Language::_('AdminDomains.!success.configuration_updated', true),
-                null,
-                false
-            );
+            // Update cron interval
+            $cron = $this->CronTasks->getTaskRunByKey('domain_tld_synchronization', 'domains');
+            $this->CronTasks->editTaskRun($cron->id, ['interval' => $this->post['domains_sync_frequency'] * 60 * 24]);
+
+            // Set error/success messages
+            if (($errors = $this->CronTasks->errors())) {
+                $this->set('vars', (object) $this->post);
+                $this->flashMessage('error', $errors);
+            } else {
+                $this->flashMessage(
+                    'message',
+                    Language::_('AdminDomains.!success.configuration_updated', true),
+                    null,
+                    false
+                );
+            }
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configuration/');
         }
 
