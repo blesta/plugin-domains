@@ -810,8 +810,7 @@ class DomainsTlds extends DomainsModel
         $enabled_pricings = 0;
         for ($i = 1; $i <= 10; $i++) {
             foreach ($currencies as $currency) {
-                $pricings[$i][$currency]['enabled'] =
-                    isset($pricings[$i][$currency]['enabled']) ? $pricings[$i][$currency]['enabled'] : null;
+                $pricings[$i][$currency]['enabled'] = $pricings[$i][$currency]['enabled'] ?? null;
 
                 if ($pricings[$i][$currency]['enabled']) {
                     $enabled_pricings++;
