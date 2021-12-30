@@ -814,14 +814,8 @@ class DomainsPlugin extends Plugin
 
         Loader::loadModels($this, ['Companies', 'Domains.DomainsTlds']);
 
-        // Get company settings
-        $company_id = Configure::get('Blesta.company_id');
-        $settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
-        if (!isset($settings['domains_package_group'])) {
-            return;
-        }
-
         // Get all TLDs for the current company
+        $company_id = Configure::get('Blesta.company_id');
         $tlds = $this->DomainsTlds->getAll(['company_id' => $company_id]);
 
         // Build a list of the TLDs to be synchronized

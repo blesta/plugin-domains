@@ -1335,7 +1335,9 @@ class DomainsTlds extends DomainsModel
             'domains_enable_rounding',
             'domains_markup_rounding',
             'domains_automatic_sync',
-            'domains_sync_frequency'
+            'domains_sync_frequency',
+            'domains_package_group',
+            'domains_tld_packages'
         ];
 
         foreach ($company_settings as $key => $setting) {

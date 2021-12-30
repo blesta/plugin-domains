@@ -20,22 +20,25 @@ class TldSync
             $company_id = Configure::get('Blesta.company_id');
         }
 
+        // Get TLD records
         $tld_records = $this->DomainsTlds->getAll(
             ['tlds' => $tlds, 'company_id' => $company_id]
         );
 
+        // Organize TLD records by registrar module
         $module_tlds = [];
         foreach ($tld_records as $tld_record) {
             $module_tlds[$tld_record->module_id][] = $tld_record->tld;
         }
 
+        // Get TLD prices from the registrar module
         foreach ($module_tlds as $module_id => $list_tlds) {
             $module = $this->ModuleManager->initModule($module_id);
             $module->setModuleRow($module->getModuleRows()[0] ?? null);
             $module_pricing = $module->getTldPricing();
 
+            // Set the price for each TLD
             $tlds_pricing = array_intersect_key($module_pricing, array_flip($list_tlds));
-
             foreach ($tlds_pricing as $tld => $pricing) {
                 $this->DomainsTlds->updatePricings(
                     $tld,
@@ -63,6 +66,12 @@ class TldSync
             $company_id = Configure::get('Blesta.company_id');
         }
 
+        // Set TLD rounding
+        $tld_rounding = null;
+        if (($tld_settings['domains_enable_rounding'] ?? 0) == 1) {
+            $tld_rounding = $tld_settings['domains_markup_rounding'] ?? '.00';
+        }
+
         // Fetch TLD sync settings
         $tld_settings = $this->DomainsTlds->getDomainsCompanySettings();
 
@@ -73,17 +82,17 @@ class TldSync
                 $prices['register'] = $this->markup(
                     $prices['register'],
                     $tld_settings['domains_sync_price_markup'] ?? 0,
-                    $tld_settings['domains_markup_rounding'] ?? '.00'
+                    $tld_rounding
                 );
                 $prices['renew'] = $this->markup(
                     $prices['renew'],
                     $tld_settings['domains_sync_renewal_markup'] ?? 0,
-                    $tld_settings['domains_markup_rounding'] ?? '.00'
+                    $tld_rounding
                 );
                 $prices['transfer'] = $this->markup(
                     $prices['transfer'],
                     $tld_settings['domains_sync_transfer_markup'] ?? 0,
-                    $tld_settings['domains_markup_rounding'] ?? '.00'
+                    $tld_rounding
                 );
 
                 // Check if the pricing row is enabled
@@ -107,29 +116,25 @@ class TldSync
      *
      * @param float $price The price to add a markup
      * @param int $markup The percentage of markup to add
+     * @param string $rounding The nearest decimal to round up the final price
      * @return float The total amount of the price plus the markup
      */
     private function markup($price, $markup, $rounding = null)
     {
-        $price = number_format($price * (($markup / 100) + 1), 2, '.', '');
+        if ($price == 0) {
+            return null;
+        }
 
-        if (!is_null($rounding)) {
-            $decimals = explode('.', $price, 2);
-            $integer = ($decimals[0] ?? null);
-            $decimals = ($decimals[1] ?? null);
-            $round = (int) trim($rounding, '.');
+        $final_price = number_format($price * (($markup / 100.00) + 1), 4, '.', '');
 
-            if (is_numeric($decimals) && is_numeric($rounding)) {
-                if ($decimals > $round) {
-                    $price = round($price, 0, PHP_ROUND_HALF_DOWN) + 1;
-                } else if ($decimals > 0) {
-                    $price = $integer . $rounding;
-                } else {
-                    $price = $integer;
-                }
+        if (!is_null($rounding) && is_numeric($rounding)) {
+            $final_price = floor($final_price) + (float) $rounding;
+
+            if ($final_price < $price) {
+                $final_price = $final_price + 1;
             }
         }
 
-        return $price;
+        return $final_price;
     }
 }
