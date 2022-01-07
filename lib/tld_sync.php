@@ -66,14 +66,14 @@ class TldSync
             $company_id = Configure::get('Blesta.company_id');
         }
 
+        // Fetch TLD sync settings
+        $tld_settings = $this->DomainsTlds->getDomainsCompanySettings();
+
         // Set TLD rounding
         $tld_rounding = null;
         if (($tld_settings['domains_enable_rounding'] ?? 0) == 1) {
             $tld_rounding = $tld_settings['domains_markup_rounding'] ?? '.00';
         }
-
-        // Fetch TLD sync settings
-        $tld_settings = $this->DomainsTlds->getDomainsCompanySettings();
 
         $formatted_pricing = [];
         foreach ($pricing as $currency => $terms) {
@@ -125,14 +125,10 @@ class TldSync
             return null;
         }
 
-        $final_price = number_format($price * (($markup / 100.00) + 1), 4, '.', '');
+        $final_price = number_format($price * (($markup / 100.00) + 1), 4, '.', '') + ((float) $rounding > 0 ? 1 : 0);
 
         if (!is_null($rounding) && is_numeric($rounding)) {
             $final_price = floor($final_price) + (float) $rounding;
-
-            if ($final_price < $price) {
-                $final_price = $final_price + 1;
-            }
         }
 
         return $final_price;

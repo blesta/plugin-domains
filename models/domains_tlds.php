@@ -1332,6 +1332,7 @@ class DomainsTlds extends DomainsModel
             'domains_sync_price_markup',
             'domains_sync_renewal_markup',
             'domains_sync_transfer_markup',
+            'domains_sync_last_execution',
             'domains_enable_rounding',
             'domains_markup_rounding',
             'domains_automatic_sync',

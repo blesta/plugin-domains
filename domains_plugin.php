@@ -811,23 +811,53 @@ class DomainsPlugin extends Plugin
         if (!isset($this->Form)) {
             Loader::loadHelpers($this, ['Form']);
         }
+        if (!isset($this->Date)) {
+            Loader::loadHelpers($this, ['Date']);
+        }
 
         Loader::loadModels($this, ['Companies', 'Domains.DomainsTlds']);
 
-        // Get all TLDs for the current company
+        // Get domains company settings
         $company_id = Configure::get('Blesta.company_id');
-        $tlds = $this->DomainsTlds->getAll(['company_id' => $company_id]);
+        $settings = $this->DomainsTlds->getDomainsCompanySettings($company_id);
 
-        // Build a list of the TLDs to be synchronized
-        $tld_list = [];
-        foreach ($tlds as $tld) {
-            $tld_list[] = $tld->tld;
+        // Validate if the task can run
+        $last_execution = $settings['domains_sync_last_execution'] ?? null;
+
+        if (
+            (
+                is_null($last_execution)
+                || $this->Date->modify(
+                    date($last_execution),
+                    '+' . ((int) $settings['domains_sync_frequency'] ?? 1) . ' days',
+                    'Y-m-d',
+                    Configure::get('Blesta.company_timezone')
+                ) == $this->Date->format('Y-m-d', date('c'))
+            )
+            && !empty($settings['domains_sync_frequency'])
+        ) {
+            // Get all TLDs for the current company
+            $tlds = $this->DomainsTlds->getAll(['company_id' => $company_id]);
+
+            // Build a list of the TLDs to be synchronized
+            $tld_list = [];
+            foreach ($tlds as $tld) {
+                $tld_list[] = $tld->tld;
+            }
+
+            // Load sync tool
+            Loader::load(dirname(__FILE__) . DS . 'lib' . DS . 'tld_sync.php');
+            $this->TldSync = new TldSync();
+            
+            $this->TldSync->synchronizePrices($tld_list, $company_id);
+
+            // Save last execution
+            $this->Companies->setSetting(
+                $company_id,
+                'domains_sync_last_execution',
+                $this->Companies->dateToUtc(date('c'))
+            );
         }
-
-        // Load sync tool
-        Loader::load(dirname(__FILE__) . DS . 'lib' . DS . 'tld_sync.php');
-        $this->TldSync = new TldSync();
-        $this->TldSync->synchronizePrices($tld_list, $company_id);
     }
 
     /**

@@ -405,16 +405,6 @@ class AdminDomains extends DomainsController
                 $this->DomainsTlds->updateTax($this->post['domains_taxable']);
             }
 
-            // Update cron interval
-            $cron = $this->CronTasks->getTaskRunByKey('domain_tld_synchronization', 'domains');
-            $this->CronTasks->editTaskRun(
-                $cron->task_run_id,
-                [
-                    'interval' => $this->post['domains_sync_frequency'] * 60 * 24,
-                    'enabled' => $this->post['domains_automatic_sync']
-                ]
-            );
-
             // Set error/success messages
             if (($errors = $this->CronTasks->errors())) {
                 $this->set('vars', (object) $this->post);
