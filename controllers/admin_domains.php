@@ -404,7 +404,7 @@ class AdminDomains extends DomainsController
         );
         $this->set(
             'package_option_groups',
-            $this->Form->collapseObjectArray($this->PackageOptionGroups->getAll($company_id), 'name', 'id')
+            $this->Form->collapseObjectArray($this->PackageOptionGroups->getAll($company_id, ['hidden' => true]), 'name', 'id')
         );
         $this->set('first_reminder_days', $this->getDays(26, 35));
         $this->set('second_reminder_days', $this->getDays(4, 10));

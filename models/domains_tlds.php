@@ -1138,7 +1138,7 @@ class DomainsTlds extends DomainsModel
 
         // Fetch all available package option groups
         $package_option_groups = $this->Form->collapseObjectArray(
-            $this->PackageOptionGroups->getAll($package->company_id),
+            $this->PackageOptionGroups->getAll($package->company_id, ['hidden' => true]),
             'name',
             'id'
         );
