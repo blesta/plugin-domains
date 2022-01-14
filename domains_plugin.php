@@ -326,7 +326,11 @@ class DomainsPlugin extends Plugin
         foreach ($companies as $company) {
             $company_domains_package_group = $this->Companies->getSetting($company->id, 'domains_package_group');
 
-            if ($company_domains_package_group->value == $domains_package_group->value && $company->id != $company_id) {
+            if ($domains_package_group
+                && $company_domains_package_group
+                && $company_domains_package_group->value == $domains_package_group->value
+                && $company->id != $company_id
+            ) {
                 // A collision was found, unset the domains_package_group setting for the current company
                 $this->Companies->unsetSetting($company_id, 'domains_package_group');
                 break;
