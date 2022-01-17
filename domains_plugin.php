@@ -158,6 +158,12 @@ class DomainsPlugin extends Plugin
 
                 $this->upgrade1_1_0();
             }
+            
+            // Upgrade to 1.3.0
+            if (version_compare($current_version, '1.3.0', '<')) {
+
+                $this->upgrade1_3_0();
+            }
         }
     }
 
@@ -206,6 +212,31 @@ class DomainsPlugin extends Plugin
 
             // Put the Domain Manager nav items in the appropriate spot
             $this->reorderNavigationItems($company->id);
+        }
+    }
+    
+    /**
+     * Update to v1.3.0
+     */
+    private function upgrade1_3_0()
+    {
+        Loader::loadModels($this, ['Companies', 'PackageOptions', 'PackageOptionGroups']);
+        $companies = $this->Companies->getAll();
+        
+        // Remove the epp_code config option groups
+        foreach ($companies as $company) {
+            $setting = $this->Companies->getSetting($company->id, 'domains_epp_code_option_group');
+            if ($setting) {
+                // Delete options
+                $package_options = $this->PackageOptionGroups->getAllOptions($setting->value);
+                foreach ($package_options ?? [] as $package_option) {
+                    $this->PackageOptions->delete($package_option->id);
+                }
+                
+                // Delete option group
+                $this->PackageOptionGroups->delete($setting->value);
+                $this->Companies->unsetSetting($company->id, $setting->key);
+            }
         }
     }
 
@@ -326,7 +357,11 @@ class DomainsPlugin extends Plugin
         foreach ($companies as $company) {
             $company_domains_package_group = $this->Companies->getSetting($company->id, 'domains_package_group');
 
-            if ($company_domains_package_group->value == $domains_package_group->value && $company->id != $company_id) {
+            if ($domains_package_group
+                && $company_domains_package_group
+                && $company_domains_package_group->value == $domains_package_group->value
+                && $company->id != $company_id
+            ) {
                 // A collision was found, unset the domains_package_group setting for the current company
                 $this->Companies->unsetSetting($company_id, 'domains_package_group');
                 break;
