@@ -11,9 +11,13 @@ use Blesta\Core\Util\Input\Fields\Html as FieldsHtml;
 class DomainsTlds extends DomainsModel
 {
     /**
-     * @var array A list of potential features
+     * @var array A list of config option controlled potential features
      */
-    private $features = ['dns_management', 'email_forwarding', 'id_protection', 'epp_code'];
+    private $config_option_features = ['dns_management', 'email_forwarding', 'id_protection'];
+    /**
+     * @var array A list of package meta controlled potential features
+     */
+    private $package_meta_features = ['epp_code'];
 
     /**
      * Append features to the TLD and marks them based on which configurable option groups are assigned to the package
@@ -40,9 +44,18 @@ class DomainsTlds extends DomainsModel
         );
 
         // Assign a feature if the TLD package is assigned the correct option_group
-        foreach ($this->features as $feature) {
+        foreach ($this->config_option_features as $feature) {
             $option_group_id = $company_settings['domains_' . $feature . '_option_group'] ?? null;
             $tld->{$feature} = (array_key_exists($option_group_id, $package_option_groups) ? '1' : '0');
+        }
+        
+        // Assign a feature if the TLD package is assigned the correct meta data
+        foreach ($this->package_meta_features as $feature) {
+            $meta_data = $this->Record->select()->from('package_meta')
+                ->where('package_id', '=', $tld->package_id)
+                ->where('key', '=', $feature)
+                ->fetch();
+            $tld->{$feature} = $meta_data->value ?? '0';
         }
 
         return $tld;
@@ -258,8 +271,8 @@ class DomainsTlds extends DomainsModel
                 }
             }
 
-            // Set the package configurable options
-            $this->assignConfigurableOptions($vars['package_id'], $vars);
+            // Set the package configurable options and meta data
+            $this->assignFeatures($vars['package_id'], $vars);
 
             $fields = [
                 'tld',
@@ -426,6 +439,26 @@ class DomainsTlds extends DomainsModel
             $this->Record->duplicate('package_meta.value', '=', $fields['value'])
                 ->insert('package_meta', $fields);
         }
+        
+        
+        // Set the epp_code package meta
+        $registrar = $this->ModuleManager->initModule($vars['module_id']);
+        if (($vars['epp_code'] ?? '0') == '1' && !$registrar->supportsFeature('epp_code')) {
+            $this->Input->setErrors([
+                'feature' => [
+                    'message' => Language::_('DomainsTlds.!error.feature.unsupported', true, 'epp_code')
+                ]
+            ]);
+        } else {
+            $fields = [
+                'package_id' => $package_id,
+                'key' => 'epp_code',
+                'value' => $vars['epp_code'] ?? '0',
+                'serialized' => '0'
+            ];
+            $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+                ->insert('package_meta', $fields);
+        }
 
         // Set the default module row, if any
         $module = $this->ModuleManager->get($vars['module_id']);
@@ -506,7 +539,7 @@ class DomainsTlds extends DomainsModel
                     );
 
                     $registrar = $this->ModuleManager->initModule($vars['module_id']);
-                    foreach ($this->features as $feature) {
+                    foreach ($this->config_option_features as $feature) {
                         $setting = $company_settings['domains_' . $feature . '_option_group'] ?? null;
 
                         if ($setting && !$registrar->supportsFeature($feature)) {
@@ -574,6 +607,7 @@ class DomainsTlds extends DomainsModel
                 $fields['meta']['tlds'] = [$vars['tld']];
             }
 
+            // Unset empty fields
             foreach ($fields as $key => $value) {
                 if (is_null($value)) {
                     unset($fields[$key]);
@@ -588,8 +622,8 @@ class DomainsTlds extends DomainsModel
                 return;
             }
 
-            // Update configurable options
-            $this->assignConfigurableOptions($package->id, $vars);
+            // Update configurable options and meta data
+            $this->assignFeatures($package->id, $vars);
 
             // Update TLD
             $fields = ['tld', 'package_id'];
@@ -1001,7 +1035,7 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
-     * Assigns the configurable options group to the given package
+     * Assigns feature configurable options groups to the given package
      *
      * @param int $package_id The ID of the package to assign the configurable options
      * @param array $vars An array of input data including:
@@ -1012,7 +1046,7 @@ class DomainsTlds extends DomainsModel
      *  - id_protection Whether to include ID protection for this TLD
      *  - epp_code Whether to include EPP Code for this TLD
      */
-    private function assignConfigurableOptions($package_id, array $vars)
+    private function assignFeatures($package_id, array $vars)
     {
         // Verify if the given package id belongs to a TLD
         if (!($tld = $this->getByPackage($package_id))) {
@@ -1035,8 +1069,7 @@ class DomainsTlds extends DomainsModel
         );
 
         // Update configurable options
-        foreach ($this->features as $option) {
-
+        foreach ($this->config_option_features as $option) {
             if (isset($company_settings['domains_' . $option . '_option_group'])) {
                 $option_group_id = $company_settings['domains_' . $option . '_option_group'];
 
@@ -1064,6 +1097,28 @@ class DomainsTlds extends DomainsModel
                             ->delete();
                     }
                 }
+            }
+        }
+
+        // Update package meta
+        foreach ($this->package_meta_features as $feature) {
+            if (($vars[$feature] ?? '0') == '1' && !$registrar->supportsFeature($feature)) {
+                $this->Input->setErrors([
+                    'feature' => [
+                        'message' => Language::_('DomainsTlds.!error.feature.unsupported', true, $feature)
+                    ]
+                ]);
+                continue;
+            } else {
+                // Set the package meta
+                $fields = [
+                    'package_id' => $package_id,
+                    'key' => $feature,
+                    'value' => $vars[$feature],
+                    'serialized' => '0'
+                ];
+                $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+                    ->insert('package_meta', $fields);
             }
         }
     }
@@ -1296,7 +1351,7 @@ class DomainsTlds extends DomainsModel
      */
     public function getFeatures()
     {
-        return $this->features;
+        return array_merge($this->config_option_features, $this->package_meta_features);
     }
 
     /**
