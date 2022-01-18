@@ -474,6 +474,8 @@
         $('#admin_domains_tlds a.bulk_tld').click(function(event) {
             event.preventDefault();
 
+            $(this).prop('disabled', true);
+            $(this).attr('disabled', 'disabled');
             $(this).blestaRequest(
                 "POST",
                 $(this).attr('href'),
@@ -485,6 +487,9 @@
                         $('.common_box').parent().find('.error_section').remove();
                         $('.common_box').parent().prepend(tlds.message);
                     }
+                    
+                    $(this).prop('disabled', false);
+                    $(this).removeAttr('disabled');
                 },
                 null,
                 {dataType: 'json'}
