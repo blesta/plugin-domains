@@ -1108,8 +1108,7 @@ class DomainsTlds extends DomainsModel
                         'message' => Language::_('DomainsTlds.!error.feature.unsupported', true, $feature)
                     ]
                 ]);
-                continue;
-            } else {
+            } elseif (isset($vars[$feature])) {
                 // Set the package meta
                 $fields = [
                     'package_id' => $package_id,
