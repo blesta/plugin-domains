@@ -125,10 +125,11 @@ class TldSync
             return null;
         }
 
-        $final_price = number_format($price * (($markup / 100.00) + 1), 4, '.', '') + ((float) $rounding > 0 ? 1 : 0);
-
+        $final_price = number_format($price * (($markup / 100.00) + 1), 4, '.', '');
         if (!is_null($rounding) && is_numeric($rounding)) {
-            $final_price = floor($final_price) + (float) $rounding;
+            $subtracted_rounding_price = $final_price - (float) $rounding;
+            $floored_price = floor($subtracted_rounding_price);
+            $final_price = $floored_price + (float) $rounding + ($subtracted_rounding_price == $floored_price ? 0 : 1);
         }
 
         return $final_price;
