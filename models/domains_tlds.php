@@ -1106,13 +1106,12 @@ class DomainsTlds extends DomainsModel
                         'message' => Language::_('DomainsTlds.!error.feature.unsupported', true, $feature)
                     ]
                 ]);
-                continue;
             } else {
                 // Set the package meta
                 $fields = [
                     'package_id' => $package_id,
                     'key' => $feature,
-                    'value' => $vars[$feature],
+                    'value' => $vars[$feature] ?? null,
                     'serialized' => '0'
                 ];
                 $this->Record->duplicate('package_meta.value', '=', $fields['value'])
