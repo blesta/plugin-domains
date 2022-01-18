@@ -369,7 +369,6 @@ class AdminDomains extends DomainsController
                 'domains_dns_management_option_group',
                 'domains_email_forwarding_option_group',
                 'domains_id_protection_option_group',
-                'domains_epp_code_option_group',
                 'domains_first_reminder_days_before',
                 'domains_second_reminder_days_before',
                 'domains_expiration_notice_days_after',

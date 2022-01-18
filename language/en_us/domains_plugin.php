@@ -48,8 +48,6 @@ $lang['DomainsPlugin.dns_management.name'] = 'DNS Management';
 $lang['DomainsPlugin.dns_management.description'] = 'DNS Management';
 $lang['DomainsPlugin.id_protection.name'] = 'ID Protection';
 $lang['DomainsPlugin.id_protection.description'] = 'ID Protection';
-$lang['DomainsPlugin.epp_code.name'] = 'EPP Code';
-$lang['DomainsPlugin.epp_code.description'] = 'EPP Code';
 $lang['DomainsPlugin.enabled'] = 'Enabled';
 
 // Staff Widget
