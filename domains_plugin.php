@@ -218,7 +218,7 @@ class DomainsPlugin extends Plugin
     private function upgrade1_3_0()
     {
         Loader::loadModels($this, ['CronTasks', 'Companies', 'PackageOptions', 'PackageOptionGroups']);
-        
+
         // Add new cron task to automatically synchronize TLDs
         $cron_tasks = $this->getCronTasks();
         $task = null;
@@ -231,7 +231,7 @@ class DomainsPlugin extends Plugin
         if ($task) {
             $this->addCronTasks([$task]);
         }
-      
+
         // Remove the epp_code config option groups
         $companies = $this->Companies->getAll();
         foreach ($companies as $company) {
@@ -242,7 +242,7 @@ class DomainsPlugin extends Plugin
                 foreach ($package_options ?? [] as $package_option) {
                     $this->PackageOptions->delete($package_option->id);
                 }
-                
+
                 // Delete option group
                 $this->PackageOptionGroups->delete($setting->value);
                 $this->Companies->unsetSetting($company->id, $setting->key);
