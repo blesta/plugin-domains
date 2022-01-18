@@ -98,11 +98,6 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_id_protection_option_group');?></div></span>
                         <?php $this->Form->fieldSelect('domains_id_protection_option_group', ($package_option_groups ?? null), (isset($vars['domains_id_protection_option_group']) ? $vars['domains_id_protection_option_group'] : null), ['id' => 'id_protection_option_group', 'class' => 'block']); ?>
                     </li>
-                    <li>
-                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_epp_code_option_group', true), 'epp_code_option_group', ['class' => 'inline']); ?>
-                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_epp_code_option_group');?></div></span>
-                        <?php $this->Form->fieldSelect('domains_epp_code_option_group', ($package_option_groups ?? null), (isset($vars['domains_epp_code_option_group']) ? $vars['domains_epp_code_option_group'] : null), ['id' => 'epp_code_option_group', 'class' => 'block']); ?>
-                    </li>
                 </ul>
             </div>
         </div>
