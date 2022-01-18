@@ -67,6 +67,7 @@ class DomainsTlds extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - tld The TLD
+     *  - tlds A list of TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @param int $page The page number of results to fetch
@@ -93,6 +94,7 @@ class DomainsTlds extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - tld The TLD
+     *  - tlds A list of TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @return int The total number of TLDs for the given filters
@@ -108,6 +110,7 @@ class DomainsTlds extends DomainsModel
      * @param array $filters A list of filters for the query
      *
      *  - tld The TLD
+     *  - tlds A list of TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @param array $order A key/value pair array of fields to order the results by
@@ -841,8 +844,7 @@ class DomainsTlds extends DomainsModel
         $enabled_pricings = 0;
         for ($i = 1; $i <= 10; $i++) {
             foreach ($currencies as $currency) {
-                $pricings[$i][$currency]['enabled'] =
-                    isset($pricings[$i][$currency]['enabled']) ? $pricings[$i][$currency]['enabled'] : null;
+                $pricings[$i][$currency]['enabled'] = $pricings[$i][$currency]['enabled'] ?? null;
 
                 if ($pricings[$i][$currency]['enabled']) {
                     $enabled_pricings++;
@@ -1297,19 +1299,25 @@ class DomainsTlds extends DomainsModel
      *
      * @param array $filters A list of filters for the query
      *
-     *  - tld The TLD
+     *  - tld The TLD to fetch
+     *  - tlds A list of TLDs to fetch
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      * @return Record A partially built query
      */
     private function getTlds(array $filters = [])
     {
-        $this->Record->select(['domains_tlds.*'])->
+        $this->Record->select(['domains_tlds.*', 'packages.module_id'])->
             from('domains_tlds')->
+            leftJoin('packages', 'packages.id', '=', 'domains_tlds.package_id', false)->
             leftJoin('package_group', 'package_group.package_id', '=', 'domains_tlds.package_id', false);
 
         if (isset($filters['tld'])) {
             $this->Record->where('domains_tlds.tld', '=', $filters['tld']);
+        }
+
+        if (isset($filters['tlds'])) {
+            $this->Record->where('domains_tlds.tld', 'in', $filters['tlds']);
         }
 
         if (isset($filters['company_id'])) {
@@ -1343,6 +1351,57 @@ class DomainsTlds extends DomainsModel
     public function getFeatures()
     {
         return array_merge($this->config_option_features, $this->package_meta_features);
+    }
+
+    /**
+     * Returns the plugin company settings
+     *
+     * @param int $company_id The ID of the company to fetch the plugin settings
+     * @return array An array containing all the Domains plugin company settings
+     */
+    public function getDomainsCompanySettings($company_id = null)
+    {
+        Loader::loadModels($this, ['Companies']);
+        Loader::loadHelpers($this, ['Form']);
+
+        // Get company settings
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+        $company_settings = $this->Form->collapseObjectArray(
+            $this->Companies->getSettings($company_id),
+            'value',
+            'key'
+        );
+
+        $domains_settings = [];
+        $accepted_settings = [
+            'domains_spotlight_tlds',
+            'domains_dns_management_option_group',
+            'domains_email_forwarding_option_group',
+            'domains_id_protection_option_group',
+            'domains_epp_code_option_group',
+            'domains_first_reminder_days_before',
+            'domains_second_reminder_days_before',
+            'domains_expiration_notice_days_after',
+            'domains_taxable',
+            'domains_sync_price_markup',
+            'domains_sync_renewal_markup',
+            'domains_sync_transfer_markup',
+            'domains_sync_last_execution',
+            'domains_enable_rounding',
+            'domains_markup_rounding',
+            'domains_automatic_sync',
+            'domains_sync_frequency',
+            'domains_package_group',
+            'domains_tld_packages'
+        ];
+
+        foreach ($company_settings as $key => $setting) {
+            if (in_array($key, $accepted_settings)) {
+                $domains_settings[$key] = $setting;
+            }
+        }
+
+        return $domains_settings;
     }
 
     /**

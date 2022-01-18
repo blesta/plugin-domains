@@ -143,6 +143,7 @@ class AdminDomains extends DomainsController
         $this->set('sort', $alt_sort ? $alt_sort : $sort);
         $this->set('order', $order);
         $this->set('negate_order', ($order == 'asc' ? 'desc' : 'asc'));
+
         // Overwrite default pagination settings
         $settings = array_merge(
             Configure::get('Blesta.pagination'),
@@ -347,14 +348,21 @@ class AdminDomains extends DomainsController
      */
     public function configuration()
     {
-        $this->uses(
-            ['Companies', 'EmailGroups', 'PackageGroups', 'PackageOptionGroups', 'Domains.DomainsTlds']
-        );
+        $this->uses([
+            'Companies',
+            'EmailGroups',
+            'PackageGroups',
+            'PackageOptionGroups',
+            'CronTasks',
+            'Domains.DomainsTlds'
+        ]);
+
         $company_id = Configure::get('Blesta.company_id');
         $vars = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
         $vars['domains_spotlight_tlds'] = isset($vars['domains_spotlight_tlds'])
             ? json_decode($vars['domains_spotlight_tlds'], true)
             : [];
+
         if (!empty($this->post)) {
             $accepted_settings = [
                 'domains_spotlight_tlds',
@@ -364,13 +372,26 @@ class AdminDomains extends DomainsController
                 'domains_first_reminder_days_before',
                 'domains_second_reminder_days_before',
                 'domains_expiration_notice_days_after',
-                'domains_taxable'
+                'domains_taxable',
+                'domains_sync_price_markup',
+                'domains_sync_renewal_markup',
+                'domains_sync_transfer_markup',
+                'domains_enable_rounding',
+                'domains_markup_rounding',
+                'domains_automatic_sync',
+                'domains_sync_frequency',
             ];
             if (!isset($this->post['domains_spotlight_tlds'])) {
                 $this->post['domains_spotlight_tlds'] = [];
             }
             if (!isset($this->post['domains_taxable'])) {
                 $this->post['domains_taxable'] = '0';
+            }
+            if (!isset($this->post['domains_enable_rounding'])) {
+                $this->post['domains_enable_rounding'] = '0';
+            }
+            if (!isset($this->post['domains_automatic_sync'])) {
+                $this->post['domains_automatic_sync'] = '0';
             }
             $this->post['domains_spotlight_tlds'] = json_encode($this->post['domains_spotlight_tlds']);
             $this->Companies->setSettings(
@@ -382,13 +403,29 @@ class AdminDomains extends DomainsController
             if (isset($this->post['domains_taxable'])) {
                 $this->DomainsTlds->updateTax($this->post['domains_taxable']);
             }
-
-            $this->flashMessage(
-                'message',
-                Language::_('AdminDomains.!success.configuration_updated', true),
-                null,
-                false
+            
+            // Update cron task enabled
+            $cron = $this->CronTasks->getTaskRunByKey('domain_tld_synchronization', 'domains');
+            $this->CronTasks->editTaskRun(
+                $cron->task_run_id,
+                [
+                    'interval' => $cron->interval,
+                    'enabled' => $this->post['domains_automatic_sync']
+                ]
             );
+
+            // Set error/success messages
+            if (($errors = $this->CronTasks->errors())) {
+                $this->set('vars', (object) $this->post);
+                $this->flashMessage('error', $errors);
+            } else {
+                $this->flashMessage(
+                    'message',
+                    Language::_('AdminDomains.!success.configuration_updated', true),
+                    null,
+                    false
+                );
+            }
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configuration/');
         }
 
@@ -408,9 +445,24 @@ class AdminDomains extends DomainsController
         $this->set('first_reminder_days', $this->getDays(26, 35));
         $this->set('second_reminder_days', $this->getDays(4, 10));
         $this->set('expiration_notice_days', $this->getDays(1, 5));
+        $this->set('sync_days', $this->getDays(1, 30));
+        $this->set('rounding_options', $this->getRoundingOptions());
         $this->set('first_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_1'));
         $this->set('second_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_2'));
         $this->set('expiration_notice_template', $this->EmailGroups->getByAction('Domains.domain_expiration'));
+    }
+
+    /**
+     * Get a list of rounding options
+     */
+    private function getRoundingOptions()
+    {
+        return [
+            '.00' => '.00', '.10' => '.10', '.20' => '.20', '.30' => '.30',
+            '.40' => '.40', '.50' => '.50', '.60' => '.60', '.70' => '.70',
+            '.80' => '.80', '.90' => '.90', '.95' => '.95', '.99' => '.99',
+            '' => Language::_('AdminDomains.getroundingoptions.custom', true)
+        ];
     }
 
     /**
@@ -419,7 +471,7 @@ class AdminDomains extends DomainsController
     public function importPackages()
     {
         $this->uses(['ModuleManager', 'Companies', 'Domains.DomainsTlds', 'Packages', 'PackageGroups', 'Services']);
-        $company_settings = $this->getDomainsCompanySettings();
+        $company_settings = $this->DomainsTlds->getDomainsCompanySettings();
 
         if (!empty($this->post)) {
             $this->Packages->begin();
@@ -843,7 +895,7 @@ class AdminDomains extends DomainsController
         $this->uses(['Domains.DomainsTlds', 'PackageOptions', 'PackageOptionGroups']);
 
         // Get plugin company settings
-        $plugin_settings = $this->getDomainsCompanySettings();
+        $plugin_settings = $this->DomainsTlds->getDomainsCompanySettings();
 
         // Get configurable options
         $tld_features = $this->DomainsTlds->getFeatures();
@@ -1150,6 +1202,15 @@ class AdminDomains extends DomainsController
                 ]
             ],
             [
+                'name' => Language::_('AdminDomains.configuration.tab_tld_sync', true),
+                'current' => (($tab ?? 'general') == 'tld_sync'),
+                'attributes' => [
+                    'class' => 'tld_sync',
+                    'href' => $ajax ? '#' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync'),
+                    'id' => 'tld_sync_tab'
+                ]
+            ],
+            [
                 'name' => Language::_('AdminDomains.configuration.tab_importpackages', true),
                 'current' => (($tab ?? 'general') == 'importpackages'),
                 'attributes' => [
@@ -1168,43 +1229,6 @@ class AdminDomains extends DomainsController
                 ]
             ]
         ];
-    }
-
-    /**
-     * Gets the Domains plugin company settings
-     *
-     * @return array An array containing all the Domains plugin company settings
-     */
-    private function getDomainsCompanySettings()
-    {
-        $this->uses(['Companies']);
-        $this->helpers(['Form']);
-
-        // Get company settings
-        $company_id = Configure::get('Blesta.company_id');
-        $company_settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
-
-        $domains_settings = [];
-        $accepted_settings = [
-            'domains_spotlight_tlds',
-            'domains_dns_management_option_group',
-            'domains_email_forwarding_option_group',
-            'domains_id_protection_option_group',
-            'domains_first_reminder_days_before',
-            'domains_second_reminder_days_before',
-            'domains_expiration_notice_days_after',
-            'domains_taxable',
-            'domains_package_group',
-            'domains_tld_packages'
-        ];
-
-        foreach ($company_settings as $key => $setting) {
-            if (in_array($key, $accepted_settings)) {
-                $domains_settings[$key] = $setting;
-            }
-        }
-
-        return $domains_settings;
     }
 
     /**
@@ -1274,7 +1298,6 @@ class AdminDomains extends DomainsController
 
             $this->DomainsTlds->add($params);
 
-
             // Try to automatically update the package meta
             $update_meta = false;
             $query_string = '';
@@ -1294,22 +1317,33 @@ class AdminDomains extends DomainsController
 
         // Process TLD bulk actions
         if (!empty($this->post['tlds_bulk'])) {
-            $action = $this->post['tlds_bulk']['action'] ?? null;
-
-            if (!empty($this->post['tlds_bulk']['tlds']) && is_array($this->post['tlds_bulk']['tlds'])) {
-                foreach ($this->post['tlds_bulk']['tlds'] as $tld) {
-                    if ($action == 'enable') {
-                        $this->DomainsTlds->enable($tld);
-                    } elseif ($action == 'disable') {
-                        $this->DomainsTlds->disable($tld);
-                    }
-                }
-            }
+            $bulk_data = $this->post['tlds_bulk'];
+            $action = $bulk_data['action'] ?? null;
 
             if (!array_key_exists($action, $this->getTldActions())) {
                 $this->flashMessage('error', Language::_('AdminDomains.!error.tlds_bulk[action].valid', true));
-            } else {
-                $this->flashMessage('message', Language::_('AdminDomains.!success.tlds_updated', true));
+            } else if (!empty($bulk_data['tlds']) && is_array($bulk_data['tlds'])) {
+                switch ($action) {
+                    case 'change_status':
+                        $status = $bulk_data['status'] ?? null;
+                        foreach ($bulk_data['tlds'] as $tld) {
+                            if ($status == 'enabled') {
+                                $this->DomainsTlds->enable($tld);
+                            } elseif ($status == 'disabled') {
+                                $this->DomainsTlds->disable($tld);
+                            }
+                        }
+
+                        $this->flashMessage('message', Language::_('AdminDomains.!success.change_status', true));
+                        break;
+                    case 'tld_sync':
+                        Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
+                        $sync_utility = new TldSync();
+                        $sync_utility->synchronizePrices($bulk_data['tlds']);
+
+                        $this->flashMessage('message', Language::_('AdminDomains.!success.tld_sync', true));
+                        break;
+                }
             }
 
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
@@ -1336,13 +1370,11 @@ class AdminDomains extends DomainsController
         $select = ['' => Language::_('AppController.select.please', true)];
         $modules = $select + $this->Form->collapseObjectArray($modules, 'name', 'id');
 
-        // Fetch TLD actions
-        $tld_actions = $this->getTldActions();
-
         $this->set('added_tld', $this->get['added_tld'] ?? null);
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
-        $this->set('tld_actions', $tld_actions);
+        $this->set('tld_actions', $this->getTldActions());
+        $this->set('tld_statuses', $this->getTldStatuses());
 
         // Include WYSIWYG
         $this->Javascript->setFile('blesta/ckeditor/build/ckeditor.js', 'head', VENDORWEBDIR);
@@ -1358,8 +1390,21 @@ class AdminDomains extends DomainsController
     private function getTldActions()
     {
         return [
-            'enable' => Language::_('AdminDomains.getTldActions.option_enable', true),
-            'disable' => Language::_('AdminDomains.getTldActions.option_disable', true)
+            'change_status' => Language::_('AdminDomains.getTldActions.option_change_status', true),
+            'tld_sync' => Language::_('AdminDomains.getTldActions.option_tld_sync', true)
+        ];
+    }
+
+    /**
+     * Gets a list of the available bulk actions for TLDs
+     *
+     * @return array An array containing the available bulk actions for TLDs
+     */
+    private function getTldStatuses()
+    {
+        return [
+            'enabled' => Language::_('AdminDomains.getTldStatuses.option_enabled', true),
+            'disabled' => Language::_('AdminDomains.getTldStatuses.option_disabled', true)
         ];
     }
 
