@@ -271,9 +271,6 @@ class DomainsTlds extends DomainsModel
                 }
             }
 
-            // Set the package configurable options and meta data
-            $this->assignFeatures($vars['package_id'], $vars);
-
             $fields = [
                 'tld',
                 'company_id',
@@ -284,6 +281,9 @@ class DomainsTlds extends DomainsModel
                 'domains_packages',
                 ['package_id' => $vars['package_id'], 'tld_id' => $this->lastInsertId()]
             );
+            
+            // Set the package configurable options and meta data
+            $this->assignFeatures($vars['package_id'], $vars);
 
             return $vars;
         }
