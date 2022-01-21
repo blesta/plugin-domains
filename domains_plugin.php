@@ -846,12 +846,12 @@ class DomainsPlugin extends Plugin
         if (
             (
                 is_null($last_execution)
-                || $this->Date->modify(
+                || strtotime($this->Date->modify(
                     date($last_execution),
                     '+' . ((int) $settings['domains_sync_frequency'] ?? 1) . ' days',
                     'Y-m-d',
                     Configure::get('Blesta.company_timezone')
-                ) == $this->Date->format('Y-m-d', date('c'))
+                )) <= strtotime($this->Date->format('Y-m-d', date('c')))
             )
             && !empty($settings['domains_sync_frequency'])
         ) {
