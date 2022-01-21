@@ -1057,7 +1057,7 @@ class AdminDomains extends DomainsController
                 'editable' => $option->editable,
                 'values' => $value_vars,
                 'groups' => [],
-                'hidden' => true
+                'hidden' => 1
             ];
 
             foreach ($option->groups as $group) {

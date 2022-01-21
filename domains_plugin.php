@@ -158,9 +158,9 @@ class DomainsPlugin extends Plugin
                 $this->upgrade1_1_0();
             }
 
-            // Upgrade to 1.2.5
+            // Upgrade to 1.4.0
             if (version_compare($current_version, '1.2.5', '<')) {
-                $this->upgrade1_2_5();
+                $this->upgrade1_4_0();
             }
         }
     }
@@ -214,9 +214,9 @@ class DomainsPlugin extends Plugin
     }
 
     /**
-     * Update to v1.2.5
+     * Update to v1.4.0
      */
-    private function upgrade1_2_5()
+    private function upgrade1_4_0()
     {
         Loader::loadModels($this, ['Companies', 'PackageOptionGroups']);
         Loader::loadComponents($this, ['Record']);
@@ -237,19 +237,6 @@ class DomainsPlugin extends Plugin
             }
 
             if (($setting = $this->Companies->getSetting($company->id, 'domains_email_forwarding_option_group'))) {
-                // Hide package option group
-                $this->Record->where('id', '=', $setting->value)
-                    ->update('package_option_groups', ['hidden' => true]);
-
-                // Hide package options belonging to the group
-                $package_options = $this->PackageOptionGroups->getAllOptions($setting->value, ['hidden' => true]);
-                foreach ($package_options as $package_option) {
-                    $this->Record->where('id', '=', $package_option->id)
-                        ->update('package_options', ['hidden' => true]);
-                }
-            }
-
-            if (($setting = $this->Companies->getSetting($company->id, 'domains_epp_code_option_group'))) {
                 // Hide package option group
                 $this->Record->where('id', '=', $setting->value)
                     ->update('package_option_groups', ['hidden' => true]);
@@ -549,7 +536,7 @@ class DomainsPlugin extends Plugin
                 'company_id' => $company_id,
                 'name' => Language::_('DomainsPlugin.' . $tld_addon . '.name', true),
                 'description' => Language::_('DomainsPlugin.' . $tld_addon . '.description', true),
-                'hidden' => true
+                'hidden' => 1
             ];
             // Add the config option group
             $option_group_id = $this->PackageOptionGroups->add($option_group_params);
@@ -577,7 +564,7 @@ class DomainsPlugin extends Plugin
                 ],
                 'pricing' => [],
                 'groups' => [$option_group_id],
-                'hidden' => true
+                'hidden' => 1
             ];
 
             // Add a pricing for terms 1-10 years for each currency
