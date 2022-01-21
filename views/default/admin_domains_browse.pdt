@@ -29,7 +29,7 @@ if (!empty($domains)) {
             <?php
             if (!in_array($this->Html->ifSet($status), ['in_review', 'canceled'])) {
             ?>
-            <td class="icon"><?php $this->Form->fieldCheckbox('service_ids[]', 'all', ($this->Html->ifSet($vars->service_ids[0]) == 'all'), ['class' => 'actions']);?></td>
+            <td class="icon"><?php $this->Form->fieldCheckbox('service_ids[]', 'all', (($vars->service_ids[0] ?? '') == 'all'), ['class' => 'actions']);?></td>
             <?php
             }
             ?>

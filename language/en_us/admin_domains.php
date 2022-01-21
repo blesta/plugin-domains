@@ -8,6 +8,8 @@ $lang['AdminDomains.!success.tld_enabled'] = 'The TLD was successfully enabled!'
 $lang['AdminDomains.!success.tld_added'] = 'The TLD was successfully added!';
 $lang['AdminDomains.!success.tld_updated'] = 'The TLD was successfully updated!';
 $lang['AdminDomains.!success.tlds_updated'] = 'The TLDs were successfully updated!';
+$lang['AdminDomains.!success.tld_sync'] = 'The TLD prices were successfully synced!';
+$lang['AdminDomains.!success.change_status'] = 'The TLD statuses were successfully updated!';
 $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
 $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
 $lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
@@ -67,21 +69,32 @@ $lang['AdminDomains.configuration.boxtitle'] = 'Configuration';
 $lang['AdminDomains.configuration.tab_general'] = 'General';
 $lang['AdminDomains.configuration.tab_notifications'] = 'Notifications';
 $lang['AdminDomains.configuration.tab_advanced'] = 'Advanced';
+$lang['AdminDomains.configuration.tab_tld_sync'] = 'TLD Sync';
 $lang['AdminDomains.configuration.tab_importpackages'] = 'Import Packages';
 $lang['AdminDomains.configuration.tab_configurableoptions'] = 'Configurable Options';
 
 $lang['AdminDomains.configuration.heading_package_options'] = 'Package Options';
 $lang['AdminDomains.configuration.heading_taxes'] = 'Taxes';
+$lang['AdminDomains.configuration.heading_markup'] = 'Markup';
+$lang['AdminDomains.configuration.heading_automation'] = 'Automation';
 
 $lang['AdminDomains.configuration.field_dns_management_option_group'] = 'DNS Management Option Group';
 $lang['AdminDomains.configuration.field_email_forwarding_option_group'] = 'Email Forwarding Option Group';
 $lang['AdminDomains.configuration.field_id_protection_option_group'] = 'ID Protection Option Group';
-$lang['AdminDomains.configuration.field_epp_code_option_group'] = 'EPP Code Option Group';
 $lang['AdminDomains.configuration.field_first_reminder_days_before'] = '1st Renewal Reminder Days Before';
 $lang['AdminDomains.configuration.field_second_reminder_days_before'] = '2nd Renewal Reminder Days Before';
 $lang['AdminDomains.configuration.field_expiration_notice_days_after'] = 'Expiration Notice Days After';
 $lang['AdminDomains.configuration.field_spotlight_tlds'] = 'Spotlight TLDs';
 $lang['AdminDomains.configuration.field_taxable'] = 'Enable Tax for Domains';
+$lang['AdminDomains.configuration.field_sync_price_markup'] = 'Price Markup (%)';
+$lang['AdminDomains.configuration.field_sync_renewal_markup'] = 'Renewal Price Markup (%)';
+$lang['AdminDomains.configuration.field_sync_transfer_markup'] = 'Transfer Price Markup (%)';
+$lang['AdminDomains.configuration.field_enable_rounding'] = 'Enable Rounding';
+$lang['AdminDomains.configuration.field_markup_rounding'] = 'Round to Next';
+$lang['AdminDomains.configuration.field_automatic_sync'] = 'Enable Automated Synchronization';
+$lang['AdminDomains.configuration.field_sync_frequency'] = 'Sync Every';
+$lang['AdminDomains.configuration.text_manual_sync_title'] = 'Want to synchronize manually?';
+$lang['AdminDomains.configuration.text_manual_sync'] = 'To synchronize TLDs manually, visit the TLD Pricing page, use checkboxes to select the TLDs to sync, and select the Registrar Sync action.';
 $lang['AdminDomains.configuration.field_submit'] = 'Update Configuration';
 
 $lang['AdminDomains.configuration.link_template'] = 'Edit Email Template';
@@ -89,12 +102,12 @@ $lang['AdminDomains.configuration.link_template'] = 'Edit Email Template';
 $lang['AdminDomains.configuration.tooltip_dns_management_option_group'] = 'The configurable option group used to control whether a domain will have DNS management services.';
 $lang['AdminDomains.configuration.tooltip_email_forwarding_option_group'] = 'The configurable option group used to control whether a domain will have email forwarding services.';
 $lang['AdminDomains.configuration.tooltip_id_protection_option_group'] = 'The configurable option group used to control whether a domain will have ID protection services.';
-$lang['AdminDomains.configuration.tooltip_epp_code_option_group'] = 'The configurable option group used to control whether a domain will have access to the EPP Code.';
 $lang['AdminDomains.configuration.tooltip_first_reminder_days_before'] = 'Select the number of days before a domain expires to send the first renewal email (26-35 as per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_second_reminder_days_before'] = 'Select the number of days before a domain expires to send the second renewal email (4-10 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_expiration_notice_days_after'] = 'Select the number of days after a domain expires to send the expiration notice email (1-5 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that will be highlighted on order forms through the Order Plugin.';
 
+$lang['AdminDomains.getroundingoptions.custom'] = 'Custom';
 
 $lang['AdminDomains.importpackages.page_title'] = 'Domains > Configuration';
 $lang['AdminDomains.importpackages.boxtitle'] = 'Configuration';
@@ -145,6 +158,9 @@ $lang['AdminDomains.tlds.option_disable'] = 'Disable';
 $lang['AdminDomains.tlds.option_enable'] = 'Enable';
 $lang['AdminDomains.tlds.option_add'] = 'Add';
 $lang['AdminDomains.tlds.option_submit'] = 'Submit';
+$lang['AdminDomains.tlds.option_configure_sync'] = 'Configure TLD Sync';
+$lang['AdminDomains.tlds.field_action'] = 'Action';
+$lang['AdminDomains.tlds.field_status'] = 'Status';
 $lang['AdminDomains.tlds.confirm_disable'] = 'Are you sure you want to disable this TLD?';
 $lang['AdminDomains.tlds.confirm_enable'] = 'Are you sure you want to enable this TLD?';
 
@@ -154,8 +170,14 @@ $lang['AdminDomains.tlds.tooltip_id_protection'] = 'The availability of ID Prote
 $lang['AdminDomains.tlds.tooltip_epp_code'] = 'The availability of the EPP Code will depend on whether the registrar module implements such functionality and may not be available for all TLDs or registrars';
 
 
-$lang['AdminDomains.getTldActions.option_disable'] = 'Disable';
-$lang['AdminDomains.getTldActions.option_enable'] = 'Enable';
+// Get TLD Actions
+$lang['AdminDomains.getTldActions.option_change_status'] = 'Change Status';
+$lang['AdminDomains.getTldActions.option_tld_sync'] = 'Registrar Price Sync';
+
+
+// Get TLD Statuses
+$lang['AdminDomains.getTldStatuses.option_disabled'] = 'Disabled';
+$lang['AdminDomains.getTldStatuses.option_enabled'] = 'Enabled';
 
 
 $lang['AdminDomains.pricing.boxtitle_edit_tld'] = 'Update TLD %1$s'; // %1$s is the TLD

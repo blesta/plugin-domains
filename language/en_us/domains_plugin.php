@@ -12,6 +12,8 @@ $lang['DomainsPlugin.!error.module_id.exists'] = 'Invalid module ID.';
 // Cron Tasks
 $lang['DomainsPlugin.getCronTasks.domain_synchronization'] = 'Domain Synchronization';
 $lang['DomainsPlugin.getCronTasks.domain_synchronization_description'] = 'Synchronize domain services with the expiry date from their registrar module';
+$lang['DomainsPlugin.getCronTasks.domain_tld_synchronization'] = 'Domain TLD Synchronization';
+$lang['DomainsPlugin.getCronTasks.domain_tld_synchronization_description'] = 'Synchronize packages with the TLD pricing from their registrar module';
 $lang['DomainsPlugin.getCronTasks.domain_term_change'] = 'Change Domain Term';
 $lang['DomainsPlugin.getCronTasks.domain_term_change_description'] = 'Change services with a term longer than a year to a yearly term';
 $lang['DomainsPlugin.getCronTasks.domain_renewal_reminders'] = 'Send Renewal Reminders';
@@ -46,8 +48,6 @@ $lang['DomainsPlugin.dns_management.name'] = 'DNS Management';
 $lang['DomainsPlugin.dns_management.description'] = 'DNS Management';
 $lang['DomainsPlugin.id_protection.name'] = 'ID Protection';
 $lang['DomainsPlugin.id_protection.description'] = 'ID Protection';
-$lang['DomainsPlugin.epp_code.name'] = 'EPP Code';
-$lang['DomainsPlugin.epp_code.description'] = 'EPP Code';
 $lang['DomainsPlugin.enabled'] = 'Enabled';
 
 // Staff Widget

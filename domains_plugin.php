@@ -158,8 +158,13 @@ class DomainsPlugin extends Plugin
                 $this->upgrade1_1_0();
             }
 
+            // Upgrade to 1.3.0
+            if (version_compare($current_version, '1.3.0', '<')) {
+                $this->upgrade1_3_0();
+            }
+
             // Upgrade to 1.4.0
-            if (version_compare($current_version, '1.2.5', '<')) {
+            if (version_compare($current_version, '1.4.0', '<')) {
                 $this->upgrade1_4_0();
             }
         }
@@ -205,11 +210,48 @@ class DomainsPlugin extends Plugin
                 $package_ids = array_values($this->Form->collapseObjectArray($tlds, 'package_id', 'id'));
 
                 $this->Packages->orderPackages($setting->value, $package_ids);
-
             }
 
             // Put the Domain Manager nav items in the appropriate spot
             $this->reorderNavigationItems($company->id);
+        }
+    }
+    
+    /**
+     * Update to v1.3.0
+     */
+    private function upgrade1_3_0()
+    {
+        Loader::loadModels($this, ['CronTasks', 'Companies', 'PackageOptions', 'PackageOptionGroups']);
+
+        // Add new cron task to automatically synchronize TLDs
+        $cron_tasks = $this->getCronTasks();
+        $task = null;
+        foreach ($cron_tasks as $task) {
+            if ($task['key'] == 'domain_tld_synchronization') {
+                break;
+            }
+        }
+
+        if ($task) {
+            $this->addCronTasks([$task]);
+        }
+
+        // Remove the epp_code config option groups
+        $companies = $this->Companies->getAll();
+        foreach ($companies as $company) {
+            $setting = $this->Companies->getSetting($company->id, 'domains_epp_code_option_group');
+            if ($setting) {
+                // Delete options
+                $package_options = $this->PackageOptionGroups->getAllOptions($setting->value);
+                foreach ($package_options ?? [] as $package_option) {
+                    $this->PackageOptions->delete($package_option->id);
+                }
+
+                // Delete option group
+                $this->PackageOptionGroups->delete($setting->value);
+                $this->Companies->unsetSetting($company->id, $setting->key);
+            }
         }
     }
 
@@ -381,7 +423,11 @@ class DomainsPlugin extends Plugin
         foreach ($companies as $company) {
             $company_domains_package_group = $this->Companies->getSetting($company->id, 'domains_package_group');
 
-            if ($company_domains_package_group->value == $domains_package_group->value && $company->id != $company_id) {
+            if ($domains_package_group
+                && $company_domains_package_group
+                && $company_domains_package_group->value == $domains_package_group->value
+                && $company->id != $company_id
+            ) {
                 // A collision was found, unset the domains_package_group setting for the current company
                 $this->Companies->unsetSetting($company_id, 'domains_package_group');
                 break;
@@ -520,7 +566,7 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels($this, ['PackageOptions', 'PackageOptionGroups']);
 
-        $tld_addons = ['email_forwarding', 'dns_management', 'id_protection', 'epp_code'];
+        $tld_addons = ['email_forwarding', 'dns_management', 'id_protection'];
         foreach ($tld_addons as $tld_addon) {
             $setting = $this->Companies->getSetting($company_id, 'domains_' . $tld_addon . '_option_group');
             // Skip option group creation for this tld and if there is already a group assigned to it
@@ -724,6 +770,19 @@ class DomainsPlugin extends Plugin
                 'enabled' => 1
             ],
             [
+                'key' => 'domain_tld_synchronization',
+                'task_type' => 'plugin',
+                'dir' => 'domains',
+                'name' => Language::_('DomainsPlugin.getCronTasks.domain_tld_synchronization', true),
+                'description' => Language::_(
+                    'DomainsPlugin.getCronTasks.domain_tld_synchronization_description',
+                    true
+                ),
+                'type' => 'interval',
+                'type_value' => '1440', // 60*24 1 day
+                'enabled' => 1
+            ],
+            [
                 'key' => 'domain_term_change',
                 'task_type' => 'plugin',
                 'dir' => 'domains',
@@ -760,6 +819,9 @@ class DomainsPlugin extends Plugin
         switch ($key) {
             case 'domain_synchronization':
                 $this->synchronizeDomains();
+                break;
+            case 'domain_tld_synchronization':
+                $this->synchronizeTldDomains();
                 break;
             case 'domain_term_change':
                 $this->cronDomainTermChange();
@@ -815,6 +877,63 @@ class DomainsPlugin extends Plugin
             if (strtotime($renew_date) > strtotime($service->date_renews)) {
                 $this->Services->edit($service->id, ['date_renews' => $renew_date]);
             }
+        }
+    }
+
+    /**
+     * Synchronizes all TLDs with the pricing from their registrar module
+     */
+    private function synchronizeTldDomains()
+    {
+        if (!isset($this->Form)) {
+            Loader::loadHelpers($this, ['Form']);
+        }
+        if (!isset($this->Date)) {
+            Loader::loadHelpers($this, ['Date']);
+        }
+
+        Loader::loadModels($this, ['Companies', 'Domains.DomainsTlds']);
+
+        // Get domains company settings
+        $company_id = Configure::get('Blesta.company_id');
+        $settings = $this->DomainsTlds->getDomainsCompanySettings($company_id);
+
+        // Validate if the task can run
+        $last_execution = $settings['domains_sync_last_execution'] ?? null;
+
+        if (
+            (
+                is_null($last_execution)
+                || $this->Date->modify(
+                    date($last_execution),
+                    '+' . ((int) $settings['domains_sync_frequency'] ?? 1) . ' days',
+                    'Y-m-d',
+                    Configure::get('Blesta.company_timezone')
+                ) == $this->Date->format('Y-m-d', date('c'))
+            )
+            && !empty($settings['domains_sync_frequency'])
+        ) {
+            // Get all TLDs for the current company
+            $tlds = $this->DomainsTlds->getAll(['company_id' => $company_id]);
+
+            // Build a list of the TLDs to be synchronized
+            $tld_list = [];
+            foreach ($tlds as $tld) {
+                $tld_list[] = $tld->tld;
+            }
+
+            // Load sync tool
+            Loader::load(dirname(__FILE__) . DS . 'lib' . DS . 'tld_sync.php');
+            $this->TldSync = new TldSync();
+            
+            $this->TldSync->synchronizePrices($tld_list, $company_id);
+
+            // Save last execution
+            $this->Companies->setSetting(
+                $company_id,
+                'domains_sync_last_execution',
+                $this->Companies->dateToUtc(date('c'))
+            );
         }
     }
 
