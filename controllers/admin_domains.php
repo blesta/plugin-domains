@@ -1107,7 +1107,8 @@ class AdminDomains extends DomainsController
                 'addable' => $option->addable,
                 'editable' => $option->editable,
                 'values' => $value_vars,
-                'groups' => []
+                'groups' => [],
+                'hidden' => 1
             ];
 
             foreach ($option->groups as $group) {
