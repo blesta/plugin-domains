@@ -403,7 +403,7 @@ class AdminDomains extends DomainsController
             if (isset($this->post['domains_taxable'])) {
                 $this->DomainsTlds->updateTax($this->post['domains_taxable']);
             }
-            
+
             // Update cron task enabled
             $cron = $this->CronTasks->getTaskRunByKey('domain_tld_synchronization', 'domains');
             $this->CronTasks->editTaskRun(
@@ -492,10 +492,19 @@ class AdminDomains extends DomainsController
             // Keep track of which tlds have already been imported
             $imported_tld_packages = [];
 
+            // Set unset checkboxes
+            if (!isset($this->post['overwrite_packages'])) {
+                $this->post['overwrite_packages'] = '0';
+            }
+
+            if (!isset($this->post['migrate_services'])) {
+                $this->post['migrate_services'] = '0';
+            }
+
             // Set whether to override current TLD packages with new cloned ones
-            $overwrite_packages = isset($this->post['overwrite_packages']);
+            $overwrite_packages = $this->post['overwrite_packages'] == '1';
             // Set whether to migrate services from old packages to the new TLD packages
-            $migrate_services = isset($this->post['migrate_services']);
+            $migrate_services = $this->post['migrate_services'] == '1';
 
             // Get all the registrar modules
             $installed_registrars = $this->ModuleManager->getAll(
@@ -788,12 +797,28 @@ class AdminDomains extends DomainsController
 
         // Parse description details
         foreach ($package->descriptions as $description) {
-            $package_vars['descriptions'][] = (array)$description;
+            $package_vars['descriptions'][] = [
+                'lang' => is_scalar($description->lang) ? $description->lang : 'en_us',
+                'html' => is_scalar($description->html) ? $description->html : '',
+                'text' => is_scalar($description->text) ? $description->text : '',
+            ];
         }
 
-        // Parse description details
+        // Parse email content details
+        if (empty($package->email_content)) {
+            $package->email_content = [(object)[
+                'lang' => 'en_us',
+                'html' => '',
+                'text' => '',
+            ]];
+        }
+
         foreach ($package->email_content as $email) {
-            $package_vars['email_content'][] = (array)$email;
+            $package_vars['email_content'][] = [
+                'lang' => is_scalar($email->lang) ? $email->lang : 'en_us',
+                'html' => is_scalar($email->html) ? $email->html : '',
+                'text' => is_scalar($email->text) ? $email->text : '',
+            ];
         }
 
         // Parse pricing details
