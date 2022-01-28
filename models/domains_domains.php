@@ -86,4 +86,90 @@ class DomainsDomains extends DomainsModel
 
         return $this->Services->getListCount(null, $status, false, null, $filters);
     }
+
+    /**
+     * Renews a domain name
+     *
+     * @param int $service_id The id of the service where the domain belongs
+     * @param int $years The number of years to renew the domain
+     * @return int The ID of the invoice for the domain to be renewed
+     */
+    public function renewDomain($service_id, $years = 1)
+    {
+        Loader::loadModels($this, ['Services', 'Invoices']);
+
+        // Get service
+        $service = $this->Services->get($service_id);
+        if (!$service) {
+            return;
+        }
+
+        // Determine whether invoices for this service remain unpaid
+        $unpaid_invoices = $this->Invoices->getAllWithService($service->id, $service->client_id, 'open');
+
+        // Disallow renew if the current service has not been paid
+        if (!empty($unpaid_invoices)) {
+            $errors = [
+                'error' => ['cycles' => Language::_('DomainsDomains.!error.invoices_renew_service', true)]
+            ];
+            $this->Input->setErrors($errors);
+
+            return;
+        }
+
+        // Create the invoice for these renewing services
+        $invoice_id = $this->Invoices->createRenewalFromService($service_id, $years);
+
+        if (($errors = $this->Invoices->errors())) {
+            $this->Input->setErrors($errors);
+
+            return;
+        }
+
+        return $invoice_id;
+    }
+
+    /**
+     * Updates the nameservers of a given domain name
+     *
+     * @param int $service_id The id of the service where the domain belongs
+     * @param array $nameservers A list of name servers to assign (e.g. [ns1, ns2])
+     */
+    public function updateNameservers($service_id, array $nameservers)
+    {
+        Loader::loadModels($this, ['Services', 'ModuleManager']);
+
+        // Get service
+        $service = $this->Services->get($service_id);
+        if (!$service) {
+            return false;
+        }
+
+        // Get registrar module associated to the service
+        $module_row = $this->ModuleManager->getRow($service->module_row_id ?? null);
+        $module = $this->ModuleManager->get($module_row->module_id ?? null, false, false);
+
+        if (empty($module)) {
+            return false;
+        }
+
+        // Get service domain name
+        $service_name = $this->ModuleManager->moduleRpc($module->id, 'getServiceName', [$service], $module_row->id);
+
+        // Update nameservers
+        $params = [
+            $service_name,
+            $module_row->id,
+            $nameservers
+        ];
+        $result = $this->ModuleManager->moduleRpc($module->id, 'setDomainNameservers', $params, $module_row->id);
+
+        if (($errors = $this->ModuleManager->errors())) {
+            $this->Input->setErrors($errors);
+
+            return;
+        }
+
+        return $result;
+    }
 }

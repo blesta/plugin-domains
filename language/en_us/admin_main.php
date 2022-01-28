@@ -1,6 +1,8 @@
 <?php
 // Success messages
 $lang['AdminMain.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
+$lang['AdminMain.!success.domain_renewal'] = 'The Domain has been renewed!';
+$lang['AdminMain.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 
 
 // Domains
@@ -36,7 +38,12 @@ $lang['AdminMain.index.text_never'] = 'Never';
 $lang['AdminMain.index.text_on'] = 'On';
 $lang['AdminMain.index.text_off'] = 'Off';
 $lang['AdminMain.index.change_auto_renewal'] = 'Change Auto Renewal';
+$lang['AdminMain.index.domain_renewal'] = 'Renew Domain';
+$lang['AdminMain.index.update_nameservers'] = 'Update Nameservers';
 $lang['AdminMain.index.field_actionsubmit'] = 'Submit';
+
+$lang['AdminMain.domains.action.field_years'] = 'Years';
+$lang['AdminMain.domains.action.field_nameservers'] = 'Nameservers';
 
 
 // Get filters
