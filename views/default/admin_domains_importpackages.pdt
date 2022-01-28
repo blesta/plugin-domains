@@ -41,9 +41,9 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
             </ul>
         </div>
         <div class="button_row">
-            <button class="btn btn-primary pull-right">
-                <i class="fa fa-edit"></i> <?php $this->_('AdminDomains.importpackages.field_submit');?>
-            </button>
+            <?php
+            $this->Form->fieldSubmit('save', $this->_('AdminDomains.importpackages.field_submit', true), ['class' => 'btn btn-sm btn-primary pull-right']);
+            ?>
         </div>
     </div>
     <?php
