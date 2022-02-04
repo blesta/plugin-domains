@@ -154,7 +154,7 @@ class DomainsDomains extends DomainsModel
         }
 
         // Get service domain name
-        $service_name = $this->ModuleManager->moduleRpc($module->id, 'getServiceName', [$service], $module_row->id);
+        $service_name = $this->ModuleManager->moduleRpc($module->id, 'getServiceDomain', [$service], $module_row->id);
 
         // Update nameservers
         $params = [
