@@ -40,8 +40,17 @@ class AdminMain extends DomainsController
                 $this->set('vars', (object)$this->post);
                 $this->setMessage('error', $errors, false, null, false);
             } else {
-                $term = 'AdminMain.!success.';
-                $term .= isset($this->post['action']) ? $this->post['action'] : '';
+                switch ($this->post['action']) {
+                    case 'schedule_cancellation':
+                        $term = 'AdminMain.!success.change_auto_renewal';
+                        break;
+                    case 'domain_renewal':
+                        $term = 'AdminMain.!success.domain_renewal';
+                        break;
+                    case 'update_nameservers':
+                        $term = 'AdminMain.!success.update_nameservers';
+                        break;
+                }
 
                 $this->flashMessage('message', Language::_($term, true), null, false);
                 $this->redirect($this->base_uri . 'clients/view/'. ($this->get['client_id'] ?? ($this->get[0] ?? null)));
@@ -166,7 +175,11 @@ class AdminMain extends DomainsController
      */
     public function getDomainActions()
     {
-        return ['change_auto_renewal' => Language::_('AdminMain.index.change_auto_renewal', true)];
+        return [
+            'change_auto_renewal' => Language::_('AdminMain.index.change_auto_renewal', true),
+            'domain_renewal' => Language::_('AdminMain.index.domain_renewal', true),
+            'update_nameservers' => Language::_('AdminMain.index.update_nameservers', true)
+        ];
     }
 
     /**
@@ -180,7 +193,7 @@ class AdminMain extends DomainsController
      */
     private function updateDomains(array $data)
     {
-        $this->uses(['Services']);
+        $this->uses(['Services', 'Domains.DomainsDomains']);
 
         // Require authorization to update a client's service
         if (!$this->authorized('admin_clients', 'editservice')) {
@@ -213,6 +226,24 @@ class AdminMain extends DomainsController
                     }
 
                     if (($errors = $this->Services->errors())) {
+                        break;
+                    }
+                }
+                break;
+            case 'domain_renewal':
+                foreach ($data['service_ids'] as $service_id) {
+                    $this->DomainsDomains->renewDomain($service_id, $data['years'] ?? 1);
+
+                    if (($errors = $this->DomainsDomains->errors())) {
+                        break;
+                    }
+                }
+                break;
+            case 'update_nameservers':
+                foreach ($data['service_ids'] as $service_id) {
+                    $this->DomainsDomains->updateNameservers($service_id, $data['nameservers'] ?? []);
+
+                    if (($errors = $this->DomainsDomains->errors())) {
                         break;
                     }
                 }

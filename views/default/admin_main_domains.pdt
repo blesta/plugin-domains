@@ -156,6 +156,23 @@
                     $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], isset($vars->action) ? $vars->action : null);
                     ?>
                 </div>
+                <div id="domain_renewal" class="action_section">
+                    <div class="float">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.domains.action.field_years', true), 'years', ['class' => 'inline']);
+                        $this->Form->fieldText('years', ($vars->cycles ?? 1), ['class' => 'form-control input-md']);
+                        ?>
+                    </div>
+                </div>
+                <div id="update_nameservers" class="action_section">
+                    <div class="float">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.domains.action.field_nameservers', true), 'nameservers', ['class' => 'inline']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[0] ?? ''), ['class' => 'form-control input-md']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[1] ?? ''), ['class' => 'form-control input-md']);
+                        ?>
+                    </div>
+                </div>
                 <?php
                 $this->Form->fieldSelect('action', ['' => $this->_('AppController.select.please', true)] + (isset($actions) ? $actions : []), isset($vars->action) ? $vars->action : null, ['id' => 'domain_action']);
                 ?>
