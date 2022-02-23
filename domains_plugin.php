@@ -37,7 +37,10 @@ class DomainsPlugin extends Plugin
      */
     public function install($plugin_id)
     {
-        Loader::loadModels($this, ['Companies', 'Currencies', 'EmailGroups', 'Emails', 'Languages', 'PluginManager']);
+        Loader::loadModels(
+            $this,
+            ['Companies', 'Currencies', 'EmailGroups', 'Emails', 'Languages', 'PluginManager', 'DataFeeds']
+        );
 
         Configure::load('domains', dirname(__FILE__) . DS . 'config' . DS);
 
@@ -134,6 +137,25 @@ class DomainsPlugin extends Plugin
                 ]);
             }
         }
+
+        // Add data feed
+        try {
+            $this->DataFeeds->add([
+                'feed' => 'domain',
+                'dir' => 'domains',
+                'class' => '\\DomainsFeed'
+            ]);
+        } catch (Throwable $e) {
+            $this->Input->setErrors(['feed' => ['create' => $e->getMessage()]]);
+            return;
+        }
+
+        $this->DataFeeds->addEndpoint([
+            'company_id' => $company_id,
+            'feed' => 'domain',
+            'endpoint' => 'pricing',
+            'enabled' => 0
+        ]);
     }
 
     /**
@@ -166,6 +188,11 @@ class DomainsPlugin extends Plugin
             // Upgrade to 1.4.0
             if (version_compare($current_version, '1.4.0', '<')) {
                 $this->upgrade1_4_0();
+            }
+
+            // Upgrade to 1.5.0
+            if (version_compare($current_version, '1.5.0', '<')) {
+                $this->upgrade1_5_0();
             }
         }
     }
@@ -303,6 +330,37 @@ class DomainsPlugin extends Plugin
                         ->update('package_options', ['hidden' => true]);
                 }
             }
+        }
+    }
+
+    /**
+     * Update to v1.5.0
+     */
+    private function upgrade1_5_0()
+    {
+        Loader::loadModels($this, ['Companies', 'DataFeeds']);
+
+        // Add data feed
+        try {
+            $this->DataFeeds->add([
+                'feed' => 'domain',
+                'dir' => 'domains',
+                'class' => '\\DomainsFeed'
+            ]);
+        } catch (Throwable $e) {
+            $this->Input->setErrors(['feed' => ['create' => $e->getMessage()]]);
+            return;
+        }
+
+        // Add data feed endpoint to all companies
+        $companies = $this->Companies->getAll();
+        foreach ($companies as $company) {
+            $this->DataFeeds->addEndpoint([
+                'company_id' => $company->id,
+                'feed' => 'domain',
+                'endpoint' => 'pricing',
+                'enabled' => 0
+            ]);
         }
     }
 
@@ -634,7 +692,7 @@ class DomainsPlugin extends Plugin
      */
     public function uninstall($plugin_id, $last_instance)
     {
-        Loader::loadModels($this, ['CronTasks', 'Companies', 'Emails', 'EmailGroups']);
+        Loader::loadModels($this, ['CronTasks', 'Companies', 'Emails', 'EmailGroups', 'DataFeeds']);
 
         Configure::load('domains', dirname(__FILE__) . DS . 'config' . DS);
         $emails = Configure::get('Domains.install.emails');
@@ -660,6 +718,9 @@ class DomainsPlugin extends Plugin
                     $this->CronTasks->deleteTask($cron_task->id, $task['task_type'], $task['dir']);
                 }
             }
+
+            // Remove data feed
+            $this->DataFeeds->delete('domain');
         } else {
             // Save the company TLD packages, so we can restore them in the future
             $tld_packages_setting = $this->Companies->getSetting(
@@ -687,6 +748,12 @@ class DomainsPlugin extends Plugin
                 leftJoin('domains_packages', 'domains_packages.tld_id', '=', 'domains_tlds.id', false)->
                 where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
                 delete(['domains_tlds.*', 'domains_packages.*']);
+
+            // Remove data feed endpoints
+            $endpoints = $this->DataFeeds->getAllEndpoints(['company_id' => Configure::get('Blesta.company_id')]);
+            foreach ($endpoints as $endpoint) {
+                $this->DataFeeds->deleteEndpoint($endpoint->id);
+            }
         }
 
         // Remove individual cron task runs
