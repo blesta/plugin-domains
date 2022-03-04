@@ -583,6 +583,11 @@ class AdminDomains extends DomainsController
                             $this->DomainsTlds->addPackage(['tld' => $tld, 'package_id' => $package_id]);
                         }
 
+                        // Report errors
+                        if (($errors = $this->DomainsTlds->errors())) {
+                            break 2;
+                        }
+
                         // Mark this package as the primary for this TLD or mark it as inactive
                         if ($set_primary_package) {
                             $this->DomainsTlds->edit($tld, ['package_id' => $package_id]);
@@ -593,18 +598,29 @@ class AdminDomains extends DomainsController
                                 ['status' => 'inactive', 'meta' => (array)$package_info['meta']]
                             );
                         }
+
+                        // Report errors
+                        if (($errors = $this->Packages->errors()) || ($errors = $this->DomainsTlds->errors())) {
+                            break 2;
+                        }
                     }
                 }
 
-                // Set success message
-                $this->setMessage(
-                    'message',
-                    Language::_('AdminDomains.!success.packages_imported', true),
-                    false,
-                    null,
-                    false
-                );
-                $this->Packages->commit();
+                if ($errors) {
+                    // Set error message
+                    $this->Packages->rollback();
+                    $this->setMessage('error', $errors, false, null, false);
+                } else {
+                    // Set success message
+                    $this->setMessage(
+                        'message',
+                        Language::_('AdminDomains.!success.packages_imported', true),
+                        false,
+                        null,
+                        false
+                    );
+                    $this->Packages->commit();
+                }
             }
             $vars = $this->post;
         }
@@ -682,6 +698,7 @@ class AdminDomains extends DomainsController
                 $overwrite_packages,
                 $migrate_services
             );
+
             if (($errors = $this->Packages->errors())) {
                 return;
             }
@@ -720,11 +737,15 @@ class AdminDomains extends DomainsController
             return;
         }
 
-        // If set to override packages, delete the existing package for this TLD/module
         if (array_key_exists($tld, $existing_tld_packages)
             && array_key_exists($package->module_id, $existing_tld_packages[$tld])
-            && $overwrite_packages
         ) {
+            // A package exists for this TLD and module, so skip it unless the option was selected to overwite it
+            if (!$overwrite_packages) {
+                return;
+            }
+
+            // If set to override packages, delete the existing package for this TLD/module
             $this->Packages->delete($existing_tld_packages[$tld][$package->module_id]);
             if (($errors = $this->Packages->errors())) {
                 return;
