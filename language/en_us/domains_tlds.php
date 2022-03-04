@@ -3,6 +3,7 @@
 // Errors
 $lang['DomainsTlds.!error.tld.empty'] = 'Please enter a TLD.';
 $lang['DomainsTlds.!error.tld.exists'] = 'The TLD already exists in the company.';
+$lang['DomainsTlds.!error.tld.not_exists'] = 'The TLD does not exist in the company.';
 $lang['DomainsTlds.!error.tld.length'] = 'The TLD must be at least 3 characters long.';
 $lang['DomainsTlds.!error.package_id.exists'] = 'Invalid package ID.';
 $lang['DomainsTlds.!error.package_group_id.exists'] = 'Invalid package group ID.';

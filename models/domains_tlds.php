@@ -48,7 +48,7 @@ class DomainsTlds extends DomainsModel
             $option_group_id = $company_settings['domains_' . $feature . '_option_group'] ?? null;
             $tld->{$feature} = (array_key_exists($option_group_id, $package_option_groups) ? '1' : '0');
         }
-        
+
         // Assign a feature if the TLD package is assigned the correct meta data
         foreach ($this->package_meta_features as $feature) {
             $meta_data = $this->Record->select()->from('package_meta')
@@ -281,7 +281,7 @@ class DomainsTlds extends DomainsModel
                 'domains_packages',
                 ['package_id' => $vars['package_id'], 'tld_id' => $this->lastInsertId()]
             );
-            
+
             // Set the package configurable options and meta data
             $this->assignFeatures($vars['package_id'], $vars);
 
@@ -439,8 +439,8 @@ class DomainsTlds extends DomainsModel
             $this->Record->duplicate('package_meta.value', '=', $fields['value'])
                 ->insert('package_meta', $fields);
         }
-        
-        
+
+
         // Set the epp_code package meta
         $registrar = $this->ModuleManager->initModule($vars['module_id']);
         if (($vars['epp_code'] ?? '0') == '1' && !$registrar->supportsFeature('epp_code')) {
@@ -1525,7 +1525,8 @@ class DomainsTlds extends DomainsModel
         ];
 
         if ($edit) {
-            unset($rules['tld']['exists']);
+            $rules['tld']['exists']['negate'] = true;
+            $rules['tld']['exists']['message'] = Language::_('DomainsTlds.!error.tld.not_exists', true);
         }
 
         return $rules;
