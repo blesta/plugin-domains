@@ -150,7 +150,6 @@ class DomainsFeed extends AbstractDataFeed
 
             // Load the data feed view
             $this->view = new View($vars['style'] . '_table', 'domains.feeds');
-            $this->view->setDefaultView(realpath(dirname(__FILE__) . DS . '..') . DS);
 
             Loader::loadHelpers($this, ['CurrencyFormat']);
 
