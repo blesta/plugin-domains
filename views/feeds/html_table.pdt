@@ -1,0 +1,46 @@
+<table id="domains_pricing">
+    <thead>
+        <tr>
+            <th><?php $this->_('DomainsFeed.table.heading_tlds');?></th>
+            <?php
+            for ($i = 1; $i <= 10; $i++) {
+                if (in_array($i, $terms ?? [])) {
+            ?>
+            <th><?php $this->_('DomainsFeed.table.heading_year' . ($i > 1 ? 's' : ''), false, $i);?></th>
+            <?php
+                }
+            }
+            ?>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        foreach ($tlds ?? [] as $tld) {
+        ?>
+        <tr>
+            <td><?php echo $tld->tld; ?></td>
+            <?php
+            foreach ($tld->pricing as $term => $pricing) {
+                if (!empty($pricing)) {
+            ?>
+            <td>
+                <i><?php $this->_('DomainsFeed.table.register');?></i> <?php echo $this->CurrencyFormat->format($pricing->price, $pricing->currency, ['code' => true]);?><br/>
+                <i><?php $this->_('DomainsFeed.table.transfer');?></i> <?php echo $this->CurrencyFormat->format($pricing->price_renews ?? $pricing->price, $pricing->currency, ['code' => true]);?><br/>
+                <i><?php $this->_('DomainsFeed.table.renew');?></i> <?php echo $this->CurrencyFormat->format($pricing->price_transfer ?? $pricing->price, $pricing->currency, ['code' => true]);?><br/>
+            </td>
+            <?php
+                } else {
+            ?>
+            <td>
+                <i><?php $this->_('DomainsFeed.table.not_available');?></i>
+            </td>
+            <?php
+                }
+            }
+            ?>
+        </tr>
+        <?php
+        }
+        ?>
+    </tbody>
+</table>
