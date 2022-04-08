@@ -92,7 +92,41 @@ class DomainsFeed extends AbstractDataFeed
             <div class="title_row"><h3>' . Language::_('DomainsFeed.getOptionFields.title_row_example_code', true) . '</h3></div>
             <div class="pad">
                 <small>' . Language::_('DomainsFeed.getOptionFields.example_code_table', true) . '</small>
-                <pre class="rounded bg-light text-secondary border border-secondary p-2 m-0 my-1">&lt;script src="' . $base_url . 'feed/domain/pricing/?currency=USD"&gt;&lt;/script&gt;</pre>
+                <pre class="rounded bg-light text-secondary border border-secondary p-2 m-0 my-1">'
+                    . '&lt;script src="' . $base_url . 'feed/domain/pricing/?currency=USD&style=bootstrap&term=1,2,3,4,5,10"&gt;&lt;/script&gt;'
+                . '</pre>
+                <h4><a id="domain_params" href="#" class="show_content"><i class="fas fa-chevron-down"></i> ' . Language::_('DomainsFeed.getOptionFields.params', true) . '</a></h4>
+                <div id="domain_params_content" class="pad_top hidden">
+                    <div>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr class="heading_row">
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.header_name', true) . '</td>
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.header_description', true) . '</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.param_currency', true) . '</td>
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.param_currency_description', true) . '</td>
+                                </tr>
+                                <tr>
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.param_style', true) . '</td>
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.param_style_description', true) . '</td>
+                                </tr>
+                                <tr>
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.param_term', true) . '</td>
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.param_term_description', true) . '</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <script>
+                    $(document).ready(function () {
+                        $(this).blestaBindToggleEvent("#domain_params", "#domain_params_content");
+                    });
+                </script>
             </div>
         ');
 
@@ -114,7 +148,7 @@ class DomainsFeed extends AbstractDataFeed
         Loader::loadComponents($this, ['SettingsCollection']);
 
         if (!isset($vars['style'])) {
-            $vars['style'] = 'html';
+            $vars['style'] = 'bootstrap';
         }
 
         if (!isset($vars['currency'])) {
