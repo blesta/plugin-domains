@@ -40,8 +40,18 @@ class AdminDomains extends DomainsController
                 $this->set('vars', (object)$this->post);
                 $this->setMessage('error', $errors, false, null, false);
             } else {
-                $term = 'AdminDomains.!success.';
-                $term .= isset($this->post['action']) ? $this->post['action'] : '';
+                switch ($this->post['action']) {
+                    case 'schedule_cancellation':
+                        $term = 'AdminDomains.!success.change_auto_renewal';
+                        break;
+                    case 'domain_renewal':
+                        $term = 'AdminDomains.!success.domain_renewal';
+                        break;
+                    case 'update_nameservers':
+                        $term = 'AdminDomains.!success.update_nameservers';
+                        break;
+                }
+
                 $this->setMessage('message', Language::_($term, true), false, null, false);
             }
         }
@@ -166,7 +176,11 @@ class AdminDomains extends DomainsController
      */
     public function getDomainActions()
     {
-        return ['change_auto_renewal' => Language::_('AdminDomains.getdomainactions.change_auto_renewal', true)];
+        return [
+            'change_auto_renewal' => Language::_('AdminDomains.browse.change_auto_renewal', true),
+            'domain_renewal' => Language::_('AdminDomains.browse.domain_renewal', true),
+            'update_nameservers' => Language::_('AdminDomains.browse.update_nameservers', true)
+        ];
     }
 
     /**
@@ -182,6 +196,8 @@ class AdminDomains extends DomainsController
      */
     private function updateServices(array $data)
     {
+        $this->uses(['Services', 'Domains.DomainsDomains']);
+
         // Require authorization to update a client's service
         if (!$this->authorized('admin_clients', 'editservice')) {
             $this->flashMessage('error', Language::_('AppController.!error.unauthorized_access', true), null, false);
@@ -213,6 +229,24 @@ class AdminDomains extends DomainsController
                     }
 
                     if (($errors = $this->Services->errors())) {
+                        break;
+                    }
+                }
+                break;
+            case 'domain_renewal':
+                foreach ($data['service_ids'] as $service_id) {
+                    $this->DomainsDomains->renewDomain($service_id, $data['years'] ?? 1);
+
+                    if (($errors = $this->DomainsDomains->errors())) {
+                        break;
+                    }
+                }
+                break;
+            case 'update_nameservers':
+                foreach ($data['service_ids'] as $service_id) {
+                    $this->DomainsDomains->updateNameservers($service_id, $data['nameservers'] ?? []);
+
+                    if (($errors = $this->DomainsDomains->errors())) {
                         break;
                     }
                 }
