@@ -1404,6 +1404,73 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Imports the TLDs and their pricing from a registrar module, if available
+     *
+     * @param array $tlds A list containing the TLDs to import from the registrar module
+     * @param int $module_id The ID of the registrar module
+     * @param int $company_id The ID of the company to import the TLDs
+     * @return bool True if all the TLDs where imported successfully, false otherwise
+     */
+    public function import(array $tlds, int $module_id, int $company_id = null) : bool
+    {
+        Loader::loadModels($this, ['ModuleManager']);
+
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+
+        // Format TLDS
+        $tlds = array_keys($tlds);
+
+        // Initialize module
+        $module = $this->ModuleManager->initModule($module_id);
+
+        if (!$module) {
+            return false;
+        }
+
+        // Import TLDs
+        if (!empty($tlds)) {
+            $module->setModuleRow($module->getModuleRows()[0] ?? null);
+
+            // Get TLD pricing, if available
+            $tld_pricing = $module->getTldPricing();
+            $module_tlds = $module->getTlds();
+
+            foreach ($tlds as $tld) {
+                // Verify if the TLD does not exist in the company
+                $stored_tld = $this->get($tld, $company_id);
+                if (!empty($stored_tld)) {
+                    continue;
+                }
+
+                // Check if the TLD is supported by the module
+                if (!in_array($tld, $module_tlds)) {
+                    continue;
+                }
+
+                // Add TLD to the company
+                $tld_package = $this->add([
+                    'tld' => $tld,
+                    'company_id' => $company_id,
+                    'module_id' => $module_id
+                ]);
+
+                if (($errors = $this->errors())) {
+                    return false;
+                }
+            }
+
+            // Sync TLD pricing
+            if (isset($tld_pricing[$tld])) {
+                Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
+                $sync_utility = new TldSync();
+                $sync_utility->synchronizePrices($tlds, $company_id, ['module_id' => $module_id]);
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Returns all validation rules for adding/editing extensions
      *
      * @param array $vars An array of input key/value pairs

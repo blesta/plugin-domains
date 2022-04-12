@@ -11,8 +11,11 @@ class TldSync
      *
      * @param array $tlds A list of TLDs for which to sync registrar prices
      * @param int $company_id The ID of the company where the TLDs will be synchronized (optional)
+     * @param array $filters A list of filters for the process
+     *
+     *  - module_id If given, only TLDs belonging to this module ID will be updated
      */
-    public function synchronizePrices(array $tlds, $company_id = null)
+    public function synchronizePrices(array $tlds, $company_id = null, array $filters = [])
     {
         Loader::loadModels($this, ['Domains.DomainsTlds', 'ModuleManager']);
 
@@ -33,6 +36,10 @@ class TldSync
 
         // Get TLD prices from the registrar module
         foreach ($module_tlds as $module_id => $list_tlds) {
+            if (isset($filters['module_id']) && $module_id !== $filters['module_id']) {
+                continue;
+            }
+
             $module = $this->ModuleManager->initModule($module_id);
             $module->setModuleRow($module->getModuleRows()[0] ?? null);
             $module_pricing = $module->getTldPricing();

@@ -15,6 +15,7 @@ $lang['AdminDomains.!success.domain_renewal'] = 'The Domain has been renewed!';
 $lang['AdminDomains.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
 $lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
+$lang['AdminDomains.!success.tlds_imported'] = 'The TLDs were successfully imported!';
 
 $lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not valid.';
 $lang['AdminDomains.!error.tlds_bulk[action].valid'] = 'Invalid value for TLDs Bulk Action, must be "enable" or "disable".';
@@ -233,6 +234,16 @@ $lang['AdminDomains.whois.field_domain'] = 'Domain';
 $lang['AdminDomains.whois.field_submit'] = 'Lookup';
 
 
+$lang['AdminDomains.import.boxtitle_import'] = 'Import TLDs';
+$lang['AdminDomains.import.title_module'] = 'Module';
+$lang['AdminDomains.import.title_tlds'] = 'TLDs';
+$lang['AdminDomains.import.field_module'] = 'Module';
+$lang['AdminDomains.import.field_import'] = 'Import TLDs';
+$lang['AdminDomains.import.text_refresh'] = 'Refresh';
+$lang['AdminDomains.import.text_install_modules'] = 'Install Modules';
+$lang['AdminDomains.import.text_tld_settings'] = 'TLD pricing markups, round, etc., will be set based on the TLD Sync settings.';
+
+
 $lang['AdminDomains.getDays.never'] = 'Never';
 $lang['AdminDomains.getDays.text_day'] = '%1$s Day'; // %1$s is the number of days
 $lang['AdminDomains.getDays.text_days'] = '%1$s Days'; // %1$s is the number of days
@@ -259,4 +270,5 @@ $lang['AdminDomains.leftnav.nav_domains_whois'] = 'Whois';
 $lang['AdminDomains.leftnav.nav_tlds'] = 'TLDs';
 $lang['AdminDomains.leftnav.nav_tlds_pricing'] = 'TLD Pricing';
 $lang['AdminDomains.leftnav.nav_tlds_registrars'] = 'Registrars';
+$lang['AdminDomains.leftnav.nav_tlds_import'] = 'Import TLDs';
 $lang['AdminDomains.leftnav.nav_configuration'] = 'Configuration';
