@@ -29,6 +29,22 @@
                     <h3><?php echo $this->_('AdminDomains.import.title_module', true);?></h3>
                 </div>
                 <div class="pad">
+                    <section class="error_section">
+                        <article class="error_box alert">
+                            <div class="row">
+                                <div class="col-md-9">
+                                    <div class="icon-line fa-2x">
+                                        <i class="fas fa-exclamation-triangle fa-fw"></i>
+                                        <p style="padding: 0px!important;"><?php $this->_('AdminDomains.import.text_tld_settings');?></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync');?>" class="btn btn-warning m-0 float-right"><?php $this->_('AdminDomains.import.text_configuration');?></a>
+                                </div>
+                            </div>
+                        </article>
+                    </section>
+
                     <ul>
                         <li>
                             <?php
@@ -46,15 +62,6 @@
                         <h3><?php echo $this->_('AdminDomains.import.title_tlds', true);?></h3>
                     </div>
                     <div class="pad">
-                        <section class="error_section">
-                            <article class="error_box alert">
-                                <div class="icon-line fa-2x">
-                                    <i class="fas fa-exclamation-triangle fa-fw"></i>
-                                    <p style="padding: 0px!important;"><?php $this->_('AdminDomains.import.text_tld_settings');?></p>
-                                </div>
-                            </article>
-                        </section>
-
                         <ul>
                             <li></li>
                         </ul>

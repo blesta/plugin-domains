@@ -242,6 +242,7 @@ $lang['AdminDomains.import.field_import'] = 'Import TLDs';
 $lang['AdminDomains.import.text_refresh'] = 'Refresh';
 $lang['AdminDomains.import.text_install_modules'] = 'Install Modules';
 $lang['AdminDomains.import.text_tld_settings'] = 'TLD pricing markups, round, etc., will be set based on the TLD Sync settings.';
+$lang['AdminDomains.import.text_configuration'] = 'Configure Settings';
 
 
 $lang['AdminDomains.getDays.never'] = 'Never';
