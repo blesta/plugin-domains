@@ -833,25 +833,6 @@ class DomainsTlds extends DomainsModel
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
         $tld = $this->get($tld, $company_id);
 
-        // Get company currencies
-        $currencies = $this->Form->collapseObjectArray(
-            $this->Currencies->getAll($company_id),
-            'code',
-            'code'
-        );
-
-        // Set empty checkboxes
-        $enabled_pricings = 0;
-        for ($i = 1; $i <= 10; $i++) {
-            foreach ($currencies as $currency) {
-                $pricings[$i][$currency]['enabled'] = $pricings[$i][$currency]['enabled'] ?? null;
-
-                if ($pricings[$i][$currency]['enabled']) {
-                    $enabled_pricings++;
-                }
-            }
-        }
-
         // Update pricing
         if (!empty($pricings)) {
             foreach ($pricings as $term => $term_pricing) {
@@ -862,20 +843,12 @@ class DomainsTlds extends DomainsModel
                     $pricing_row = $this->getPricing($tld->package_id, $term, $currency);
 
                     if (!empty($pricing_row)) {
-                        if ((bool)$pricing['enabled']) {
+                        if ((bool) ($pricing['enabled'] ?? 1)) {
                             $this->updatePricing($pricing_row->id, $pricing);
-                        } else if ($enabled_pricings >= 1) {
-                            $this->disablePricing($pricing_row->id);
                         } else {
-                            $this->Input->setErrors([
-                                'count' => [
-                                    'message' => Language::_('DomainsTlds.!error.package_pricing.count', true)
-                                ]
-                            ]);
-
-                            return;
+                            $this->disablePricing($pricing_row->id);
                         }
-                    } else if ((bool)$pricing['enabled']) {
+                    } else if ((bool) ($pricing['enabled'] ?? 0)) {
                         $this->addPricing($tld->package_id, $pricing);
                     }
                 }
@@ -1431,10 +1404,8 @@ class DomainsTlds extends DomainsModel
         if (!empty($tlds)) {
             $module->setModuleRow($module->getModuleRows()[0] ?? null);
 
-            // Get TLD pricing, if available
-            $tld_pricing = $module->getTldPricing();
+            // Get module TLDs
             $module_tlds = $module->getTlds();
-
             foreach ($tlds as $tld) {
                 // Verify if the TLD does not exist in the company
                 $stored_tld = $this->get($tld, $company_id);
@@ -1460,11 +1431,9 @@ class DomainsTlds extends DomainsModel
             }
 
             // Sync TLD pricing
-            if (isset($tld_pricing[$tld])) {
-                Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
-                $sync_utility = new TldSync();
-                $sync_utility->synchronizePrices($tlds, $company_id, ['module_id' => $module_id]);
-            }
+            Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
+            $sync_utility = new TldSync();
+            $sync_utility->synchronizePrices($tlds, $company_id, ['module_id' => $module_id]);
         }
 
         return false;

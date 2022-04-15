@@ -39,7 +39,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync');?>" class="btn btn-warning m-0 float-right"><?php $this->_('AdminDomains.import.text_configuration');?></a>
+                                    <a target="_blank" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync');?>" class="btn btn-warning m-0 float-right"><?php $this->_('AdminDomains.import.text_configuration');?></a>
                                 </div>
                             </div>
                         </article>

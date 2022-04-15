@@ -1847,11 +1847,46 @@ class AdminDomains extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
+        // Get company settings
+        $company_settings = $this->Form->collapseObjectArray(
+            $this->Companies->getSettings(Configure::get('Blesta.company_id')),
+            'value',
+            'key'
+        );
+
+        // Get company default currency
+        $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
+
+        // Get company currencies
+        $currencies = $this->Currencies->getAll(Configure::get('Blesta.company_id'));
+
+        foreach ($currencies as $key => $currency) {
+            $currencies[$currency->code] = $currency;
+            unset($currencies[$key]);
+        }
+
+        if (isset($currencies[$default_currency])) {
+            $currencies = [$default_currency => $currencies[$default_currency]] + $currencies;
+        }
+
+        // Get company languages
+        $languages = $this->Languages->getAll(Configure::get('Blesta.company_id'));
+
+        // Updates pricing
         if (!empty($this->post)) {
             $tld = $this->DomainsTlds->getByPackage($this->get[0]);
 
             // Update TLD package
             $this->DomainsTlds->edit($tld->tld, $this->post);
+
+            // Set empty checkboxes
+            for ($i = 1; $i <= 10; $i++) {
+                foreach ($currencies as $code => $currency) {
+                    if (!isset($this->post['pricing'][$i][$code]['enabled'])) {
+                        $this->post['pricing'][$i][$code]['enabled'] = 0;
+                    }
+                }
+            }
 
             // Update pricing
             if (!isset($this->post['pricing'])) {
@@ -1882,28 +1917,6 @@ class AdminDomains extends DomainsController
 
             return false;
         }
-
-        // Get company settings
-        $company_id = Configure::get('Blesta.company_id');
-        $company_settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
-
-        // Get company default currency
-        $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
-
-        // Get company currencies
-        $currencies = $this->Currencies->getAll($company_id);
-
-        foreach ($currencies as $key => $currency) {
-            $currencies[$currency->code] = $currency;
-            unset($currencies[$key]);
-        }
-
-        if (isset($currencies[$default_currency])) {
-            $currencies = [$default_currency => $currencies[$default_currency]] + $currencies;
-        }
-
-        // Get company languages
-        $languages = $this->Languages->getAll($company_id);
 
         // Get TLD package
         $package = $this->Packages->get($this->get[0], true);
