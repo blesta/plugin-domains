@@ -29,6 +29,7 @@ $lang['AdminDomains.browse.heading_client'] = 'Client';
 $lang['AdminDomains.browse.heading_registrar'] = 'Registrar';
 $lang['AdminDomains.browse.heading_price'] = 'Price';
 $lang['AdminDomains.browse.heading_registration'] = 'Registration Date';
+$lang['AdminDomains.browse.heading_renewal'] = 'Renewal Date';
 $lang['AdminDomains.browse.heading_expiration'] = 'Expiration Date';
 $lang['AdminDomains.browse.heading_renew'] = 'Auto Renewal';
 $lang['AdminDomains.browse.heading_options'] = 'Options';
@@ -91,6 +92,7 @@ $lang['AdminDomains.configuration.field_first_reminder_days_before'] = '1st Rene
 $lang['AdminDomains.configuration.field_second_reminder_days_before'] = '2nd Renewal Reminder Days Before';
 $lang['AdminDomains.configuration.field_expiration_notice_days_after'] = 'Expiration Notice Days After';
 $lang['AdminDomains.configuration.field_spotlight_tlds'] = 'Spotlight TLDs';
+$lang['AdminDomains.configuration.field_renewal_days_before_expiration'] = 'Renew Days Before Expiration';
 $lang['AdminDomains.configuration.field_taxable'] = 'Enable Tax for Domains';
 $lang['AdminDomains.configuration.field_sync_price_markup'] = 'Price Markup (%)';
 $lang['AdminDomains.configuration.field_sync_renewal_markup'] = 'Renewal Price Markup (%)';
@@ -112,6 +114,7 @@ $lang['AdminDomains.configuration.tooltip_first_reminder_days_before'] = 'Select
 $lang['AdminDomains.configuration.tooltip_second_reminder_days_before'] = 'Select the number of days before a domain expires to send the second renewal email (4-10 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_expiration_notice_days_after'] = 'Select the number of days after a domain expires to send the expiration notice email (1-5 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that will be highlighted on order forms through the Order Plugin.';
+$lang['AdminDomains.configuration.tooltip_renewal_days_before_expiration'] = 'When domains are invoiced, the invoice will be due this number of days prior to the domains expiration date.';
 
 $lang['AdminDomains.getroundingoptions.custom'] = 'Custom';
 

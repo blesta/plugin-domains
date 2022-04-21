@@ -1391,7 +1391,8 @@ class DomainsTlds extends DomainsModel
             'domains_automatic_sync',
             'domains_sync_frequency',
             'domains_package_group',
-            'domains_tld_packages'
+            'domains_tld_packages',
+            'domains_renewal_days_before_expiration'
         ];
 
         foreach ($company_settings as $key => $setting) {

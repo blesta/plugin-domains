@@ -49,6 +49,7 @@
                 <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=term&order=' . ($sort == 'term' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'term' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.index.heading_term');?></a></span></td>
                 <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=date_added&order=' . ($sort == 'date_added' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_added' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.index.heading_datecreated');?></a></span></td>
                 <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=date_renews&order=' . ($sort == 'date_renews' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_renews' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.index.heading_daterenews');?></a></span></td>
+                <td><span><?php $this->_('AdminMain.index.heading_dateexpires');?></span></td>
                 <?php
                 if ((isset($status) ? $status : null) == 'suspended') {
                 ?>
@@ -97,6 +98,7 @@
                 </td>
                 <td><?php echo $this->Date->cast((isset($domains[$i]->date_added) ? $this->Html->safe($domains[$i]->date_added) : null));?></td>
                 <td><?php echo (empty($domains[$i]->date_renews) ? $this->_('AdminMain.index.text_never', true) : $this->Date->cast((isset($domains[$i]->date_renews) ? $this->Html->safe($domains[$i]->date_renews) : null)));?></td>
+                <td><?php echo isset($domains[$i]->date_renews) ? $this->Date->cast($domains[$i]->date_renews) : '';?></td>
                 <?php
                 if ((isset($status) ? $status : null) == 'suspended') {
                 ?>

@@ -32,7 +32,7 @@ class AdminMain extends DomainsController
      */
     public function domains()
     {
-        $this->uses(['Clients', 'Services', 'Companies', 'Packages', 'ModuleManager']);
+        $this->uses(['Domains.DomainsDomains', 'Clients', 'Services', 'Companies', 'Packages', 'ModuleManager']);
 
         // Process bulk domains options
         if (!empty($this->post) && isset($this->post['service_ids'])) {
@@ -108,6 +108,7 @@ class AdminMain extends DomainsController
 
             $domain->renewal_price = $this->Services->getRenewalPrice($domain->id);
             $domain->registrar = $modules[$module_id]->getName();
+            $domain->expiration_date = $this->DomainsDomains->getExpirationDate($domain->id);
         }
 
         // Set the input field filters for the widget

@@ -16,6 +16,7 @@ $lang['AdminMain.index.heading_domain'] = 'Domain';
 $lang['AdminMain.index.heading_term'] = 'Term';
 $lang['AdminMain.index.heading_datecreated'] = 'Date Created';
 $lang['AdminMain.index.heading_daterenews'] = 'Date Renews';
+$lang['AdminMain.index.heading_dateexpires'] = 'Date Expires';
 $lang['AdminMain.index.heading_datesuspended'] = 'Date Suspended';
 $lang['AdminMain.index.heading_datecanceled'] = 'Date Canceled';
 $lang['AdminMain.index.heading_options'] = 'Options';

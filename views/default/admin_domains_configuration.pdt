@@ -33,6 +33,11 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                         }
                         ?>
                     </li>
+                    <li>
+                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_renewal_days_before_expiration', true), 'renewal_days_before_expiration', ['class' => 'inline']); ?>
+                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_renewal_days_before_expiration');?></div></span>
+                        <?php $this->Form->fieldSelect('domains_renewal_days_before_expiration', ($renewal_days ?? null), ($vars['domains_renewal_days_before_expiration'] ?? null), ['id' => 'renewal_days_before_expiration', 'class' => 'block']); ?>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -43,7 +48,6 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                         <?php $this->Form->label($this->_('AdminDomains.configuration.field_first_reminder_days_before', true), 'first_reminder_days_before', ['class' => 'inline']); ?>
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_first_reminder_days_before');?></div></span>
                         <?php $this->Form->fieldSelect('domains_first_reminder_days_before', ($first_reminder_days ?? null), ($vars['domains_first_reminder_days_before'] ?? null), ['id' => 'first_reminder_days_before', 'class' => 'block']); ?>
-
                     </li>
                     <li>
                         <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($first_reminder_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>

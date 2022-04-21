@@ -63,6 +63,16 @@ class DomainsPlugin extends Plugin
                 ->setKey(['id'], 'primary')
                 ->setKey(['tld_id', 'package_id'], 'unique')
                 ->create('domains_packages', true);
+
+            // domains_domains
+            $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('expiration_date', ['type' => 'datetime'])
+                ->setKey(['id'], 'primary')
+                ->setKey(['service_id'], 'unique')
+                ->create('domains_domains', true);
+
         } catch (Exception $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -97,6 +107,10 @@ class DomainsPlugin extends Plugin
         // Set the default days to before renewal to send the expiration notice
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_expiration_notice_days_after'))) {
             $this->Companies->setSetting($company_id, 'domains_expiration_notice_days_after', 1);
+        }
+        // Set the default renewal days before expiration
+        if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
+            $this->Companies->setSetting($company_id, 'domains_renewal_days_before_expiration', 30);
         }
 
         // Add all email templates
@@ -193,6 +207,11 @@ class DomainsPlugin extends Plugin
             // Upgrade to 1.5.0
             if (version_compare($current_version, '1.5.0', '<')) {
                 $this->upgrade1_5_0();
+            }
+
+            // Upgrade to 1.6.0
+            if (version_compare($current_version, '1.6.0', '<')) {
+                $this->upgrade1_6_0();
             }
         }
     }
@@ -361,6 +380,47 @@ class DomainsPlugin extends Plugin
                 'endpoint' => 'pricing',
                 'enabled' => 0
             ]);
+        }
+    }
+
+    /**
+     * Update to v1.6.0
+     */
+    private function upgrade1_6_0()
+    {
+        Loader::loadModels($this, ['Companies', 'Domains.DomainsDomains']);
+
+        try {
+            $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('expiration_date', ['type' => 'datetime'])
+                ->setKey(['id'], 'primary')
+                ->setKey(['service_id'], 'unique')
+                ->create('domains_domains', true);
+
+            // Add all the existing domains for all companies
+            $companies = $this->Companies->getAll();
+            foreach ($companies as $company) {
+                $domains = $this->DomainsDomains->getAll([
+                    'company_id' => $company->id
+                ]);
+
+                foreach ($domains as $domain) {
+                    $vars = ['service_id' => $domain->id, 'expiration_date' => $domain->date_renews];
+                    $fields = ['service_id', 'expiration_date'];
+                    $this->Record->insert('domains_domains', $vars, $fields);
+                }
+
+                // Set the default renewal days before expiration
+                if (!($setting = $this->Companies->getSetting($company->id, 'domains_renewal_days_before_expiration'))) {
+                    $this->Companies->setSetting($company->id, 'domains_renewal_days_before_expiration', 30);
+                }
+            }
+        } catch (Exception $e) {
+            // Error adding... no permission?
+            $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
+            return;
         }
     }
 
@@ -705,6 +765,7 @@ class DomainsPlugin extends Plugin
                 // Remove database tables
                 $this->Record->drop('domains_tlds');
                 $this->Record->drop('domains_packages');
+                $this->Record->drop('domains_domains');
             } catch (Exception $e) {
                 // Error dropping... no permission?
                 $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -1305,8 +1366,12 @@ class DomainsPlugin extends Plugin
     {
         return [
             [
-                'event' => 'Packages.delete',
+                'event' => 'Packages.deleteAfter',
                 'callback' => ['this', 'deletePackageTld']
+            ],
+            [
+                'event' => 'Services.addAfter',
+                'callback' => ['this', 'setRenewalDate']
             ]
         ];
     }
@@ -1327,6 +1392,25 @@ class DomainsPlugin extends Plugin
             foreach ($tlds as $tld) {
                 $this->DomainsTlds->delete($tld->tld);
             }
+        }
+    }
+
+    /**
+     * Updates the renewal date of a recently added domain
+     *
+     * @param Blesta\Core\Util\Events\Common\EventInterface $event The event to process
+     */
+    public function setRenewalDate($event)
+    {
+        Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'ModuleManager']);
+        $params = $event->getParams();
+
+        // Validate if the service is being handled by the Domain Manager and the module type is registrar
+        $package_group_id = $this->Companies->getSetting(Configure::get('Blesta.company_id'), 'domains_package_group');
+        $module_row = $this->ModuleManager->getRow($params['vars']['module_row']);
+
+        if ($package_group_id == ($params['vars']['package_group_id'] ?? null)) {
+
         }
     }
 
