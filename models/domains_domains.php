@@ -232,7 +232,7 @@ class DomainsDomains extends DomainsModel
                 ->fetch();
             $expiration_date = $domain->expiration_date ?? null;
 
-            // Get the expiration date from the renewal
+            // Get the expiration date from the registrar
             if (empty($expiration_date)) {
                 $expiration_date = $this->ModuleManager->moduleRpc(
                     $service->package->module_id,
@@ -246,9 +246,18 @@ class DomainsDomains extends DomainsModel
                 $expiration_date = $service->date_renews;
             }
 
-            // Update expiration date
-            $this->Record->duplicate('domains_domains.expiration_date', '=', $expiration_date)
-                ->insert('domains_domains', ['service_id' => $service_id, 'expiration_date' => $expiration_date]);
+            if ($expiration_date === $service->date_renews) {
+                // Save expiration date
+                $this->Record->duplicate('domains_domains.expiration_date', '=', $expiration_date)
+                    ->insert('domains_domains', ['service_id' => $service_id, 'expiration_date' => $expiration_date]);
+            }
+
+            if ($service->date_renews > $expiration_date) {
+                // Update expiration date
+                $expiration_date = $service->date_renews;
+                $this->Record->duplicate('domains_domains.expiration_date', '=', $expiration_date)
+                    ->insert('domains_domains', ['service_id' => $service_id, 'expiration_date' => $expiration_date]);
+            }
 
             return $this->Date->format(
                 $format,

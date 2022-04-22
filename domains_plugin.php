@@ -1402,15 +1402,32 @@ class DomainsPlugin extends Plugin
      */
     public function setRenewalDate($event)
     {
-        Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'ModuleManager']);
+        Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services']);
         $params = $event->getParams();
 
         // Validate if the service is being handled by the Domain Manager and the module type is registrar
         $package_group_id = $this->Companies->getSetting(Configure::get('Blesta.company_id'), 'domains_package_group');
-        $module_row = $this->ModuleManager->getRow($params['vars']['module_row']);
+        $module_row = $this->ModuleManager->getRow($params['vars']['module_row_id']);
+        $module = $this->ModuleManager->get($module_row->module_id ?? null, false, false);
 
-        if ($package_group_id == ($params['vars']['package_group_id'] ?? null)) {
+        if ($package_group_id->value == ($params['vars']['package_group_id'] ?? null) && $module->type == 'registrar') {
+            $service = $this->Services->get($params['service_id'] ?? null);
 
+            // Save current renewal date
+            $this->DomainsDomains->getExpirationDate($service->id);
+
+            $renewal_days = $this->Companies->getSetting(
+                Configure::get('Blesta.company_id'),
+                'domains_renewal_days_before_expiration'
+            );
+            $service->date_renews = $this->Services->Date->modify(
+                $service->date_renews,
+                '-' . $renewal_days->value . ' days',
+                'Y-m-d 00:00:00',
+                Configure::get('Blesta.company_timezone')
+            );
+
+            $this->Services->edit($service->id, ['date_renews' => $service->date_renews], true);
         }
     }
 
