@@ -662,6 +662,31 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Get the pricings of a TLD
+     *
+     * @param int $package_id The ID of the package belonging to the TLD
+     * @return array A list of objects containing the pricing
+     */
+    private function getPricingsByTermCurrency($package_id)
+    {
+        // Get pricings
+        $pricings = $this->Record->select('pricings.*')
+            ->from('pricings')
+            ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
+            ->where('package_pricing.package_id', '=', $package_id)
+            ->where('pricings.period', '=', 'year')
+            ->fetchAll();
+
+        // Organize pricings by currency and term
+        $pricings_by_currency = [];
+        foreach ($pricings as $pricing) {
+            $pricings_by_currency[$pricing->currency][$pricing->term] = $pricing;
+        }
+
+        return $pricings_by_currency;
+    }
+
+    /**
      * Validates if a package will require a module migration.
      *
      * @param string $tld The TLD to validate
@@ -835,12 +860,13 @@ class DomainsTlds extends DomainsModel
 
         // Update pricing
         if (!empty($pricings)) {
+            $pricings_by_currency = $this->getPricingsByTermCurrency($tld->package_id);
             foreach ($pricings as $term => $term_pricing) {
                 foreach ($term_pricing as $currency => $pricing) {
                     $pricing['currency'] = $currency;
                     $pricing['term'] = $term;
 
-                    $pricing_row = $this->getPricing($tld->package_id, $term, $currency);
+                    $pricing_row = $pricings_by_currency[$currency][$term] ?? null;
 
                     if (!empty($pricing_row)) {
                         if ((bool) ($pricing['enabled'] ?? 1)) {
