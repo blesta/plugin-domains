@@ -662,6 +662,31 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Get the pricings of a TLD
+     *
+     * @param int $package_id The ID of the package belonging to the TLD
+     * @return array A list of objects containing the pricing
+     */
+    private function getPricingsByTermCurrency($package_id)
+    {
+        // Get pricings
+        $pricings = $this->Record->select('pricings.*')
+            ->from('pricings')
+            ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
+            ->where('package_pricing.package_id', '=', $package_id)
+            ->where('pricings.period', '=', 'year')
+            ->fetchAll();
+
+        // Organize pricings by currency and term
+        $pricings_by_currency = [];
+        foreach ($pricings as $pricing) {
+            $pricings_by_currency[$pricing->currency][$pricing->term] = $pricing;
+        }
+
+        return $pricings_by_currency;
+    }
+
+    /**
      * Validates if a package will require a module migration.
      *
      * @param string $tld The TLD to validate
@@ -833,49 +858,23 @@ class DomainsTlds extends DomainsModel
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
         $tld = $this->get($tld, $company_id);
 
-        // Get company currencies
-        $currencies = $this->Form->collapseObjectArray(
-            $this->Currencies->getAll($company_id),
-            'code',
-            'code'
-        );
-
-        // Set empty checkboxes
-        $enabled_pricings = 0;
-        for ($i = 1; $i <= 10; $i++) {
-            foreach ($currencies as $currency) {
-                $pricings[$i][$currency]['enabled'] = $pricings[$i][$currency]['enabled'] ?? null;
-
-                if ($pricings[$i][$currency]['enabled']) {
-                    $enabled_pricings++;
-                }
-            }
-        }
-
         // Update pricing
         if (!empty($pricings)) {
+            $pricings_by_currency = $this->getPricingsByTermCurrency($tld->package_id);
             foreach ($pricings as $term => $term_pricing) {
                 foreach ($term_pricing as $currency => $pricing) {
                     $pricing['currency'] = $currency;
                     $pricing['term'] = $term;
 
-                    $pricing_row = $this->getPricing($tld->package_id, $term, $currency);
+                    $pricing_row = $pricings_by_currency[$currency][$term] ?? null;
 
                     if (!empty($pricing_row)) {
-                        if ((bool)$pricing['enabled']) {
+                        if ((bool) ($pricing['enabled'] ?? 1)) {
                             $this->updatePricing($pricing_row->id, $pricing);
-                        } else if ($enabled_pricings >= 1) {
-                            $this->disablePricing($pricing_row->id);
                         } else {
-                            $this->Input->setErrors([
-                                'count' => [
-                                    'message' => Language::_('DomainsTlds.!error.package_pricing.count', true)
-                                ]
-                            ]);
-
-                            return;
+                            $this->disablePricing($pricing_row->id);
                         }
-                    } else if ((bool)$pricing['enabled']) {
+                    } else if ((bool) ($pricing['enabled'] ?? 0)) {
                         $this->addPricing($tld->package_id, $pricing);
                     }
                 }
@@ -1401,6 +1400,69 @@ class DomainsTlds extends DomainsModel
         }
 
         return $domains_settings;
+    }
+
+    /**
+     * Imports the TLDs and their pricing from a registrar module, if available
+     *
+     * @param array $tlds A list containing the TLDs to import from the registrar module
+     * @param int $module_id The ID of the registrar module
+     * @param int $company_id The ID of the company to import the TLDs
+     * @return bool True if all the TLDs where imported successfully, false otherwise
+     */
+    public function import(array $tlds, int $module_id, int $company_id = null) : bool
+    {
+        Loader::loadModels($this, ['ModuleManager']);
+
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+
+        // Format TLDS
+        $tlds = array_keys($tlds);
+
+        // Initialize module
+        $module = $this->ModuleManager->initModule($module_id);
+
+        if (!$module) {
+            return false;
+        }
+
+        // Import TLDs
+        if (!empty($tlds)) {
+            $module->setModuleRow($module->getModuleRows()[0] ?? null);
+
+            // Get module TLDs
+            $module_tlds = $module->getTlds();
+            foreach ($tlds as $tld) {
+                // Verify if the TLD does not exist in the company
+                $stored_tld = $this->get($tld, $company_id);
+                if (!empty($stored_tld)) {
+                    continue;
+                }
+
+                // Check if the TLD is supported by the module
+                if (!in_array($tld, $module_tlds)) {
+                    continue;
+                }
+
+                // Add TLD to the company
+                $tld_package = $this->add([
+                    'tld' => $tld,
+                    'company_id' => $company_id,
+                    'module_id' => $module_id
+                ]);
+
+                if (($errors = $this->errors())) {
+                    return false;
+                }
+            }
+
+            // Sync TLD pricing
+            Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
+            $sync_utility = new TldSync();
+            $sync_utility->synchronizePrices($tlds, $company_id, ['module_id' => $module_id]);
+        }
+
+        return false;
     }
 
     /**

@@ -355,6 +355,106 @@ class AdminDomains extends DomainsController
     }
 
     /**
+     * Import TLDs and their respective pricing from a registrar module
+     */
+    public function importTlds()
+    {
+        Loader::loadModels($this, ['Domains.DomainsTlds']);
+
+        $vars = [];
+        if (!empty($this->post)) {
+            $vars = $this->post;
+
+            try {
+                $this->DomainsTlds->import(
+                    $this->post['tlds'] ?? [],
+                    empty($this->post['module_id']) ? 0 : $this->post['module_id'],
+                    Configure::get('Blesta.company_id')
+                );
+
+                if (($errors = $this->DomainsTlds->errors())) {
+                    $this->flashMessage('error', $errors, null, false);
+                } else {
+                    $this->flashMessage(
+                        'message',
+                        Language::_('AdminDomains.!success.tlds_imported', true),
+                        null,
+                        false
+                    );
+                }
+            } catch (Throwable $e) {
+                $this->flashMessage('error', $e->getMessage(), null, false);
+            }
+
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/importtlds/');
+        }
+
+        $this->set('vars', $vars);
+    }
+
+    /**
+     * Returns a JSON object containing the installed registrar modules
+     */
+    public function getImportModules()
+    {
+        // Check if the request was made through AJAX
+        if (!$this->isAjax()) {
+            header($this->server_protocol . ' 401 Unauthorized');
+            exit();
+        }
+
+        // Get installed registrar modules
+        $installed_registrars = $this->ModuleManager->getAll(
+            Configure::get('Blesta.company_id'),
+            'name',
+            'asc',
+            ['type' => 'registrar']
+        );
+
+        // Get installed module details when available
+        $registrars = [];
+        foreach ($installed_registrars as $installed_registrar) {
+            $registrars[$installed_registrar->id] = $installed_registrar->name;
+        }
+
+        $this->outputAsJson($registrars);
+        return false;
+    }
+
+    /**
+     * Returns a JSON object containing the TLDs supported for a given module
+     */
+    public function getModuleTlds()
+    {
+        Loader::loadModels($this, ['Domains.DomainsTlds']);
+
+        // Check if the provided module id exists
+        if (!$this->isAjax() || !isset($this->get[0]) || !($module = $this->ModuleManager->get($this->get[0]))) {
+            header($this->server_protocol . ' 401 Unauthorized');
+            exit();
+        }
+
+        // Fetch TLD list from the module
+        $tlds = [];
+        $module_tlds = $this->ModuleManager->moduleRpc($module->id, 'getTlds');
+        foreach ($module_tlds as $tld) {
+            $tld = strtolower($tld);
+            $disabled = false;
+
+            // Check if the TLD already exists in the current company
+            $local_tld = $this->DomainsTlds->get($tld, Configure::get('Blesta.company_id'));
+            if ($local_tld) {
+                $disabled = true;
+            }
+
+            $tlds[$tld] = ['name' => $tld, 'disabled' => $disabled];
+        }
+
+        $this->outputAsJson($tlds);
+        return false;
+    }
+
+    /**
      * Fetches the view for the whois page
      */
     public function whois()
@@ -1747,11 +1847,46 @@ class AdminDomains extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
+        // Get company settings
+        $company_settings = $this->Form->collapseObjectArray(
+            $this->Companies->getSettings(Configure::get('Blesta.company_id')),
+            'value',
+            'key'
+        );
+
+        // Get company default currency
+        $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
+
+        // Get company currencies
+        $currencies = $this->Currencies->getAll(Configure::get('Blesta.company_id'));
+
+        foreach ($currencies as $key => $currency) {
+            $currencies[$currency->code] = $currency;
+            unset($currencies[$key]);
+        }
+
+        if (isset($currencies[$default_currency])) {
+            $currencies = [$default_currency => $currencies[$default_currency]] + $currencies;
+        }
+
+        // Get company languages
+        $languages = $this->Languages->getAll(Configure::get('Blesta.company_id'));
+
+        // Updates pricing
         if (!empty($this->post)) {
             $tld = $this->DomainsTlds->getByPackage($this->get[0]);
 
             // Update TLD package
             $this->DomainsTlds->edit($tld->tld, $this->post);
+
+            // Set empty checkboxes
+            for ($i = 1; $i <= 10; $i++) {
+                foreach ($currencies as $code => $currency) {
+                    if (!isset($this->post['pricing'][$i][$code]['enabled'])) {
+                        $this->post['pricing'][$i][$code]['enabled'] = 0;
+                    }
+                }
+            }
 
             // Update pricing
             if (!isset($this->post['pricing'])) {
@@ -1782,28 +1917,6 @@ class AdminDomains extends DomainsController
 
             return false;
         }
-
-        // Get company settings
-        $company_id = Configure::get('Blesta.company_id');
-        $company_settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
-
-        // Get company default currency
-        $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
-
-        // Get company currencies
-        $currencies = $this->Currencies->getAll($company_id);
-
-        foreach ($currencies as $key => $currency) {
-            $currencies[$currency->code] = $currency;
-            unset($currencies[$key]);
-        }
-
-        if (isset($currencies[$default_currency])) {
-            $currencies = [$default_currency => $currencies[$default_currency]] + $currencies;
-        }
-
-        // Get company languages
-        $languages = $this->Languages->getAll($company_id);
 
         // Get TLD package
         $package = $this->Packages->get($this->get[0], true);
