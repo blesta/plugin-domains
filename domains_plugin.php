@@ -63,16 +63,6 @@ class DomainsPlugin extends Plugin
                 ->setKey(['id'], 'primary')
                 ->setKey(['tld_id', 'package_id'], 'unique')
                 ->create('domains_packages', true);
-
-            // domains_domains
-            $this->Record
-                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-                ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                ->setField('expiration_date', ['type' => 'datetime'])
-                ->setKey(['id'], 'primary')
-                ->setKey(['service_id'], 'unique')
-                ->create('domains_domains', true);
-
         } catch (Exception $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -107,10 +97,6 @@ class DomainsPlugin extends Plugin
         // Set the default days to before renewal to send the expiration notice
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_expiration_notice_days_after'))) {
             $this->Companies->setSetting($company_id, 'domains_expiration_notice_days_after', 1);
-        }
-        // Set the default renewal days before expiration
-        if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
-            $this->Companies->setSetting($company_id, 'domains_renewal_days_before_expiration', 30);
         }
 
         // Add all email templates
@@ -152,24 +138,8 @@ class DomainsPlugin extends Plugin
             }
         }
 
-        // Add data feed
-        try {
-            $this->DataFeeds->add([
-                'feed' => 'domain',
-                'dir' => 'domains',
-                'class' => '\\DomainsFeed'
-            ]);
-        } catch (Throwable $e) {
-            $this->Input->setErrors(['feed' => ['create' => $e->getMessage()]]);
-            return;
-        }
-
-        $this->DataFeeds->addEndpoint([
-            'company_id' => $company_id,
-            'feed' => 'domain',
-            'endpoint' => 'pricing',
-            'enabled' => 0
-        ]);
+        $this->upgrade1_5_0();
+        $this->upgrade1_6_0();
     }
 
     /**
@@ -996,9 +966,19 @@ class DomainsPlugin extends Plugin
             }
 
             // Get the expiration date of this service from the registrar
-            $renew_date = $service->date_renews;
+            $renew_date = $this->Services->Date->modify(
+                $service->date_renews,
+                '-' . ($settings['domains_renewal_days_before_expiration'] ?? 0) . ' days',
+                'Y-m-d 00:00:00',
+                Configure::get('Blesta.company_timezone')
+            );
             if (method_exists($modules[$module_id], 'getExpirationDate')) {
-                $renew_date = $modules[$module_id]->getExpirationDate($service, 'c');
+                $renew_date = $this->Services->Date->modify(
+                    $modules[$module_id]->getExpirationDate($service, 'c'),
+                    '-' . ($settings['domains_renewal_days_before_expiration'] ?? 0) . ' days',
+                    'Y-m-d 00:00:00',
+                    Configure::get('Blesta.company_timezone')
+                );
             }
 
             // Update the renew date if the expiration date is greater than the renew date
