@@ -514,6 +514,7 @@ class AdminDomains extends DomainsController
                 'domains_markup_rounding',
                 'domains_automatic_sync',
                 'domains_sync_frequency',
+                'domains_override_price'
             ];
             if (!isset($this->post['domains_spotlight_tlds'])) {
                 $this->post['domains_spotlight_tlds'] = [];
@@ -526,6 +527,9 @@ class AdminDomains extends DomainsController
             }
             if (!isset($this->post['domains_automatic_sync'])) {
                 $this->post['domains_automatic_sync'] = '0';
+            }
+            if (!isset($this->post['domains_override_price'])) {
+                $this->post['domains_override_price'] = '0';
             }
             $this->post['domains_spotlight_tlds'] = json_encode($this->post['domains_spotlight_tlds']);
             $this->Companies->setSettings(

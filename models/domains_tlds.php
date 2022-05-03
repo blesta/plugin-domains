@@ -390,7 +390,8 @@ class DomainsTlds extends DomainsModel
             'pricing' => [
                 ['term' => 1, 'period' => 'year', 'currency' => $default_currency]
             ],
-            'groups' => [$vars['package_group_id']]
+            'groups' => [$vars['package_group_id']],
+            'override_price' => $company_settings['domains_override_price'] ?? 0,
         ];
 
         // Fetch sample welcome email from the module
