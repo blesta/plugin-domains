@@ -15,6 +15,7 @@ $lang['AdminDomains.!success.domain_renewal'] = 'The Domain has been renewed!';
 $lang['AdminDomains.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
 $lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
+$lang['AdminDomains.!success.tlds_imported'] = 'The TLDs were successfully imported!';
 
 $lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not valid.';
 $lang['AdminDomains.!error.tlds_bulk[action].valid'] = 'Invalid value for TLDs Bulk Action, must be "enable" or "disable".';
@@ -94,6 +95,7 @@ $lang['AdminDomains.configuration.field_expiration_notice_days_after'] = 'Expira
 $lang['AdminDomains.configuration.field_spotlight_tlds'] = 'Spotlight TLDs';
 $lang['AdminDomains.configuration.field_renewal_days_before_expiration'] = 'Renew Days Before Expiration';
 $lang['AdminDomains.configuration.field_taxable'] = 'Enable Tax for Domains';
+$lang['AdminDomains.configuration.field_override_price'] = 'Lock in domain prices';
 $lang['AdminDomains.configuration.field_sync_price_markup'] = 'Price Markup (%)';
 $lang['AdminDomains.configuration.field_sync_renewal_markup'] = 'Renewal Price Markup (%)';
 $lang['AdminDomains.configuration.field_sync_transfer_markup'] = 'Transfer Price Markup (%)';
@@ -110,6 +112,7 @@ $lang['AdminDomains.configuration.link_template'] = 'Edit Email Template';
 $lang['AdminDomains.configuration.tooltip_dns_management_option_group'] = 'The configurable option group used to control whether a domain will have DNS management services.';
 $lang['AdminDomains.configuration.tooltip_email_forwarding_option_group'] = 'The configurable option group used to control whether a domain will have email forwarding services.';
 $lang['AdminDomains.configuration.tooltip_id_protection_option_group'] = 'The configurable option group used to control whether a domain will have ID protection services.';
+$lang['AdminDomains.configuration.tooltip_override_price'] = 'When enabled this option will prevent TLD price changes from affecting existing domains by setting an "override price" on newly created domains.';
 $lang['AdminDomains.configuration.tooltip_first_reminder_days_before'] = 'Select the number of days before a domain expires to send the first renewal email (26-35 as per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_second_reminder_days_before'] = 'Select the number of days before a domain expires to send the second renewal email (4-10 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_expiration_notice_days_after'] = 'Select the number of days after a domain expires to send the expiration notice email (1-5 per ICANN specs). Use the Email Template link to modify/disable this email.';
@@ -236,6 +239,17 @@ $lang['AdminDomains.whois.field_domain'] = 'Domain';
 $lang['AdminDomains.whois.field_submit'] = 'Lookup';
 
 
+$lang['AdminDomains.import.boxtitle_import'] = 'Import TLDs';
+$lang['AdminDomains.import.title_module'] = 'Module';
+$lang['AdminDomains.import.title_tlds'] = 'TLDs';
+$lang['AdminDomains.import.field_module'] = 'Module';
+$lang['AdminDomains.import.field_import'] = 'Import TLDs';
+$lang['AdminDomains.import.text_refresh'] = 'Refresh';
+$lang['AdminDomains.import.text_install_modules'] = 'Install Modules';
+$lang['AdminDomains.import.text_tld_settings'] = 'TLD pricing markups, round, etc., will be set based on the TLD Sync settings.';
+$lang['AdminDomains.import.text_configuration'] = 'Configure Settings';
+
+
 $lang['AdminDomains.getDays.never'] = 'Never';
 $lang['AdminDomains.getDays.text_day'] = '%1$s Day'; // %1$s is the number of days
 $lang['AdminDomains.getDays.text_days'] = '%1$s Days'; // %1$s is the number of days
@@ -262,4 +276,5 @@ $lang['AdminDomains.leftnav.nav_domains_whois'] = 'Whois';
 $lang['AdminDomains.leftnav.nav_tlds'] = 'TLDs';
 $lang['AdminDomains.leftnav.nav_tlds_pricing'] = 'TLD Pricing';
 $lang['AdminDomains.leftnav.nav_tlds_registrars'] = 'Registrars';
+$lang['AdminDomains.leftnav.nav_tlds_import'] = 'Import TLDs';
 $lang['AdminDomains.leftnav.nav_configuration'] = 'Configuration';
