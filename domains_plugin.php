@@ -336,20 +336,19 @@ class DomainsPlugin extends Plugin
                 'dir' => 'domains',
                 'class' => '\\DomainsFeed'
             ]);
-        } catch (Throwable $e) {
-            $this->Input->setErrors(['feed' => ['create' => $e->getMessage()]]);
-            return;
-        }
 
-        // Add data feed endpoint to all companies
-        $companies = $this->Companies->getAll();
-        foreach ($companies as $company) {
-            $this->DataFeeds->addEndpoint([
-                'company_id' => $company->id,
-                'feed' => 'domain',
-                'endpoint' => 'pricing',
-                'enabled' => 0
-            ]);
+            // Add data feed endpoint to all companies
+            $companies = $this->Companies->getAll();
+            foreach ($companies as $company) {
+                $this->DataFeeds->addEndpoint([
+                    'company_id' => $company->id,
+                    'feed' => 'domain',
+                    'endpoint' => 'pricing',
+                    'enabled' => 0
+                ]);
+            }
+        } catch (Throwable $e) {
+            // Nothing to do
         }
     }
 
@@ -384,7 +383,7 @@ class DomainsPlugin extends Plugin
 
                 // Set the default renewal days before expiration
                 if (!($setting = $this->Companies->getSetting($company->id, 'domains_renewal_days_before_expiration'))) {
-                    $this->Companies->setSetting($company->id, 'domains_renewal_days_before_expiration', 30);
+                    $this->Companies->setSetting($company->id, 'domains_renewal_days_before_expiration', 0);
                 }
             }
         } catch (Exception $e) {
@@ -1393,21 +1392,25 @@ class DomainsPlugin extends Plugin
         if ($package_group_id->value == ($params['vars']['package_group_id'] ?? null) && $module->type == 'registrar') {
             $service = $this->Services->get($params['service_id'] ?? null);
 
-            // Save current renewal date
-            $this->DomainsDomains->getExpirationDate($service->id);
+            // Get the domain expiration date for this service
+            $expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
 
+            // Save the expiration date locally
+            $this->DomainsDomains->setExpirationDate($expiration_date);
+
+            // Calculate the renew date based on the domains_renewal_days_before_expiration setting
             $renewal_days = $this->Companies->getSetting(
                 Configure::get('Blesta.company_id'),
                 'domains_renewal_days_before_expiration'
             );
-            $service->date_renews = $this->Services->Date->modify(
-                $service->date_renews,
+            $renewal_date = $this->Services->Date->modify(
+                $expiration_date,
                 '-' . $renewal_days->value . ' days',
                 'Y-m-d 00:00:00',
                 Configure::get('Blesta.company_timezone')
             );
 
-            $this->Services->edit($service->id, ['date_renews' => $service->date_renews], true);
+            $this->Services->edit($service->id, ['date_renews' => $renewal_date], true);
         }
     }
 

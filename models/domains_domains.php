@@ -242,21 +242,8 @@ class DomainsDomains extends DomainsModel
                 );
             }
 
-            if (empty($expiration_date)) {
+            if (empty($expiration_date) || $service->date_renews > $expiration_date) {
                 $expiration_date = $service->date_renews;
-            }
-
-            if ($expiration_date === $service->date_renews) {
-                // Save expiration date
-                $this->Record->duplicate('domains_domains.expiration_date', '=', $expiration_date)
-                    ->insert('domains_domains', ['service_id' => $service_id, 'expiration_date' => $expiration_date]);
-            }
-
-            if ($service->date_renews > $expiration_date) {
-                // Update expiration date
-                $expiration_date = $service->date_renews;
-                $this->Record->duplicate('domains_domains.expiration_date', '=', $expiration_date)
-                    ->insert('domains_domains', ['service_id' => $service_id, 'expiration_date' => $expiration_date]);
             }
 
             return $this->Date->format(
@@ -266,5 +253,17 @@ class DomainsDomains extends DomainsModel
         }
 
         return null;
+    }
+
+    /**
+     * Sets the expiration date of a given domain
+     *
+     * @param int $service_id The ID of the service belonging to the domain
+     * @param string $expiration_date The expiration date of the domain
+     */
+    public function setExpirationDate($service_id, $expiration_date)
+    {
+        $this->Record->duplicate('domains_domains.expiration_date', '=', $expiration_date)
+            ->insert('domains_domains', ['service_id' => $service_id, 'expiration_date' => $expiration_date]);
     }
 }

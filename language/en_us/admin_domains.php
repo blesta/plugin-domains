@@ -117,7 +117,7 @@ $lang['AdminDomains.configuration.tooltip_first_reminder_days_before'] = 'Select
 $lang['AdminDomains.configuration.tooltip_second_reminder_days_before'] = 'Select the number of days before a domain expires to send the second renewal email (4-10 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_expiration_notice_days_after'] = 'Select the number of days after a domain expires to send the expiration notice email (1-5 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that will be highlighted on order forms through the Order Plugin.';
-$lang['AdminDomains.configuration.tooltip_renewal_days_before_expiration'] = 'When domains are invoiced, the invoice will be due this number of days prior to the domains expiration date.';
+$lang['AdminDomains.configuration.tooltip_renewal_days_before_expiration'] = 'When domains are invoiced, the invoice will be due this number of days prior to the domain\'s expiration date.';
 
 $lang['AdminDomains.getroundingoptions.custom'] = 'Custom';
 
