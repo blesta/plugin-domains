@@ -59,12 +59,10 @@ class TldSync
         foreach ($module_tlds as $module_id => $list_tlds) {
             $module = $this->ModuleManager->initModule($module_id);
             $module->setModuleRow($module->getModuleRows()[0] ?? null);
-
-            if (method_exists($module, 'getFilteredTldPricing')) {
-                $module_pricing = $module->getFilteredTldPricing(null, ['tlds' => $tlds, 'currencies' => array_values($currencies)]);
-            } else {
-                $module_pricing = $module->getTldPricing();
-            }
+            $module_pricing = $module->getFilteredTldPricing(
+                null,
+                ['tlds' => $tlds, 'currencies' => array_values($currencies)]
+            );
 
             // Set the price for each TLD
             $tlds_pricing = array_intersect_key($module_pricing, array_flip($list_tlds));
