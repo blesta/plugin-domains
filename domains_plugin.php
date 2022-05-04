@@ -378,7 +378,15 @@ class DomainsPlugin extends Plugin
                 foreach ($domains as $domain) {
                     $vars = ['service_id' => $domain->id, 'expiration_date' => $domain->date_renews];
                     $fields = ['service_id', 'expiration_date'];
-                    $this->Record->insert('domains_domains', $vars, $fields);
+                    
+                    $existing_domain = $this->Record->select()
+                        ->from('domains_domains')
+                        ->where('service_id', '=', $domain->id)
+                        ->fetch();
+
+                    if (empty($existing_domain)) {
+                        $this->Record->insert('domains_domains', $vars, $fields);
+                    }
                 }
 
                 // Set the default renewal days before expiration
