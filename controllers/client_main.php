@@ -28,7 +28,7 @@ class ClientMain extends DomainsController
     public function index()
     {
         // Load required models
-        $this->uses(['Domains.DomainsTlds', 'Companies', 'ModuleManager', 'Services', 'Packages']);
+        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services', 'Packages']);
 
         // Set filters from post input
         $post_filters = [];
@@ -81,6 +81,7 @@ class ClientMain extends DomainsController
 
             $service->renewal_price = $this->Services->getRenewalPrice($service->id);
             $service->registrar = $modules[$module_id]->getName();
+            $service->expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
         }
 
         // Set language for periods

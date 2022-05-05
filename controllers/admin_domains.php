@@ -33,7 +33,7 @@ class AdminDomains extends DomainsController
      */
     public function browse()
     {
-        $this->uses(['Domains.DomainsTlds', 'Companies', 'ModuleManager', 'Services']);
+        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services']);
 
         if (!empty($this->post) && isset($this->post['service_ids'])) {
             if (($errors = $this->updateServices($this->post))) {
@@ -118,6 +118,7 @@ class AdminDomains extends DomainsController
 
             $service->renewal_price = $this->Services->getRenewalPrice($service->id);
             $service->registrar = $modules[$module_id]->getName();
+            $service->expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
         }
 
         if ($alt_sort) {
@@ -514,6 +515,7 @@ class AdminDomains extends DomainsController
                 'domains_markup_rounding',
                 'domains_automatic_sync',
                 'domains_sync_frequency',
+                'domains_renewal_days_before_expiration',
                 'domains_override_price'
             ];
             if (!isset($this->post['domains_spotlight_tlds'])) {
@@ -580,6 +582,7 @@ class AdminDomains extends DomainsController
             'package_option_groups',
             $this->Form->collapseObjectArray($this->PackageOptionGroups->getAll($company_id), 'name', 'id')
         );
+        $this->set('renewal_days', $this->getDays(1, 90));
         $this->set('first_reminder_days', $this->getDays(26, 35));
         $this->set('second_reminder_days', $this->getDays(4, 10));
         $this->set('expiration_notice_days', $this->getDays(1, 5));
