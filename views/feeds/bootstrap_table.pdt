@@ -1,0 +1,58 @@
+<table class="table table-striped table-bordered rounded" id="domains_pricing">
+    <thead>
+        <tr>
+            <th><?php $this->_('DomainsFeed.table.heading_tlds');?></th>
+            <?php
+            for ($i = 1; $i <= 10; $i++) {
+                if (in_array($i, $terms ?? [])) {
+            ?>
+            <th colspan="3"><?php $this->_('DomainsFeed.table.heading_year' . ($i > 1 ? 's' : ''), false, $i);?></th>
+            <?php
+                }
+            }
+            ?>
+        </tr>
+        <tr>
+            <th class="py-1"></th>
+            <?php
+            for ($i = 1; $i <= 10; $i++) {
+                if (in_array($i, $terms ?? [])) {
+            ?>
+            <th class="py-1 h6"><?php $this->_('DomainsFeed.table.register');?></th>
+            <th class="py-1 h6"><?php $this->_('DomainsFeed.table.renew');?></th>
+            <th class="py-1 h6"><?php $this->_('DomainsFeed.table.transfer');?></th>
+            <?php
+                }
+            }
+            ?>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        foreach ($tlds ?? [] as $tld) {
+        ?>
+        <tr>
+            <td><?php echo $tld->tld; ?></td>
+            <?php
+            foreach ($tld->pricing as $term => $pricing) {
+                if (!empty($pricing)) {
+            ?>
+            <td class="h6"><?php echo $this->CurrencyFormat->format($pricing->price, $pricing->currency, ['code' => true]);?></td>
+            <td class="h6"><?php echo $this->CurrencyFormat->format($pricing->price_renews ?? $pricing->price, $pricing->currency, ['code' => true]);?></td>
+            <td class="h6"><?php echo $this->CurrencyFormat->format($pricing->price_transfer ?? $pricing->price, $pricing->currency, ['code' => true]);?></td>
+            <?php
+                } else {
+            ?>
+            <td colspan="3">
+                <i class="text-muted"><?php $this->_('DomainsFeed.table.not_available');?></i>
+            </td>
+            <?php
+                }
+            }
+            ?>
+        </tr>
+        <?php
+        }
+        ?>
+    </tbody>
+</table>
