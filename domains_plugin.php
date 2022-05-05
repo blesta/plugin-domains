@@ -63,6 +63,8 @@ class DomainsPlugin extends Plugin
                 ->setKey(['id'], 'primary')
                 ->setKey(['tld_id', 'package_id'], 'unique')
                 ->create('domains_packages', true);
+
+            $this->createDomainsDomainsTable();
         } catch (Exception $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -139,7 +141,11 @@ class DomainsPlugin extends Plugin
         }
 
         $this->upgrade1_5_0();
-        $this->upgrade1_6_0();
+
+        // Set the default renewal days before expiration
+        if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
+            $this->Companies->setSetting($company_id, 'domains_renewal_days_before_expiration', 30);
+        }
     }
 
     /**
@@ -232,7 +238,7 @@ class DomainsPlugin extends Plugin
             $this->reorderNavigationItems($company->id);
         }
     }
-    
+
     /**
      * Update to v1.3.0
      */
@@ -357,48 +363,51 @@ class DomainsPlugin extends Plugin
      */
     private function upgrade1_6_0()
     {
-        Loader::loadModels($this, ['Companies', 'Domains.DomainsDomains']);
+        Loader::loadModels($this, ['Companies', 'PluginManager', 'Domains.DomainsDomains']);
 
         try {
-            $this->Record
-                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-                ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                ->setField('expiration_date', ['type' => 'datetime'])
-                ->setKey(['id'], 'primary')
-                ->setKey(['service_id'], 'unique')
-                ->create('domains_domains', true);
-
-            // Add all the existing domains for all companies
-            $companies = $this->Companies->getAll();
-            foreach ($companies as $company) {
-                $domains = $this->DomainsDomains->getAll([
-                    'company_id' => $company->id
-                ]);
-
-                foreach ($domains as $domain) {
-                    $vars = ['service_id' => $domain->id, 'expiration_date' => $domain->date_renews];
-                    $fields = ['service_id', 'expiration_date'];
-                    
-                    $existing_domain = $this->Record->select()
-                        ->from('domains_domains')
-                        ->where('service_id', '=', $domain->id)
-                        ->fetch();
-
-                    if (empty($existing_domain)) {
-                        $this->Record->insert('domains_domains', $vars, $fields);
-                    }
-                }
-
-                // Set the default renewal days before expiration
-                if (!($setting = $this->Companies->getSetting($company->id, 'domains_renewal_days_before_expiration'))) {
-                    $this->Companies->setSetting($company->id, 'domains_renewal_days_before_expiration', 0);
-                }
-            }
+            $this->createDomainsDomainsTable();
         } catch (Exception $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
             return;
         }
+
+        // Add all the existing domains for all companies with the domain manager installed
+        $plugins = $this->PluginManager->getByDir('domains');
+        foreach ($plugins as $plugin) {
+            // Set the default renewal days before expiration
+            if (!($setting = $this->Companies->getSetting($plugin->company_id, 'domains_renewal_days_before_expiration'))) {
+                $this->Companies->setSetting($plugin->company_id, 'domains_renewal_days_before_expiration', 0);
+            }
+
+            $domains = $this->DomainsDomains->getAll([
+                'company_id' => $plugin->company_id
+            ]);
+
+            // Record expiration date in domains_domains for each domain service in the system
+            foreach ($domains as $domain) {
+                $vars = ['service_id' => $domain->id, 'expiration_date' => $domain->date_renews];
+                $fields = ['service_id', 'expiration_date'];
+
+                $this->Record->duplicate('service_id', '=', $domain->id)->insert('domains_domains', $vars, $fields);
+            }
+
+        }
+    }
+
+    /**
+     * Creates the domains_domains database table
+     */
+    private function createDomainsDomainsTable()
+    {
+        $this->Record
+            ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+            ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+            ->setField('expiration_date', ['type' => 'datetime'])
+            ->setKey(['id'], 'primary')
+            ->setKey(['service_id'], 'unique')
+            ->create('domains_domains', true);
     }
 
     /**
@@ -1040,7 +1049,7 @@ class DomainsPlugin extends Plugin
             // Load sync tool
             Loader::load(dirname(__FILE__) . DS . 'lib' . DS . 'tld_sync.php');
             $this->TldSync = new TldSync();
-            
+
             $this->TldSync->synchronizePrices($tld_list, $company_id);
 
             // Save last execution
@@ -1404,7 +1413,7 @@ class DomainsPlugin extends Plugin
             $expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
 
             // Save the expiration date locally
-            $this->DomainsDomains->setExpirationDate($expiration_date);
+            $this->DomainsDomains->setExpirationDate($service->id, $expiration_date);
 
             // Calculate the renew date based on the domains_renewal_days_before_expiration setting
             $renewal_days = $this->Companies->getSetting(
