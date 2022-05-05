@@ -19,8 +19,8 @@
                 if (in_array($i, $terms ?? [])) {
             ?>
             <th class="py-1 h6"><?php $this->_('DomainsFeed.table.register');?></th>
-            <th class="py-1 h6"><?php $this->_('DomainsFeed.table.transfer');?></th>
             <th class="py-1 h6"><?php $this->_('DomainsFeed.table.renew');?></th>
+            <th class="py-1 h6"><?php $this->_('DomainsFeed.table.transfer');?></th>
             <?php
                 }
             }
