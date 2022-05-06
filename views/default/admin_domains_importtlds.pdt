@@ -15,6 +15,7 @@
         ?>
             <?php
             $this->Widget->clear();
+            $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css', ['id' => 'domains_styles']);
             $this->Widget->create(
                 $this->_('AdminDomains.import.boxtitle_import', true),
                 ['id' => 'admin_domains_import'],
@@ -25,41 +26,50 @@
             ?>
 
             <div class="inner">
-                <div class="title_row first">
-                    <h3><?php echo $this->_('AdminDomains.import.title_module', true);?></h3>
-                </div>
-                <div class="pad">
-                    <section class="error_section">
-                        <article class="error_box alert">
-                            <div class="row">
-                                <div class="col-md-9">
-                                    <div class="icon-line fa-2x">
-                                        <i class="fas fa-exclamation-triangle fa-fw"></i>
-                                        <p style="padding: 0px!important;"><?php $this->_('AdminDomains.import.text_tld_settings');?></p>
+                <div id="modules_section">
+                    <div class="title_row first">
+                        <h3><?php echo $this->_('AdminDomains.import.title_module', true);?></h3>
+                    </div>
+                    <div class="pad">
+                        <section class="error_section">
+                            <article class="error_box alert">
+                                <div class="row">
+                                    <div class="col-md-9 pt-1">
+                                        <div class="icon-line fa-2x">
+                                            <i class="fas fa-exclamation-triangle fa-fw"></i>
+                                            <p style="padding: 0px!important;"><?php $this->_('AdminDomains.import.text_tld_settings');?></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a target="_blank" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync');?>" class="btn btn-warning m-0 float-right"><?php $this->_('AdminDomains.import.text_configuration');?></a>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <a target="_blank" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync');?>" class="btn btn-warning m-0 float-right"><?php $this->_('AdminDomains.import.text_configuration');?></a>
-                                </div>
-                            </div>
-                        </article>
-                    </section>
+                            </article>
+                        </section>
 
-                    <ul>
-                        <li>
-                            <?php
-                            $this->Form->label($this->_('AdminDomains.import.field_module', true), 'module_id');
-                            $this->Form->fieldSelect('module_id', [], $vars['module_id'] ?? '', ['id' => 'module_id', 'class' => 'mb-2']);
-                            ?>
-                            <a class="ml-1" id="refresh_modules" href="#"><i class="fas fa-sync"></i> <?php $this->_('AdminDomains.import.text_refresh');?></a>
-                            <a target="_blank" class="d-block" href="<?php echo $this->Html->safe($this->base_uri . 'settings/company/modules/available');?>"><i class="fas fa-list"></i> <?php $this->_('AdminDomains.import.text_install_modules');?></a>
-                        </li>
-                    </ul>
+                        <ul>
+                            <li>
+                                <?php
+                                $this->Form->label($this->_('AdminDomains.import.field_module', true), 'module_id');
+                                $this->Form->fieldSelect('module_id', [], $vars['module_id'] ?? '', ['id' => 'module_id', 'class' => 'mb-2']);
+                                ?>
+                                <a class="ml-1" id="refresh_modules" href="#"><i class="fas fa-sync"></i> <?php $this->_('AdminDomains.import.text_refresh');?></a>
+                                <a target="_blank" class="d-block" href="<?php echo $this->Html->safe($this->base_uri . 'settings/company/modules/available');?>"><i class="fas fa-list"></i> <?php $this->_('AdminDomains.import.text_install_modules');?></a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div id="module_tlds" style="display: none;">
                     <div class="title_row">
-                        <h3><?php echo $this->_('AdminDomains.import.title_tlds', true);?></h3>
+                        <h3>
+                            <?php echo $this->_('AdminDomains.import.title_tlds', true);?>
+                            <div class="float-right px-2">
+                                <?php
+                                $this->Form->fieldCheckbox('select_all', '1', false, ['class' => 'inline', 'id' => 'select_all']);
+                                ?>
+                            </div>
+                        </h3>
                     </div>
                     <div class="pad">
                         <ul>
@@ -70,7 +80,7 @@
 
                 <div class="button_row">
                     <?php
-                    $this->Form->fieldSubmit('save', $this->_('AdminDomains.import.field_import', true), ['class' => 'btn btn-primary float-right']);
+                    $this->Form->fieldSubmit('save', $this->_('AdminDomains.import.field_import', true), ['class' => 'btn btn-primary float-right', 'id' => 'import_tlds_button']);
                     ?>
                 </div>
             </div>
@@ -98,9 +108,21 @@
             loadModules();
         });
 
+        // Select all TLDs
+        $("#select_all").on('change', function() {
+            if ($(this).is(":checked")) {
+                $('#import_tlds_form input[type=checkbox]:not(:disabled)').prop("checked", true);
+            } else {
+                $('#import_tlds_form input[type=checkbox]:not(:disabled)').prop("checked", false);
+            }
+        });
+
         // Get module TLDs
         $("#module_id").on('change', function() {
             var module_id = $(this).val();
+
+            $("#import_tlds_button").removeAttr('disabled').show();
+            $("#select_all").removeAttr('disabled').prop("checked", false);
 
             $('#module_tlds').show();
             $(this).blestaRequest(
@@ -118,25 +140,27 @@
                         }
 
                         var checkbox = $('<input>', {
-                            type: 'checkbox',
-                            name: 'tlds[' + tld + ']',
-                            id: 'tld_' + tld,
-                            value: '1',
-                            class: 'mb-1'
+                            "type": 'checkbox',
+                            "name": 'tlds[' + tld + ']',
+                            "id": 'tld_' + tld,
+                            "data-tld": tld,
+                            "value": '1',
+                            "class": 'mb-1'
                         });
                         if (tld_object.disabled) {
                             checkbox = $('<input>', {
-                                type: 'checkbox',
-                                name: 'tlds[' + tld + ']',
-                                id: 'tld_' + tld,
-                                value: '1',
-                                class: 'mb-1',
-                                disabled: 'disabled'
+                                "type": 'checkbox',
+                                "name": 'tlds[' + tld + ']',
+                                "id": 'tld_' + tld,
+                                "data-tld": tld,
+                                "value": '1',
+                                "class": 'mb-1',
+                                "disabled": 'disabled'
                             });
                         }
 
                         var tld_html = $('<div>', {
-                            class: 'p-2 m-1 bg-light rounded border d-inline-block'
+                            class: 'tld-box'
                         });
                         $(checkbox).appendTo(tld_html);
                         $($('<label>', {
@@ -182,4 +206,46 @@
             {dataType: 'json'}
         );
     }
+
+    // Import TLDS
+    $("#import_tlds_form").submit(function(event) {
+        event.preventDefault();
+
+        $("html, body").animate({scrollTop: 0}, "fast");
+        $("#import_tlds_button").attr('disabled','disabled').hide();
+        $("#import_tlds_form input:checkbox:not(:checked)").each(function() {
+            $(this).parent().remove();
+        });
+
+        $(".tld-box").each(function() {
+            if ($(this).find('input[type="checkbox"]').is(":checked")) {
+                var tld_box = $(this);
+
+                // Show spinning wheel
+                $(this).addClass("current");
+                $(this).find('input[type="checkbox"]').hide();
+
+                // Disable all other checkboxes, except the current one
+                $('#import_tlds_form input[type="checkbox"]').attr('disabled','disabled');
+                $(this).find('input[type="checkbox"]').removeAttr('disabled');
+
+                // Import TLD through AJAX
+                $(this).blestaRequest(
+                    "POST",
+                    $('#import_tlds_form').attr('action'),
+                    $('#import_tlds_form').serialize("serialize"),
+                    function(response) {
+                        if (response.hasOwnProperty('message')) {
+                            tld_box.removeClass("current").addClass("success");
+                        } else {
+                            tld_box.removeClass("current").addClass("failed");
+                        }
+                    },
+                    function(error) {
+                        tld_box.removeClass("current").addClass("failed");
+                    }
+                );
+            }
+        });
+    });
 </script>

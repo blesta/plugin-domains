@@ -1417,7 +1417,7 @@ class DomainsTlds extends DomainsModel
 
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
-        // Format TLDS
+        // Format TLDs
         $tlds = array_keys($tlds);
 
         // Initialize module
@@ -1446,7 +1446,7 @@ class DomainsTlds extends DomainsModel
                 }
 
                 // Add TLD to the company
-                $tld_package = $this->add([
+                $this->add([
                     'tld' => $tld,
                     'company_id' => $company_id,
                     'module_id' => $module_id
@@ -1461,6 +1461,8 @@ class DomainsTlds extends DomainsModel
             Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
             $sync_utility = new TldSync();
             $sync_utility->synchronizePrices($tlds, $company_id, ['module_id' => $module_id]);
+
+            return true;
         }
 
         return false;
