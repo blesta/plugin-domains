@@ -53,7 +53,7 @@ class TldSync
         }
 
         // Get company currencies
-        $currencies = $this->Form->collapseObjectArray($this->Currencies->getAll($this->company_id), 'code', 'code');
+        $currencies = $this->Form->collapseObjectArray($this->Currencies->getAll($company_id), 'code', 'code');
 
         // Get TLD prices from the registrar module
         foreach ($module_tlds as $module_id => $list_tlds) {
