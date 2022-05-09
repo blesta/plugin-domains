@@ -164,7 +164,7 @@ class DomainsFeed extends AbstractDataFeed
         $requested_terms = [];
         if (in_array($vars['style'], ['html', 'bootstrap'])) {
             // Get TLDs pricing
-            $tlds = $this->DomainsTlds->getAll(['company_id' => $this->options['company_id']]);
+            $tlds = $this->DomainsTlds->getAll(['company_id' => $this->options['company_id'], 'status' => 'active']);
             foreach ($tlds as &$tld) {
                 $pricing = [];
                 for ($term = 1; $term <= 10; $term++) {
