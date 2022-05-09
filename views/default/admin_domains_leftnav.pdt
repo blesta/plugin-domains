@@ -16,6 +16,10 @@
                             [
                                 'name' => Language::_('AdminDomains.leftnav.nav_tlds_registrars', true),
                                 'uri' => $this->base_uri . 'plugin/domains/admin_domains/registrars/'
+                            ],
+                            [
+                                'name' => Language::_('AdminDomains.leftnav.nav_tlds_import', true),
+                                'uri' => $this->base_uri . 'plugin/domains/admin_domains/importtlds/'
                             ]
                         ]
                     ],
@@ -93,7 +97,6 @@
 <?php
 $this->Javascript->setInline("
     $(document).ready(function() {
-
         // Handle confirmation on delete action
         $(\"#left_container a[rel='modal']\").blestaModal({close: '" . $this->_('AppController.modal.text_close', true) . "'});
     });

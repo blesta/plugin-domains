@@ -13,6 +13,7 @@ $lang['ClientMain.index.heading_status'] = 'Status';
 $lang['ClientMain.index.heading_domain'] = 'Domain';
 $lang['ClientMain.index.heading_term'] = 'Term';
 $lang['ClientMain.index.heading_registration_date'] = 'Registration Date';
+$lang['ClientMain.index.heading_renewal_date'] = 'Renewal Date';
 $lang['ClientMain.index.heading_expiration_date'] = 'Expiration Date';
 $lang['ClientMain.index.heading_suspension_date'] = 'Suspension Date';
 $lang['ClientMain.index.heading_deletion_date'] = 'Deletion Date';
