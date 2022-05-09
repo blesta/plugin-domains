@@ -28,7 +28,8 @@ class TldSync
      */
     public function synchronizePrices(array $tlds, $company_id = null, array $filters = [])
     {
-        Loader::loadModels($this, ['ModuleManager']);
+        Loader::loadModels($this, ['ModuleManager', 'Currencies']);
+        Loader::loadHelpers($this, ['Form']);
 
         if (is_null($company_id)) {
             $company_id = Configure::get('Blesta.company_id');
@@ -51,11 +52,17 @@ class TldSync
             $module_tlds[$tld_record->module_id][] = $tld_record->tld;
         }
 
+        // Get company currencies
+        $currencies = $this->Form->collapseObjectArray($this->Currencies->getAll($company_id), 'code', 'code');
+
         // Get TLD prices from the registrar module
         foreach ($module_tlds as $module_id => $list_tlds) {
             $module = $this->ModuleManager->initModule($module_id);
             $module->setModuleRow($module->getModuleRows()[0] ?? null);
-            $module_pricing = $module->getTldPricing();
+            $module_pricing = $module->getFilteredTldPricing(
+                null,
+                ['tlds' => $tlds, 'currencies' => array_values($currencies)]
+            );
 
             // Set the price for each TLD
             $tlds_pricing = array_intersect_key($module_pricing, array_flip($list_tlds));
