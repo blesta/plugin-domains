@@ -1,76 +1,76 @@
-<?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-    echo (isset($left_nav) ? $left_nav : null);
-?>
-<div id="right_outer">
-    <?php
-    if (!(isset($render_section) ? $render_section : null)) {
-        echo (isset($message) ? $message : null);
-    }
-    ?>
-    <section id="right_container">
-<?php
-}
-?>
-    <?php
-    $this->Widget->clear();
-    $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css');
-    $this->Widget->setTabs($tabs ?? []);
-    $this->Widget->create($this->_('AdminDomains.importpackages.boxtitle', true), ['id' => 'admin_domains_importpackages'], (isset($render_section) ? $render_section : null));
-
-    $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/importpackages/import/', ['id' => 'importpackages', 'class' => 'disable-on-submit']);
-    ?>
-
-    <div class="inner">
-        <p><?php $this->_('AdminDomains.importpackages.description');?></p>
-        <div class="pad">
-            <ul>
-                <li>
-                    <?php
-                    $this->Form->fieldCheckbox('migrate_services', '1', (isset($vars['migrate_services']) ? $vars['migrate_services'] : '1') === '1', ['id' => 'migrate_services', 'class' => 'inline']);
-                    $this->Form->label($this->_('AdminDomains.importpackages.field_migrate_services', true), 'migrate_services', ['class' => 'inline']);
-                    ?>
-                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.importpackages.tooltip_migrate_services');?></div></span><br/>
-                </li>
-                <li>
-                    <?php
-                    $this->Form->fieldCheckbox('overwrite_packages', '1', (isset($vars['overwrite_packages']) ? $vars['overwrite_packages'] : null) === '1', ['id' => 'overwrite_packages', 'class' => 'inline']);
-                    $this->Form->label($this->_('AdminDomains.importpackages.field_overwrite_packages', true), 'overwrite_packages', ['class' => 'inline']);
-                    ?>
-                    <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.importpackages.tooltip_overwrite_packages');?></div></span><br/>
-                </li>
-            </ul>
-        </div>
-
-        <div id="imported_packages" style="display: none;">
-            <div class="title_row">
-                <h3><?php echo $this->_('AdminDomains.importpackages.title_imported_packages', true);?></h3>
-            </div>
-            <div class="pad">
-                <ul>
-                    <li><p><i class="fas fa-spinner fa-spin"></i> <?php echo $this->_('AdminDomains.importpackages.text_collecting_list_tlds', true);?></p></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="button_row">
+        <?php
+        if (!(isset($is_ajax) ? $is_ajax : false)) {
+            echo (isset($left_nav) ? $left_nav : null);
+        ?>
+        <div id="right_outer">
             <?php
-            $this->Form->fieldSubmit('save', $this->_('AdminDomains.importpackages.field_submit', true), ['class' => 'btn btn-sm btn-primary pull-right']);
+            if (!(isset($render_section) ? $render_section : null)) {
+                echo (isset($message) ? $message : null);
+            }
             ?>
+            <section id="right_container">
+        <?php
+        }
+        ?>
+            <?php
+            $this->Widget->clear();
+            $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css');
+            $this->Widget->setTabs($tabs ?? []);
+            $this->Widget->create($this->_('AdminDomains.importpackages.boxtitle', true), ['id' => 'admin_domains_importpackages'], (isset($render_section) ? $render_section : null));
+
+            $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/importpackages/import/', ['id' => 'importpackages', 'class' => 'disable-on-submit']);
+            ?>
+
+            <div class="inner">
+                <p><?php $this->_('AdminDomains.importpackages.description');?></p>
+                <div class="pad">
+                    <ul>
+                        <li>
+                            <?php
+                            $this->Form->fieldCheckbox('migrate_services', '1', (isset($vars['migrate_services']) ? $vars['migrate_services'] : '1') === '1', ['id' => 'migrate_services', 'class' => 'inline']);
+                            $this->Form->label($this->_('AdminDomains.importpackages.field_migrate_services', true), 'migrate_services', ['class' => 'inline']);
+                            ?>
+                            <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.importpackages.tooltip_migrate_services');?></div></span><br/>
+                        </li>
+                        <li>
+                            <?php
+                            $this->Form->fieldCheckbox('overwrite_packages', '1', (isset($vars['overwrite_packages']) ? $vars['overwrite_packages'] : null) === '1', ['id' => 'overwrite_packages', 'class' => 'inline']);
+                            $this->Form->label($this->_('AdminDomains.importpackages.field_overwrite_packages', true), 'overwrite_packages', ['class' => 'inline']);
+                            ?>
+                            <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.importpackages.tooltip_overwrite_packages');?></div></span><br/>
+                        </li>
+                    </ul>
+                </div>
+
+                <div id="imported_packages" style="display: none;">
+                    <div class="title_row">
+                        <h3><?php echo $this->_('AdminDomains.importpackages.title_imported_packages', true);?></h3>
+                    </div>
+                    <div class="pad">
+                        <ul>
+                            <li><p><i class="fas fa-spinner fa-spin"></i> <?php echo $this->_('AdminDomains.importpackages.text_collecting_list_tlds', true);?></p></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="button_row">
+                    <?php
+                    $this->Form->fieldSubmit('save', $this->_('AdminDomains.importpackages.field_submit', true), ['class' => 'btn btn-sm btn-primary pull-right']);
+                    ?>
+                </div>
+            </div>
+            <?php
+            $this->Form->end();
+            $this->Widget->end();
+            ?>
+        <?php
+        if (!(isset($is_ajax) ? $is_ajax : false)) {
+        ?>
+            </section>
         </div>
-    </div>
-    <?php
-    $this->Form->end();
-    $this->Widget->end();
-    ?>
-<?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-?>
-    </section>
-</div>
-<?php
-}
-?>
+        <?php
+        }
+        ?>
 
 <script type="text/javascript">
     $(document).ready(function() {
