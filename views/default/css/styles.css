@@ -103,3 +103,49 @@
 #tld_action label, #tld_action a {
     font-size: 11px;
 }
+
+.tld-box {
+    border: 1px solid #DEE2E6;
+    background: #F8F9FA;
+    color: #656565;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 5px;
+    display: inline-block;
+}
+
+.tld-box.success {
+    border: 1px solid #C3E6CB;
+    background: #D4EDDA;
+    color: #165723;
+}
+
+.tld-box.success::before {
+    content: '\f058';
+    font-family: "Font Awesome 5 Free";
+    margin-right: 5px;
+}
+
+.tld-box.failed {
+    border: 1px solid #F5C6CB;
+    background: #F8D7DA;
+    color: #721B24;
+}
+
+.tld-box.failed::before {
+    content: '\f057';
+    font-family: "Font Awesome 5 Free";
+    margin-right: 5px;
+}
+
+.tld-box.current {
+    border: 1px solid #BEE5EB;
+    background: #D1ECF1;
+    color: #155460;
+}
+
+.tld-box.current::before {
+    content: '\f192';
+    font-family: "Font Awesome 5 Free";
+    margin-right: 5px;
+}
