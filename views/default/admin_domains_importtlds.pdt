@@ -15,7 +15,7 @@
         ?>
             <?php
             $this->Widget->clear();
-            $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css', ['id' => 'domains_styles']);
+            $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css');
             $this->Widget->create(
                 $this->_('AdminDomains.import.boxtitle_import', true),
                 ['id' => 'admin_domains_import'],
