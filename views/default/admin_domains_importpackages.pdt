@@ -78,6 +78,8 @@
         $('#importpackages').on('submit', function(event) {
             event.preventDefault();
 
+            var form_data = $('#importpackages').serialize("serialize");
+
             // Remove save button and disable form
             $('#importpackages input').prop('disabled', true);
             $('#importpackages input[name="save"]').remove();
@@ -86,9 +88,9 @@
             // Fetch TLD packages to import
             var tlds_to_import = [];
             $(this).blestaRequest(
-                "GET",
+                "POST",
                 '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/list/');?>',
-                null,
+                form_data,
                 function(tlds) {
                     // Save TLDs for future use
                     tlds_to_import = tlds;
@@ -117,7 +119,7 @@
             $(this).blestaRequest(
                 "POST",
                 $('#importpackages').attr('action'),
-                $('#importpackages').serialize("serialize"),
+                form_data,
                 function(response) {
                     if (response.hasOwnProperty('message')) {
                         $('#imported_packages ul li .tld-box').removeClass("current").addClass("success");

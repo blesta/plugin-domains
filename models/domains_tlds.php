@@ -313,14 +313,12 @@ class DomainsTlds extends DomainsModel
         $rules = [
             'tld_id' => [
                 'exists' => [
-                    'if_set' => true,
                     'rule' => [[$this, 'validateExists'], 'id', 'domains_tlds'],
                     'message' => Language::_('DomainsTlds.!error.tld_id.exists', true)
                 ]
             ],
             'package_id' => [
                 'exists' => [
-                    'if_set' => true,
                     'rule' => [[$this, 'validateExists'], 'id', 'packages'],
                     'message' => Language::_('DomainsTlds.!error.package_id.exists', true)
                 ]
