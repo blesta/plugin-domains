@@ -362,35 +362,45 @@ class AdminDomains extends DomainsController
     {
         Loader::loadModels($this, ['Domains.DomainsTlds']);
 
-        $vars = [];
-        if (!empty($this->post)) {
-            $vars = $this->post;
+        if (!empty($this->post) && $this->isAjax()) {
+            $response = [];
 
-            try {
-                $this->DomainsTlds->import(
-                    $this->post['tlds'] ?? [],
-                    empty($this->post['module_id']) ? 0 : $this->post['module_id'],
-                    Configure::get('Blesta.company_id')
-                );
+            $tries = Configure::get('Blesta.transaction_deadlock_reattempts');
+            do {
+                $retry = false;
 
-                if (($errors = $this->DomainsTlds->errors())) {
-                    $this->flashMessage('error', $errors, null, false);
-                } else {
-                    $this->flashMessage(
-                        'message',
-                        Language::_('AdminDomains.!success.tlds_imported', true),
-                        null,
-                        false
+                try {
+                    $this->DomainsTlds->import(
+                        $this->post['tlds'] ?? [],
+                        empty($this->post['module_id']) ? 0 : $this->post['module_id'],
+                        Configure::get('Blesta.company_id')
                     );
+
+                    if (($errors = $this->DomainsTlds->errors())) {
+                        $response['error'] = $this->setMessage('error', $errors, true, null, false);
+                    } else {
+                        $response['message'] = $this->setMessage(
+                            'message',
+                            Language::_('AdminDomains.!success.tlds_imported', true),
+                            true,
+                            null,
+                            false
+                        );
+                    }
+                } catch (PDOException $e) {
+                    // A deadlock occurred (PDO error 1213, SQLState 40001)
+                    if ($tries > 0 && $e->getCode() == '40001' && str_contains($e->getMessage(), '1213')) {
+                        $retry = true;
+                    }
                 }
-            } catch (Throwable $e) {
-                $this->flashMessage('error', $e->getMessage(), null, false);
-            }
 
-            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/importtlds/');
+                $tries--;
+            } while ($retry);
+
+            $this->outputAsJson($response);
+
+            return false;
         }
-
-        $this->set('vars', $vars);
     }
 
     /**

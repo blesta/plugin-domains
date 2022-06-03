@@ -45,7 +45,7 @@ class TldSync
         // Organize TLD records by registrar module
         $module_tlds = [];
         foreach ($tld_records as $tld_record) {
-            if (isset($filters['module_id']) && $tld_record->module_id !== $filters['module_id']) {
+            if (isset($filters['module_id']) && $tld_record->module_id != $filters['module_id']) {
                 continue;
             }
 
