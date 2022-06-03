@@ -8,6 +8,43 @@
 class DomainsDomains extends DomainsModel
 {
     /**
+     * Returns a list with all the Domains for the given company
+     *
+     * @param array $filters A list of filters for the query
+     *
+     *  - client_id The client ID (optional)
+     *  - company_id The ID of the company for which this domain is available (optional)
+     *  - excluded_pricing_term The pricing term by which to exclude results (optional)
+     *  - module_id The module ID on which to filter packages (optional)
+     *  - pricing_period The pricing period for which to fetch services (optional)
+     *  - package_id The package ID (optional)
+     *  - package_name The (partial) name of the packages for which to fetch services (optional)
+     *  - service_meta The (partial) value of meta data on which to filter services (optional)
+     *  - status The status type of the services to fetch (optional, default 'active'):
+     *    - active All active services
+     *    - canceled All canceled services
+     *    - pending All pending services
+     *    - suspended All suspended services
+     *    - in_review All services that require manual review before they may become pending
+     *    - scheduled_cancellation All services scheduled to be canceled
+     *    - all All active/canceled/pending/suspended/in_review
+     * @param array $order A key/value pair array of fields to order the results by
+     * @return array An array of stdClass objects
+     */
+    public function getAll(array $filters = [], array $order = ['id' => 'asc'])
+    {
+        Loader::loadModels($this, ['Services', 'Companies']);
+
+        $filters['company_id'] = $filters['company_id'] ?? Configure::get('Blesta.company_id');
+
+        // Filter by package group
+        $package_group_id = $this->Companies->getSetting($filters['company_id'], 'domains_package_group');
+        $filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
+
+        return $this->Services->getAll($order, false, $filters);
+    }
+
+    /**
      * Returns a list of Domains for the given company
      *
      * @param array $filters A list of filters for the query
@@ -171,5 +208,62 @@ class DomainsDomains extends DomainsModel
         }
 
         return $result;
+    }
+
+    /**
+     * Gets the domain expiration date
+     *
+     * @param int $service_id The id of the service where the domain belongs
+     * @param string $format The format to return the expiration date in
+     * @return string The domain expiration date in UTC time in the given format
+     * @see Services::get()
+     */
+    public function getExpirationDate($service_id, $format = 'Y-m-d H:i:s')
+    {
+        Loader::loadModels($this, ['Services', 'ModuleManager']);
+
+        if (is_numeric($service_id)) {
+            $service = $this->Services->get($service_id);
+
+            // Check if the domain already has an expiration date
+            $domain = $this->Record->select()
+                ->from('domains_domains')
+                ->where('service_id', '=', $service->id)
+                ->fetch();
+            $expiration_date = $domain->expiration_date ?? null;
+
+            // Get the expiration date from the registrar
+            if (empty($expiration_date)) {
+                $expiration_date = $this->ModuleManager->moduleRpc(
+                    $service->package->module_id,
+                    'getExpirationDate',
+                    [$service_id, $format],
+                    $service->module_row_id ?? null
+                );
+            }
+
+            if (empty($expiration_date) || $service->date_renews > $expiration_date) {
+                $expiration_date = $service->date_renews;
+            }
+
+            return $this->Date->format(
+                $format,
+                $expiration_date
+            );
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the expiration date of a given domain
+     *
+     * @param int $service_id The ID of the service belonging to the domain
+     * @param string $expiration_date The expiration date of the domain
+     */
+    public function setExpirationDate($service_id, $expiration_date)
+    {
+        $this->Record->duplicate('domains_domains.expiration_date', '=', $expiration_date)
+            ->insert('domains_domains', ['service_id' => $service_id, 'expiration_date' => $expiration_date]);
     }
 }
