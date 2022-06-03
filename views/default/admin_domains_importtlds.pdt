@@ -13,6 +13,8 @@
         <?php
         }
         ?>
+            <div class="message_box">
+            </div>
             <?php
             $this->Widget->clear();
             $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css');
@@ -237,6 +239,9 @@
                     function(response) {
                         if (response.hasOwnProperty('message')) {
                             tld_box.removeClass("current").addClass("success");
+                            if ($(".tld-box.current").length === 0) {
+                                $(".message_box").html(response.message);
+                            }
                         } else {
                             tld_box.removeClass("current").addClass("failed");
                         }
