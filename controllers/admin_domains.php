@@ -616,10 +616,10 @@ class AdminDomains extends DomainsController
 
         if (!empty($this->post) || !empty($this->get)) {
             // Check if the request was made through AJAX
-            if (!$this->isAjax()) {
-                header($this->server_protocol . ' 401 Unauthorized');
-                exit();
-            }
+//            if (!$this->isAjax()) {
+//                header($this->server_protocol . ' 401 Unauthorized');
+//                exit();
+//            }
 
             // Get company ID
             $company_id = Configure::get('Blesta.company_id');
@@ -638,6 +638,9 @@ class AdminDomains extends DomainsController
                 );
             }
 
+            $temp = $this->SettingsCollection->fetchSetting($this->Companies, $company_id, 'uploads_dir');
+            $log_file_path = $temp['value'] . $this->company_id . DS . 'domains_package_import.json';
+
             switch ($this->get[0] ?? '') {
                 case 'list':
                     // Get TLD packages to import
@@ -647,13 +650,20 @@ class AdminDomains extends DomainsController
                         $company_settings
                     );
 
-                    $this->outputAsJson(array_keys($tlds_packages));
+                    $tlds = array_keys($tlds_packages);
+                    $this->outputAsJson($tlds);
                     return false;
                 case 'import':
                     $this->Packages->begin();
 
                     // Remove time limit
                     set_time_limit(0);
+
+                    file_put_contents(
+                        $log_file_path,
+                        json_encode(['errored' => [], 'package_created' => [], 'tld_created' => []])
+                    );
+                    $import_log = json_decode(file_get_contents($log_file_path), true);
 
                     // Set whether to migrate services from old packages to the new TLD packages
                     $migrate_services = ($this->post['migrate_services'] ?? '0') == '1';
@@ -672,6 +682,7 @@ class AdminDomains extends DomainsController
 
                     // Attempt to import the TLDs from each package
                     foreach ($tlds_packages as $tld => $tld_packages) {
+                        sleep(3);
                         foreach ($tld_packages as $package) {
                             $this->importTld(
                                 $package,
@@ -684,9 +695,13 @@ class AdminDomains extends DomainsController
                             );
 
                             if (($errors = $this->Packages->errors())) {
+                                $import_log['errored'][$tld] = $tld;
+                                file_put_contents($log_file_path, json_encode($import_log));
                                 break 2;
                             }
                         }
+                        $import_log['package_created'][$tld] = $tld;
+                        file_put_contents($log_file_path, json_encode($import_log));
                     }
 
                     if ($errors) {
@@ -706,6 +721,7 @@ class AdminDomains extends DomainsController
                     } else {
                         // Create the TLDs
                         foreach ($imported_tld_packages as $tld => $module_packages) {
+                            sleep(3);
                             // Sort the imported packages by the number of migrated services
                             uasort(
                                 $module_packages,
@@ -717,7 +733,8 @@ class AdminDomains extends DomainsController
 
                             // The first package in the imported list should be marked as the primary for the
                             // TLD if the TLD is new or the setting to override package is enabled
-                            $set_primary_package = $overwrite_packages || !array_key_exists($tld, $existing_tld_packages);
+                            $set_primary_package = $overwrite_packages
+                                || !array_key_exists($tld, $existing_tld_packages);
                             foreach ($module_packages as $module_id => $package_info) {
                                 $package_id = $package_info['package_id'];
                                 // If the TLD for this package was deleted, create it again
@@ -757,6 +774,9 @@ class AdminDomains extends DomainsController
                                     break 2;
                                 }
                             }
+                            unset($import_log['package_created'][$tld]);
+                            $import_log['tld_created'][$tld] = $tld;
+                            file_put_contents($log_file_path, json_encode($import_log));
                         }
 
                         if ($errors) {
@@ -790,28 +810,20 @@ class AdminDomains extends DomainsController
                         }
                     }
                 case 'check':
-                    // Get the TLDs that are already installed
-                    $installed_tlds = array_values(
-                        $this->Form->collapseObjectArray($this->DomainsTlds->getAll(), 'tld', 'tld')
-                    );
-
-                    // Get the TLDs to be imported
-                    $imported_tlds = $this->get['tlds'] ?? [];
-
-                    if (empty($imported_tlds)) {
-                        return;
-                    }
+                    $import_log = json_decode(file_get_contents($log_file_path), true);
 
                     // Keep track of the status of the TLDs that are being imported
                     $tlds = [];
+                    foreach ($import_log['errored'] as $tld) {
+                        $tlds[$tld] = 'error';
+                    }
 
-                    // Check if the TLDs to be imported has been already imported
-                    foreach ($imported_tlds as $tld) {
-                        if (in_array($tld, $installed_tlds)) {
-                            $tlds[$tld] = 'success';
-                        } else {
-                            $tlds[$tld] = 'pending';
-                        }
+                    foreach ($import_log['package_created'] as $tld) {
+                        $tlds[$tld] = 'current';
+                    }
+
+                    foreach ($import_log['tld_created'] as $tld) {
+                        $tlds[$tld] = 'success';
                     }
 
                     $this->outputAsJson($tlds);
@@ -839,7 +851,7 @@ class AdminDomains extends DomainsController
      *  - [tld => [module_id => package_id]]
      * @param array $company_settings A list of company settings ([key => value])
      *  false to keep the existing TLD packages and prevent the new ones from being created
-     * 
+     *
      */
     function getPackageImportTlds($overwrite_packages, $existing_tld_packages, $company_settings)
     {

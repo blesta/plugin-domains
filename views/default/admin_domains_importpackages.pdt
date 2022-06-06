@@ -103,10 +103,10 @@
                         }
 
                         // Format TLD id
-                        var tld_id = tld.replace('.', '_');
+                        var tld_id = tld.replace(/\./g, '_');
 
                         // Build HTML
-                        var tld_html = $('<div>', {class: 'tld-box current', id: 'package' + tld_id});
+                        var tld_html = $('<div>', {class: 'tld-box bg-warning', id: 'package' + tld_id});
                         $(tld_html).text(tld);
                         $('#imported_packages ul li').append(tld_html);
                     });
@@ -151,10 +151,12 @@
                             if (tld == '.') {
                                 return;
                             }
+                            console.log('hi');
 
                             // Set TLD status
-                            var tld_id = tld.replace('.', '_');
+                            var tld_id = tld.replace(/\./g, '_');
                             $('#imported_packages #package' + tld_id).attr('class', 'tld-box ' + status);
+                            console.log('#imported_packages #package' + tld_id);
                         });
                     }
                 );
