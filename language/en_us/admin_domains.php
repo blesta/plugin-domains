@@ -136,7 +136,8 @@ $lang['AdminDomains.importpackages.field_migrate_services'] = 'Migrate Services'
 $lang['AdminDomains.importpackages.tooltip_migrate_services'] = 'When checked, any services assigned to the cloned packages will be migrated to the newly created packages.  This will only apply to services with a yearly pricing period.';
 $lang['AdminDomains.importpackages.field_overwrite_packages'] = 'Overwrite TLD Packages';
 $lang['AdminDomains.importpackages.tooltip_overwrite_packages'] = 'When checked, current Domain Manager TLD packages will be deleted and replaced by external TLD packages.  Domain Manager packages with services assigned to them will be skipped during this process.';
-
+$lang['AdminDomains.importpackages.title_imported_packages'] = 'Imported TLDs';
+$lang['AdminDomains.importpackages.text_collecting_list_tlds'] = 'Collecting a list of TLDs to import...';
 $lang['AdminDomains.importpackages.field_submit'] = 'Import Packages';
 
 

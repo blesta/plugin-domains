@@ -624,10 +624,18 @@ class AdminDomains extends DomainsController
         $this->uses(['ModuleManager', 'Companies', 'Domains.DomainsTlds', 'Packages', 'PackageGroups', 'Services']);
         $company_settings = $this->DomainsTlds->getDomainsCompanySettings();
 
-        if (!empty($this->post)) {
-            $this->Packages->begin();
-            // Get plugin company settings
+        if (!empty($this->post) || !empty($this->get)) {
+            // Check if the request was made through AJAX
+//            if (!$this->isAjax()) {
+//                header($this->server_protocol . ' 401 Unauthorized');
+//                exit();
+//            }
+
+            // Get company ID
             $company_id = Configure::get('Blesta.company_id');
+
+            // Set whether to override current TLD packages with new cloned ones
+            $overwrite_packages = ($this->post['overwrite_packages'] ?? '0') == '1';
 
             // Get the current TLDs
             $existing_tlds = $this->DomainsTlds->getAll(['company_id' => $company_id]);
@@ -640,140 +648,197 @@ class AdminDomains extends DomainsController
                 );
             }
 
-            // Keep track of which tlds have already been imported
-            $imported_tld_packages = [];
+            $temp = $this->SettingsCollection->fetchSetting($this->Companies, $company_id, 'uploads_dir');
+            $log_file_path = $temp['value'] . $this->company_id . DS . 'domains_package_import.json';
 
-            // Set unset checkboxes
-            if (!isset($this->post['overwrite_packages'])) {
-                $this->post['overwrite_packages'] = '0';
-            }
-
-            if (!isset($this->post['migrate_services'])) {
-                $this->post['migrate_services'] = '0';
-            }
-
-            // Set whether to override current TLD packages with new cloned ones
-            $overwrite_packages = $this->post['overwrite_packages'] == '1';
-            // Set whether to migrate services from old packages to the new TLD packages
-            $migrate_services = $this->post['migrate_services'] == '1';
-
-            // Get all the registrar modules
-            $installed_registrars = $this->ModuleManager->getAll(
-                Configure::get('Blesta.company_id'),
-                'name',
-                'asc',
-                ['type' => 'registrar']
-            );
-            $errors = null;
-            foreach ($installed_registrars as $installed_registrar) {
-                // Get all packages for the registrar module
-                $packages = $this->Packages->getAll(
-                    Configure::get('Blesta.company_id'),
-                    ['name' => 'ASC'],
-                    'active',
-                    null,
-                    ['module_id' => $installed_registrar->id]
-                );
-
-                // Attempt to import the TLDs from each package
-                foreach ($packages as $package) {
-                    $this->importPackage(
-                        $package->id,
-                        $imported_tld_packages,
-                        $existing_tld_packages,
-                        $company_settings,
+            switch ($this->get[0] ?? '') {
+                case 'list':
+                    // Get TLD packages to import
+                    $tlds_packages = $this->getPackageImportTlds(
                         $overwrite_packages,
-                        $migrate_services
+                        $existing_tld_packages,
+                        $company_settings
                     );
 
-                    if (($errors = $this->Packages->errors())) {
-                        break 2;
-                    }
-                }
-            }
+                    $tlds = array_keys($tlds_packages);
+                    $this->outputAsJson($tlds);
+                    return false;
+                case 'import':
+                    $this->Packages->begin();
 
-            if ($errors) {
-                $this->Packages->rollback();
-                $this->setMessage(
-                    'error',
-                    $errors,
-                    false,
-                    null,
-                    false
-                );
-            } else {
-                // Create the TLDs
-                foreach ($imported_tld_packages as $tld => $module_packages) {
-                    // Sort the imported packages by the number of migrated services
-                    uasort(
-                        $module_packages,
-                        function ($a, $b) {
-                            $swap = $a['migrated_services'] < $b['migrated_services'];
-                            return $swap ? 1 : -1;
-                        }
+                    // Remove time limit
+                    set_time_limit(0);
+
+                    file_put_contents(
+                        $log_file_path,
+                        json_encode(['errored' => [], 'package_created' => [], 'tld_created' => []])
+                    );
+                    $import_log = json_decode(file_get_contents($log_file_path), true);
+
+                    // Set whether to migrate services from old packages to the new TLD packages
+                    $migrate_services = ($this->post['migrate_services'] ?? '0') == '1';
+
+                    // Get TLD packages to import
+                    $tlds_packages = $this->getPackageImportTlds(
+                        $overwrite_packages,
+                        $existing_tld_packages,
+                        $company_settings
                     );
 
-                    // The first package in the imported list should be marked as the primary for the
-                    // TLD if the TLD is new or the setting to override package is enabled
-                    $set_primary_package = $overwrite_packages || !array_key_exists($tld, $existing_tld_packages);
-                    foreach ($module_packages as $module_id => $package_info) {
-                        $package_id = $package_info['package_id'];
-                        // If the TLD for this package was deleted, create it again
-                        if (!array_key_exists($tld, $existing_tld_packages)) {
-                            // Add the TLD
-                            $tld_vars = [
-                                'tld' => $tld,
-                                'package_id' => $package_id,
-                                'module_id' => $module_id
-                            ];
-                            $this->DomainsTlds->add($tld_vars);
-                            $existing_tld_packages[$tld] = [$module_id => $package_id];
-                        } else {
-                            // The TLD already exists so just add this package as another
-                            // package on the TLD instead of the primary
-                            $this->DomainsTlds->addPackage(['tld' => $tld, 'package_id' => $package_id]);
-                        }
+                    // Keep track of which tlds have already been imported
+                    $imported_tld_packages = [];
 
-                        // Report errors
-                        if (($errors = $this->DomainsTlds->errors())) {
-                            break 2;
-                        }
+                    $errors = null;
 
-                        // Mark this package as the primary for this TLD or mark it as inactive
-                        if ($set_primary_package) {
-                            $this->DomainsTlds->edit($tld, ['package_id' => $package_id]);
-                            $set_primary_package = false;
-                        } else {
-                            $this->Packages->edit(
-                                $package_id,
-                                ['status' => 'inactive', 'meta' => (array)$package_info['meta']]
+                    // Attempt to import the TLDs from each package
+                    foreach ($tlds_packages as $tld => $tld_packages) {
+                        sleep(3);
+                        foreach ($tld_packages as $package) {
+                            $this->importTld(
+                                $package,
+                                $tld,
+                                $imported_tld_packages,
+                                $existing_tld_packages,
+                                $company_settings,
+                                $overwrite_packages,
+                                $migrate_services
                             );
+
+                            if (($errors = $this->Packages->errors())) {
+                                $import_log['errored'][$tld] = $tld;
+                                file_put_contents($log_file_path, json_encode($import_log));
+                                break 2;
+                            }
+                        }
+                        $import_log['package_created'][$tld] = $tld;
+                        file_put_contents($log_file_path, json_encode($import_log));
+                    }
+
+                    if ($errors) {
+                        // Set error message
+                        $this->Packages->rollback();
+                        $this->outputAsJson([
+                            'error' => $this->setMessage(
+                                'error',
+                                $errors,
+                                true,
+                                null,
+                                false
+                            )
+                        ]);
+
+                        return false;
+                    } else {
+                        // Create the TLDs
+                        foreach ($imported_tld_packages as $tld => $module_packages) {
+                            sleep(3);
+                            // Sort the imported packages by the number of migrated services
+                            uasort(
+                                $module_packages,
+                                function ($a, $b) {
+                                    $swap = $a['migrated_services'] < $b['migrated_services'];
+                                    return $swap ? 1 : -1;
+                                }
+                            );
+
+                            // The first package in the imported list should be marked as the primary for the
+                            // TLD if the TLD is new or the setting to override package is enabled
+                            $set_primary_package = $overwrite_packages
+                                || !array_key_exists($tld, $existing_tld_packages);
+                            foreach ($module_packages as $module_id => $package_info) {
+                                $package_id = $package_info['package_id'];
+                                // If the TLD for this package was deleted, create it again
+                                if (!array_key_exists($tld, $existing_tld_packages)) {
+                                    // Add the TLD
+                                    $tld_vars = [
+                                        'tld' => $tld,
+                                        'package_id' => $package_id,
+                                        'module_id' => $module_id
+                                    ];
+                                    $this->DomainsTlds->add($tld_vars);
+                                    $existing_tld_packages[$tld] = [$module_id => $package_id];
+                                } else {
+                                    // The TLD already exists so just add this package as another
+                                    // package on the TLD instead of the primary
+                                    $this->DomainsTlds->addPackage(['tld' => $tld, 'package_id' => $package_id]);
+                                }
+
+                                // Report errors
+                                if (($errors = $this->DomainsTlds->errors())) {
+                                    break 2;
+                                }
+
+                                // Mark this package as the primary for this TLD or mark it as inactive
+                                if ($set_primary_package) {
+                                    $this->DomainsTlds->edit($tld, ['package_id' => $package_id]);
+                                    $set_primary_package = false;
+                                } else {
+                                    $this->Packages->edit(
+                                        $package_id,
+                                        ['status' => 'inactive', 'meta' => (array)$package_info['meta']]
+                                    );
+                                }
+
+                                // Report errors
+                                if (($errors = $this->Packages->errors()) || ($errors = $this->DomainsTlds->errors())) {
+                                    break 2;
+                                }
+                            }
+                            unset($import_log['package_created'][$tld]);
+                            $import_log['tld_created'][$tld] = $tld;
+                            file_put_contents($log_file_path, json_encode($import_log));
                         }
 
-                        // Report errors
-                        if (($errors = $this->Packages->errors()) || ($errors = $this->DomainsTlds->errors())) {
-                            break 2;
+                        if ($errors) {
+                            // Set error message
+                            $this->Packages->rollback();
+                            $this->outputAsJson([
+                                'error' => $this->setMessage(
+                                    'error',
+                                    $errors,
+                                    true,
+                                    null,
+                                    false
+                                )
+                            ]);
+
+                            return false;
+                        } else {
+                            // Set success message
+                            $this->outputAsJson([
+                                'message' => $this->setMessage(
+                                    'message',
+                                    Language::_('AdminDomains.!success.packages_imported', true),
+                                    true,
+                                    null,
+                                    false
+                                )
+                            ]);
+                            $this->Packages->commit();
+
+                            return false;
                         }
                     }
-                }
+                case 'check':
+                    $import_log = json_decode(file_get_contents($log_file_path), true);
 
-                if ($errors) {
-                    // Set error message
-                    $this->Packages->rollback();
-                    $this->setMessage('error', $errors, false, null, false);
-                } else {
-                    // Set success message
-                    $this->setMessage(
-                        'message',
-                        Language::_('AdminDomains.!success.packages_imported', true),
-                        false,
-                        null,
-                        false
-                    );
-                    $this->Packages->commit();
-                }
+                    // Keep track of the status of the TLDs that are being imported
+                    $tlds = [];
+                    foreach ($import_log['errored'] as $tld) {
+                        $tlds[$tld] = 'error';
+                    }
+
+                    foreach ($import_log['package_created'] as $tld) {
+                        $tlds[$tld] = 'current';
+                    }
+
+                    foreach ($import_log['tld_created'] as $tld) {
+                        $tlds[$tld] = 'success';
+                    }
+
+                    $this->outputAsJson($tlds);
+                    return false;
             }
-            $vars = $this->post;
         }
 
         $package_group = $this->PackageGroups->get($company_settings['domains_package_group']);
@@ -789,71 +854,84 @@ class AdminDomains extends DomainsController
     }
 
     /**
-     * Imports all the TLDs from a package as new Domain Manager TLD packages
+     * Get all the TLDs/packages to import as new Domain Manager TLD packages
      *
-     * @param int $package_id The ID of the package from which to import TLDs
-     * @param array $imported_tld_packages A list keeping track of package details for TLDs and modules
-     *  that have already been imported
-     *  - [tld => [module_id => ['package_id' => x, 'migrated_services' => x, 'meta' => x]]]
+     * @param bool $overwrite_packages True to delete existing TLD packages in favor of those being imported,
      * @param array $existing_tld_packages A list TLDs and modules that existed before the import began
      *  - [tld => [module_id => package_id]]
      * @param array $company_settings A list of company settings ([key => value])
-     * @param bool $overwrite_packages True to delete existing TLD packages in favor of those being imported,
      *  false to keep the existing TLD packages and prevent the new ones from being created
-     * @param bool $migrate_services True to migrate services from the old packages to the newly created
-     *  ones, false otherwise
+     *
      */
-    private function importPackage(
-        $package_id,
-        array &$imported_tld_packages,
-        array &$existing_tld_packages,
-        array $company_settings,
-        $overwrite_packages,
-        $migrate_services
-    ) {
-        $package = $this->Packages->get($package_id);
+    function getPackageImportTlds($overwrite_packages, $existing_tld_packages, $company_settings)
+    {
+        // Get company ID
+        $company_id = Configure::get('Blesta.company_id');
 
-        // Check if the package is from the Domain Manager package group
-        $from_domain_manager = false;
-        foreach ($package->groups as $group) {
-            if (isset($company_settings['domains_package_group'])
-                && $group->id == $company_settings['domains_package_group']
-            ) {
-                $from_domain_manager = true;
-                break;
-            }
-        }
+        // Keep track of the TLDs that will be imported
+        $tlds = [];
 
-        // Check if the package has a yearly pricing
-        $has_yearly_pricing = false;
-        foreach ($package->pricing as $pricing) {
-            if ($pricing->period == 'year') {
-                $has_yearly_pricing = true;
-            }
-        }
-
-        // Skip the package if it has no assigned TLDs, is from the Domain Manager,
-        // or doesn't have any year(s) pricing terms
-        if (empty($package->meta->tlds) || $from_domain_manager || !$has_yearly_pricing) {
-            return;
-        }
-
-        // Clone the package once for each assigned TLD
-        foreach ($package->meta->tlds as $tld) {
-            $this->importTld(
-                $package,
-                $tld,
-                $imported_tld_packages,
-                $existing_tld_packages,
-                $company_settings,
-                $overwrite_packages,
-                $migrate_services
+        // Get all the registrar modules
+        $installed_registrars = $this->ModuleManager->getAll($company_id, 'name', 'asc', ['type' => 'registrar']);
+        foreach ($installed_registrars as $installed_registrar) {
+            // Get all packages for the registrar module
+            $packages = $this->Packages->getAll(
+                $company_id,
+                ['name' => 'ASC'],
+                'active',
+                null,
+                ['module_id' => $installed_registrar->id]
             );
 
-            if (($errors = $this->Packages->errors())) {
-                return;
+            // Get the tlds from the package
+            foreach ($packages as $package_tld) {
+                $package = $this->Packages->get($package_tld->id);
+
+                // Check if the package is from the Domain Manager package group
+                $from_domain_manager = false;
+                foreach ($package->groups as $group) {
+                    if (isset($company_settings['domains_package_group'])
+                        && $group->id == $company_settings['domains_package_group']
+                    ) {
+                        $from_domain_manager = true;
+                        break;
+                    }
+                }
+
+                // Check if the package has a yearly pricing
+                $has_yearly_pricing = false;
+                foreach ($package->pricing as $pricing) {
+                    if ($pricing->period == 'year') {
+                        $has_yearly_pricing = true;
+                    }
+                }
+
+                // Skip the package if it has no assigned TLDs, is from the Domain Manager,
+                // or doesn't have any year(s) pricing terms
+                if (empty($package->meta->tlds) || $from_domain_manager || !$has_yearly_pricing) {
+                    continue;
+                }
+
+                $package_tlds = array_fill_keys((array) $package->meta->tlds, [$package]);
+
+                foreach ($package_tlds as $tld => $packages) {
+                    foreach($packages as $package) {
+                        // Skip TLD/module pairs that are already in the domain manager
+                        // unless the option was selected to overwite it
+                        if (!$overwrite_packages
+                            && array_key_exists($tld, $existing_tld_packages)
+                            && array_key_exists($package->module_id, $existing_tld_packages[$tld])
+                        ) {
+                            unset($package_tlds[$tld]);
+                        }
+                    }
+                }
+
+                $tlds = array_merge($package_tlds, $tlds);
             }
         }
+
+        return $tlds;
     }
 
     /**
