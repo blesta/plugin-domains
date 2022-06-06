@@ -151,12 +151,10 @@
                             if (tld == '.') {
                                 return;
                             }
-                            console.log('hi');
 
                             // Set TLD status
                             var tld_id = tld.replace(/\./g, '_');
                             $('#imported_packages #package' + tld_id).attr('class', 'tld-box ' + status);
-                            console.log('#imported_packages #package' + tld_id);
                         });
                     }
                 );
