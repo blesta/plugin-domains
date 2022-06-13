@@ -56,7 +56,7 @@
                                 $this->Form->fieldSelect('module_id', [], $vars['module_id'] ?? '', ['id' => 'module_id', 'class' => 'mb-2']);
                                 ?>
                                 <a class="ml-1" id="refresh_modules" href="#"><i class="fas fa-sync"></i> <?php $this->_('AdminDomains.import.text_refresh');?></a>
-                                <a target="_blank" class="d-block" href="<?php echo $this->Html->safe($this->base_uri . 'settings/company/modules/available');?>"><i class="fas fa-list"></i> <?php $this->_('AdminDomains.import.text_install_modules');?></a>
+                                <a target="_blank" class="d-block" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/registrars');?>"><i class="fas fa-list"></i> <?php $this->_('AdminDomains.import.text_install_modules');?></a>
                             </li>
                         </ul>
                     </div>
