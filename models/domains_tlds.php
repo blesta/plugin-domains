@@ -1143,12 +1143,13 @@ class DomainsTlds extends DomainsModel
 
         // Get package
         $package = $this->Packages->get($package_id);
+        $package->meta = (array) $package->meta;
 
         // Initialize module
         $module = $this->ModuleManager->initModule($package->module_id);
 
         // Fetch all package fields this module requires
-        $package_fields = $module->getPackageFields();
+        $package_fields = $module->getPackageFields($package);
         $fields = $package_fields->getFields();
         $html = $package_fields->getHtml();
         $tags = $module->getEmailTags();
@@ -1166,7 +1167,7 @@ class DomainsTlds extends DomainsModel
         foreach ($fields as $key => $field) {
             $remove_field = false;
             foreach ($field->fields as $sub_field) {
-                if (in_array($sub_field->params['name'], $remove_fields)) {
+                if (isset($sub_field->params['name']) && in_array($sub_field->params['name'], $remove_fields)) {
                     $remove_field = true;
                 }
             }
