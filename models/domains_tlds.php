@@ -71,6 +71,8 @@ class DomainsTlds extends DomainsModel
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      *  - status The status of the package to be used for pricing and sale of this TLD
+     *  - module_id The ID of the registrar module
+     *  - search_tld Partial match for the TLD
      * @param int $page The page number of results to fetch
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
@@ -99,6 +101,8 @@ class DomainsTlds extends DomainsModel
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      *  - status The status of the package to be used for pricing and sale of this TLD
+     *  - module_id The ID of the registrar module
+     *  - search_tld Partial match for the TLD
      * @return int The total number of TLDs for the given filters
      */
     public function getListCount(array $filters = [])
@@ -116,6 +120,8 @@ class DomainsTlds extends DomainsModel
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      *  - status The status of the package to be used for pricing and sale of this TLD
+     *  - module_id The ID of the registrar module
+     *  - search_tld Partial match for the TLD
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
@@ -185,14 +191,28 @@ class DomainsTlds extends DomainsModel
      */
     public function sort(array $tlds = [], $company_id = null)
     {
-        Loader::loadModels($this, ['Companies']);
-        Loader::loadModels($this, ['Packages']);
+        Loader::loadModels($this, ['Companies', 'Packages']);
+        Loader::loadHelpers($this, ['Form']);
 
         $company_id = $company_id ?? Configure::get('Blesta.company_id');
         $domains_package_group = $this->Companies->getSetting($company_id, 'domains_package_group');
-        $package_group_id = isset($domains_package_group->value)
-            ? $domains_package_group->value
-            : null;
+        $package_group_id = $domains_package_group->value ?? null;
+
+        // Fetch all TLDs for the current company
+        $current_tlds = [];
+        foreach ($this->getAll(['company_id' => $company_id]) ?? [] as $key => $tld) {
+            $current_tlds[$key] = $tld->tld ?? '';
+        }
+
+        // Fetch the TLD if the package ID was provided instead
+        foreach ($tlds as &$tld) {
+            if (is_numeric($tld)) {
+                $tld = $this->getByPackage($tld, $company_id)->tld ?? $tld;
+            }
+        }
+
+        $tlds = array_flip(array_merge(array_flip($current_tlds), array_flip($tlds)));
+        ksort($tlds);
 
         $package_ids = [];
         foreach ($tlds as $tld) {
@@ -1305,32 +1325,43 @@ class DomainsTlds extends DomainsModel
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      *  - status The status of the package to be used for pricing and sale of this TLD
+     *  - module_id The ID of the registrar module
+     *  - search_tld Partial match for the TLD
      * @return Record A partially built query
      */
     private function getTlds(array $filters = [])
     {
-        $this->Record->select(['domains_tlds.*', 'packages.module_id'])->
+        $this->Record->select(['domains_tlds.*', 'packages.module_id', 'package_group.order' => 'order'])->
             from('domains_tlds')->
             leftJoin('packages', 'packages.id', '=', 'domains_tlds.package_id', false)->
             leftJoin('package_group', 'package_group.package_id', '=', 'domains_tlds.package_id', false);
 
-        if (isset($filters['tld'])) {
+        if (!empty($filters['tld'])) {
             $this->Record->where('domains_tlds.tld', '=', $filters['tld']);
         }
 
-        if (isset($filters['tlds'])) {
+        if (!empty($filters['tlds'])) {
             $this->Record->where('domains_tlds.tld', 'in', $filters['tlds']);
         }
 
-        if (isset($filters['company_id'])) {
+        if (!empty($filters['company_id'])) {
             $this->Record->where('domains_tlds.company_id', '=', $filters['company_id']);
         }
 
-        if (isset($filters['package_id'])) {
+        if (!empty($filters['package_id'])) {
             $this->Record->where('domains_tlds.package_id', '=', $filters['package_id']);
         }
-        if (isset($filters['status'])) {
+
+        if (!empty($filters['status'])) {
             $this->Record->where('packages.status', '=', $filters['status']);
+        }
+
+        if (!empty($filters['module_id'])) {
+            $this->Record->where('packages.module_id', '=', $filters['module_id']);
+        }
+
+        if (!empty($filters['search_tld'])) {
+            $this->Record->where('domains_tlds.tld', 'LIKE', '%' . $filters['search_tld'] . '%');
         }
 
         $this->Record->group('package_group.package_id');

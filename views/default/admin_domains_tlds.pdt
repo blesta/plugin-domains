@@ -27,8 +27,11 @@
             ];
 
             $this->Widget->clear();
+            $this->Widget->setLinks([]);
             $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css', ['id' => 'domains_styles']);
             $this->Widget->setLinkButtons($link_buttons);
+            $this->Widget->setFilters($filters ?? [], $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/tlds/'), !empty($filter_vars));
+            $this->Widget->setAjaxFiltering();
             $this->Widget->create($this->_('AdminDomains.tlds.boxtitle_tld_pricing', true), ['id' => 'admin_domains_tlds'], (isset($render_section) ? $render_section : null));
             ?>
             <table class="table option_table">
@@ -67,7 +70,7 @@
                     if (!empty($tlds)) {
                         foreach ($tlds as $i => $tld) {
                     ?>
-                    <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->tld) ? $tld->tld : null);?>" data-package-tld="<?php echo $this->Html->safe($tld->tld);?>">
+                    <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo $tld->package_id ?? null;?>" data-package-tld="<?php echo $this->Html->safe($tld->tld);?>">
                         <td class="icon center">
                             <i class="fas fa-arrows-alt movable"></i>
                             <i class="fas fa-spinner fa-spin" style="display: none;"></i>
@@ -206,6 +209,7 @@
                 </div>
             </div>
             <?php
+            $this->Pagination->build();
             $this->Widget->end();
             ?>
         <?php
@@ -233,7 +237,7 @@
 
                 $(this).blestaRequest(
                     "POST",
-                    '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/sorttlds/');?>',
+                    '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/sorttlds/' . ($page ?? 1) . '/');?>',
                     $(this).sortable("serialize") + "&" + $.param(params),
                     null,
                     null,
