@@ -1213,7 +1213,7 @@ class DomainsPlugin extends Plugin
             // Domains Client Nav
             [
                 'location' => 'nav_client',
-                'uri' => 'plugin/domains/client_main/',
+                'uri' => 'plugin/domains/client_main/index/',
                 'name' => 'DomainsPlugin.nav_client.domains',
                 'options' => ['parent' => 'services/index/active/']
             ],
@@ -1233,7 +1233,7 @@ class DomainsPlugin extends Plugin
             // Client Widget
             [
                 'action' => 'widget_client_home',
-                'uri' => 'plugin/domains/client_main/index/',
+                'uri' => 'plugin/domains/client_main/widget/',
                 'name' => 'DomainsPlugin.widget_client_home.main'
             ]
         ];

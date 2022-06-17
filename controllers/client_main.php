@@ -130,6 +130,16 @@ class ClientMain extends DomainsController
     }
 
     /**
+     * Client widget
+     */
+    public function widget()
+    {
+        $this->action = 'index';
+
+        return $this->index();
+    }
+
+    /**
      * Service Info
      */
     public function serviceInfo()
