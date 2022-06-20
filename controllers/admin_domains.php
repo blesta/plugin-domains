@@ -554,8 +554,10 @@ class AdminDomains extends DomainsController
                 array_intersect_key($this->post, array_flip($accepted_settings))
             );
 
-            // Update tax status
-            if (isset($this->post['domains_taxable'])) {
+            // Update tax status if setting was changed
+            if (isset($this->post['domains_taxable'])
+                && $this->post['domains_taxable'] != ($vars['domains_taxable'] ?? null)
+            ) {
                 $this->DomainsTlds->updateTax($this->post['domains_taxable']);
             }
 
