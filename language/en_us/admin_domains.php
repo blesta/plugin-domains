@@ -267,9 +267,15 @@ $lang['AdminDomains.getOperators.earlier'] = 'Earlier';
 
 
 $lang['AdminDomains.getfilters.any'] = 'Any';
-$lang['AdminDomains.getfilters.field_module_id'] = 'Registrar Modules';
+$lang['AdminDomains.getfilters.field_module_id'] = 'Registrar Module';
 $lang['AdminDomains.getfilters.field_package_name'] = 'TLD';
 $lang['AdminDomains.getfilters.field_service_meta'] = 'Domain Name';
+
+
+$lang['AdminDomains.gettldfilters.any'] = 'Any';
+$lang['AdminDomains.gettldfilters.field_module_id'] = 'Registrar Module';
+$lang['AdminDomains.gettldfilters.field_search_tld'] = 'TLD';
+$lang['AdminDomains.gettldfilters.field_limit'] = 'Limit';
 
 
 $lang['AdminDomains.leftnav.nav_utilities'] = 'Utilities';

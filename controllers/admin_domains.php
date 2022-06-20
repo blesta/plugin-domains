@@ -11,6 +11,11 @@ use Blesta\Core\Util\Input\Fields\InputFields;
 class AdminDomains extends DomainsController
 {
     /**
+     * @var int The TLDs per page to show
+     */
+    private $tlds_per_page = 50;
+
+    /**
      * Setup
      */
     public function preAction()
@@ -1540,9 +1545,24 @@ class AdminDomains extends DomainsController
     public function tlds()
     {
         $this->uses(['ModuleManager', 'Packages', 'Domains.DomainsTlds']);
-        $this->helpers(['Form']);
+        $this->helpers(['Form', 'Widget']);
 
         $company_id = Configure::get('Blesta.company_id');
+        $page = (isset($this->get[0]) ? (int) $this->get[0] : 1);
+        $this->tlds_per_page = !empty($this->post['filters']['limit']) ? $this->post['filters']['limit'] : $this->tlds_per_page;
+
+        // Set filters from post input
+        $post_filters = [];
+        if (isset($this->post['filters'])) {
+            $post_filters = $this->post['filters'];
+            unset($this->post['filters']);
+
+            foreach($post_filters as $filter => $value) {
+                if (empty($value)) {
+                    unset($post_filters[$filter]);
+                }
+            }
+        }
 
         // Add new TLD
         if (!empty($this->post['add_tld'])) {
@@ -1626,7 +1646,12 @@ class AdminDomains extends DomainsController
         }
 
         // Fetch all the TLDs and their pricing for this company
-        $tlds = $this->DomainsTlds->getAll(['company_id' => $company_id]);
+        $this->DomainsTlds->setPerPage($this->tlds_per_page);
+        $tlds = $this->DomainsTlds->getList(
+            array_merge($post_filters, ['company_id' => $company_id]),
+            $page
+        );
+        $total_results = $this->DomainsTlds->getListCount(array_merge($post_filters, ['company_id' => $company_id]));
 
         foreach ($tlds as $key => $tld) {
             $package = $this->Packages->get($tld->package_id);
@@ -1646,11 +1671,34 @@ class AdminDomains extends DomainsController
         $select = ['' => Language::_('AppController.select.please', true)];
         $modules = $select + $this->Form->collapseObjectArray($modules, 'name', 'id');
 
+        // Overwrite default pagination settings
+        $settings = array_merge(
+            Configure::get('Blesta.pagination'),
+            [
+                'total_results' => $total_results,
+                'results_per_page' => $this->tlds_per_page,
+                'uri' => $this->base_uri . 'plugin/domains/admin_domains/tlds/[p]/'
+            ]
+        );
+        $this->setPagination($this->get, $settings);
+
+        $this->set('page', $page ?? null);
         $this->set('added_tld', $this->get['added_tld'] ?? null);
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
         $this->set('tld_actions', $this->getTldActions());
         $this->set('tld_statuses', $this->getTldStatuses());
+
+        // Set the input field filters for the widget
+        $filters = $this->getTldFilters(
+            [
+                'language' => Configure::get('Blesta.language'),
+                'company_id' => Configure::get('Blesta.company_id')
+            ],
+            $post_filters
+        );
+        $this->set('filters', $filters);
+        $this->set('filter_vars', $post_filters);
 
         // Include WYSIWYG
         $this->Javascript->setFile('blesta/ckeditor/build/ckeditor.js', 'head', VENDORWEBDIR);
@@ -1747,8 +1795,15 @@ class AdminDomains extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
-        if (!empty($this->post)) {
-            $this->DomainsTlds->sort($this->post['tlds']);
+        $page = (isset($this->get[0]) ? (int)$this->get[0] : 1);
+
+        if (!empty($this->post['tlds'])) {
+            $tlds = [];
+            foreach ($this->post['tlds'] as $order => $package_id) {
+                $tlds[$order + (($page - 1) * $this->tlds_per_page)] = $package_id;
+            }
+
+            $this->DomainsTlds->sort($tlds, $this->company_id);
         }
 
         return false;
@@ -2176,7 +2231,6 @@ class AdminDomains extends DomainsController
         Loader::loadModels($this, ['ModuleManager']);
         Loader::loadHelpers($this, ['Form']);
 
-
         $fields = new InputFields();
 
         // Set module ID filter
@@ -2235,6 +2289,85 @@ class AdminDomains extends DomainsController
             )
         );
         $fields->setField($service_meta);
+
+        return $fields;
+    }
+
+    /**
+     * Gets a list of input fields for filtering TLDs
+     *
+     * @param array $options A list of options for building the filters including:
+     *  - language The language for filter labels and tooltips
+     *  - company_id The company ID to filter modules on
+     * @param array $vars A list of submitted inputs that act as defaults for filter fields including:
+     *  - module_id The module ID on which to filter packages
+     *  - tld The (partial) name of the TLD to filter
+     * @return InputFields An object representing the list of filter input field
+     */
+    private function getTldFilters(array $options, array $vars = [])
+    {
+        //Loader::loadComponents($this, ['Record']);
+        Loader::loadModels($this, ['ModuleManager']);
+        Loader::loadHelpers($this, ['Form']);
+
+        $fields = new InputFields();
+
+        // Set the TLD filter
+        $tld = $fields->label(
+            Language::_('AdminDomains.gettldfilters.field_search_tld', true),
+            'search_tld'
+        );
+        $tld->attach(
+            $fields->fieldText(
+                'filters[search_tld]',
+                isset($vars['search_tld']) ? $vars['search_tld'] : null,
+                [
+                    'id' => 'search_tld',
+                    'class' => 'form-control stretch',
+                    'placeholder' => Language::_('AdminDomains.gettldfilters.field_search_tld', true)
+                ]
+            )
+        );
+        $fields->setField($tld);
+
+        // Set module ID filter
+        $modules = $this->Form->collapseObjectArray(
+            $this->ModuleManager->getAll($options['company_id'], 'name', 'asc', ['type' => 'registrar']),
+            'name',
+            'id'
+        );
+
+        $module = $fields->label(
+            Language::_('AdminDomains.gettldfilters.field_module_id', true),
+            'module_id'
+        );
+        $module->attach(
+            $fields->fieldSelect(
+                'filters[module_id]',
+                ['' => Language::_('AdminDomains.gettldfilters.any', true)] + $modules,
+                isset($vars['module_id']) ? $vars['module_id'] : null,
+                ['id' => 'module_id', 'class' => 'form-control stretch']
+            )
+        );
+        $fields->setField($module);
+
+        // Set the Limit filter
+        $limit = $fields->label(
+            Language::_('AdminDomains.gettldfilters.field_limit', true),
+            'limit'
+        );
+        $limit->attach(
+            $fields->fieldText(
+                'filters[limit]',
+                isset($vars['limit']) ? $vars['limit'] : null,
+                [
+                    'id' => 'limit',
+                    'class' => 'form-control stretch',
+                    'placeholder' => Language::_('AdminDomains.gettldfilters.field_limit', true)
+                ]
+            )
+        );
+        $fields->setField($limit);
 
         return $fields;
     }
