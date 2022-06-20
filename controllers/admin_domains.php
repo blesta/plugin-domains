@@ -368,8 +368,9 @@ class AdminDomains extends DomainsController
         Loader::loadModels($this, ['Domains.DomainsTlds']);
 
         if (!empty($this->post) && $this->isAjax()) {
-            $response = [];
+            set_time_limit(60*60*15); // 15 minutes
 
+            $response = [];
             $tries = Configure::get('Blesta.transaction_deadlock_reattempts');
             do {
                 $retry = false;
@@ -378,7 +379,8 @@ class AdminDomains extends DomainsController
                     $this->DomainsTlds->import(
                         $this->post['tlds'] ?? [],
                         empty($this->post['module_id']) ? 0 : $this->post['module_id'],
-                        Configure::get('Blesta.company_id')
+                        Configure::get('Blesta.company_id'),
+                        ['terms' => $this->post['terms'] ?? []]
                     );
 
                     if (($errors = $this->DomainsTlds->errors())) {
@@ -397,6 +399,8 @@ class AdminDomains extends DomainsController
                     if ($tries > 0 && $e->getCode() == '40001' && str_contains($e->getMessage(), '1213')) {
                         $retry = true;
                     }
+                } catch (Throwable $e) {
+                    $response['error'] = $this->setMessage('error', $e->getMessage(), true, null, false);
                 }
 
                 $tries--;
@@ -434,6 +438,7 @@ class AdminDomains extends DomainsController
         }
 
         $this->outputAsJson($registrars);
+
         return false;
     }
 
@@ -451,7 +456,7 @@ class AdminDomains extends DomainsController
         }
 
         // Fetch TLD list from the module
-        $tlds = [];
+        $response = [];
         $module_tlds = $this->ModuleManager->moduleRpc($module->id, 'getTlds');
         foreach ($module_tlds as $tld) {
             $tld = strtolower($tld);
@@ -463,10 +468,33 @@ class AdminDomains extends DomainsController
                 $disabled = true;
             }
 
-            $tlds[$tld] = ['name' => $tld, 'disabled' => $disabled];
+            $response['tlds'][$tld] = ['name' => $tld, 'disabled' => $disabled];
         }
 
-        $this->outputAsJson($tlds);
+        // Build TLD terms
+        $response['terms'] = true;
+
+        // Check if the module supports pricing sync
+        try {
+            $module_rows = $this->ModuleManager->getRows($module->id);
+            $module_row = reset($module_rows) ?? (object) [];
+            $tld_prices = $this->ModuleManager->moduleRpc($module->id, 'getTldPricing');
+
+            if (empty($tld_prices)) {
+                $response['message'] = $this->setMessage(
+                    'notice',
+                    Language::_('AdminDomains.!warning.price_sync_unsupported', true),
+                    true,
+                    null,
+                    false
+                );
+                $response['terms'] = false;
+            }
+        } catch (Throwable $e) {
+            $response['error'] = $this->setMessage('error', $e->getMessage(), true, null, false);
+        }
+
+        $this->outputAsJson($response);
         return false;
     }
 

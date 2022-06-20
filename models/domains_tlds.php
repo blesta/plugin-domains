@@ -871,8 +871,11 @@ class DomainsTlds extends DomainsModel
      * @param array $pricings A key => value array, where the key is the package pricing ID
      *  and the value the pricing row
      * @param int $company_id The ID of the company for which to filter by
+     * @param array $filters A list of filters for the process
+     *
+     *  - terms A list of terms to import for the TLD, if supported
      */
-    public function updatePricings($tld, array $pricings, $company_id = null)
+    public function updatePricings($tld, array $pricings, $company_id = null, array $filters = [])
     {
         Loader::loadModels($this, ['Pricings', 'Currencies']);
         Loader::loadHelpers($this, ['Form']);
@@ -887,6 +890,10 @@ class DomainsTlds extends DomainsModel
                 foreach ($term_pricing as $currency => $pricing) {
                     $pricing['currency'] = $currency;
                     $pricing['term'] = $term;
+
+                    if (!empty($filter['terms']) && !in_array($term, $filters['terms'])) {
+                        continue;
+                    }
 
                     $pricing_row = $pricings_by_currency[$currency][$term] ?? null;
 
@@ -1446,9 +1453,12 @@ class DomainsTlds extends DomainsModel
      * @param array $tlds A list containing the TLDs to import from the registrar module
      * @param int $module_id The ID of the registrar module
      * @param int $company_id The ID of the company to import the TLDs
+     * @param array $filters A list of filters for the process
+     *
+     *  - terms A list of terms to import for the TLD, if supported
      * @return bool True if all the TLDs where imported successfully, false otherwise
      */
-    public function import(array $tlds, int $module_id, int $company_id = null) : bool
+    public function import(array $tlds, int $module_id, int $company_id = null, array $filters = []) : bool
     {
         Loader::loadModels($this, ['ModuleManager', 'Companies']);
 
@@ -1511,7 +1521,7 @@ class DomainsTlds extends DomainsModel
             // Sync TLD pricing
             Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
             $sync_utility = new TldSync();
-            $sync_utility->synchronizePrices($tlds, $company_id, ['module_id' => $module_id]);
+            $sync_utility->synchronizePrices($tlds, $company_id, array_merge($filters, ['module_id' => $module_id]));
 
             return true;
         }
