@@ -476,11 +476,9 @@ class AdminDomains extends DomainsController
 
         // Check if the module supports pricing sync
         try {
-            $module_rows = $this->ModuleManager->getRows($module->id);
-            $module_row = reset($module_rows) ?? (object) [];
-            $tld_prices = $this->ModuleManager->moduleRpc($module->id, 'getTldPricing');
-
-            if (empty($tld_prices)) {
+            $class_name = Loader::toCamelCase($module->class);
+            $reflection = new ReflectionClass($class_name);
+            if ($reflection->getMethod('getFilteredTldPricing')->class !== $class_name) {
                 $response['message'] = $this->setMessage(
                     'notice',
                     Language::_('AdminDomains.!warning.price_sync_unsupported', true),

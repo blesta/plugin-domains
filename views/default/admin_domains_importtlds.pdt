@@ -173,6 +173,8 @@
                     // Show terms, if supported
                     if (response.terms) {
                         $('#module_terms').show();
+                    } else {
+                        $('#module_terms').hide();
                     }
 
                     // Add the TLDs to the form

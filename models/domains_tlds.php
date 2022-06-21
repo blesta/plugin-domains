@@ -891,7 +891,7 @@ class DomainsTlds extends DomainsModel
                     $pricing['currency'] = $currency;
                     $pricing['term'] = $term;
 
-                    if (!empty($filter['terms']) && !in_array($term, $filters['terms'])) {
+                    if (!empty($filters['terms']) && !in_array($term, $filters['terms'])) {
                         continue;
                     }
 
@@ -1511,7 +1511,7 @@ class DomainsTlds extends DomainsModel
                     10,
                     [$default_currency => ['price' => 0, 'price_renews' => 0, 'price_transfer' => 0, 'enabled' => 1]]
                 );
-                $this->updatePricings($tld, $pricings, $company_id);
+                $this->updatePricings($tld, $pricings, $company_id, $filters);
 
                 if (($errors = $this->errors())) {
                     return false;
