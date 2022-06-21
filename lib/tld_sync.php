@@ -25,6 +25,7 @@ class TldSync
      * @param array $filters A list of filters for the process
      *
      *  - module_id If given, only TLDs belonging to this module ID will be updated
+     *  - terms A list of terms to import for the TLD, if supported
      */
     public function synchronizePrices(array $tlds, $company_id = null, array $filters = [])
     {
@@ -70,7 +71,8 @@ class TldSync
                 $this->DomainsTlds->updatePricings(
                     $tld,
                     $this->formatPricing($pricing),
-                    $company_id
+                    $company_id,
+                    $filters
                 );
             }
         }

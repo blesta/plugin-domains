@@ -71,6 +71,8 @@ class DomainsTlds extends DomainsModel
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      *  - status The status of the package to be used for pricing and sale of this TLD
+     *  - module_id The ID of the registrar module
+     *  - search_tld Partial match for the TLD
      * @param int $page The page number of results to fetch
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
@@ -99,6 +101,8 @@ class DomainsTlds extends DomainsModel
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      *  - status The status of the package to be used for pricing and sale of this TLD
+     *  - module_id The ID of the registrar module
+     *  - search_tld Partial match for the TLD
      * @return int The total number of TLDs for the given filters
      */
     public function getListCount(array $filters = [])
@@ -116,6 +120,8 @@ class DomainsTlds extends DomainsModel
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      *  - status The status of the package to be used for pricing and sale of this TLD
+     *  - module_id The ID of the registrar module
+     *  - search_tld Partial match for the TLD
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
@@ -185,14 +191,28 @@ class DomainsTlds extends DomainsModel
      */
     public function sort(array $tlds = [], $company_id = null)
     {
-        Loader::loadModels($this, ['Companies']);
-        Loader::loadModels($this, ['Packages']);
+        Loader::loadModels($this, ['Companies', 'Packages']);
+        Loader::loadHelpers($this, ['Form']);
 
         $company_id = $company_id ?? Configure::get('Blesta.company_id');
         $domains_package_group = $this->Companies->getSetting($company_id, 'domains_package_group');
-        $package_group_id = isset($domains_package_group->value)
-            ? $domains_package_group->value
-            : null;
+        $package_group_id = $domains_package_group->value ?? null;
+
+        // Fetch all TLDs for the current company
+        $current_tlds = [];
+        foreach ($this->getAll(['company_id' => $company_id]) ?? [] as $key => $tld) {
+            $current_tlds[$key] = $tld->tld ?? '';
+        }
+
+        // Fetch the TLD if the package ID was provided instead
+        foreach ($tlds as &$tld) {
+            if (is_numeric($tld)) {
+                $tld = $this->getByPackage($tld, $company_id)->tld ?? $tld;
+            }
+        }
+
+        $tlds = array_flip(array_merge(array_flip($current_tlds), array_flip($tlds)));
+        ksort($tlds);
 
         $package_ids = [];
         foreach ($tlds as $tld) {
@@ -851,8 +871,11 @@ class DomainsTlds extends DomainsModel
      * @param array $pricings A key => value array, where the key is the package pricing ID
      *  and the value the pricing row
      * @param int $company_id The ID of the company for which to filter by
+     * @param array $filters A list of filters for the process
+     *
+     *  - terms A list of terms to import for the TLD, if supported
      */
-    public function updatePricings($tld, array $pricings, $company_id = null)
+    public function updatePricings($tld, array $pricings, $company_id = null, array $filters = [])
     {
         Loader::loadModels($this, ['Pricings', 'Currencies']);
         Loader::loadHelpers($this, ['Form']);
@@ -867,6 +890,10 @@ class DomainsTlds extends DomainsModel
                 foreach ($term_pricing as $currency => $pricing) {
                     $pricing['currency'] = $currency;
                     $pricing['term'] = $term;
+
+                    if (!empty($filters['terms']) && !in_array($term, $filters['terms'])) {
+                        continue;
+                    }
 
                     $pricing_row = $pricings_by_currency[$currency][$term] ?? null;
 
@@ -1143,12 +1170,13 @@ class DomainsTlds extends DomainsModel
 
         // Get package
         $package = $this->Packages->get($package_id);
+        $package->meta = (array) $package->meta;
 
         // Initialize module
         $module = $this->ModuleManager->initModule($package->module_id);
 
         // Fetch all package fields this module requires
-        $package_fields = $module->getPackageFields();
+        $package_fields = $module->getPackageFields($package);
         $fields = $package_fields->getFields();
         $html = $package_fields->getHtml();
         $tags = $module->getEmailTags();
@@ -1166,7 +1194,7 @@ class DomainsTlds extends DomainsModel
         foreach ($fields as $key => $field) {
             $remove_field = false;
             foreach ($field->fields as $sub_field) {
-                if (in_array($sub_field->params['name'], $remove_fields)) {
+                if (isset($sub_field->params['name']) && in_array($sub_field->params['name'], $remove_fields)) {
                     $remove_field = true;
                 }
             }
@@ -1305,32 +1333,43 @@ class DomainsTlds extends DomainsModel
      *  - company_id The ID of the company for which this TLD is available
      *  - package_id The package to be used for pricing and sale of this TLD
      *  - status The status of the package to be used for pricing and sale of this TLD
+     *  - module_id The ID of the registrar module
+     *  - search_tld Partial match for the TLD
      * @return Record A partially built query
      */
     private function getTlds(array $filters = [])
     {
-        $this->Record->select(['domains_tlds.*', 'packages.module_id'])->
+        $this->Record->select(['domains_tlds.*', 'packages.module_id', 'package_group.order' => 'order'])->
             from('domains_tlds')->
             leftJoin('packages', 'packages.id', '=', 'domains_tlds.package_id', false)->
             leftJoin('package_group', 'package_group.package_id', '=', 'domains_tlds.package_id', false);
 
-        if (isset($filters['tld'])) {
+        if (!empty($filters['tld'])) {
             $this->Record->where('domains_tlds.tld', '=', $filters['tld']);
         }
 
-        if (isset($filters['tlds'])) {
+        if (!empty($filters['tlds'])) {
             $this->Record->where('domains_tlds.tld', 'in', $filters['tlds']);
         }
 
-        if (isset($filters['company_id'])) {
+        if (!empty($filters['company_id'])) {
             $this->Record->where('domains_tlds.company_id', '=', $filters['company_id']);
         }
 
-        if (isset($filters['package_id'])) {
+        if (!empty($filters['package_id'])) {
             $this->Record->where('domains_tlds.package_id', '=', $filters['package_id']);
         }
-        if (isset($filters['status'])) {
+
+        if (!empty($filters['status'])) {
             $this->Record->where('packages.status', '=', $filters['status']);
+        }
+
+        if (!empty($filters['module_id'])) {
+            $this->Record->where('packages.module_id', '=', $filters['module_id']);
+        }
+
+        if (!empty($filters['search_tld'])) {
+            $this->Record->where('domains_tlds.tld', 'LIKE', '%' . $filters['search_tld'] . '%');
         }
 
         $this->Record->group('package_group.package_id');
@@ -1415,9 +1454,12 @@ class DomainsTlds extends DomainsModel
      * @param array $tlds A list containing the TLDs to import from the registrar module
      * @param int $module_id The ID of the registrar module
      * @param int $company_id The ID of the company to import the TLDs
+     * @param array $filters A list of filters for the process
+     *
+     *  - terms A list of terms to import for the TLD, if supported
      * @return bool True if all the TLDs where imported successfully, false otherwise
      */
-    public function import(array $tlds, int $module_id, int $company_id = null) : bool
+    public function import(array $tlds, int $module_id, int $company_id = null, array $filters = []) : bool
     {
         Loader::loadModels($this, ['ModuleManager', 'Companies']);
 
@@ -1470,7 +1512,7 @@ class DomainsTlds extends DomainsModel
                     10,
                     [$default_currency => ['price' => 0, 'price_renews' => 0, 'price_transfer' => 0, 'enabled' => 1]]
                 );
-                $this->updatePricings($tld, $pricings, $company_id);
+                $this->updatePricings($tld, $pricings, $company_id, $filters);
 
                 if (($errors = $this->errors())) {
                     return false;
@@ -1480,7 +1522,7 @@ class DomainsTlds extends DomainsModel
             // Sync TLD pricing
             Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
             $sync_utility = new TldSync();
-            $sync_utility->synchronizePrices($tlds, $company_id, ['module_id' => $module_id]);
+            $sync_utility->synchronizePrices($tlds, $company_id, array_merge($filters, ['module_id' => $module_id]));
 
             return true;
         }
