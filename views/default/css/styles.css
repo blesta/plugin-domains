@@ -149,3 +149,7 @@
     font-family: "Font Awesome 5 Free";
     margin-right: 5px;
 }
+
+.pad .error_section .error_box p {
+    margin-bottom: -10px !important;
+}

@@ -62,6 +62,26 @@
                     </div>
                 </div>
 
+                <div id="module_terms" style="display: none;">
+                    <div class="title_row"><h3><?php echo $this->_('AdminDomains.import.title_terms', true);?></h3></div>
+                    <div class="pad">
+                        <ul>
+                            <?php
+                            for ($i = 1; $i <= 10; $i++) {
+                            ?>
+                            <li class="w-25 d-inline-block">
+                                <?php
+                                $this->Form->fieldCheckbox('terms[]', $i, (($vars['terms'][$i - 1] ?? $i) == $i), ['id' => 'terms_' . $i]);
+                                $this->Form->label($this->_('AdminDomains.import.text_year' . ($i > 1 ? 's' : ''), true, $i), 'terms_' . $i, ['class' => 'inline']);
+                                ?>
+                            </li>
+                            <?php
+                            }
+                            ?>
+                        </ul>
+                    </div>
+                </div>
+
                 <div id="module_tlds" style="display: none;">
                     <div class="title_row">
                         <h3>
@@ -113,9 +133,17 @@
         // Select all TLDs
         $("#select_all").on('change', function() {
             if ($(this).is(":checked")) {
-                $('#import_tlds_form input[type=checkbox]:not(:disabled)').prop("checked", true);
+                $('#module_tlds input[type=checkbox]:not(:disabled)').prop("checked", true);
             } else {
-                $('#import_tlds_form input[type=checkbox]:not(:disabled)').prop("checked", false);
+                $('#module_tlds input[type=checkbox]:not(:disabled)').prop("checked", false);
+            }
+        });
+
+        // Force at least one term
+        $("#module_terms input[type=checkbox]").on('change', function() {
+            if ($("input[type=checkbox]:checked").length === 0) {
+                alert('<?php echo $this->_('AdminDomains.import.text_terms_notice', true);?>');
+                $(this).prop("checked", true);
             }
         });
 
@@ -126,17 +154,32 @@
             $("#import_tlds_button").removeAttr('disabled').show();
             $("#select_all").removeAttr('disabled').prop("checked", false);
 
+            // Remove all TLDs
+            $('#module_tlds ul li').html('<i class="fas fa-spinner fa-spin"></i>');
+            $('#module_tlds .pad .error_section').remove();
             $('#module_tlds').show();
+
             $(this).blestaRequest(
                 "GET",
                 '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/getmoduletlds/');?>' + module_id + '/',
                 null,
-                function(tlds) {
-                    // Remove all TLDs
-                    $('#module_tlds ul li').html('');
+                function(response) {
+                    // Show alert message, if any
+                    if (response.hasOwnProperty('message')) {
+                        $('#module_tlds .pad').prepend(response.message);
+                        $("#module_terms input:checkbox").prop('checked', false);
+                    }
+
+                    // Show terms, if supported
+                    if (response.terms) {
+                        $('#module_terms').show();
+                    } else {
+                        $('#module_terms').hide();
+                    }
 
                     // Add the TLDs to the form
-                    $.each(tlds, function(tld, tld_object){
+                    $('#module_tlds ul li').html('');
+                    $.each(response.tlds, function(tld, tld_object){
                         if (tld == '.') {
                             return;
                         }
@@ -189,6 +232,9 @@
                 $('#module_id').empty();
                 $('#module_tlds ul li').empty();
                 $('#module_tlds').hide();
+                $('#module_terms').hide();
+                $("#module_terms input:checkbox").prop('checked', true);
+                $('#module_tlds .pad .error_section').remove();
 
                 // Add "Please Select" option
                 $('#module_id').append($('<option>', {
@@ -209,13 +255,12 @@
         );
     }
 
-    // Import TLDS
+    // Import TLDs
     $("#import_tlds_form").submit(function(event) {
         event.preventDefault();
 
-        $("html, body").animate({scrollTop: 0}, "fast");
         $("#import_tlds_button").attr('disabled','disabled').hide();
-        $("#import_tlds_form input:checkbox:not(:checked)").each(function() {
+        $("#module_tlds input:checkbox:not(:checked)").each(function() {
             $(this).parent().remove();
         });
 
@@ -228,7 +273,7 @@
                 $(this).find('input[type="checkbox"]').hide();
 
                 // Disable all other checkboxes, except the current one
-                $('#import_tlds_form input[type="checkbox"]').attr('disabled','disabled');
+                $('#module_tlds input[type="checkbox"]').attr('disabled','disabled');
                 $(this).find('input[type="checkbox"]').removeAttr('disabled');
 
                 // Import TLD through AJAX
@@ -239,11 +284,15 @@
                     function(response) {
                         if (response.hasOwnProperty('message')) {
                             tld_box.removeClass("current").addClass("success");
-                            if ($(".tld-box.current").length === 0) {
+                            if ($(".tld-box.current").length === 0 && $(".tld-box.failed").length === 0) {
                                 $(".message_box").html(response.message);
                             }
                         } else {
                             tld_box.removeClass("current").addClass("failed");
+
+                            if (response.hasOwnProperty('error')) {
+                                $(".message_box").html(response.error);
+                            }
                         }
                     },
                     function(error) {
