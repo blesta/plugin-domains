@@ -380,7 +380,7 @@ class AdminDomains extends DomainsController
                         $this->post['tlds'] ?? [],
                         empty($this->post['module_id']) ? 0 : $this->post['module_id'],
                         Configure::get('Blesta.company_id'),
-                        ['terms' => $this->post['terms'] ?? []]
+                        ['terms' => $this->post['terms'] ?? [1]]
                     );
 
                     if (($errors = $this->DomainsTlds->errors())) {
