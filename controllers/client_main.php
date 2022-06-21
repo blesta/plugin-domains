@@ -25,10 +25,13 @@ class ClientMain extends DomainsController
     /**
      * Returns the view for a list of extensions
      */
-    public function index()
+    public function index($widget = false)
     {
         // Load required models
         $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services', 'Packages']);
+
+        // Force the action to index
+        $this->action = 'index';
 
         // Set filters from post input
         $post_filters = [];
@@ -110,6 +113,7 @@ class ClientMain extends DomainsController
         $this->set('sort', $sort);
         $this->set('order', $order);
         $this->set('negate_order', ($order == 'asc' ? 'desc' : 'asc'));
+        $this->set('action', ($widget ? 'widget' : $this->action));
 
         // Overwrite default pagination settings
         $settings = array_merge(
@@ -134,9 +138,7 @@ class ClientMain extends DomainsController
      */
     public function widget()
     {
-        $this->action = 'index';
-
-        return $this->index();
+        return $this->index(true);
     }
 
     /**
