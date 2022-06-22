@@ -189,6 +189,11 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.6.0', '<')) {
                 $this->upgrade1_6_0();
             }
+
+            // Upgrade to 1.7.0
+            if (version_compare($current_version, '1.7.0', '<')) {
+                $this->upgrade1_7_0();
+            }
         }
     }
 
@@ -393,6 +398,37 @@ class DomainsPlugin extends Plugin
                 $this->Record->duplicate('service_id', '=', $domain->id)->insert('domains_domains', $vars, $fields);
             }
 
+        }
+    }
+
+    /**
+     * Update to v1.7.0
+     */
+    private function upgrade1_7_0()
+    {
+        Loader::loadModels($this, ['Domains.DomainsTlds', 'PackageOptionGroups', 'PluginManager']);
+
+        $plugins = $this->PluginManager->getByDir('domains');
+        foreach ($plugins as $plugin) {
+            $settings = $this->DomainsTlds->getDomainsCompanySettings($plugin->company_id);
+
+            if (!empty($settings['domains_dns_management_option_group']) && is_numeric($settings['domains_dns_management_option_group'])) {
+                $this->PackageOptionGroups->edit($settings['domains_dns_management_option_group'], [
+                    'description' => Language::_('DomainsPlugin.upgrade.domains_dns_management_option_group', true)
+                ]);
+            }
+
+            if (!empty($settings['domains_email_forwarding_option_group']) && is_numeric($settings['domains_email_forwarding_option_group'])) {
+                $this->PackageOptionGroups->edit($settings['domains_email_forwarding_option_group'], [
+                    'description' => Language::_('DomainsPlugin.upgrade.domains_email_forwarding_option_group', true)
+                ]);
+            }
+
+            if (!empty($settings['domains_id_protection_option_group']) && is_numeric($settings['domains_id_protection_option_group'])) {
+                $this->PackageOptionGroups->edit($settings['domains_id_protection_option_group'], [
+                    'description' => Language::_('DomainsPlugin.upgrade.domains_id_protection_option_group', true)
+                ]);
+            }
         }
     }
 
