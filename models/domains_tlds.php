@@ -482,6 +482,17 @@ class DomainsTlds extends DomainsModel
                 ->insert('package_meta', $fields);
         }
 
+        // Set type package meta field which exists on our registrar modules.
+        // This is a temporary measure.  We should really remove this field on those modules.
+        $fields = [
+            'package_id' => $package_id,
+            'key' => 'type',
+            'value' => 'domain',
+            'serialized' => '0'
+        ];
+        $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+            ->insert('package_meta', $fields);
+
         // Set the default module row, if any
         $module = $this->ModuleManager->get($vars['module_id']);
         $module_row = null;

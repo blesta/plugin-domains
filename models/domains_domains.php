@@ -289,7 +289,7 @@ class DomainsDomains extends DomainsModel
             $expiration_date = $this->ModuleManager->moduleRpc(
                 $service->package->module_id,
                 'getExpirationDate',
-                [$service_id, $format],
+                [$service, $format],
                 $service->module_row_id ?? null
             );
 
