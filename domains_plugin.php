@@ -1367,7 +1367,11 @@ class DomainsPlugin extends Plugin
             ],
             [
                 'event' => 'Services.addAfter',
-                'callback' => ['this', 'setRenewalDate']
+                'callback' => ['this', 'updateRenewalDate']
+            ],
+            [
+                'event' => 'Services.editAfter',
+                'callback' => ['this', 'updateRenewalDate']
             ]
         ];
     }
@@ -1396,7 +1400,7 @@ class DomainsPlugin extends Plugin
      *
      * @param Blesta\Core\Util\Events\Common\EventInterface $event The event to process
      */
-    public function setRenewalDate($event)
+    public function updateRenewalDate($event)
     {
         Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services']);
         $params = $event->getParams();
@@ -1422,7 +1426,7 @@ class DomainsPlugin extends Plugin
             );
             $renewal_date = $this->Services->Date->modify(
                 $expiration_date,
-                '-' . $renewal_days->value . ' days',
+                '-' . ($renewal_days->value ?? 0) . ' days',
                 'Y-m-d 00:00:00',
                 Configure::get('Blesta.company_timezone')
             );

@@ -41,7 +41,17 @@ class DomainsDomains extends DomainsModel
         $package_group_id = $this->Companies->getSetting($filters['company_id'], 'domains_package_group');
         $filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
 
-        return $this->Services->getAll($order, false, $filters);
+        $services = $this->Services->getAll($order, false, $filters);
+
+        // Add domain fields
+        foreach ($services as &$service) {
+            $module = $this->ModuleManager->initModule($service->package->module_id);
+            $service->registrar = $module->getName();
+            $service->renewal_price = $this->Services->getRenewalPrice($service->id);
+            $service->expiration_date = $this->getExpirationDate($service->id);
+        }
+
+        return $services;
     }
 
     /**
@@ -71,18 +81,26 @@ class DomainsDomains extends DomainsModel
      */
     public function getList(array $filters = [], $page = 1, array $order = ['order' => 'asc'])
     {
-        Loader::loadModels($this, ['Services', 'Companies']);
+        Loader::loadModels($this, ['Services', 'Companies', 'ModuleManager']);
 
-        $company_id = $filters['company_id'] ?? Configure::get('Blesta.company_id');
-
-        // Filter by package group
-        $package_group_id = $this->Companies->getSetting($company_id, 'domains_package_group');
-        $filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
+        // Filter by type
+        $filters['type'] = 'domains';
 
         // Set service status
         $status = $filters['status'] ?? 'active';
+        $client_id = $filters['client_id'] ?? null;
 
-        return $this->Services->getList(null, $status, $page, $order, false, $filters);
+        $services = $this->Services->getList($client_id, $status, $page, $order, false, $filters);
+
+        // Add domain fields
+        foreach ($services as &$service) {
+            $module = $this->ModuleManager->initModule($service->package->module_id);
+            $service->registrar = $module->getName();
+            $service->renewal_price = $this->Services->getRenewalPrice($service->id);
+            $service->expiration_date = $this->getExpirationDate($service->id);
+        }
+
+        return $services;
     }
 
     /**
@@ -110,18 +128,56 @@ class DomainsDomains extends DomainsModel
      */
     public function getListCount(array $filters = [])
     {
-        Loader::loadModels($this, ['Services', 'Companies']);
+        Loader::loadModels($this, ['Services', 'Companies', 'ModuleManager']);
 
-        $company_id = $filters['company_id'] ?? Configure::get('Blesta.company_id');
-
-        // Filter by package group
-        $package_group_id = $this->Companies->getSetting($company_id, 'domains_package_group');
-        $filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
+        // Filter by type
+        $filters['type'] = 'domains';
 
         // Set service status
         $status = $filters['status'] ?? 'active';
+        $client_id = $filters['client_id'] ?? null;
 
-        return $this->Services->getListCount(null, $status, false, null, $filters);
+        return $this->Services->getListCount($client_id, $status, false, null, $filters);
+    }
+
+    /**
+     * Returns the number of results available for the given status
+     *
+     * @param string $status The status value to select a count of ('active', 'canceled', 'pending', 'suspended')
+     * @param array $filters A list of parameters to filter by, including:
+     *
+     *  - client_id The client ID (optional)
+     *  - excluded_pricing_term The pricing term by which to exclude results (optional)
+     *  - module_id The module ID on which to filter packages (optional)
+     *  - pricing_period The pricing period for which to fetch services (optional)
+     *  - package_id The package ID (optional)
+     *  - package_name The (partial) name of the packages for which to fetch services (optional)
+     *  - service_meta The (partial) value of meta data on which to filter services (optional)
+     *  - status The status type of the services to fetch (optional, default 'active'):
+     *    - active All active services
+     *    - canceled All canceled services
+     *    - pending All pending services
+     *    - suspended All suspended services
+     *    - in_review All services that require manual review before they may become pending
+     *    - scheduled_cancellation All services scheduled to be canceled
+     *    - all All active/canceled/pending/suspended/in_review
+     *  - type The type of the services, it can be 'services', 'domains' or null for all (optional, default null)
+     * @return int The number representing the total number of services for this client with that status
+     */
+    public function getStatusCount($status = 'active', array $filters = [])
+    {
+        Loader::loadModels($this, ['Services']);
+
+        // Filter by type
+        $filters['type'] = 'domains';
+
+        // Set service status
+        $status = $status ?? $filters['status'] ?? 'active';
+        $client_id = $filters['client_id'] ?? null;
+
+        unset($filters['status']);
+
+        return $this->Services->getListCount($client_id, $status, false, null, $filters);
     }
 
     /**
@@ -220,30 +276,36 @@ class DomainsDomains extends DomainsModel
      */
     public function getExpirationDate($service_id, $format = 'Y-m-d H:i:s')
     {
-        Loader::loadModels($this, ['Services', 'ModuleManager']);
+        Loader::loadModels($this, ['Services', 'ModuleManager', 'Companies', 'Services']);
+
+        if (is_null($format)) {
+            $format = 'Y-m-d H:i:s';
+        }
 
         if (is_numeric($service_id)) {
             $service = $this->Services->get($service_id);
 
-            // Check if the domain already has an expiration date
-            $domain = $this->Record->select()
-                ->from('domains_domains')
-                ->where('service_id', '=', $service->id)
-                ->fetch();
-            $expiration_date = $domain->expiration_date ?? null;
-
             // Get the expiration date from the registrar
-            if (empty($expiration_date)) {
-                $expiration_date = $this->ModuleManager->moduleRpc(
-                    $service->package->module_id,
-                    'getExpirationDate',
-                    [$service_id, $format],
-                    $service->module_row_id ?? null
-                );
-            }
+            $expiration_date = $this->ModuleManager->moduleRpc(
+                $service->package->module_id,
+                'getExpirationDate',
+                [$service_id, $format],
+                $service->module_row_id ?? null
+            );
 
-            if (empty($expiration_date) || $service->date_renews > $expiration_date) {
-                $expiration_date = $service->date_renews;
+            // Check if there is an expiration date locally saved
+            if (empty($expiration_date)) {
+                $domain = $this->Record->select()
+                    ->from('domains_domains')
+                    ->where('service_id', '=', $service->id)
+                    ->fetch();
+                $local_expiration_date = $domain->expiration_date ?? null;
+
+                if (strtotime($service->date_renews) <= strtotime($local_expiration_date)) {
+                    $expiration_date = $local_expiration_date;
+                } else {
+                    $expiration_date = $service->date_renews;
+                }
             }
 
             return $this->Date->format(

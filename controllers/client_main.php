@@ -46,46 +46,27 @@ class ClientMain extends DomainsController
             }
         }
 
-        // Filter by domains type
-        $domains_filters = $post_filters;
-        $domains_filters['type'] = 'domains';
-
-        $status = (isset($this->get[0]) ? $this->get[0] : 'active');
+        // Get domains
+        $status = ($this->get[0] ?? 'active');
         $page = (isset($this->get[1]) ? (int)$this->get[1] : 1);
-        $sort = (isset($this->get['sort']) ? $this->get['sort'] : 'date_added');
-        $order = (isset($this->get['order']) ? $this->get['order'] : 'desc');
+        $sort = ($this->get['sort'] ?? 'date_added');
+        $order = ($this->get['order'] ?? 'desc');
 
-        // Get services
-        $services = $this->Services->getList(
-            $this->client->id,
-            $status,
-            $page,
-            [$sort => $order],
-            false,
-            $domains_filters
-        );
-        $total_results = $this->Services->getListCount($this->client->id, $status, false, null, $domains_filters);
+        $domains_filters = array_merge([
+            'client_id' => $this->client->id,
+            'status' => $status
+        ], $post_filters);
+
+        $services = $this->DomainsDomains->getList($domains_filters, $page, [$sort => $order]);
+        $total_results = $this->DomainsDomains->getListCount($domains_filters);
 
         // Set the number of services of each type, not including children
         $status_count = [
-            'active' => $this->Services->getStatusCount($this->client->id, 'active', false, $domains_filters),
-            'canceled' => $this->Services->getStatusCount($this->client->id, 'canceled', false, $domains_filters),
-            'pending' => $this->Services->getStatusCount($this->client->id, 'pending', false, $domains_filters),
-            'suspended' => $this->Services->getStatusCount($this->client->id, 'suspended', false, $domains_filters),
+            'active' => $this->DomainsDomains->getStatusCount('active', $domains_filters),
+            'canceled' => $this->DomainsDomains->getStatusCount('canceled', $domains_filters),
+            'pending' => $this->DomainsDomains->getStatusCount('pending', $domains_filters),
+            'suspended' => $this->DomainsDomains->getStatusCount('suspended', $domains_filters),
         ];
-
-        // Set the expected service renewal price
-        $modules = [];
-        foreach ($services as $service) {
-            $module_id = $service->package->module_id;
-            if (!isset($modules[$module_id])) {
-                $modules[$module_id] = $this->ModuleManager->initModule($module_id);
-            }
-
-            $service->renewal_price = $this->Services->getRenewalPrice($service->id);
-            $service->registrar = $modules[$module_id]->getName();
-            $service->expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
-        }
 
         // Set language for periods
         $periods = $this->Packages->getPricingPeriods();
