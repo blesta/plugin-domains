@@ -1063,7 +1063,7 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
-     * Assigns feature configgetListCounturable options groups to the given package
+     * Assigns feature configurable options groups to the given package
      *
      * @param int $package_id The ID of the package to assign the configurable options
      * @param array $vars An array of input data including:
