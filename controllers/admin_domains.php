@@ -587,6 +587,13 @@ class AdminDomains extends DomainsController
                 $this->DomainsTlds->updateTax($this->post['domains_taxable']);
             }
 
+            // Update override price package setting if setting was changed
+            if (isset($this->post['domains_override_price'])
+                && $this->post['domains_override_price'] != ($vars['domains_override_price'] ?? null)
+            ) {
+                $this->DomainsTlds->updateOverridePriceSetting($this->post['domains_override_price']);
+            }
+
             // Update cron task enabled
             $cron = $this->CronTasks->getTaskRunByKey('domain_tld_synchronization', 'domains');
             $this->CronTasks->editTaskRun(

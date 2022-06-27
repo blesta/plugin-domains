@@ -1066,11 +1066,20 @@ class DomainsTlds extends DomainsModel
      */
     public function updateTax($taxable)
     {
-        $tlds = $this->getAll();
+        $this->Record->innerJoin('domains_packages', 'domains_packages.package_id', '=', 'packages.id', false)
+            ->update('packages', ['taxable' => (int)$taxable]);
+    }
 
-        foreach ($tlds as $tld) {
-            $this->edit($tld->tld, ['taxable' => (int)$taxable]);
-        }
+    /**
+     * Updates the taxation status of the TLD packages
+     *
+     * @param int $override_prices Whether or not to set override prices automatically on services
+     *  created from this package
+     */
+    public function updateOverridePriceSetting($override_prices)
+    {
+        $this->Record->innerJoin('domains_packages', 'domains_packages.package_id', '=', 'packages.id', false)
+            ->update('packages', ['override_price' => (int)$override_prices]);
     }
 
     /**
