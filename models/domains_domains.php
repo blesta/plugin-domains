@@ -286,7 +286,7 @@ class DomainsDomains extends DomainsModel
             $service = $this->Services->get($service_id);
 
             // Get the expiration date from the registrar
-            $expiration_date = $this->ModuleManager->moduleRpc(
+            $remote_expiration_date = $this->ModuleManager->moduleRpc(
                 $service->package->module_id,
                 'getExpirationDate',
                 [$service, $format],
@@ -294,18 +294,15 @@ class DomainsDomains extends DomainsModel
             );
 
             // Check if there is an expiration date locally saved
-            if (empty($expiration_date)) {
-                $domain = $this->Record->select()
-                    ->from('domains_domains')
-                    ->where('service_id', '=', $service->id)
-                    ->fetch();
-                $local_expiration_date = $domain->expiration_date ?? null;
+            $domain = $this->Record->select()
+                ->from('domains_domains')
+                ->where('service_id', '=', $service->id)
+                ->fetch();
+            $local_expiration_date = $domain->expiration_date ?? null;
 
-                if (strtotime($service->date_renews) <= strtotime($local_expiration_date)) {
-                    $expiration_date = $local_expiration_date;
-                } else {
-                    $expiration_date = $service->date_renews;
-                }
+            $expiration_date = $remote_expiration_date;
+            if (strtotime($remote_expiration_date) <= strtotime($local_expiration_date)) {
+                $expiration_date = $local_expiration_date;
             }
 
             return $this->Date->format(
