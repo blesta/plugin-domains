@@ -1405,6 +1405,10 @@ class DomainsPlugin extends Plugin
         Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services']);
         $params = $event->getParams();
 
+        if (isset($params['old_service'])) {
+            $params['vars'] = (array) $params['old_service'];
+        }
+
         // Validate if the service is being handled by the Domain Manager and the module type is registrar
         $package_group_id = $this->Companies->getSetting(Configure::get('Blesta.company_id'), 'domains_package_group');
         $module_row = $this->ModuleManager->getRow($params['vars']['module_row_id']);
@@ -1431,7 +1435,8 @@ class DomainsPlugin extends Plugin
                 Configure::get('Blesta.company_timezone')
             );
 
-            $this->Services->edit($service->id, ['date_renews' => $renewal_date], true);
+            $this->Record->where('id', '=', $service->id)
+                ->update('services', ['date_renews' => $renewal_date]);
         }
     }
 
