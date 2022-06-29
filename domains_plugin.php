@@ -189,6 +189,11 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.6.0', '<')) {
                 $this->upgrade1_6_0();
             }
+
+            // Upgrade to 1.6.1
+            if (version_compare($current_version, '1.6.1', '<')) {
+                $this->upgrade1_6_1();
+            }
         }
     }
 
@@ -393,6 +398,84 @@ class DomainsPlugin extends Plugin
                 $this->Record->duplicate('service_id', '=', $domain->id)->insert('domains_domains', $vars, $fields);
             }
 
+        }
+    }
+
+    /**
+     * Update to v1.6.1
+     */
+    private function upgrade1_6_1()
+    {
+        Loader::loadModels($this, ['Companies', 'PackageOptionGroups', 'PackageOptions', 'SettingsCollection']);
+
+        $companies = $this->Companies->getAll();
+        foreach ($companies as $company) {
+            // Get default currency
+            $default_currency = $this->SettingsCollection->fetchSetting(null, $company->id, 'default_currency');
+            $currency = ($default_currency['value'] ?? 'USD');
+
+            if (($setting = $this->Companies->getSetting($company->id, 'domains_dns_management_option_group'))) {
+                $package_options = $this->PackageOptionGroups->getAllOptions($setting->value, ['hidden' => true]);
+                foreach ($package_options as $package_option) {
+                    $values = $this->PackageOptions->getValues($package_option->id);
+                    foreach ($values as &$value) {
+                        if (empty($value->pricing)) {
+                            $value->pricing = [];
+                            for ($i = 1; $i <= 10; $i++) {
+                                $value->pricing[] = ['term' => $i, 'period' => 'year', 'currency' => $currency, 'price' => 0];
+                            }
+                        }
+
+                        $value = (array) $value;
+                    }
+
+                    // Update package option
+                    $option = array_merge((array) $package_option, ['values' => $values]);
+                    $this->PackageOptions->edit($package_option->id, $option);
+                }
+            }
+
+            if (($setting = $this->Companies->getSetting($company->id, 'domains_email_forwarding_option_group'))) {
+                $package_options = $this->PackageOptionGroups->getAllOptions($setting->value, ['hidden' => true]);
+                foreach ($package_options as $package_option) {
+                    $values = $this->PackageOptions->getValues($package_option->id);
+                    foreach ($values as &$value) {
+                        if (empty($value->pricing)) {
+                            $value->pricing = [];
+                            for ($i = 1; $i <= 10; $i++) {
+                                $value->pricing[] = ['term' => $i, 'period' => 'year', 'currency' => $currency, 'price' => 0];
+                            }
+                        }
+
+                        $value = (array) $value;
+                    }
+
+                    // Update package option
+                    $option = array_merge((array) $package_option, ['values' => $values]);
+                    $this->PackageOptions->edit($package_option->id, $option);
+                }
+            }
+
+            if (($setting = $this->Companies->getSetting($company->id, 'domains_id_protection_option_group'))) {
+                $package_options = $this->PackageOptionGroups->getAllOptions($setting->value, ['hidden' => true]);
+                foreach ($package_options as $package_option) {
+                    $values = $this->PackageOptions->getValues($package_option->id);
+                    foreach ($values as &$value) {
+                        if (empty($value->pricing)) {
+                            $value->pricing = [];
+                            for ($i = 1; $i <= 10; $i++) {
+                                $value->pricing[] = ['term' => $i, 'period' => 'year', 'currency' => $currency, 'price' => 0];
+                            }
+                        }
+
+                        $value = (array) $value;
+                    }
+
+                    // Update package option
+                    $option = array_merge((array) $package_option, ['values' => $values]);
+                    $this->PackageOptions->edit($package_option->id, $option);
+                }
+            }
         }
     }
 
@@ -719,8 +802,8 @@ class DomainsPlugin extends Plugin
 
             // Add a pricing for terms 1-10 years for each currency
             foreach ($currencies as $currency) {
-                for ($i = 0; $i < 10; $i++) {
-                    $option_params['pricing'][] = ['term' => $i, 'period' => 'year', 'currency' => $currency->code];
+                for ($i = 1; $i <= 10; $i++) {
+                    $option_params['pricing'][] = ['term' => $i, 'period' => 'year', 'currency' => $currency->code, 'price' => 0];
                 }
             }
 
