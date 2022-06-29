@@ -1557,7 +1557,7 @@ class AdminDomains extends DomainsController
     private function getDays($min_days, $max_days)
     {
         $days = [
-            '' => Language::_('AdminDomains.getDays.never', true)
+            '' => Language::_('AdminDomains.getDays.same_day', true)
         ];
         for ($i = $min_days; $i <= $max_days; $i++) {
             $days[$i] = Language::_(
