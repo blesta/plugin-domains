@@ -76,6 +76,28 @@ class DomainsObserver extends Observer
     }
 
     /**
+     * Handle Domains.updateDomainsCompanySettingsAfter events
+     *
+     * @param Blesta\Core\Util\Events\Common\EventInterface $event An event object for Domains.updateDomainsCompanySettingsAfter events
+     * @return Blesta\Core\Util\Events\Common\EventInterface The processed event object
+     */
+    public static function updateDomainsCompanySettingsAfter(EventInterface $event)
+    {
+        return parent::triggerEvent($event);
+    }
+
+    /**
+     * Handle Domains.updateDomainsCompanySettingsBefore events
+     *
+     * @param Blesta\Core\Util\Events\Common\EventInterface $event An event object for Domains.updateDomainsCompanySettingsBefore events
+     * @return Blesta\Core\Util\Events\Common\EventInterface The processed event object
+     */
+    public static function updateDomainsCompanySettingsBefore(EventInterface $event)
+    {
+        return parent::triggerEvent($event);
+    }
+
+    /**
      * Handle Domains.updateTax events
      *
      * @param Blesta\Core\Util\Events\Common\EventInterface $event An event object for Domains.updateTax events
