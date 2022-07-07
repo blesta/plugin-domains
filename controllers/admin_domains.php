@@ -575,10 +575,7 @@ class AdminDomains extends DomainsController
                 $this->post['domains_override_price'] = '0';
             }
             $this->post['domains_spotlight_tlds'] = json_encode($this->post['domains_spotlight_tlds']);
-            $this->Companies->setSettings(
-                $company_id,
-                array_intersect_key($this->post, array_flip($accepted_settings))
-            );
+            $this->DomainsTlds->updateDomainsCompanySettings($company_id, $this->post);
 
             // Update tax status if setting was changed
             if (isset($this->post['domains_taxable'])

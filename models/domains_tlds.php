@@ -1503,6 +1503,54 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Updates the plugin company settings
+     *
+     * @param int $company_id The ID of the company to fetch the plugin settings
+     * @param array $settings An array containing all the Domains plugin company settings
+     */
+    public function updateDomainsCompanySettings($company_id, array $settings)
+    {
+        Loader::loadModels($this, ['Companies']);
+
+        // Trigger the Domains.updateDomainsCompanySettingsBefore event
+        extract($this->triggerEvent(
+            'updateDomainsCompanySettingsBefore',
+            ['company_id' => $company_id, 'settings' => $settings]
+        ));
+
+        $accepted_settings = [
+            'domains_spotlight_tlds',
+            'domains_dns_management_option_group',
+            'domains_email_forwarding_option_group',
+            'domains_id_protection_option_group',
+            'domains_first_reminder_days_before',
+            'domains_second_reminder_days_before',
+            'domains_expiration_notice_days_after',
+            'domains_taxable',
+            'domains_sync_price_markup',
+            'domains_sync_renewal_markup',
+            'domains_sync_transfer_markup',
+            'domains_enable_rounding',
+            'domains_markup_rounding',
+            'domains_automatic_sync',
+            'domains_sync_frequency',
+            'domains_renewal_days_before_expiration',
+            'domains_override_price'
+        ];
+
+        $this->Companies->setSettings(
+            $company_id,
+            array_intersect_key($settings, array_flip($accepted_settings))
+        );
+
+        // Trigger the Domains.updateDomainsCompanySettingsAfter event
+        extract($this->triggerEvent(
+            'updateDomainsCompanySettingsAfter',
+            ['company_id' => $company_id, 'settings' => $settings]
+        ));
+    }
+
+    /**
      * Imports the TLDs and their pricing from a registrar module, if available
      *
      * @param array $tlds A list containing the TLDs to import from the registrar module
