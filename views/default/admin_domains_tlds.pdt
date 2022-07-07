@@ -272,7 +272,7 @@
         }
 
         // Get partial form
-        function getPartialForm(input_array) {
+        function getPartialForm(input_array, include_filters = true) {
             var form = document.createElement('form');
 
             // Add input fields
@@ -289,6 +289,21 @@
                 form.appendChild(select);
             });
 
+            // Add filters
+            if (include_filters && input_array !== 'filters') {
+                $('#admin_domains_tlds input[name^="filters"]').each(function() {
+                    form.appendChild(this.cloneNode());
+                });
+
+                $('#admin_domains_tlds select[name^="filters"]').each(function() {
+                    var select = document.createElement('input');
+                    select.setAttribute('type', 'hidden');
+                    select.setAttribute('name', $(this).attr('name'));
+                    select.setAttribute('value', $(this).val());
+                    form.appendChild(select);
+                });
+            }
+
             // Get CSRF token
             var csrf_token = document.createElement('input');
             csrf_token.setAttribute('type', 'hidden');
@@ -297,6 +312,22 @@
             form.appendChild(csrf_token);
 
             return $(form).serialize();
+        }
+
+        // Reload TLDs table
+        function reloadTlds() {
+            $('.common_box').parent().find('.error_section').remove();
+
+            $(this).blestaRequest(
+                "POST",
+                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/tlds/' . (!empty($page) ? $page . '/' : ''));?>',
+                getPartialForm('filters'),
+                function(tlds) {
+                    $('#right_container ' + tlds.replacer).html(tlds.content);
+                },
+                null,
+                {dataType: 'json'}
+            );
         }
 
         // Update TLDs
@@ -316,22 +347,10 @@
                 '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updatetlds/');?>' + tld,
                 getPartialForm('tlds'),
                 function(response) {
+                    reloadTlds();
                     if (response.hasOwnProperty('message')) {
-                        $('.common_box').parent().find('.error_section').remove();
                         $('.common_box').parent().prepend(response.message);
                     }
-
-                    // Restore TLD settings
-                    $(this).blestaRequest(
-                        "GET",
-                        '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/tlds/');?>',
-                        null,
-                        function(tlds) {
-                            $('#right_container ' + tlds.replacer).html(tlds.content);
-                        },
-                        null,
-                        {dataType: 'json'}
-                    );
 
                     // If the module has been updated, ask the user to update the package meta
                     if ($(field).attr('name').includes('[module]') && !response.message.includes('error_box error') && response.update_meta && tld !== '') {
@@ -396,10 +415,8 @@
                 $(this).attr('href'),
                 getPartialForm('add_tld'),
                 function(tlds) {
-                    $(tlds.replacer).html(tlds.content);
-
+                    reloadTlds();
                     if (tlds.hasOwnProperty('message')) {
-                        $('.common_box').parent().find('.error_section').remove();
                         $('.common_box').parent().prepend(tlds.message);
                     }
                 },
@@ -485,10 +502,8 @@
                 $(this).attr('href'),
                 getPartialForm('tlds_bulk'),
                 function(tlds) {
-                    $(tlds.replacer).html(tlds.content);
-
+                    reloadTlds();
                     if (tlds.hasOwnProperty('message')) {
-                        $('.common_box').parent().find('.error_section').remove();
                         $('.common_box').parent().prepend(tlds.message);
                     }
                     
