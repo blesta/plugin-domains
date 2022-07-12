@@ -141,6 +141,7 @@ class DomainsPlugin extends Plugin
         }
 
         $this->upgrade1_5_0();
+        $this->upgrade1_6_2();
 
         // Set the default renewal days before expiration
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
@@ -190,9 +191,9 @@ class DomainsPlugin extends Plugin
                 $this->upgrade1_6_0();
             }
 
-            // Upgrade to 1.6.1
-            if (version_compare($current_version, '1.6.1', '<')) {
-                $this->upgrade1_6_1();
+            // Upgrade to 1.6.2
+            if (version_compare($current_version, '1.6.2', '<')) {
+                $this->upgrade1_6_2();
             }
         }
     }
@@ -402,79 +403,71 @@ class DomainsPlugin extends Plugin
     }
 
     /**
-     * Update to v1.6.1
+     * Update to v1.6.2
      */
-    private function upgrade1_6_1()
+    private function upgrade1_6_2()
     {
-        Loader::loadModels($this, ['Companies', 'PackageOptionGroups', 'PackageOptions', 'SettingsCollection']);
+        Loader::loadModels($this, ['Companies']);
 
         $companies = $this->Companies->getAll();
         foreach ($companies as $company) {
-            // Get default currency
-            $default_currency = $this->SettingsCollection->fetchSetting(null, $company->id, 'default_currency');
-            $currency = ($default_currency['value'] ?? 'USD');
-
             if (($setting = $this->Companies->getSetting($company->id, 'domains_dns_management_option_group'))) {
-                $package_options = $this->PackageOptionGroups->getAllOptions($setting->value, ['hidden' => true]);
-                foreach ($package_options as $package_option) {
-                    $values = $this->PackageOptions->getValues($package_option->id);
-                    foreach ($values as &$value) {
-                        if (empty($value->pricing)) {
-                            $value->pricing = [];
-                            for ($i = 1; $i <= 10; $i++) {
-                                $value->pricing[] = ['term' => $i, 'period' => 'year', 'currency' => $currency, 'price' => 0];
-                            }
-                        }
-
-                        $value = (array) $value;
-                    }
-
-                    // Update package option
-                    $option = array_merge((array) $package_option, ['values' => $values]);
-                    $this->PackageOptions->edit($package_option->id, $option);
-                }
+                $this->addDefaultTermsConfigurableOption($setting->value);
             }
 
             if (($setting = $this->Companies->getSetting($company->id, 'domains_email_forwarding_option_group'))) {
-                $package_options = $this->PackageOptionGroups->getAllOptions($setting->value, ['hidden' => true]);
-                foreach ($package_options as $package_option) {
-                    $values = $this->PackageOptions->getValues($package_option->id);
-                    foreach ($values as &$value) {
-                        if (empty($value->pricing)) {
-                            $value->pricing = [];
-                            for ($i = 1; $i <= 10; $i++) {
-                                $value->pricing[] = ['term' => $i, 'period' => 'year', 'currency' => $currency, 'price' => 0];
-                            }
-                        }
-
-                        $value = (array) $value;
-                    }
-
-                    // Update package option
-                    $option = array_merge((array) $package_option, ['values' => $values]);
-                    $this->PackageOptions->edit($package_option->id, $option);
-                }
+                $this->addDefaultTermsConfigurableOption($setting->value);
             }
 
             if (($setting = $this->Companies->getSetting($company->id, 'domains_id_protection_option_group'))) {
-                $package_options = $this->PackageOptionGroups->getAllOptions($setting->value, ['hidden' => true]);
-                foreach ($package_options as $package_option) {
-                    $values = $this->PackageOptions->getValues($package_option->id);
-                    foreach ($values as &$value) {
-                        if (empty($value->pricing)) {
-                            $value->pricing = [];
-                            for ($i = 1; $i <= 10; $i++) {
-                                $value->pricing[] = ['term' => $i, 'period' => 'year', 'currency' => $currency, 'price' => 0];
-                            }
-                        }
+                $this->addDefaultTermsConfigurableOption($setting->value);
+            }
+        }
+    }
 
-                        $value = (array) $value;
+    /**
+     * Adds default terms for domain configurable options
+     *
+     * @param int $option_group_id The ID of the package group
+     */
+    private function addDefaultTermsConfigurableOption($option_group_id)
+    {
+        if (!isset($this->SettingsCollection)) {
+            Loader::loadModels($this, ['SettingsCollection']);
+        }
+        if (!isset($this->PackageOptionGroups)) {
+            Loader::loadModels($this, ['PackageOptionGroups']);
+        }
+        if (!isset($this->PackageOptions)) {
+            Loader::loadModels($this, ['PackageOptions']);
+        }
+
+        // Get package options group
+        $package_options = $this->PackageOptionGroups->getAllOptions($option_group_id, ['hidden' => true]);
+
+        foreach ($package_options as $package_option) {
+            // Get default currency
+            $default_currency = $this->SettingsCollection->fetchSetting(null, $package_option->company_id, 'default_currency');
+            $currency = ($default_currency['value'] ?? 'USD');
+
+            // Update configurable option
+            $update = false;
+            $values = $this->PackageOptions->getValues($package_option->id);
+            foreach ($values as &$value) {
+                if (empty($value->pricing)) {
+                    $update = true;
+                    $value->pricing = [];
+                    for ($i = 1; $i <= 10; $i++) {
+                        $value->pricing[] = ['term' => $i, 'period' => 'year', 'currency' => $currency, 'price' => 0];
                     }
-
-                    // Update package option
-                    $option = array_merge((array) $package_option, ['values' => $values]);
-                    $this->PackageOptions->edit($package_option->id, $option);
                 }
+                $value = (array) $value;
+            }
+
+            // Update package option
+            if ($update) {
+                $option = array_merge((array) $package_option, ['values' => (array) $values]);
+                $this->PackageOptions->edit($package_option->id, $option);
             }
         }
     }
