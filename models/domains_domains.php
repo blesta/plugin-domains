@@ -33,7 +33,7 @@ class DomainsDomains extends DomainsModel
      */
     public function getAll(array $filters = [], array $order = ['id' => 'asc'])
     {
-        Loader::loadModels($this, ['Services', 'Companies']);
+        Loader::loadModels($this, ['Services', 'Companies', 'ModuleManager']);
 
         $filters['company_id'] = $filters['company_id'] ?? Configure::get('Blesta.company_id');
 

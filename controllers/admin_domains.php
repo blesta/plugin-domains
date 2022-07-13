@@ -1555,7 +1555,7 @@ class AdminDomains extends DomainsController
     private function getDays($min_days, $max_days)
     {
         $days = [
-            '' => Language::_('AdminDomains.getDays.never', true)
+            '' => Language::_('AdminDomains.getDays.same_day', true)
         ];
         for ($i = $min_days; $i <= $max_days; $i++) {
             $days[$i] = Language::_(
@@ -2353,7 +2353,7 @@ class AdminDomains extends DomainsController
         $tld->attach(
             $fields->fieldText(
                 'filters[search_tld]',
-                isset($vars['search_tld']) ? $vars['search_tld'] : null,
+                $vars['search_tld'] ?? null,
                 [
                     'id' => 'search_tld',
                     'class' => 'form-control stretch',
@@ -2378,7 +2378,7 @@ class AdminDomains extends DomainsController
             $fields->fieldSelect(
                 'filters[module_id]',
                 ['' => Language::_('AdminDomains.gettldfilters.any', true)] + $modules,
-                isset($vars['module_id']) ? $vars['module_id'] : null,
+                $vars['module_id'] ?? null,
                 ['id' => 'module_id', 'class' => 'form-control stretch']
             )
         );
@@ -2390,9 +2390,12 @@ class AdminDomains extends DomainsController
             'limit'
         );
         $limit->attach(
-            $fields->fieldText(
+            $fields->fieldNumber(
                 'filters[limit]',
-                isset($vars['limit']) ? $vars['limit'] : null,
+                $vars['limit'] ?? $this->tlds_per_page,
+                1,
+                null,
+                null,
                 [
                     'id' => 'limit',
                     'class' => 'form-control stretch',
