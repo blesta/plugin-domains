@@ -141,6 +141,7 @@ class DomainsPlugin extends Plugin
         }
 
         $this->upgrade1_5_0();
+        $this->upgrade1_6_2();
 
         // Set the default renewal days before expiration
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
@@ -188,6 +189,11 @@ class DomainsPlugin extends Plugin
             // Upgrade to 1.6.0
             if (version_compare($current_version, '1.6.0', '<')) {
                 $this->upgrade1_6_0();
+            }
+
+            // Upgrade to 1.6.2
+            if (version_compare($current_version, '1.6.2', '<')) {
+                $this->upgrade1_6_2();
             }
         }
     }
@@ -393,6 +399,76 @@ class DomainsPlugin extends Plugin
                 $this->Record->duplicate('service_id', '=', $domain->id)->insert('domains_domains', $vars, $fields);
             }
 
+        }
+    }
+
+    /**
+     * Update to v1.6.2
+     */
+    private function upgrade1_6_2()
+    {
+        Loader::loadModels($this, ['Companies']);
+
+        $companies = $this->Companies->getAll();
+        foreach ($companies as $company) {
+            if (($setting = $this->Companies->getSetting($company->id, 'domains_dns_management_option_group'))) {
+                $this->addDefaultTermsConfigurableOption($setting->value);
+            }
+
+            if (($setting = $this->Companies->getSetting($company->id, 'domains_email_forwarding_option_group'))) {
+                $this->addDefaultTermsConfigurableOption($setting->value);
+            }
+
+            if (($setting = $this->Companies->getSetting($company->id, 'domains_id_protection_option_group'))) {
+                $this->addDefaultTermsConfigurableOption($setting->value);
+            }
+        }
+    }
+
+    /**
+     * Adds default terms for domain configurable options
+     *
+     * @param int $option_group_id The ID of the package group
+     */
+    private function addDefaultTermsConfigurableOption($option_group_id)
+    {
+        if (!isset($this->SettingsCollection)) {
+            Loader::loadModels($this, ['SettingsCollection']);
+        }
+        if (!isset($this->PackageOptionGroups)) {
+            Loader::loadModels($this, ['PackageOptionGroups']);
+        }
+        if (!isset($this->PackageOptions)) {
+            Loader::loadModels($this, ['PackageOptions']);
+        }
+
+        // Get package options group
+        $package_options = $this->PackageOptionGroups->getAllOptions($option_group_id, ['hidden' => true]);
+
+        foreach ($package_options as $package_option) {
+            // Get default currency
+            $default_currency = $this->SettingsCollection->fetchSetting(null, $package_option->company_id, 'default_currency');
+            $currency = ($default_currency['value'] ?? 'USD');
+
+            // Update configurable option
+            $update = false;
+            $values = $this->PackageOptions->getValues($package_option->id);
+            foreach ($values as &$value) {
+                if (empty($value->pricing)) {
+                    $update = true;
+                    $value->pricing = [];
+                    for ($i = 1; $i <= 10; $i++) {
+                        $value->pricing[] = ['term' => $i, 'period' => 'year', 'currency' => $currency, 'price' => 0];
+                    }
+                }
+                $value = (array) $value;
+            }
+
+            // Update package option
+            if ($update) {
+                $option = array_merge((array) $package_option, ['values' => (array) $values]);
+                $this->PackageOptions->edit($package_option->id, $option);
+            }
         }
     }
 
@@ -719,8 +795,8 @@ class DomainsPlugin extends Plugin
 
             // Add a pricing for terms 1-10 years for each currency
             foreach ($currencies as $currency) {
-                for ($i = 0; $i < 10; $i++) {
-                    $option_params['pricing'][] = ['term' => $i, 'period' => 'year', 'currency' => $currency->code];
+                for ($i = 1; $i <= 10; $i++) {
+                    $option_params['pricing'][] = ['term' => $i, 'period' => 'year', 'currency' => $currency->code, 'price' => 0];
                 }
             }
 
