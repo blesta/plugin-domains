@@ -2106,22 +2106,25 @@ class AdminDomains extends DomainsController
             // Get TLD package fields
             $package_fields = $this->DomainsTlds->getTldFields($this->get[0]);
             $package_fields_view = 'admin' . DS . 'default';
+            $tld_pricings = [];
 
             // Add a pricing for terms 1-10 years for each currency
             foreach ($currencies as $currency) {
                 for ($i = 1; $i <= 10; $i++) {
                     // Check if the term already exists
                     $exists_pricing = false;
-                    foreach ($package->pricing as &$pricing) {
+                    foreach ($package->pricing as $pricing) {
                         if ($pricing->term == $i && $pricing->period == 'year' && $pricing->currency == $currency->code) {
                             $exists_pricing = true;
                             $pricing->enabled = true;
+                            $tld_pricings[] = $pricing;
+                            break;
                         }
                     }
 
                     // If the term not exists, add a placeholder for that term
                     if (!$exists_pricing) {
-                        $package->pricing[] = (object)[
+                        $tld_pricings[] = (object)[
                             'term' => $i,
                             'period' => 'year',
                             'currency' => $currency->code,
@@ -2130,6 +2133,8 @@ class AdminDomains extends DomainsController
                     }
                 }
             }
+
+            $package->pricing = $tld_pricings;
         } catch (Throwable $e) {
             echo $this->setMessage(
                 'error',
