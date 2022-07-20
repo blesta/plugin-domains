@@ -663,10 +663,10 @@ class AdminDomains extends DomainsController
 
         if (!empty($this->post) || !empty($this->get)) {
             // Check if the request was made through AJAX
-//            if (!$this->isAjax()) {
-//                header($this->server_protocol . ' 401 Unauthorized');
-//                exit();
-//            }
+            if (!$this->isAjax()) {
+                header($this->server_protocol . ' 401 Unauthorized');
+                exit();
+            }
 
             // Get company ID
             $company_id = Configure::get('Blesta.company_id');
@@ -729,7 +729,6 @@ class AdminDomains extends DomainsController
 
                     // Attempt to import the TLDs from each package
                     foreach ($tlds_packages as $tld => $tld_packages) {
-                        sleep(3);
                         foreach ($tld_packages as $package) {
                             $this->importTld(
                                 $package,
@@ -768,7 +767,6 @@ class AdminDomains extends DomainsController
                     } else {
                         // Create the TLDs
                         foreach ($imported_tld_packages as $tld => $module_packages) {
-                            sleep(3);
                             // Sort the imported packages by the number of migrated services
                             uasort(
                                 $module_packages,
