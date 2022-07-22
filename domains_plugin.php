@@ -466,7 +466,19 @@ class DomainsPlugin extends Plugin
 
             // Update package option
             if ($update) {
-                $option = array_merge((array) $package_option, ['values' => (array) $values]);
+                // Build option parameters
+                $option = (array) $package_option;
+                unset($option['id']);
+                unset($option['company_id']);
+                unset($option['description']);
+
+                // Get option groups
+                $groups = $this->PackageOptions->getGroups($package_option->id);
+                foreach ($groups as $group) {
+                    $option['groups'][] = $group->id;
+                }
+
+                $option = array_merge($option, ['values' => (array) $values]);
                 $this->PackageOptions->edit($package_option->id, $option);
             }
         }
