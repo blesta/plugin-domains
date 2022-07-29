@@ -1490,41 +1490,70 @@ class DomainsPlugin extends Plugin
      */
     public function updateRenewalDate($event)
     {
-        Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services']);
+        Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services', 'ClientGroups']);
         $params = $event->getParams();
 
         if (isset($params['old_service'])) {
-            $params['vars'] = (array) $params['old_service'];
+            $service = array_merge((array) $params['old_service'], (array) $params['vars']);
+        }
+
+        // Get client group Invoice Days Before Renewal setting
+        $client = $this->Record->select('client_group_id')
+            ->from('clients')
+            ->where('id', '=', $service['client_id'])
+            ->fetch();
+
+        $days_before_renewal = 0;
+        if ($client) {
+            $inv_days_before_renewal = $this->ClientGroups->getSetting(
+                $client->client_group_id,
+                'inv_days_before_renewal'
+            );
+            $days_before_renewal = $inv_days_before_renewal->value ?? 0;
         }
 
         // Validate if the service is being handled by the Domain Manager and the module type is registrar
         $package_group_id = $this->Companies->getSetting(Configure::get('Blesta.company_id'), 'domains_package_group');
-        $module_row = $this->ModuleManager->getRow($params['vars']['module_row_id']);
+        $module_row = $this->ModuleManager->getRow($service['module_row_id']);
         $module = $this->ModuleManager->get($module_row->module_id ?? null, false, false);
 
-        if ($package_group_id->value == ($params['vars']['package_group_id'] ?? null) && $module->type == 'registrar') {
-            $service = $this->Services->get($params['service_id'] ?? null);
-
+        if ($package_group_id->value == ($service['package_group_id'] ?? null) && $module->type == 'registrar') {
             // Get the domain expiration date for this service
-            $expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
+            $expiration_date = $this->DomainsDomains->getExpirationDate($params['service_id']);
 
             // Save the expiration date locally
-            $this->DomainsDomains->setExpirationDate($service->id, $expiration_date);
+            $this->DomainsDomains->setExpirationDate($params['service_id'], $expiration_date);
 
             // Calculate the renew date based on the domains_renewal_days_before_expiration setting
             $renewal_days = $this->Companies->getSetting(
                 Configure::get('Blesta.company_id'),
                 'domains_renewal_days_before_expiration'
             );
-            $renewal_date = $this->Services->Date->modify(
-                $expiration_date,
-                '-' . ($renewal_days->value ?? 0) . ' days',
-                'Y-m-d 00:00:00',
-                Configure::get('Blesta.company_timezone')
-            );
 
-            $this->Record->where('id', '=', $service->id)
-                ->update('services', ['date_renews' => $renewal_date]);
+            if ($event->getName() == 'Services.addAfter') {
+                $renewal_date = $this->Services->Date->modify(
+                    $expiration_date,
+                    '-' . (($renewal_days->value ?? 0) - $days_before_renewal) . ' days',
+                    'Y-m-d 00:00:00',
+                    Configure::get('Blesta.company_timezone')
+                );
+            } elseif (
+                $event->getName() == 'Services.editAfter'
+                && isset($params['vars']['date_last_renewed'])
+                && isset($params['vars']['date_renews'])
+            ) {
+                $renewal_date = $this->Services->Date->modify(
+                    $service['date_renews'],
+                    '-' . (($renewal_days->value ?? 0) - $days_before_renewal) . ' days',
+                    'Y-m-d 00:00:00',
+                    Configure::get('Blesta.company_timezone')
+                );
+            }
+
+            if (!empty($renewal_date)) {
+                $this->Record->where('id', '=', $params['service_id'])
+                    ->update('services', ['date_renews' => $renewal_date]);
+            }
         }
     }
 
