@@ -41,7 +41,7 @@ class DomainsDomains extends DomainsModel
         $package_group_id = $this->Companies->getSetting($filters['company_id'], 'domains_package_group');
         $filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
 
-        $services = $this->Services->getAll($order, false, $filters);
+        $services = $this->Services->getAll($order, true, $filters);
 
         // Add domain fields
         foreach ($services as &$service) {
@@ -276,39 +276,42 @@ class DomainsDomains extends DomainsModel
      */
     public function getExpirationDate($service_id, $format = 'Y-m-d H:i:s')
     {
-        Loader::loadModels($this, ['Services', 'ModuleManager', 'Companies', 'Services']);
 
         if (is_null($format)) {
             $format = 'Y-m-d H:i:s';
         }
 
         if (is_numeric($service_id)) {
-            $service = $this->Services->get($service_id);
-
-            // Get the expiration date from the registrar
-            $remote_expiration_date = $this->ModuleManager->moduleRpc(
-                $service->package->module_id,
-                'getExpirationDate',
-                [$service, $format],
-                $service->module_row_id ?? null
-            );
-
             // Check if there is an expiration date locally saved
             $domain = $this->Record->select()
                 ->from('domains_domains')
-                ->where('service_id', '=', $service->id)
+                ->where('service_id', '=', $service_id)
                 ->fetch();
-            $local_expiration_date = $domain->expiration_date ?? null;
+            $expiration_date = $domain->expiration_date ?? null;
 
-            $expiration_date = $remote_expiration_date;
-            if (strtotime($remote_expiration_date) <= strtotime($local_expiration_date)) {
-                $expiration_date = $local_expiration_date;
+            if ($expiration_date == null) {
+                if (!isset($this->Services) || !isset($this->ModuleManager)) {
+                    Loader::loadModels($this, ['Services', 'ModuleManager']);
+                }
+
+                // Get the expiration date from the registrar
+                $service = $this->Services->get($service_id);
+                $remote_expiration_date = $this->ModuleManager->moduleRpc(
+                    $service->package->module_id,
+                    'getExpirationDate',
+                    [$service, $format],
+                    $service->module_row_id ?? null
+                );
+
+                $expiration_date = $remote_expiration_date;
             }
 
-            return $this->Date->format(
-                $format,
-                $expiration_date
-            );
+            if ($expiration_date) {
+                return $this->Date->format(
+                    $format,
+                    $expiration_date
+                );
+            }
         }
 
         return null;
@@ -324,5 +327,34 @@ class DomainsDomains extends DomainsModel
     {
         $this->Record->duplicate('domains_domains.expiration_date', '=', $expiration_date)
             ->insert('domains_domains', ['service_id' => $service_id, 'expiration_date' => $expiration_date]);
+    }
+
+    /**
+     * Checks if the given service is a domain managed by the domain manager
+     *
+     * @param $service_id The ID of the service to evaluate
+     * @return bool True if the service is a managed domain, false otherwise
+     */
+    public function isManagedDomain($service_id)
+    {
+        if (!isset($this->Companies)) {
+            Loader::loadModels($this, ['Companies']);
+        }
+        if (!isset($this->Services)) {
+            Loader::loadModels($this, ['Services']);
+        }
+        if (!isset($this->ModuleManager)) {
+            Loader::loadModels($this, ['ModuleManager']);
+        }
+
+        // Validate if the service is being handled by the Domain Manager and the module type is registrar
+        $package_group_id = $this->Companies->getSetting(Configure::get('Blesta.company_id'), 'domains_package_group');
+        $service = $this->Services->get($service_id ?? null);
+        $module = $this->ModuleManager->get($service->package->module_id ?? null, false, false);
+
+        return $service
+            && $module
+            && $package_group_id->value == $service->package_group_id
+            && $module->type == 'registrar';
     }
 }
