@@ -1533,7 +1533,8 @@ class DomainsPlugin extends Plugin
     private function serviceActivationOccuring($event)
     {
         $params = $event->getParams();
-        return $params['vars']['status'] === 'active'
+        return isset($params['vars']['status'])
+            && $params['vars']['status'] === 'active'
             && (
                 $event->getName() == 'Services.addAfter'
                 || (isset($params['old_service']) && ($params['old_service']->status === 'pending'))
