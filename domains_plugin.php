@@ -1039,20 +1039,14 @@ class DomainsPlugin extends Plugin
      */
     private function synchronizeDomains()
     {
-        Loader::loadModels($this, ['Companies', 'ModuleManager', 'Services']);
+        Loader::loadModels($this, ['Companies', 'Domains.DomainsDomains', 'ModuleManager', 'Services']);
         Loader::loadHelpers($this, ['Form']);
 
-        $company_id = Configure::get('Blesta.company_id');
-        $settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
-        if (!isset($settings['domains_package_group'])) {
-            return;
-        }
-
         // Find all domain services
-        $services = $this->Services->getAll(
-            ['date_added' => 'DESC'],
-            true,
-            ['package_group_id' => $settings['domains_package_group']]
+        $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC']);
+        $renewal_days = $this->Companies->getSetting(
+            Configure::get('Blesta.company_id'),
+            'domains_renewal_days_before_expiration'
         );
 
         // Set the service renew date based on the expiration date retrieved from the module
@@ -1063,31 +1057,38 @@ class DomainsPlugin extends Plugin
                 $modules[$module_id] = $this->ModuleManager->initModule($module_id);
             }
 
-            // Get the domain name from the module
-            $domain = $service->name;
-            if (method_exists($modules[$module_id], 'getServiceDomain')) {
-                $domain = $modules[$module_id]->getServiceDomain($service);
+            // Fetch the domain expiration date from the registrar, and update if different than what is stored locally
+            if (($new_expiration_date = $modules[$module_id]->getExpirationDate($service, 'Y-m-d H:i:s'))
+                && strtotime($service->expiration_date) !== strtotime($new_expiration_date)
+            ) {
+                $this->DomainsDomains->setExpirationDate($service->id, $new_expiration_date);
+                $service->expiration_date = $new_expiration_date;
             }
 
-            // Get the expiration date of this service from the registrar
-            $renew_date = $this->Services->Date->modify(
-                $service->date_renews,
-                '-' . ($settings['domains_renewal_days_before_expiration'] ?? 0) . ' days',
+            // Get the adjusted renew date base on the expiration date of this service and the configured
+            // renewal offset from domains_renewal_days_before_expiration
+            $new_renew_date = $this->Services->Date->modify(
+                $service->expiration_date,
+                '-' . ($renewal_days->value ?? 0) . ' days',
                 'Y-m-d 00:00:00',
                 Configure::get('Blesta.company_timezone')
             );
-            if (method_exists($modules[$module_id], 'getExpirationDate')) {
-                $renew_date = $this->Services->Date->modify(
-                    $modules[$module_id]->getExpirationDate($service, 'c'),
-                    '-' . ($settings['domains_renewal_days_before_expiration'] ?? 0) . ' days',
-                    'Y-m-d 00:00:00',
-                    Configure::get('Blesta.company_timezone')
-                );
-            }
 
-            // Update the renew date if the expiration date is greater than the renew date
-            if (strtotime($renew_date) > strtotime($service->date_renews)) {
-                $this->Services->edit($service->id, ['date_renews' => $renew_date]);
+            // Update the renew date if the expiration date is greater than or equal to the renew date
+            // and the adjusted renew date doesn't already match the current renew date
+            if (strtotime($service->expiration_date) >= strtotime($service->date_renews)
+                && strtotime($new_renew_date) !== strtotime($service->date_renews)
+            ) {
+                // Currently there are a few circumstances in which this may be triggered:
+                // 1. The domain was renewed in the registrar and now we want the renewal date to be moved
+                //    up to match
+                // 2. The domains_renewal_days_before_expiration setting was changed and the current renew date
+                //    no longer reflects the adjusted renew date based on the new value
+                // 3. The domain had it's renew date manually adjusted through Blesta to a date that is before
+                //    the expiration but that does not match the adjusted renewal date based on
+                //    domains_renewal_days_before_expiration SO MANUAL ADJUSTMENTS WILL NOT STICK
+                $this->Record->where('id', '=', $service->id)
+                    ->update('services', ['date_renews' => $new_renew_date]);
             }
         }
     }
@@ -1490,42 +1491,54 @@ class DomainsPlugin extends Plugin
      */
     public function updateRenewalDate($event)
     {
-        Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services']);
+        Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'Services']);
         $params = $event->getParams();
 
-        if (isset($params['old_service'])) {
-            $params['vars'] = (array) $params['old_service'];
+        if (!($this->DomainsDomains->isManagedDomain($params['service_id'] ?? null)
+            && $this->serviceActivationOccuring($event))
+        ) {
+            return;
         }
 
-        // Validate if the service is being handled by the Domain Manager and the module type is registrar
-        $package_group_id = $this->Companies->getSetting(Configure::get('Blesta.company_id'), 'domains_package_group');
-        $module_row = $this->ModuleManager->getRow($params['vars']['module_row_id']);
-        $module = $this->ModuleManager->get($module_row->module_id ?? null, false, false);
+        // Get the domain expiration date for this service
+        $expiration_date = $this->DomainsDomains->getExpirationDate($params['service_id']);
 
-        if ($package_group_id->value == ($params['vars']['package_group_id'] ?? null) && $module->type == 'registrar') {
-            $service = $this->Services->get($params['service_id'] ?? null);
+        // Save the expiration date locally
+        $this->DomainsDomains->setExpirationDate($params['service_id'], $expiration_date);
 
-            // Get the domain expiration date for this service
-            $expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
+        // Calculate the renew date based on the domains_renewal_days_before_expiration setting
+        $renewal_days = $this->Companies->getSetting(
+            Configure::get('Blesta.company_id'),
+            'domains_renewal_days_before_expiration'
+        );
 
-            // Save the expiration date locally
-            $this->DomainsDomains->setExpirationDate($service->id, $expiration_date);
+        // On activation, update renewal date to be equal to the expiration date minus the offset
+        $renewal_date = $this->Companies->Date->modify(
+            $expiration_date,
+            '-' . ($renewal_days->value ?? 0) . ' days',
+            'Y-m-d 00:00:00',
+            Configure::get('Blesta.company_timezone')
+        );
 
-            // Calculate the renew date based on the domains_renewal_days_before_expiration setting
-            $renewal_days = $this->Companies->getSetting(
-                Configure::get('Blesta.company_id'),
-                'domains_renewal_days_before_expiration'
+        $this->Record->where('id', '=', $params['service_id'])
+            ->update('services', ['date_renews' => $renewal_date]);
+    }
+
+    /**
+     * Evaluates whether the given event was triggered by a service activation
+     *
+     * @param Blesta\Core\Util\Events\Common\EventInterface $event The event to evaluate
+     * @return bool True if the given event was triggered by a service activation, false otherwise
+     */
+    private function serviceActivationOccuring($event)
+    {
+        $params = $event->getParams();
+        return isset($params['vars']['status'])
+            && $params['vars']['status'] === 'active'
+            && (
+                $event->getName() == 'Services.addAfter'
+                || (isset($params['old_service']) && ($params['old_service']->status === 'pending'))
             );
-            $renewal_date = $this->Services->Date->modify(
-                $expiration_date,
-                '-' . ($renewal_days->value ?? 0) . ' days',
-                'Y-m-d 00:00:00',
-                Configure::get('Blesta.company_timezone')
-            );
-
-            $this->Record->where('id', '=', $service->id)
-                ->update('services', ['date_renews' => $renewal_date]);
-        }
     }
 
     /**
