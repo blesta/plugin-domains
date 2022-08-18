@@ -1050,7 +1050,8 @@ class DomainsPlugin extends Plugin
         );
 
         // Set the service renew date based on the expiration date retrieved from the module
-        $modules = [];        foreach ($services as $service) {
+        $modules = [];
+        foreach ($services as $service) {
             if ($service->date_canceled != null) {
                 continue;
             }
