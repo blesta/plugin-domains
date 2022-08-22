@@ -1052,6 +1052,10 @@ class DomainsPlugin extends Plugin
         // Set the service renew date based on the expiration date retrieved from the module
         $modules = [];
         foreach ($services as $service) {
+            if ($service->date_canceled != null) {
+                continue;
+            }
+            
             $module_id = $service->package->module_id;
             if (!isset($modules[$module_id])) {
                 $modules[$module_id] = $this->ModuleManager->initModule($module_id);
@@ -1493,9 +1497,12 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'Services']);
         $params = $event->getParams();
-
+        
         if (!($this->DomainsDomains->isManagedDomain($params['service_id'] ?? null)
-            && $this->serviceActivationOccuring($event))
+                && $this->serviceActivationOccuring($event)
+                && ($service = $this->Services->get($params['service_id'] ?? null))
+                && $service->date_canceled == null
+            )
         ) {
             return;
         }
