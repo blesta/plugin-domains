@@ -59,7 +59,7 @@
                     </ul>
                     <div class="inner_content">
                         <?php
-                        foreach ((isset($currencies) ? $currencies : []) as $currency) {
+                        foreach (($currencies ?? []) as $currency) {
                         ?>
                             <div>
                                 <?php
@@ -88,11 +88,12 @@
                                     </thead>
                                     <tbody>
                                         <?php
-                                        $i = 0;
-                                        foreach ($package->pricing as $package_pricing) {
-                                            if ($package_pricing->currency == $currency->code) {
+                                        $r = 0;
+                                        for ($i = 1; $i <= 10; $i++) {
+                                            foreach ($package->pricing ?? [] as $package_pricing) {
+                                                if ($package_pricing->currency == $currency->code && $package_pricing->term == $i) {
                                         ?>
-                                            <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
+                                            <tr<?php echo ($r % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
                                                 <td class="icon center">
                                                     <?php
                                                     $this->Form->fieldCheckbox('pricing[' . $package_pricing->term . '][' . $currency->code . '][enabled]', '1', (isset($package_pricing->enabled) ? $package_pricing->enabled : false));
@@ -116,7 +117,8 @@
                                                 </td>
                                             </tr>
                                         <?php
-                                                $i++;
+                                                    $r++;
+                                                }
                                             }
                                         }
                                         ?>

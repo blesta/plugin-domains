@@ -575,16 +575,20 @@ class AdminDomains extends DomainsController
                 $this->post['domains_override_price'] = '0';
             }
             $this->post['domains_spotlight_tlds'] = json_encode($this->post['domains_spotlight_tlds']);
-            $this->Companies->setSettings(
-                $company_id,
-                array_intersect_key($this->post, array_flip($accepted_settings))
-            );
+            $this->DomainsTlds->updateDomainsCompanySettings($company_id, $this->post);
 
             // Update tax status if setting was changed
             if (isset($this->post['domains_taxable'])
                 && $this->post['domains_taxable'] != ($vars['domains_taxable'] ?? null)
             ) {
                 $this->DomainsTlds->updateTax($this->post['domains_taxable']);
+            }
+
+            // Update override price package setting if setting was changed
+            if (isset($this->post['domains_override_price'])
+                && $this->post['domains_override_price'] != ($vars['domains_override_price'] ?? null)
+            ) {
+                $this->DomainsTlds->updateOverridePriceSetting($this->post['domains_override_price']);
             }
 
             // Update cron task enabled
@@ -1548,7 +1552,7 @@ class AdminDomains extends DomainsController
     private function getDays($min_days, $max_days)
     {
         $days = [
-            '' => Language::_('AdminDomains.getDays.never', true)
+            '' => Language::_('AdminDomains.getDays.same_day', true)
         ];
         for ($i = $min_days; $i <= $max_days; $i++) {
             $days[$i] = Language::_(
@@ -2102,22 +2106,25 @@ class AdminDomains extends DomainsController
             // Get TLD package fields
             $package_fields = $this->DomainsTlds->getTldFields($this->get[0]);
             $package_fields_view = 'admin' . DS . 'default';
+            $tld_pricings = [];
 
             // Add a pricing for terms 1-10 years for each currency
             foreach ($currencies as $currency) {
                 for ($i = 1; $i <= 10; $i++) {
                     // Check if the term already exists
                     $exists_pricing = false;
-                    foreach ($package->pricing as &$pricing) {
+                    foreach ($package->pricing as $pricing) {
                         if ($pricing->term == $i && $pricing->period == 'year' && $pricing->currency == $currency->code) {
                             $exists_pricing = true;
                             $pricing->enabled = true;
+                            $tld_pricings[] = $pricing;
+                            break;
                         }
                     }
 
                     // If the term not exists, add a placeholder for that term
                     if (!$exists_pricing) {
-                        $package->pricing[] = (object)[
+                        $tld_pricings[] = (object)[
                             'term' => $i,
                             'period' => 'year',
                             'currency' => $currency->code,
@@ -2126,6 +2133,8 @@ class AdminDomains extends DomainsController
                     }
                 }
             }
+
+            $package->pricing = $tld_pricings;
         } catch (Throwable $e) {
             echo $this->setMessage(
                 'error',
@@ -2346,7 +2355,7 @@ class AdminDomains extends DomainsController
         $tld->attach(
             $fields->fieldText(
                 'filters[search_tld]',
-                isset($vars['search_tld']) ? $vars['search_tld'] : null,
+                $vars['search_tld'] ?? null,
                 [
                     'id' => 'search_tld',
                     'class' => 'form-control stretch',
@@ -2371,7 +2380,7 @@ class AdminDomains extends DomainsController
             $fields->fieldSelect(
                 'filters[module_id]',
                 ['' => Language::_('AdminDomains.gettldfilters.any', true)] + $modules,
-                isset($vars['module_id']) ? $vars['module_id'] : null,
+                $vars['module_id'] ?? null,
                 ['id' => 'module_id', 'class' => 'form-control stretch']
             )
         );
@@ -2383,9 +2392,12 @@ class AdminDomains extends DomainsController
             'limit'
         );
         $limit->attach(
-            $fields->fieldText(
+            $fields->fieldNumber(
                 'filters[limit]',
-                isset($vars['limit']) ? $vars['limit'] : null,
+                $vars['limit'] ?? $this->tlds_per_page,
+                1,
+                null,
+                null,
                 [
                     'id' => 'limit',
                     'class' => 'form-control stretch',

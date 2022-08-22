@@ -246,6 +246,9 @@ class DomainsTlds extends DomainsModel
     {
         Loader::loadModels($this, ['ModuleManager', 'Packages']);
 
+        // Trigger the Domains.addBefore event
+        extract($this->triggerEvent('addBefore', ['vars' => $vars]));
+
         // Set company id
         if (!isset($vars['company_id'])) {
             $vars['company_id'] = Configure::get('Blesta.company_id');
@@ -307,6 +310,9 @@ class DomainsTlds extends DomainsModel
 
             // Set the package configurable options and meta data
             $this->assignFeatures($vars['package_id'], $vars);
+
+            // Trigger the Domains.addAfter event
+            extract($this->triggerEvent('addAfter', ['package_id' => $vars['package_id'], 'vars' => $vars]));
 
             return $vars;
         }
@@ -482,6 +488,17 @@ class DomainsTlds extends DomainsModel
                 ->insert('package_meta', $fields);
         }
 
+        // Set type package meta field which exists on our registrar modules.
+        // This is a temporary measure.  We should really remove this field on those modules.
+        $fields = [
+            'package_id' => $package_id,
+            'key' => 'type',
+            'value' => 'domain',
+            'serialized' => '0'
+        ];
+        $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+            ->insert('package_meta', $fields);
+
         // Set the default module row, if any
         $module = $this->ModuleManager->get($vars['module_id']);
         $module_row = null;
@@ -524,6 +541,9 @@ class DomainsTlds extends DomainsModel
     {
         Loader::loadModels($this, ['Packages', 'ModuleManager', 'Companies']);
         Loader::loadHelpers($this, ['Form']);
+
+        // Trigger the Domains.editBefore event
+        extract($this->triggerEvent('editBefore', ['tld' => $tld, 'vars' => $vars]));
 
         $company_id = $vars['company_id'] ?? Configure::get('Blesta.company_id');
 
@@ -652,6 +672,9 @@ class DomainsTlds extends DomainsModel
             $this->Record->where('tld', '=', $vars['tld'])
                 ->where('company_id', '=', $company_id)
                 ->update('domains_tlds', $vars, $fields);
+
+            // Trigger the Domains.editAfter event
+            extract($this->triggerEvent('editAfter', ['tld' => $vars['tld'], 'vars' => $vars]));
 
             return $vars['tld'];
         }
@@ -880,6 +903,9 @@ class DomainsTlds extends DomainsModel
         Loader::loadModels($this, ['Pricings', 'Currencies']);
         Loader::loadHelpers($this, ['Form']);
 
+        // Trigger the Domains.updatePricingBefore event
+        extract($this->triggerEvent('updatePricingBefore', ['tld' => $tld, 'pricings' => $pricings]));
+
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
         $tld = $this->get($tld, $company_id);
 
@@ -908,6 +934,9 @@ class DomainsTlds extends DomainsModel
                     }
                 }
             }
+
+            // Trigger the Domains.updatePricingAfter event
+            extract($this->triggerEvent('updatePricingAfter', ['tld' => $tld, 'pricings' => $pricings]));
         }
     }
 
@@ -1055,11 +1084,23 @@ class DomainsTlds extends DomainsModel
      */
     public function updateTax($taxable)
     {
-        $tlds = $this->getAll();
+        // Trigger the Domains.updateTax event
+        extract($this->triggerEvent('updateTax', ['taxable' => $taxable]));
 
-        foreach ($tlds as $tld) {
-            $this->edit($tld->tld, ['taxable' => (int)$taxable]);
-        }
+        $this->Record->innerJoin('domains_packages', 'domains_packages.package_id', '=', 'packages.id', false)
+            ->update('packages', ['taxable' => (int)$taxable]);
+    }
+
+    /**
+     * Updates the taxation status of the TLD packages
+     *
+     * @param int $override_prices Whether or not to set override prices automatically on services
+     *  created from this package
+     */
+    public function updateOverridePriceSetting($override_prices)
+    {
+        $this->Record->innerJoin('domains_packages', 'domains_packages.package_id', '=', 'packages.id', false)
+            ->update('packages', ['override_price' => (int)$override_prices]);
     }
 
     /**
@@ -1285,6 +1326,9 @@ class DomainsTlds extends DomainsModel
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
+        // Trigger the Domains.delete event
+        extract($this->triggerEvent('delete', ['tld' => $tld, 'company_id' => $company_id]));
+
         // Delete TLD and packages assignments
         $this->Record->from('domains_tlds')->
             leftJoin('domains_packages', 'domains_packages.tld_id', '=', 'domains_tlds.id', false)->
@@ -1301,6 +1345,11 @@ class DomainsTlds extends DomainsModel
      */
     public function enable($tld, $company_id = null)
     {
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+
+        // Trigger the Domains.enable event
+        extract($this->triggerEvent('enable', ['tld' => $tld, 'company_id' => $company_id]));
+
         // Get TLD
         $tld = $this->get($tld, $company_id);
 
@@ -1316,6 +1365,11 @@ class DomainsTlds extends DomainsModel
      */
     public function disable($tld, $company_id = null)
     {
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+
+        // Trigger the Domains.disable event
+        extract($this->triggerEvent('disable', ['tld' => $tld, 'company_id' => $company_id]));
+
         // Get TLD
         $tld = $this->get($tld, $company_id);
 
@@ -1446,6 +1500,54 @@ class DomainsTlds extends DomainsModel
         }
 
         return $domains_settings;
+    }
+
+    /**
+     * Updates the plugin company settings
+     *
+     * @param int $company_id The ID of the company to fetch the plugin settings
+     * @param array $settings An array containing all the Domains plugin company settings
+     */
+    public function updateDomainsCompanySettings($company_id, array $settings)
+    {
+        Loader::loadModels($this, ['Companies']);
+
+        // Trigger the Domains.updateDomainsCompanySettingsBefore event
+        extract($this->triggerEvent(
+            'updateDomainsCompanySettingsBefore',
+            ['company_id' => $company_id, 'settings' => $settings]
+        ));
+
+        $accepted_settings = [
+            'domains_spotlight_tlds',
+            'domains_dns_management_option_group',
+            'domains_email_forwarding_option_group',
+            'domains_id_protection_option_group',
+            'domains_first_reminder_days_before',
+            'domains_second_reminder_days_before',
+            'domains_expiration_notice_days_after',
+            'domains_taxable',
+            'domains_sync_price_markup',
+            'domains_sync_renewal_markup',
+            'domains_sync_transfer_markup',
+            'domains_enable_rounding',
+            'domains_markup_rounding',
+            'domains_automatic_sync',
+            'domains_sync_frequency',
+            'domains_renewal_days_before_expiration',
+            'domains_override_price'
+        ];
+
+        $this->Companies->setSettings(
+            $company_id,
+            array_intersect_key($settings, array_flip($accepted_settings))
+        );
+
+        // Trigger the Domains.updateDomainsCompanySettingsAfter event
+        extract($this->triggerEvent(
+            'updateDomainsCompanySettingsAfter',
+            ['company_id' => $company_id, 'settings' => $settings]
+        ));
     }
 
     /**
