@@ -142,6 +142,7 @@ class DomainsPlugin extends Plugin
 
         $this->upgrade1_5_0();
         $this->upgrade1_6_2();
+        $this->upgrade1_8_0();
 
         // Set the default renewal days before expiration
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
