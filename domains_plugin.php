@@ -1184,7 +1184,7 @@ class DomainsPlugin extends Plugin
             // If the service has an open invoice, skip
             $service_invoices = $this->Record->select(['invoices.*'])
                 ->from('services')
-                ->innerJoin('invoice_lines', 'invoice_lines.id', '=', 'services.id', false)
+                ->innerJoin('invoice_lines', 'invoice_lines.service_id', '=', 'services.id', false)
                 ->innerJoin('invoices', 'invoices.id', '=', 'invoice_lines.invoice_id', false)
                 ->where('invoices.paid', '!=', 'invoices.total', false)
                 ->where('invoices.status', '=', 'active')
