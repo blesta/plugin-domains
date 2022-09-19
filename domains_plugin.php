@@ -1181,6 +1181,20 @@ class DomainsPlugin extends Plugin
 
         // Update the term for each service that is not on a 1 year pricing term
         foreach ($services as $service) {
+            // If the service has an open invoice, skip
+            $service_invoices = $this->Record->select(['invoices.*'])
+                ->from('services')
+                ->innerJoin('invoice_lines', 'invoice_lines.service_id', '=', 'services.id', false)
+                ->innerJoin('invoices', 'invoices.id', '=', 'invoice_lines.invoice_id', false)
+                ->where('invoices.paid', '!=', 'invoices.total', false)
+                ->where('invoices.status', '=', 'active')
+                ->where('services.id', '=', $service->id)
+                ->fetchAll();
+
+            if (!empty($service_invoices)) {
+                continue;
+            }
+
             foreach ($service->package->pricing as $pricing) {
                 // Find the 1 year pricing for the current package and update the service to use it
                 if ($pricing->term == 1
