@@ -55,3 +55,8 @@ $lang['DomainsPlugin.widget_staff_home.main'] = 'Domains';
 
 // Client Widget
 $lang['DomainsPlugin.widget_client_home.main'] = 'Domains';
+
+// Upgrade Tasks
+$lang['DomainsPlugin.upgrade.domains_dns_management_option_group'] = 'Manage the DNS zone for your domain name through name servers we provide. Create and edit records such as A, CNAME, MX, TXT, and more for your domain.';
+$lang['DomainsPlugin.upgrade.domains_email_forwarding_option_group'] = 'Create email addresses at your domain that forward to an external email address.';
+$lang['DomainsPlugin.upgrade.domains_id_protection_option_group'] = 'All domain names must have valid contact information as part of ICANN rules. This option will hide these details from the public whois, keeping your information private.';

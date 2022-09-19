@@ -142,6 +142,7 @@ class DomainsPlugin extends Plugin
 
         $this->upgrade1_5_0();
         $this->upgrade1_6_2();
+        $this->upgrade1_8_0();
 
         // Set the default renewal days before expiration
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
@@ -194,6 +195,11 @@ class DomainsPlugin extends Plugin
             // Upgrade to 1.6.2
             if (version_compare($current_version, '1.6.2', '<')) {
                 $this->upgrade1_6_2();
+            }
+
+            // Upgrade to 1.8.0
+            if (version_compare($current_version, '1.8.0', '<')) {
+                $this->upgrade1_8_0();
             }
         }
     }
@@ -480,6 +486,37 @@ class DomainsPlugin extends Plugin
 
                 $option = array_merge($option, ['values' => (array) $values]);
                 $this->PackageOptions->edit($package_option->id, $option);
+            }
+        }
+    }
+
+    /**
+     * Update to v1.8.0
+     */
+    private function upgrade1_8_0()
+    {
+        Loader::loadModels($this, ['Domains.DomainsTlds', 'PackageOptionGroups', 'PluginManager']);
+
+        $plugins = $this->PluginManager->getByDir('domains');
+        foreach ($plugins as $plugin) {
+            $settings = $this->DomainsTlds->getDomainsCompanySettings($plugin->company_id);
+
+            if (!empty($settings['domains_dns_management_option_group']) && is_numeric($settings['domains_dns_management_option_group'])) {
+                $this->PackageOptionGroups->edit($settings['domains_dns_management_option_group'], [
+                    'description' => Language::_('DomainsPlugin.upgrade.domains_dns_management_option_group', true)
+                ]);
+            }
+
+            if (!empty($settings['domains_email_forwarding_option_group']) && is_numeric($settings['domains_email_forwarding_option_group'])) {
+                $this->PackageOptionGroups->edit($settings['domains_email_forwarding_option_group'], [
+                    'description' => Language::_('DomainsPlugin.upgrade.domains_email_forwarding_option_group', true)
+                ]);
+            }
+
+            if (!empty($settings['domains_id_protection_option_group']) && is_numeric($settings['domains_id_protection_option_group'])) {
+                $this->PackageOptionGroups->edit($settings['domains_id_protection_option_group'], [
+                    'description' => Language::_('DomainsPlugin.upgrade.domains_id_protection_option_group', true)
+                ]);
             }
         }
     }
@@ -1055,7 +1092,7 @@ class DomainsPlugin extends Plugin
             if ($service->date_canceled != null) {
                 continue;
             }
-            
+
             $module_id = $service->package->module_id;
             if (!isset($modules[$module_id])) {
                 $modules[$module_id] = $this->ModuleManager->initModule($module_id);
@@ -1511,7 +1548,7 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'Services']);
         $params = $event->getParams();
-        
+
         if (!($this->DomainsDomains->isManagedDomain($params['service_id'] ?? null)
                 && $this->serviceActivationOccuring($event)
                 && ($service = $this->Services->get($params['service_id'] ?? null))
