@@ -50,6 +50,11 @@ class DomainsController extends AppController
                 'left_nav',
                 $this->getLeftNav()
             );
+
+            // Set the page title language term
+            $page_title = Loader::toCamelCase($this->controller) . '.'
+                . Loader::fromCamelCase($this->action ?? 'index') . '.page_title';
+            $this->structure->set('page_title', Language::_($page_title, true));
         }
     }
 
