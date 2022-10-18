@@ -616,7 +616,7 @@ class AdminDomains extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configuration/');
         }
 
-        $tab = isset($this->get['tab']) ? $this->get['tab'] : 'general';
+        $tab = $this->get['tab'] ?? 'general';
         $this->set('tabs', $this->configurationTabs($tab));
         $this->set('tab', $tab);
         $this->set('vars', $vars);

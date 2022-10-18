@@ -1,11 +1,11 @@
 <?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-    echo (isset($left_nav) ? $left_nav : null);
+if (!($is_ajax ?? false)) {
+    echo ($left_nav ?? null);
 ?>
 <div id="right_outer">
     <?php
-    if (!(isset($render_section) ? $render_section : null)) {
-        echo (isset($message) ? $message : null);
+    if (!($render_section ?? null)) {
+        echo ($message ?? null);
     }
     ?>
     <section id="right_container">
@@ -13,8 +13,8 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
 }
 
     $this->Widget->clear();
-    $this->Widget->setTabs($tabs);
-    $this->Widget->create($this->_('AdminDomains.configuration.boxtitle', true), ['id' => 'admin_domains_configuration'], (isset($render_section) ? $render_section : null));
+    $this->Widget->setTabs($tabs ?? []);
+    $this->Widget->create($this->_('AdminDomains.configuration.boxtitle', true), ['id' => 'admin_domains_configuration'], ($render_section ?? null));
 
     $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submit']);
     ?>
@@ -27,8 +27,8 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                         <?php $this->Form->label($this->_('AdminDomains.configuration.field_spotlight_tlds', true), 'spotlight_tlds', ['class' => 'inline']); ?>
                         <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_spotlight_tlds');?></div></span><br/>
                         <?php
-                        foreach ((isset($tlds) ? $tlds : []) as $tld) {
-                            $this->Form->fieldCheckbox('domains_spotlight_tlds[' . $tld->tld . ']', '1', (isset($vars['domains_spotlight_tlds'][$tld->tld]) ? $vars['domains_spotlight_tlds'][$tld->tld] : null) === '1', ['id' => 'spotlight_tld_' . $tld->tld, 'class' => 'inline']);
+                        foreach (($tlds ?? []) as $tld) {
+                            $this->Form->fieldCheckbox('domains_spotlight_tlds[' . $tld->tld . ']', '1', ($vars['domains_spotlight_tlds'][$tld->tld] ?? null) === '1', ['id' => 'spotlight_tld_' . $tld->tld, 'class' => 'inline']);
                             $this->Form->label($tld->tld, 'spotlight_tld_' . $tld->tld, ['class' => 'inline']);
                         }
                         ?>
@@ -77,7 +77,7 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                 <ul>
                     <li>
                         <?php
-                        $this->Form->fieldCheckbox('domains_taxable', '1', ((isset($vars['domains_taxable']) ? $vars['domains_taxable'] : 0) == 1), ['id' => 'taxable']);
+                        $this->Form->fieldCheckbox('domains_taxable', '1', (($vars['domains_taxable'] ?? 0) == 1), ['id' => 'taxable']);
                         $this->Form->label($this->_('AdminDomains.configuration.field_taxable', true), 'taxable', ['class' => 'inline']);
                         ?>
                     </li>
