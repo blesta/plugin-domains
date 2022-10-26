@@ -87,7 +87,7 @@ class DomainsFeed extends AbstractDataFeed
         $fields = new InputFields();
 
         $base_url = 'http' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 's' : '')
-            . '://' . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost') . WEBDIR;
+            . '://' . Configure::get('Blesta.company')->hostname . WEBDIR;
         $fields->setHtml('
             <div class="title_row"><h3>' . Language::_('DomainsFeed.getOptionFields.title_row_example_code', true) . '</h3></div>
             <div class="pad">
