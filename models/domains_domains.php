@@ -189,7 +189,7 @@ class DomainsDomains extends DomainsModel
      */
     public function renewDomain($service_id, $years = 1)
     {
-        Loader::loadModels($this, ['Services', 'Invoices']);
+        Loader::loadModels($this, ['Services', 'Invoices', 'Packages']);
 
         // Get service
         $service = $this->Services->get($service_id);
@@ -210,6 +210,27 @@ class DomainsDomains extends DomainsModel
             return;
         }
 
+        // Validate the TLD has a term for the amount of years to be renewed
+        $package = $this->Packages->get($service->package->id);
+        $pricings = $package->pricing;
+        $terms = [];
+
+        foreach ($pricings as $pricing) {
+            if ($pricing->period == 'year') {
+                $terms[$pricing->id] = $pricing->term;
+            }
+        }
+
+        if (!in_array($years, $terms)) {
+            $errors = [
+                'error' => ['term' => Language::_('DomainsDomains.!error.invalid_term', true)]
+            ];
+            $this->Input->setErrors($errors);
+
+            return;
+        }
+
+
         // Create the invoice for these renewing services
         $invoice_id = $this->Invoices->createRenewalFromService($service_id, $years);
 
@@ -217,6 +238,12 @@ class DomainsDomains extends DomainsModel
             $this->Input->setErrors($errors);
 
             return;
+        }
+
+        // Update the service term
+        $terms_pricing = array_flip($terms);
+        if (isset($terms_pricing[$years])) {
+            $this->Services->edit($service->id, ['pricing_id' => $terms_pricing[$years]], true);
         }
 
         return $invoice_id;
