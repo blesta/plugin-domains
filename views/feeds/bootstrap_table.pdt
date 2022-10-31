@@ -37,9 +37,9 @@
             foreach ($tld->pricing as $term => $pricing) {
                 if (!empty($pricing)) {
             ?>
-            <td class="h6"><?php echo $this->CurrencyFormat->format($pricing->price, $pricing->currency, ['code' => true]);?></td>
-            <td class="h6"><?php echo $this->CurrencyFormat->format($pricing->price_renews ?? $pricing->price, $pricing->currency, ['code' => true]);?></td>
-            <td class="h6"><?php echo $this->CurrencyFormat->format($pricing->price_transfer ?? $pricing->price, $pricing->currency, ['code' => true]);?></td>
+            <td class="h6"><?php echo htmlentities($this->CurrencyFormat->format($pricing->price, $pricing->currency, ['code' => true]));?></td>
+            <td class="h6"><?php echo htmlentities($this->CurrencyFormat->format($pricing->price_renews ?? $pricing->price, $pricing->currency, ['code' => true]));?></td>
+            <td class="h6"><?php echo htmlentities($this->CurrencyFormat->format($pricing->price_transfer ?? $pricing->price, $pricing->currency, ['code' => true]));?></td>
             <?php
                 } else {
             ?>

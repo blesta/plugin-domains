@@ -24,9 +24,9 @@
                 if (!empty($pricing)) {
             ?>
             <td>
-                <i><?php $this->_('DomainsFeed.table.register');?></i> <?php echo $this->CurrencyFormat->format($pricing->price, $pricing->currency, ['code' => true]);?><br/>
-                <i><?php $this->_('DomainsFeed.table.renew');?></i> <?php echo $this->CurrencyFormat->format($pricing->price_renews ?? $pricing->price, $pricing->currency, ['code' => true]);?><br/>
-                <i><?php $this->_('DomainsFeed.table.transfer');?></i> <?php echo $this->CurrencyFormat->format($pricing->price_transfer ?? $pricing->price, $pricing->currency, ['code' => true]);?><br/>
+                <i><?php $this->_('DomainsFeed.table.register');?></i> <?php echo htmlentities($this->CurrencyFormat->format($pricing->price, $pricing->currency, ['code' => true]));?><br/>
+                <i><?php $this->_('DomainsFeed.table.renew');?></i> <?php echo htmlentities($this->CurrencyFormat->format($pricing->price_renews ?? $pricing->price, $pricing->currency, ['code' => true]));?><br/>
+                <i><?php $this->_('DomainsFeed.table.transfer');?></i> <?php echo htmlentities($this->CurrencyFormat->format($pricing->price_transfer ?? $pricing->price, $pricing->currency, ['code' => true]));?><br/>
             </td>
             <?php
                 } else {
