@@ -495,7 +495,8 @@ class DomainsPlugin extends Plugin
      */
     private function upgrade1_8_0()
     {
-        Loader::loadModels($this, ['Domains.DomainsTlds', 'PackageOptionGroups', 'PluginManager']);
+        Loader::loadModels($this, ['Domains.DomainsTlds', 'PackageOptionGroups', 'PackageOptions', 'PluginManager']);
+        Loader::loadHelpers($this, ['Form']);
 
         $plugins = $this->PluginManager->getByDir('domains');
         foreach ($plugins as $plugin) {
@@ -505,19 +506,84 @@ class DomainsPlugin extends Plugin
                 $this->PackageOptionGroups->edit($settings['domains_dns_management_option_group'], [
                     'description' => Language::_('DomainsPlugin.upgrade.domains_dns_management_option_group', true)
                 ]);
+
+                $options = $this->PackageOptionGroups->getAllOptions($settings['domains_dns_management_option_group']);
+                foreach ($options as $option) {
+                    $package_option = $this->PackageOptions->get($option->id);
+                    $default = $this->castToArray($package_option);
+                    $default['groups'] = $this->Form->collapseObjectArray($package_option->groups, 'id', 'id');
+                    unset($default['id'], $default['company_id']);
+
+                    $vars = array_merge($default, [
+                        'description' => Language::_('DomainsPlugin.upgrade.domains_dns_management_option_group', true)
+                    ]);
+
+                    $this->PackageOptions->edit($option->id, $vars);
+                }
             }
 
             if (!empty($settings['domains_email_forwarding_option_group']) && is_numeric($settings['domains_email_forwarding_option_group'])) {
                 $this->PackageOptionGroups->edit($settings['domains_email_forwarding_option_group'], [
                     'description' => Language::_('DomainsPlugin.upgrade.domains_email_forwarding_option_group', true)
                 ]);
+
+                $options = $this->PackageOptionGroups->getAllOptions($settings['domains_email_forwarding_option_group']);
+                foreach ($options as $option) {
+                    $package_option = $this->PackageOptions->get($option->id);
+                    $default = $this->castToArray($package_option);
+                    $default['groups'] = $this->Form->collapseObjectArray($package_option->groups, 'id', 'id');
+                    unset($default['id'], $default['company_id']);
+
+                    $vars = array_merge($default, [
+                        'description' => Language::_('DomainsPlugin.upgrade.domains_email_forwarding_option_group', true)
+                    ]);
+
+                    $this->PackageOptions->edit($option->id, $vars);
+                }
             }
 
             if (!empty($settings['domains_id_protection_option_group']) && is_numeric($settings['domains_id_protection_option_group'])) {
                 $this->PackageOptionGroups->edit($settings['domains_id_protection_option_group'], [
                     'description' => Language::_('DomainsPlugin.upgrade.domains_id_protection_option_group', true)
                 ]);
+
+                $options = $this->PackageOptionGroups->getAllOptions($settings['domains_id_protection_option_group']);
+                foreach ($options as $option) {
+                    $package_option = $this->PackageOptions->get($option->id);
+                    $default = $this->castToArray($package_option);
+                    $default['groups'] = $this->Form->collapseObjectArray($package_option->groups, 'id', 'id');
+                    unset($default['id'], $default['company_id']);
+
+                    $vars = array_merge($default, [
+                        'description' => Language::_('DomainsPlugin.upgrade.domains_id_protection_option_group', true)
+                    ]);
+
+                    $this->PackageOptions->edit($option->id, $vars);
+                }
             }
+
+            unset($options);
+            unset($default);
+            unset($vars);
+        }
+    }
+
+    /**
+     * Cast an object to a multi-dimensional array
+     *
+     * @param stdClass $object The object to cast to a multi-dimensional array
+     * @return array The array from the object
+     */
+    private function castToArray($object) {
+        if (is_object($object) || is_array($object)) {
+            $array = (array) $object;
+            foreach($array as &$item) {
+                $item = $this->castToArray($item);
+            }
+
+            return $array;
+        } else {
+            return $object;
         }
     }
 
