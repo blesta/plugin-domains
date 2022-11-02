@@ -15,10 +15,10 @@ Configure::set(
             'tags' => '{domain},{service},{contact},{client_uri}',
             'from' => 'sales@mydomain.com',
             'from_name' => 'Domain Manager',
-            'subject' => '{domain} will expire on {service.date_renews}',
+            'subject' => '{domain} will expire on {service.expiration_date}',
             'text' => 'Hi {contact.first_name},
 
-This is a reminder that the domain {domain} will expire on {service.date_renews}.
+This is a reminder that the domain {domain} will expire on {service.expiration_date}.
 
 To renew this domain, please log in at: {client_uri}.
 Failure to renew will result in loss of domain ownership.
@@ -26,7 +26,7 @@ Failure to renew will result in loss of domain ownership.
 Thank you for your continued business!',
             'html' => '<p>Hi {contact.first_name},</p>
 
-<p>This is a reminder that the domain {domain} will expire on {service.date_renews}.</p>
+<p>This is a reminder that the domain {domain} will expire on {service.expiration_date}.</p>
 
 <p>To renew this domain, please log in at: {client_uri}.<br/>
 Failure to renew will result in loss of domain ownership.</p>
@@ -40,10 +40,10 @@ Failure to renew will result in loss of domain ownership.</p>
             'tags' => '{domain},{service},{contact},{client_uri}',
             'from' => 'sales@mydomain.com',
             'from_name' => 'Domain Manager',
-            'subject' => '{domain} will expire on {service.date_renews} - SECOND NOTICE',
+            'subject' => '{domain} will expire on {service.expiration_date} - SECOND NOTICE',
             'text' => 'Hi {contact.first_name},
 
-This is a reminder that the domain {domain} will expire on {service.date_renews}.
+This is a reminder that the domain {domain} will expire on {service.expiration_date}.
 
 To renew this domain, please log in at: {client_uri}.
 Failure to renew will result in loss of domain ownership.
@@ -51,7 +51,7 @@ Failure to renew will result in loss of domain ownership.
 Thank you for your continued business!',
             'html' => '<p>Hi {contact.first_name},</p>
 
-<p>This is a reminder that the domain {domain} will expire on {service.date_renews}.</p>
+<p>This is a reminder that the domain {domain} will expire on {service.expiration_date}.</p>
 
 <p>To renew this domain, please log in at: {client_uri}.<br/>
 Failure to renew will result in loss of domain ownership.</p>
@@ -65,16 +65,16 @@ Failure to renew will result in loss of domain ownership.</p>
             'tags' => '{domain},{service},{contact},{client_uri}',
             'from' => 'sales@mydomain.com',
             'from_name' => 'Domain Manager',
-            'subject' => '{domain} expired on {service.date_renews}',
+            'subject' => '{domain} expired on {service.expiration_date}',
             'text' => 'Hi {contact.first_name},
 
-This is a notice that the domain {domain} has expired on {service.date_renews} and is no longer under your ownership.
+This is a notice that the domain {domain} has expired on {service.expiration_date} and is no longer under your ownership.
 To re-purchase this domain, please log in at: {client_uri}.
 
 If you believe this expiration is in error, please contact us.',
             'html' => '<p>Hi {contact.first_name},</p>
 
-<p>This is a notice that the domain {domain} has expired on {service.date_renews} and is no longer under your ownership.<br/>
+<p>This is a notice that the domain {domain} has expired on {service.expiration_date} and is no longer under your ownership.<br/>
 To re-purchase this domain, please log in at: {client_uri}.</p>
 
 <p>If you believe this expiration is in error, please contact us.</p>'
