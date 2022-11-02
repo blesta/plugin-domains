@@ -16,8 +16,8 @@ $lang['DomainsPlugin.getCronTasks.domain_tld_synchronization'] = 'Domain TLD Syn
 $lang['DomainsPlugin.getCronTasks.domain_tld_synchronization_description'] = 'Synchronize packages with the TLD pricing from their registrar module';
 $lang['DomainsPlugin.getCronTasks.domain_term_change'] = 'Change Domain Term';
 $lang['DomainsPlugin.getCronTasks.domain_term_change_description'] = 'Change services with a term longer than a year to a yearly term';
-$lang['DomainsPlugin.getCronTasks.domain_renewal_reminders'] = 'Send Renewal Reminders';
-$lang['DomainsPlugin.getCronTasks.domain_renewal_reminders_description'] = 'Send email reminders for domains that are drawing close to their renewal date';
+$lang['DomainsPlugin.getCronTasks.domain_renewal_reminders'] = 'Send Expiration Reminders';
+$lang['DomainsPlugin.getCronTasks.domain_renewal_reminders_description'] = 'Send email reminders for domains that are drawing close to their expiration date';
 
 // Plugin Actions
 $lang['DomainsPlugin.nav_secondary_staff.domain_options'] = 'Domain Options';

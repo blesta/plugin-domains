@@ -495,7 +495,8 @@ class DomainsPlugin extends Plugin
      */
     private function upgrade1_8_0()
     {
-        Loader::loadModels($this, ['Domains.DomainsTlds', 'PackageOptionGroups', 'PluginManager']);
+        Loader::loadModels($this, ['Domains.DomainsTlds', 'PackageOptionGroups', 'PackageOptions', 'PluginManager']);
+        Loader::loadHelpers($this, ['Form']);
 
         $plugins = $this->PluginManager->getByDir('domains');
         foreach ($plugins as $plugin) {
@@ -505,19 +506,98 @@ class DomainsPlugin extends Plugin
                 $this->PackageOptionGroups->edit($settings['domains_dns_management_option_group'], [
                     'description' => Language::_('DomainsPlugin.upgrade.domains_dns_management_option_group', true)
                 ]);
+
+                $options = $this->PackageOptionGroups->getAllOptions($settings['domains_dns_management_option_group']);
+                foreach ($options as $option) {
+                    $package_option = $this->PackageOptions->get($option->id);
+                    $default = $this->castToArray($package_option);
+                    $default['groups'] = $this->Form->collapseObjectArray($package_option->groups, 'id', 'id');
+                    unset($default['id'], $default['company_id']);
+
+                    $vars = array_merge($default, [
+                        'description' => Language::_('DomainsPlugin.upgrade.domains_dns_management_option_group', true)
+                    ]);
+
+                    $this->PackageOptions->edit($option->id, $vars);
+                }
             }
 
             if (!empty($settings['domains_email_forwarding_option_group']) && is_numeric($settings['domains_email_forwarding_option_group'])) {
                 $this->PackageOptionGroups->edit($settings['domains_email_forwarding_option_group'], [
                     'description' => Language::_('DomainsPlugin.upgrade.domains_email_forwarding_option_group', true)
                 ]);
+
+                $options = $this->PackageOptionGroups->getAllOptions($settings['domains_email_forwarding_option_group']);
+                foreach ($options as $option) {
+                    $package_option = $this->PackageOptions->get($option->id);
+                    $default = $this->castToArray($package_option);
+                    $default['groups'] = $this->Form->collapseObjectArray($package_option->groups, 'id', 'id');
+                    unset($default['id'], $default['company_id']);
+
+                    $vars = array_merge($default, [
+                        'description' => Language::_('DomainsPlugin.upgrade.domains_email_forwarding_option_group', true)
+                    ]);
+
+                    $this->PackageOptions->edit($option->id, $vars);
+                }
             }
 
             if (!empty($settings['domains_id_protection_option_group']) && is_numeric($settings['domains_id_protection_option_group'])) {
                 $this->PackageOptionGroups->edit($settings['domains_id_protection_option_group'], [
                     'description' => Language::_('DomainsPlugin.upgrade.domains_id_protection_option_group', true)
                 ]);
+
+                $options = $this->PackageOptionGroups->getAllOptions($settings['domains_id_protection_option_group']);
+                foreach ($options as $option) {
+                    $package_option = $this->PackageOptions->get($option->id);
+                    $default = $this->castToArray($package_option);
+                    $default['groups'] = $this->Form->collapseObjectArray($package_option->groups, 'id', 'id');
+                    unset($default['id'], $default['company_id']);
+
+                    $vars = array_merge($default, [
+                        'description' => Language::_('DomainsPlugin.upgrade.domains_id_protection_option_group', true)
+                    ]);
+
+                    $this->PackageOptions->edit($option->id, $vars);
+                }
             }
+
+            unset($options);
+            unset($default);
+            unset($vars);
+        }
+    }
+
+    /**
+     * Cast an object to a multi-dimensional array
+     *
+     * @param stdClass $object The object to cast to a multi-dimensional array
+     * @return array The array from the object
+     */
+    private function castToArray($object) {
+        if (is_object($object) || is_array($object)) {
+            $array = (array) $object;
+            foreach($array as &$item) {
+                $item = $this->castToArray($item);
+            }
+
+            return $array;
+        } else {
+            return $object;
+        }
+
+        $email_actions = ['Domains.domain_renewal_1', 'Domains.domain_renewal_2', 'Domains.domain_expiration'];
+        $emails = $this->Record->select('emails.*')->
+            from('emails')->
+            on('email_groups.action', 'in', $email_actions)->
+            innerJoin('email_groups', 'email_groups.id', '=', 'emails.email_group_id', false)->
+            fetchAll();
+        foreach ($emails as $email) {
+            $email->subject = str_replace('{service.date_renews}', '{service.expiration_date}', $email->subject);
+            $email->text = str_replace('{service.date_renews}', '{service.expiration_date}', $email->text);
+            $email->html = str_replace('{service.date_renews}', '{service.expiration_date}', $email->html);
+            $this->Record->where('id', '=', $email->id)->
+                update('emails', ['subject' => $email->subject, 'text' => $email->text, 'html' => $email->html]);
         }
     }
 
@@ -1291,25 +1371,42 @@ class DomainsPlugin extends Plugin
             $start_date = $date->format('Y-m-d H:i:s', $dates['start_date']);
             $end_date = $date->format('Y-m-d H:i:s', $dates['end_date']);
 
+            $domains = $this->Record->select()->
+                from('domains_domains')->
+                where('expiration_date', '>=', $start_date)->
+                where('expiration_date', '<=', $end_date)->
+                fetchAll();
+
+            $domains_by_service_id = [];
+            foreach ($domains as $domain) {
+                $domains_by_service_id[$domain->service_id] = $domain;
+            }
+
             // Fetch all qualifying services
-            $services = $this->Services->getAll(
-                ['date_added' => 'DESC'],
-                true,
-                [],
-                [
-                    'services' => [
-                        'package_group_id' => $settings['domains_package_group'],
-                        ['column' => 'date_renews', 'operator' => '>=', 'value' => $start_date],
-                        ['column' => 'date_renews', 'operator' => '<=', 'value' => $end_date]
+            $services = [];
+            if (!empty($domains_by_service_id)) {
+                $services = $this->Services->getAll(
+                    ['date_added' => 'DESC'],
+                    true,
+                    [],
+                    [
+                        'services' => [
+                            'package_group_id' => $settings['domains_package_group'],
+                            ['column' => 'id', 'operator' => 'in', 'value' => array_keys($domains_by_service_id)]
+                        ]
                     ]
-                ]
-            );
+                );
+            }
 
             // Send the email for each service
             foreach ($services as $service) {
                 $lang = null;
                 $client = $this->Clients->get($service->client_id);
                 $contact = $this->Contacts->get($client->contact_id);
+                $service->expiration_date = $date->format(
+                        'Y-m-d',
+                        $domains_by_service_id[$service->id]->expiration_date
+                    );
                 if ($client && $client->settings['language']) {
                     $lang = $client->settings['language'];
                 }
