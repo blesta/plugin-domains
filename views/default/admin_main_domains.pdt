@@ -175,6 +175,15 @@
                         ?>
                     </div>
                 </div>
+                <div id="push_to_client" class="action_section">
+                    <div class="float">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.domains.action.field_client', true), 'client', ['class' => 'inline']);
+                        $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control ui-autocomplete-input input-md', 'id' => 'client']);
+                        $this->Form->fieldHidden('client_id', ($vars->client_id ?? null), ['id' => 'client_id']);
+                        ?>
+                    </div>
+                </div>
                 <?php
                 $this->Form->fieldSelect('action', ['' => $this->_('AppController.select.please', true)] + (isset($actions) ? $actions : []), isset($vars->action) ? $vars->action : null, ['id' => 'domain_action']);
                 ?>
@@ -267,5 +276,36 @@
             $('#' + $(this).val()).show();
         });
         $('#domain_action').change();
+
+        $('#client').autocomplete({
+            minLength: 3,
+            source: function(request, response) {
+                $(document).blestaRequest('POST', '<?php echo $this->Html->safe($this->base_uri . 'clients/getclients/'); ?>',
+                    { _csrf_token: $('#domain_actions').closest('form').find('input[name=_csrf_token]').val(), search: request.term},
+                    function(data) {
+                        if (data && data.clients) {
+                            // Build the response to show
+                            var clients = [];
+                            for (var id in data.clients) {
+                                clients.push({label: data.clients[id], value: data.clients[id], id: id});
+                            }
+                            response(clients);
+
+                            // No results
+                            if (clients.length == 0) {
+                                $('#no_clients').show();
+                            } else {
+                                $('#no_clients').hide();
+                            }
+                        }
+                    },
+                    null,
+                    {dataType:'json'}
+                );
+            },
+            select: function(event, ui) {
+                $('#client_id').val(ui.item.id);
+            }
+        });
     });
 </script>
