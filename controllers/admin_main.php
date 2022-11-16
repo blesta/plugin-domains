@@ -50,6 +50,9 @@ class AdminMain extends DomainsController
                     case 'update_nameservers':
                         $term = 'AdminMain.!success.update_nameservers';
                         break;
+                    case 'push_to_client':
+                        $term = 'AdminMain.!success.domains_pushed';
+                        break;
                 }
 
                 $this->flashMessage('message', Language::_($term, true), null, false);
@@ -167,7 +170,8 @@ class AdminMain extends DomainsController
         return [
             'change_auto_renewal' => Language::_('AdminMain.index.change_auto_renewal', true),
             'domain_renewal' => Language::_('AdminMain.index.domain_renewal', true),
-            'update_nameservers' => Language::_('AdminMain.index.update_nameservers', true)
+            'update_nameservers' => Language::_('AdminMain.index.update_nameservers', true),
+            'push_to_client' => Language::_('AdminMain.index.push_to_client', true)
         ];
     }
 
@@ -234,6 +238,24 @@ class AdminMain extends DomainsController
 
                     if (($errors = $this->DomainsDomains->errors())) {
                         break;
+                    }
+                }
+                break;
+            case 'push_to_client':
+                foreach ($data['service_ids'] as $service_id) {
+                    Loader::loadModels($this, ['Services', 'Invoices']);
+
+                    // Get service
+                    $service = $this->Services->get($service_id);
+                    if (!$service) {
+                        break;
+                    }
+
+                    // Move service
+                    $this->Services->move($service->id, $this->post['client_id'] ?? $data['client_id']);
+
+                    if (($errors = $this->Services->errors())) {
+                        return $errors;
                     }
                 }
                 break;
