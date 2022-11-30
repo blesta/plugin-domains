@@ -1197,7 +1197,8 @@ class DomainsPlugin extends Plugin
 
             // Update the renew date if the expiration date is greater than or equal to the renew date
             // and the adjusted renew date doesn't already match the current renew date
-            if (strtotime($service->expiration_date) >= strtotime($service->date_renews)
+            if ($service->expiration_date
+                && strtotime($service->expiration_date) >= strtotime($service->date_renews)
                 && strtotime($new_renew_date) !== strtotime($service->date_renews)
             ) {
                 // Currently there are a few circumstances in which this may be triggered:
@@ -1657,6 +1658,9 @@ class DomainsPlugin extends Plugin
 
         // Get the domain expiration date for this service
         $expiration_date = $this->DomainsDomains->getExpirationDate($params['service_id']);
+        if (!$expiration_date) {
+            return;
+        }
 
         // Save the expiration date locally
         $this->DomainsDomains->setExpirationDate($params['service_id'], $expiration_date);
