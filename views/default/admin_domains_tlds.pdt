@@ -115,7 +115,7 @@
                             ?>
                                 <?php
                                 $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/enabletld/');
-                                $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
+                                $this->Form->fieldHidden('id', ($tld->package_id ?? null));
                                 ?>
                                 <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/enabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true));?>"><?php $this->_('AdminDomains.tlds.option_enable');?></a>
                                 <?php
@@ -126,7 +126,7 @@
                             ?>
                                 <?php
                                 $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/disabletld/');
-                                $this->Form->fieldHidden('id', (isset($tld->package_id) ? $tld->package_id : null));
+                                $this->Form->fieldHidden('id', ($tld->package_id ?? null));
                                 ?>
                                 <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/disabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true));?>"><?php $this->_('AdminDomains.tlds.option_disable');?></a>
                                 <?php
@@ -344,7 +344,7 @@
 
             $(this).blestaRequest(
                 "POST",
-                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updatetlds/');?>' + tld,
+                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updatetlds/');?>' + tld.replace(/\./g,'_') + '/',
                 getPartialForm('tlds'),
                 function(response) {
                     reloadTlds();
@@ -371,7 +371,7 @@
         {
             $('.common_box').blestaModal({
                 close: '<?php $this->_('AppController.modal.text_close');?>',
-                url: '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/meta/');?>' + tld + '/',
+                url: '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/meta/');?>' + tld.replace(/\./g,'_') + '/',
                 onShow: function (event, api) {
                     var qtip = $('#' + api._id);
 
