@@ -220,6 +220,7 @@ class DomainsDomains extends DomainsModel
                 $terms[$pricing->id] = $pricing->term;
             }
         }
+        $terms_pricing = array_flip($terms);
 
         if (!in_array($years, $terms)) {
             $errors = [
@@ -231,19 +232,14 @@ class DomainsDomains extends DomainsModel
         }
 
 
-        // Create the invoice for these renewing services
-        $invoice_id = $this->Invoices->createRenewalFromService($service_id, $years);
+        // Create the invoice for these renewing services, by submitting $terms_pricing[$years] for the $pricing_id
+        // parameter, we are also telling the Invoices model to update the pricing ID on the service
+        $invoice_id = $this->Invoices->createRenewalFromService($service_id, 1, $terms_pricing[$years]);
 
         if (($errors = $this->Invoices->errors())) {
             $this->Input->setErrors($errors);
 
             return;
-        }
-
-        // Update the service term
-        $terms_pricing = array_flip($terms);
-        if (isset($terms_pricing[$years])) {
-            $this->Services->edit($service->id, ['pricing_id' => $terms_pricing[$years]], true);
         }
 
         return $invoice_id;
