@@ -55,6 +55,9 @@ class AdminDomains extends DomainsController
                     case 'update_nameservers':
                         $term = 'AdminDomains.!success.update_nameservers';
                         break;
+                    case 'push_to_client':
+                        $term = 'AdminDomains.!success.domains_pushed';
+                        break;
                 }
 
                 $this->setMessage('message', Language::_($term, true), false, null, false);
@@ -185,7 +188,8 @@ class AdminDomains extends DomainsController
         return [
             'change_auto_renewal' => Language::_('AdminDomains.browse.change_auto_renewal', true),
             'domain_renewal' => Language::_('AdminDomains.browse.domain_renewal', true),
-            'update_nameservers' => Language::_('AdminDomains.browse.update_nameservers', true)
+            'update_nameservers' => Language::_('AdminDomains.browse.update_nameservers', true),
+            'push_to_client' => Language::_('AdminDomains.browse.push_to_client', true)
         ];
     }
 
@@ -254,6 +258,24 @@ class AdminDomains extends DomainsController
 
                     if (($errors = $this->DomainsDomains->errors())) {
                         break;
+                    }
+                }
+                break;
+            case 'push_to_client':
+                foreach ($data['service_ids'] as $service_id) {
+                    Loader::loadModels($this, ['Services', 'Invoices']);
+
+                    // Get service
+                    $service = $this->Services->get($service_id);
+                    if (!$service) {
+                        break;
+                    }
+
+                    // Move service
+                    $this->Services->move($service->id, $this->post['client_id']);
+
+                    if (($errors = $this->Services->errors())) {
+                        return $errors;
                     }
                 }
                 break;
@@ -459,7 +481,7 @@ class AdminDomains extends DomainsController
         $response = [];
         $module_tlds = $this->ModuleManager->moduleRpc($module->id, 'getTlds');
         foreach ($module_tlds as $tld) {
-            $tld = strtolower($tld);
+            $tld = str_replace('_', '.', strtolower($tld));
             $disabled = false;
 
             // Check if the TLD already exists in the current company
@@ -1850,7 +1872,7 @@ class AdminDomains extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
-        $updated_tld = $this->get[0] ?? null;
+        $updated_tld = str_replace('_', '.', $this->get[0] ?? null);
 
         if (!empty($this->post)) {
             $error = null;
@@ -1877,6 +1899,7 @@ class AdminDomains extends DomainsController
 
                 // Check if the module has been updated and is required to update the package meta
                 if (!is_null($updated_tld)) {
+                    $tld = str_replace('_', '.', strtolower($tld));
                     $tld_obj = $this->DomainsTlds->get($tld);
                     $package = $this->Packages->get($tld_obj->package_id);
 
@@ -1939,6 +1962,7 @@ class AdminDomains extends DomainsController
     {
         $error = null;
         $update_meta = true;
+        $tld = str_replace('_', '.', strtolower($tld));
         $tld_obj = $this->DomainsTlds->get($tld);
         $package_fields = $this->DomainsTlds->getTldFields($tld_obj->package_id);
 
@@ -2195,10 +2219,11 @@ class AdminDomains extends DomainsController
         $this->helpers(['Form', 'CurrencyFormat']);
 
         // Fetch the package belonging to this TLD
+        $meta_tld = str_replace('_', '.', strtolower($this->get[0] ?? null));
         if (
             !$this->isAjax()
             || !isset($this->get[0])
-            || !($tld = $this->DomainsTlds->get($this->get[0]))
+            || !($tld = $this->DomainsTlds->get($meta_tld))
         ) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
