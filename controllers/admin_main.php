@@ -50,7 +50,7 @@ class AdminMain extends DomainsController
                     case 'update_nameservers':
                         $term = 'AdminMain.!success.update_nameservers';
                         break;
-                    case 'push_to_client':
+                    case 'domain_push_to_client':
                         $term = 'AdminMain.!success.domains_pushed';
                         break;
                 }
@@ -171,7 +171,7 @@ class AdminMain extends DomainsController
             'change_auto_renewal' => Language::_('AdminMain.index.change_auto_renewal', true),
             'domain_renewal' => Language::_('AdminMain.index.domain_renewal', true),
             'update_nameservers' => Language::_('AdminMain.index.update_nameservers', true),
-            'push_to_client' => Language::_('AdminMain.index.push_to_client', true)
+            'domain_push_to_client' => Language::_('AdminMain.index.domain_push_to_client', true)
         ];
     }
 
@@ -241,7 +241,7 @@ class AdminMain extends DomainsController
                     }
                 }
                 break;
-            case 'push_to_client':
+            case 'domain_push_to_client':
                 foreach ($data['service_ids'] as $service_id) {
                     Loader::loadModels($this, ['Services', 'Invoices']);
 
