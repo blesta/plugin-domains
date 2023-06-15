@@ -51,7 +51,7 @@
                         $icon = (isset($nav[$i]['icon']) ? $nav[$i]['icon'] : null);
                 ?>
                     <ul>
-                        <li class="<?php echo ($i == 0) ? 'heading' : 'parent'; ?><?php echo substr_compare((isset($nav[$i]['uri']) ? $nav[$i]['uri'] : null), $_SERVER['REQUEST_URI'], 0, strlen(rtrim((isset($nav[$i]['uri']) ? $nav[$i]['uri'] : null), '/')), true) === 0 ? ' current' : '';?>">
+                        <li class="<?php echo ($i == 0) ? 'heading' : 'parent'; ?><?php echo substr_compare((isset($nav[$i]['uri']) ? $nav[$i]['uri'] : null), $_SERVER['REQUEST_URI'], 0, strlen(rtrim($nav[$i]['uri'] ?? '', '/')), true) === 0 ? ' current' : '';?>">
                             <a<?php echo $this->Html->buildAttributes($attributes);?>>
                                 <?php
                                 if (!empty($icon)) {
@@ -80,7 +80,7 @@
                                     $is_index = true;
                                 }
                             ?>
-                            <li<?php echo substr_compare((isset($sub_nav[$j]['uri']) ? $sub_nav[$j]['uri'] : null), $_SERVER['REQUEST_URI'], 0, strlen(rtrim((isset($sub_nav[$j]['uri']) ? $sub_nav[$j]['uri'] : null), '/')), true) === 0 || $is_index ? ' class="current"' : '';?>><a<?php echo $this->Html->buildAttributes($attributes);?>><?php echo $name;?></a></li>
+                            <li<?php echo substr_compare((isset($sub_nav[$j]['uri']) ? $sub_nav[$j]['uri'] : null), $_SERVER['REQUEST_URI'], 0, strlen(rtrim($sub_nav[$j]['uri'] ?? '', '/')), true) === 0 || $is_index ? ' class="current"' : '';?>><a<?php echo $this->Html->buildAttributes($attributes);?>><?php echo $name;?></a></li>
                             <?php
                             }
                             ?>

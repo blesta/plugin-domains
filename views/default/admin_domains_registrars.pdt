@@ -43,7 +43,7 @@
                                 }
                                 ?>
                             </li>
-                            <li><?php echo nl2br((isset($registrars[$i]->description) ? $this->Html->safe($registrars[$i]->description, true) : null))?></li>
+                            <li><?php echo nl2br((isset($registrars[$i]->description) ? $this->Html->safe($registrars[$i]->description, true) : ''))?></li>
                         </ul>
                         <div class="button_row_inline">
                             <?php
