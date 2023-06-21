@@ -6,14 +6,30 @@ use Blesta\Core\Util\Input\Fields\InputFields;
  *
  * @link https://www.blesta.com Blesta
  */
-class ClientMain extends DomainsController
+class ClientMain extends ClientController
 {
     /**
      * Setup
      */
     public function preAction()
     {
+        $this->structure->setDefaultView(APPDIR);
         parent::preAction();
+
+        $this->requireLogin();
+
+        // Auto load language for the controller
+        Language::loadLang(['client_main'], null, dirname(__FILE__) . DS . 'language' . DS);
+        Language::loadLang('domains_controller', null, dirname(__FILE__) . DS . 'language' . DS);
+
+        // Override default view directory
+        $this->view->view = "default";
+        $this->orig_structure_view = $this->structure->view;
+        $this->structure->view = "default";
+
+        // Restore structure view location of the admin portal
+        $this->structure->setDefaultView(APPDIR);
+        $this->structure->setView(null, $this->orig_structure_view);
 
         // Get client
         $this->uses(['Clients']);
