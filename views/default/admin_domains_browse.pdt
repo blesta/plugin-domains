@@ -82,7 +82,7 @@ if (!empty($domains)) {
             ?>
             <td>
                 <?php
-                // Show parent, if the domain belongs to another package
+                // Show parent, if the domain belongs to a parent service
                 $show_parent = (($status ?? null) != 'canceled') && !empty($domain->parent_service_id);
                 if ($show_parent) {
                 ?>
