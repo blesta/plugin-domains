@@ -133,6 +133,12 @@ class ClientMain extends DomainsController
         if (!($domain = $this->Services->get((int)$this->get[0])) || $domain->client_id != $this->client->id) {
             $this->redirect($this->base_uri);
         }
+
+        // Check if the service belongs to a parent service
+        if (!empty($domain->parent_service_id)) {
+            $domain->parent_service = $this->Services->get($domain->parent_service_id);
+        }
+
         $this->set('domain', $domain);
 
         $package = $this->Packages->get($domain->package->id);
