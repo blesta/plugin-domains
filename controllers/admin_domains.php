@@ -93,8 +93,9 @@ class AdminDomains extends DomainsController
         }
 
         // Get only parent services
-        $services = $this->Services->getList(null, $status, $page, [$sort => $order], false, $domains_filters);
-        $total_results = $this->Services->getListCount(null, $status, false, null, $domains_filters);
+        $domains_filters['status'] = $status;
+        $services = $this->DomainsDomains->getList($domains_filters, $page, [$sort => $order]);
+        $total_results = $this->DomainsDomains->getListCount($domains_filters);
 
         // Get TLD for each service
         foreach ($services as $service) {
@@ -103,17 +104,12 @@ class AdminDomains extends DomainsController
 
         // Set the number of services of each type, not including children
         $status_count = [
-            'active' => $this->Services->getStatusCount(null, 'active', false, $domains_filters),
-            'canceled' => $this->Services->getStatusCount(null, 'canceled', false, $domains_filters),
-            'pending' => $this->Services->getStatusCount(null, 'pending', false, $domains_filters),
-            'suspended' => $this->Services->getStatusCount(null, 'suspended', false, $domains_filters),
-            'in_review' => $this->Services->getStatusCount(null, 'in_review', false, $domains_filters),
-            'scheduled_cancellation' => $this->Services->getStatusCount(
-                null,
-                'scheduled_cancellation',
-                false,
-                $domains_filters
-            ),
+            'active' => $this->DomainsDomains->getStatusCount('active', $domains_filters),
+            'canceled' => $this->DomainsDomains->getStatusCount('canceled', $domains_filters),
+            'pending' => $this->DomainsDomains->getStatusCount('pending', $domains_filters),
+            'suspended' => $this->DomainsDomains->getStatusCount('suspended', $domains_filters),
+            'in_review' => $this->DomainsDomains->getStatusCount('in_review', $domains_filters),
+            'scheduled_cancellation' => $this->DomainsDomains->getStatusCount('scheduled_cancellation', $domains_filters)
         ];
 
         // Set the expected service renewal price
