@@ -30,6 +30,7 @@ $lang['AdminMain.index.category_canceled'] = 'Canceled';
 $lang['AdminMain.index.categorylink_newservice'] = 'New Domain';
 
 $lang['AdminMain.index.recurring_term'] = '%1$s %2$s @ %3$s'; // %1$s is the service term length (number), %2$s is the service period, %3$s is the formatted service renewal price
+$lang['AdminMain.index.option_parent'] = 'Parent';
 $lang['AdminMain.index.option_manage'] = 'Manage';
 $lang['AdminMain.index.option_delete'] = 'Delete';
 $lang['AdminMain.index.confirm_delete'] = 'Are you sure you want to delete this service?';

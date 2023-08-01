@@ -90,7 +90,7 @@ class DomainsDomains extends DomainsModel
         $status = $filters['status'] ?? 'active';
         $client_id = $filters['client_id'] ?? null;
 
-        $services = $this->Services->getList($client_id, $status, $page, $order, false, $filters);
+        $services = $this->Services->getList($client_id, $status, $page, $order, true, $filters);
 
         // Add domain fields
         foreach ($services as &$service) {
@@ -137,7 +137,7 @@ class DomainsDomains extends DomainsModel
         $status = $filters['status'] ?? 'active';
         $client_id = $filters['client_id'] ?? null;
 
-        return $this->Services->getListCount($client_id, $status, false, null, $filters);
+        return $this->Services->getListCount($client_id, $status, true, null, $filters);
     }
 
     /**
@@ -177,7 +177,7 @@ class DomainsDomains extends DomainsModel
 
         unset($filters['status']);
 
-        return $this->Services->getListCount($client_id, $status, false, null, $filters);
+        return $this->Services->getListCount($client_id, $status, true, null, $filters);
     }
 
     /**

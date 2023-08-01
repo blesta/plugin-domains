@@ -112,14 +112,22 @@
                 ?>
                 <td>
                     <?php
+                    // Show parent, if the domain belongs to another package
+                    $show_parent = (($status ?? null) != 'canceled') && !empty($domains[$i]->parent_service_id);
+                    if ($show_parent) {
+                    ?>
+                    <a href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . ($client->id ?? null) . '/' . ($domains[$i]->parent_service_id ?? null) . '/');?>"><?php $this->_('AdminMain.index.option_parent');?></a>,
+                    <?php
+                    }
+
                     // Cannot manage a canceled service
-                    $show_manage = (isset($status) ? $status : null) != 'canceled';
+                    $show_manage = ($status ?? null) != 'canceled';
                     if ($show_manage) {
                     ?>
                     <a href="<?php echo $this->base_uri . 'clients/editservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null) . '/';?>" class="manage"><?php $this->_('AdminMain.index.option_manage');?></a><?php
                     }
 
-                    if (in_array((isset($status) ? $status : null), ['pending', 'canceled'])) {
+                    if (in_array(($status ?? null), ['pending', 'canceled'])) {
                         echo ($show_manage ? ',' : '');
                     ?>
                     <a href="<?php echo $this->base_uri . 'clients/deleteservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null) . '/';?>" class="manage" data-service-id="<?php (print (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null));?>" rel="<?php echo $this->Html->safe($this->_('AdminMain.index.confirm_delete', true));?>"><?php $this->_('AdminMain.index.option_delete');?></a>

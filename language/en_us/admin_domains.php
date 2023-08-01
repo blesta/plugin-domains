@@ -36,6 +36,7 @@ $lang['AdminDomains.browse.heading_expiration'] = 'Expiration Date';
 $lang['AdminDomains.browse.heading_renew'] = 'Auto Renewal';
 $lang['AdminDomains.browse.heading_options'] = 'Options';
 $lang['AdminDomains.browse.option_delete'] = 'Delete';
+$lang['AdminDomains.browse.option_parent'] = 'Parent';
 $lang['AdminDomains.browse.option_manage'] = 'Manage';
 $lang['AdminDomains.browse.confirm_delete'] = 'Are you sure you want to delete this domain service?';
 $lang['AdminDomains.browse.text_none'] = 'There are no registered domains.';

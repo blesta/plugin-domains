@@ -25,6 +25,7 @@ $lang['ClientMain.index.no_results'] = 'You have no %1$s Domains.'; // %1$s is t
 
 // Service info
 $lang['ClientMain.serviceinfo.no_results'] = 'This domain has no details.';
+$lang['ClientMain.serviceinfo.parent_service'] = 'This domain belongs to <a href="%1$s">%2$s (%3$s)</a>. If that service is cancelled, this domain will be cancelled as well.'; // %1$s is the link to the parent service, %2$s is the service package and %3$s is the service label
 $lang['ClientMain.serviceinfo.cancellation_reason'] = 'Reason for Cancellation: %1$s'; // %1$s is the reason this service was canceled
 
 // Get filters

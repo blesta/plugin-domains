@@ -78,19 +78,28 @@ if (!empty($domains)) {
             <td><?php echo isset($domain->expiration_date) ? $this->Date->cast($domain->expiration_date) : '';?></td>
             <td><?php echo isset($domain->date_canceled) ? $this->_('AdminDomains.browse.text_off') : $this->_('AdminDomains.browse.text_on');?></td>
             <?php
-            if (in_array((isset($status) ? $status : null), ['active', 'pending', 'suspended', 'canceled', 'in_review'])) {
+            if (in_array(($status ?? null), ['active', 'pending', 'suspended', 'canceled', 'in_review'])) {
             ?>
             <td>
                 <?php
+                // Show parent, if the domain belongs to a parent service
+                $show_parent = (($status ?? null) != 'canceled') && !empty($domain->parent_service_id);
+                if ($show_parent) {
+                ?>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . ($domain->client_id ?? null) . '/' . ($domain->parent_service_id ?? null) . '/');?>"><?php $this->_('AdminDomains.browse.option_parent');?></a>,
+                <?php
+                }
+
                 // Cannot manage a canceled service
-                $show_manage = (isset($status) ? $status : null) != 'canceled';
+                $show_manage = ($status ?? null) != 'canceled';
                 if ($show_manage) {
                 ?>
-                <a class="manage" href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . (isset($domain->client_id) ? $domain->client_id : null) . '/' . (isset($domain->id) ? $domain->id : null) . '/');?>"><?php $this->_('AdminDomains.browse.option_manage');?></a><?php
+                <a class="manage" href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . (isset($domain->client_id) ? $domain->client_id : null) . '/' . (isset($domain->id) ? $domain->id : null) . '/');?>"><?php $this->_('AdminDomains.browse.option_manage');?></a>
+                <?php
                 }
 
                 // Delete pending services
-                if (in_array((isset($status) ? $status : null), ['pending', 'canceled', 'in_review'])) {
+                if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
                     echo ($show_manage ? ',' : '');
                 ?>
                 <a class="manage submit" href="#" data-client-id="<?php echo $this->Html->safe((isset($domain->client_id) ? $domain->client_id : null));?>" data-service-id="<?php echo $this->Html->safe((isset($domain->id) ? $domain->id : null));?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.browse.confirm_delete', true));?>">
