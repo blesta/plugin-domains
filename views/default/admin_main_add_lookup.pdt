@@ -1,0 +1,112 @@
+
+    <?php
+    $this->Form->create();
+    ?>
+    <div class="pad">
+        <div class="whois bg-light border rounded">
+            <?php $this->Form->label($this->_('AdminMain.add.field_domain', true), 'domain'); ?>
+            <?php $this->Form->fieldText('domain', ($vars->domain ?? null), ['id' => 'domain', 'class' => 'rounded border']); ?>
+
+            <div class="text-center mt-1">
+                <?php
+                if (!empty($spotlight_tlds)) {
+                    foreach ($spotlight_tlds as $spotlight_tld) {
+                        if (array_key_exists($spotlight_tld, ($tlds ?? []))) {
+                            unset($tlds[$spotlight_tld]);
+                ?>
+                <label class="checkbox-inline spotlight_tld">
+                    <?php
+                    $this->Form->fieldCheckbox('tlds[]', $spotlight_tld, in_array($spotlight_tld, ($vars->tlds ?? [])));
+                    ?>
+                    <?php echo (isset($spotlight_tld) ? $this->Html->safe($spotlight_tld) : null);?>
+                </label>
+                <?php
+                        }
+                    }
+                }
+
+                if (!empty($tlds)) {
+                ?>
+                <hr class="border border-top-0 m-2" />
+                    <?php
+                    foreach ($tlds as $tld) {
+                    ?>
+                        <label class="checkbox-inline spotlight_tld">
+                            <?php
+                            $this->Form->fieldCheckbox('tlds[]', $tld, in_array($tld, ($vars->tlds ?? [])));
+                            ?>
+                            <?php echo (isset($tld) ? $this->Html->safe($tld) : null);?>
+                        </label>
+                    <?php
+                    }
+                    ?>
+                <?php
+                }
+                ?>
+            </div>
+        </div>
+    </div>
+    <div class="button_row d-flex">
+        <div class="btn-group mx-auto" role="group">
+            <?php
+            $this->Form->fieldSubmit('lookup', $this->_('AdminMain.add.field_lookup', true), ['class' => 'btn btn-success']);
+            $this->Form->fieldSubmit('transfer', $this->_('AdminMain.add.field_transfer', true), ['class' => 'btn btn-secondary']);
+            ?>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+    <?php
+    $this->Form->end();
+    ?>
+
+    <?php
+    if (!empty($lookup)) {
+    ?>
+    <div class="title_row mt-4">
+        <h3><?php echo $this->_('AdminMain.add.title_search_results', true);?></h3>
+    </div>
+    <div class="pad pb-2">
+        <table class="table">
+            <tbody>
+                <tr class="heading_row">
+                    <td><span><?php echo $this->_('AdminMain.add.heading_domain', true);?></span></td>
+                    <td class="medium"><span><?php echo $this->_('AdminMain.add.heading_status', true);?></span></td>
+                    <td class="last"><span><?php echo $this->_('AdminMain.add.heading_options', true);?></span></td>
+                </tr>
+                <?php
+                $i = 0;
+                foreach ($lookup as $result) {
+                ?>
+                <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?>>
+                    <td><?php echo $this->Html->safe($result['domain'] ?? '');?></td>
+                    <td>
+                        <div class="badge badge-<?php echo ($result['available'] ?? false) ? 'success' : 'danger';?>"><?php echo $this->_('AdminMain.add.text_domain_' . (($result['available'] ?? false) ? 'available' : 'unavailable'), true);?></div>
+                    </td>
+                    <td>
+                        <?php
+                        $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id) . '/configuration/');
+                        $this->Form->fieldHidden('domain', $result['domain'] ?? '');
+
+                        $disabled = !($result['available'] ?? false) ? ['disabled' => 'disabled'] : [];
+                        if ($result['transfer'] ?? false) {
+                            $this->Form->fieldSubmit('transfer', $this->_('AdminMain.add.field_transfer', true), array_merge(['class' => 'btn btn-sm btn-secondary'], $disabled));
+                        } else {
+                            $this->Form->fieldSubmit('register', $this->_('AdminMain.add.field_register', true), array_merge(['class' => 'btn btn-sm btn-secondary'], $disabled));
+                        }
+
+                        $this->Form->fieldSubmit('add', $this->_('AdminMain.add.field_add', true), ['class' => 'btn btn-sm btn-default']);
+
+                        $this->Form->end();
+                        ?>
+                    </td>
+                </tr>
+                <?php
+                    $i++;
+                }
+                ?>
+            </tbody>
+        </table>
+    </div>
+    <?php
+    }
+    ?>

@@ -231,7 +231,6 @@ class DomainsDomains extends DomainsModel
             return;
         }
 
-
         // Create the invoice for these renewing services, by submitting $terms_pricing[$years] for the $pricing_id
         // parameter, we are also telling the Invoices model to update the pricing ID on the service
         $invoice_id = $this->Invoices->createRenewalFromService($service_id, 1, $terms_pricing[$years]);
@@ -299,7 +298,6 @@ class DomainsDomains extends DomainsModel
      */
     public function getExpirationDate($service_id, $format = 'Y-m-d H:i:s')
     {
-
         if (is_null($format)) {
             $format = 'Y-m-d H:i:s';
         }
@@ -353,9 +351,93 @@ class DomainsDomains extends DomainsModel
     }
 
     /**
+     * Checks if a domain is available for registration
+     *
+     * @param string $domain The domain name to check
+     * @return bool True if the domain is available for registration
+     */
+    public function checkAvailability($domain)
+    {
+        if (!isset($this->DomainsTlds)) {
+            Loader::loadModels($this, ['Domains.DomainsTlds']);
+        }
+
+        // Remove www from domain
+        $domain = preg_replace('/^www\./i', '', $domain);
+
+        // Get TLD from domain
+        $tld = strstr($domain ?? '', '.');
+
+        // Get TLD package
+        $package = $this->DomainsTlds->getTldPackage($tld);
+        if (empty($package)) {
+            return false;
+        }
+
+        // Check availability with the registrar module
+        $availability = false;
+        try {
+            $availability = $this->ModuleManager->moduleRpc(
+                $package->module_id,
+                'checkAvailability',
+                [$domain, $package->module_row],
+                $package->module_row
+            );
+        } catch (Throwable $e) {
+            // Fallback to whois
+            $whois = Iodev\Whois\Factory::get()->createWhois();
+            $availability = $whois->isDomainAvailable($domain);
+        }
+
+        return $availability;
+    }
+
+    /**
+     * Checks if a domain is available for transfer
+     *
+     * @param string $domain The domain name to check
+     * @return bool True if the domain is available for transfer
+     */
+    public function checkTransferAvailability($domain)
+    {
+        if (!isset($this->DomainsTlds)) {
+            Loader::loadModels($this, ['Domains.DomainsTlds']);
+        }
+
+        // Remove www from domain
+        $domain = preg_replace('/^www\./i', '', $domain);
+
+        // Get TLD from domain
+        $tld = strstr($domain ?? '', '.');
+
+        // Get TLD package
+        $package = $this->DomainsTlds->getTldPackage($tld);
+        if (empty($package)) {
+            return false;
+        }
+
+        // Check availability with the registrar module
+        $availability = false;
+        try {
+            $availability = $this->ModuleManager->moduleRpc(
+                $package->module_id,
+                'checkTransferAvailability',
+                [$domain, $package->module_row],
+                $package->module_row
+            );
+        } catch (Throwable $e) {
+            // Fallback to whois
+            $whois = Iodev\Whois\Factory::get()->createWhois();
+            $availability = !$whois->isDomainAvailable($domain);
+        }
+
+        return $availability;
+    }
+
+    /**
      * Checks if the given service is a domain managed by the domain manager
      *
-     * @param $service_id The ID of the service to evaluate
+     * @param int $service_id The ID of the service to evaluate
      * @return bool True if the service is a managed domain, false otherwise
      */
     public function isManagedDomain($service_id)

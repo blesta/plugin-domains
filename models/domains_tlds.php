@@ -176,6 +176,14 @@ class DomainsTlds extends DomainsModel
             'company_id' => $company_id
         ])->fetch();
 
+        if (!$result) {
+            $result = $this->Record->select()->from('domains_packages')
+                ->leftJoin('packages', 'packages.id', '=', 'domains_packages.package_id', false)
+                ->where('domains_packages.package_id', '=', $package_id)
+                ->where('packages.company_id', '=', $company_id)
+                ->fetch();
+        }
+
         if ($result) {
             $result = $this->appendFeatures($result);
         }
@@ -681,6 +689,68 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
+     * Assigns a TLD package to a client, for unrestricted access
+     *
+     * @param int $client_id The ID of the client
+     * @param int $package_id The ID of the restricted package for a TLD
+     */
+    public function assignClientPackage($client_id, $package_id)
+    {
+        // Verify if the given package id belongs to a TLD
+        if (!($tld = $this->getByPackage($package_id))) {
+            return false;
+        }
+
+        $this->Record->duplicate('client_packages.package_id', '=', $package_id)
+            ->insert('client_packages', ['client_id' => $client_id, 'package_id' => $package_id]);
+    }
+
+    /**
+     * Duplicates the existing TLD in to a new module
+     *
+     * @param string $tld The TLD to migrate
+     * @param int $module_id The ID of the new module for the TLD
+     * @param int $company_id The ID of the company for which to filter by (optional)
+     * @return int The ID of the new package for the TLD
+     */
+    public function duplicate($tld, $module_id, $company_id = null)
+    {
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+
+        // Create new package for the new module
+        $package_id = $this->migrateModule($tld, $module_id, $company_id, false);
+
+        // Set the status of the package as restricted, that way can be used for adding new services
+        $this->Packages->edit($package_id, ['status' => 'restricted']);
+
+        // Get the default package for the TLD
+        $default_package = $this->getTldPackage($tld, $company_id);
+        $default_pricing = $this->getPricingsByTermCurrency($default_package->id);
+
+        // Set default pricing to the new package
+        foreach ($default_pricing as $currency => $pricings) {
+            foreach ($pricings as $pricing) {
+                $params = [
+                    'price' => $pricing->price,
+                    'price_renews' => $pricing->price_renews,
+                    'price_transfer' => $pricing->price_transfer,
+                    'setup_fee' => $pricing->setup_fee
+                ];
+
+                $this->Record->where('pricings.currency', '=', $currency)
+                    ->where('pricings.term', '=', $pricing->term)
+                    ->where('pricings.period', '=', $pricing->period)
+                    ->where('pricings.company_id', '=', $company_id)
+                    ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
+                    ->where('package_pricing.package_id', '=', $package_id)
+                    ->update('pricings', $params);
+            }
+        }
+
+        return $package_id;
+    }
+
+    /**
      * Get the pricing of a TLD by term and currency
      *
      * @param int $package_id The ID of the package belonging ot the TLD
@@ -696,7 +766,7 @@ class DomainsTlds extends DomainsModel
             return false;
         }
 
-        return $this->Record->select('pricings.*')
+        return $this->Record->select(['pricings.*', 'package_pricing.id' => 'pricing_id'])
             ->from('pricings')
             ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
             ->where('package_pricing.package_id', '=', $package_id)
@@ -785,32 +855,37 @@ class DomainsTlds extends DomainsModel
      *
      * @param string $tld The TLD to migrate
      * @param int $new_module_id The ID of the new module for the TLD
+     * @param int $company_id The ID of the company for which to filter by
+     * @param bool $override Replaces the previous TLD package with the new one
      * @return int The ID of the new package for the TLD
      */
-    private function migrateModule($tld, $new_module_id)
+    private function migrateModule($tld, $new_module_id, $company_id = null, bool $override = true)
     {
         Loader::loadModels($this, ['Packages']);
 
         $tld = $this->get($tld);
 
         // Get old package
-        $old_package_id = isset($tld->package_id) ? $tld->package_id : null;
+        $old_package_id = $tld->package_id ?? null;
         $old_package = $this->Packages->get($old_package_id);
 
         // Check if there is any existing package using the new module
-        $package = $this->getTldPackageByModuleId($tld->tld, $new_module_id);
+        $package = $this->getTldPackageByModuleId($tld->tld, $new_module_id, $company_id);
 
         if (!empty($package)) {
             $package_id = $package->id;
 
             // Set the current status to the restored package
-            $this->Packages->edit($package_id, ['status' => $old_package->status]);
+            if ($override) {
+                $this->Packages->edit($package_id, ['status' => $old_package->status]);
+            }
         } else {
             // Create a new package with the same tld and using the new module
             $params = [
                 'module_id' => $new_module_id,
                 'tld' => $tld->tld,
-                'status' => $old_package->status
+                'status' => $old_package->status,
+                'company_id' => $old_package->company_id
             ];
             $package_id = $this->createPackage($params);
 
@@ -833,9 +908,11 @@ class DomainsTlds extends DomainsModel
         }
 
         // Set the status of the old package as inactive
-        $this->Record->duplicate('domains_packages.package_id', '=', $old_package_id)
-            ->insert('domains_packages', ['tld_id' => $tld->id, 'package_id' => $old_package_id]);
-        $this->Packages->edit($old_package_id, ['status' => 'inactive']);
+        if ($override) {
+            $this->Record->duplicate('domains_packages.package_id', '=', $old_package_id)
+                ->insert('domains_packages', ['tld_id' => $tld->id, 'package_id' => $old_package_id]);
+            $this->Packages->edit($old_package_id, ['status' => 'inactive']);
+        }
 
         return $package_id;
     }
@@ -848,7 +925,7 @@ class DomainsTlds extends DomainsModel
      * @param int $company_id The ID of the company for which to filter by
      * @return stdClass An object representing the package
      */
-    private function getTldPackageByModuleId($tld, $module_id, $company_id = null)
+    public function getTldPackageByModuleId($tld, $module_id, $company_id = null)
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
@@ -860,6 +937,26 @@ class DomainsTlds extends DomainsModel
             ->where('domains_tlds.tld', '=', $tld)
             ->where('domains_tlds.company_id', '=', $company_id)
             ->fetch();
+    }
+
+    /**
+     * Get all the packages assigned to a TLD.
+     *
+     * @param string $tld The TLD to fetch the packages
+     * @param int $company_id The ID of the company for which to filter by
+     * @return mixed An array of objects containing the assigned packages to the given tld
+     */
+    public function getTldPackage($tld, $company_id = null)
+    {
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+        $package = $this->Record->select(['packages.*', 'domains_tlds.tld', 'module_rows.module_id'])
+            ->from('domains_tlds')
+            ->innerJoin('packages', 'packages.id', '=', 'domains_tlds.package_id', false)
+            ->innerJoin('module_rows', 'module_rows.id', '=', 'packages.module_row', false)
+            ->where('domains_tlds.tld', '=', $tld)
+            ->where('domains_tlds.company_id', '=', $company_id);
+
+        return $package->fetch();
     }
 
     /**

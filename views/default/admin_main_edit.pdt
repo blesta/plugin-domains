@@ -1,0 +1,147 @@
+
+    <div id="left_container">
+        <?php
+        $this->Widget->clear();
+        $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css');
+        $this->Widget->create($this->_('AdminMain.edit.boxtitle_client', true, ($client->id_value ?? null)));
+        ?>
+        <section class="client_detail_box">
+            <article class="address_box">
+                <p><span><?php echo (isset($client->first_name) ? $this->Html->safe($client->first_name) : null) . ' ' . (isset($client->last_name) ? $this->Html->safe($client->last_name) : null);?></span>
+                    <?php
+                    echo (!empty($client->company) ? (isset($client->company) ? $this->Html->safe($client->company) : null) . '<br />' : '');
+                    echo (!empty($client->address1) ? (isset($client->address1) ? $this->Html->safe($client->address1) : null) . '<br />' : '');
+                    echo (!empty($client->address2) ? (isset($client->address2) ? $this->Html->safe($client->address2) : null) . '<br />' : '');
+                    echo (!empty($client->city) ? (isset($client->city) ? $this->Html->safe($client->city) : null) . (!empty($client->state) ? ', ' . (isset($client->state) ? $this->Html->safe($client->state) : null) : '') : (isset($client->state) ? $this->Html->safe($client->state) : null));
+                    echo ' ' . (isset($client->zip) ? $this->Html->safe($client->zip) : null) . ' ' . (isset($client->country) ? $this->Html->safe($client->country) : null);
+                    ?>
+                    <br /><br />
+                    <a href="mailto:<?php (print (isset($client->email) ? $this->Html->safe($client->email) : null));?>"><?php (print (isset($client->email) ? $this->Html->safe($client->email) : null));?></a>
+                </p>
+
+                <div class="bottom_row">
+                    <a href="<?php echo $this->base_uri . 'clients/view/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/';?>" class="btn btn-default pull-right btn-sm">
+                        <?php $this->_('AdminMain.edit.link_viewclient');?>
+                    </a>
+                </div>
+            </article>
+        </section>
+        <?php
+        $this->Widget->end();
+        ?>
+    </div>
+
+    <div id="right_outer">
+        <?php
+        echo ($message ?? null);
+
+        $this->Widget->clear();
+        $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->name ?? null)));
+        ?>
+        <div class="inner">
+            <?php
+            $this->Form->create(null, ['id' => 'edit_domain']);
+            ?>
+            <div class="title_row first">
+                <h3><?php echo $this->_('AdminMain.edit.title_basic_options', true);?></h3>
+            </div>
+            <div class="pad">
+                <ul>
+                    <?php
+                    if ($service->status == 'pending') {
+                        $this->Form->fieldHidden('status', 'active');
+                    } else {
+                    ?>
+                        <li>
+                            <?php $this->Form->label($this->_('AdminMain.edit.field_status', true));?>
+                            <?php $this->Form->fieldSelect('status', $status ?? [], ($vars->status ?? null), ['id' => 'status']);?>
+                        </li>
+                    <?php
+                    }
+
+                    if ($service->status == 'active') {
+                    ?>
+                        <li>
+                            <?php $this->Form->label($this->_('AdminMain.edit.field_years', true));?>
+                            <?php $this->Form->fieldSelect('years', $years ?? [], ($vars->years ?? null), ['id' => 'years']);?>
+                        </li>
+                    <?php
+                    }
+
+                    if ($service->status == 'pending') {
+                    ?>
+                        <li>
+                            <?php $this->Form->label($this->_('AdminMain.edit.field_module', true));?>
+                            <?php $this->Form->fieldSelect('module', $modules ?? [], ($vars->module ?? null), ['id' => 'module']);?>
+                        </li>
+                        <li>
+                            <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order']);?>
+                            <?php $this->Form->label($this->_('AdminMain.edit.field_notify_order', true), 'notify_order', ['class' => 'inline']);?>
+                        </li>
+                    <?php
+                    }
+                    ?>
+                    <li>
+                        <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module']);?>
+                        <?php $this->Form->label($this->_('AdminMain.edit.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'inline']);?>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="title_row">
+                <h3><?php echo $this->Html->safe($module->name ?? '');?></h3>
+            </div>
+            <div class="pad">
+                <div id="module_fields">
+                    <?php
+                    if ($service->status == 'pending') {
+                        $this->Form->fieldHidden('domain', $domain ?? $vars->domain ?? '');
+                        $this->Form->fieldHidden('module_row', $vars->module_row ?? '');
+                    } else {
+                        $this->Form->fieldHidden('module', $module->id);
+                        echo $fields ?? '';
+                    }
+                    ?>
+                </div>
+            </div>
+
+            <div class="button_row">
+                <?php
+                $this->Form->fieldSubmit('submit', $this->_('AdminMain.edit.field_' . (($service->status == 'pending') ? 'activate' : 'submit'), true), ['class' => 'btn btn-primary pull-right']);
+                ?>
+                <a href="<?php echo $this->base_uri . 'clients/editservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($service->id) ? $this->Html->safe($service->id) : null) . '/';?>" class="btn btn-default pull-right"><?php echo $this->_('AdminMain.edit.field_edit_service', true);?></a>
+            </div>
+            <div class="clearfix"></div>
+            <?php
+            $this->Form->end();
+            ?>
+        </div>
+        <?php
+        $this->Widget->end();
+        ?>
+    </div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#module').on('change', function() {
+            updateModuleFields();
+        });
+        updateModuleFields();
+
+        function updateModuleFields() {
+            var module_id = $('#module').val();
+            var form_data = $('#edit_domain').serialize("serialize");
+
+            $(this).blestaRequest(
+                "POST",
+                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getmodulefields/');?>' + module_id + '/<?php echo $this->Html->safe($package->id ?? null);?>/<?php echo ($service->status !== 'pending') ? 'edit/' : ''; ?>',
+                form_data,
+                function(response) {
+                    $('#module_fields').html(response);
+                },
+                null,
+                {dataType: 'json'}
+            );
+        }
+    });
+</script>
