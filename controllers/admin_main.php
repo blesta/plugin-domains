@@ -53,6 +53,9 @@ class AdminMain extends DomainsController
                     case 'domain_push_to_client':
                         $term = 'AdminMain.!success.domains_pushed';
                         break;
+                    case 'unparent':
+                        $term = 'AdminMain.!success.domains_unparented';
+                        break;
                 }
 
                 $this->flashMessage('message', Language::_($term, true), null, false);
@@ -171,7 +174,8 @@ class AdminMain extends DomainsController
             'change_auto_renewal' => Language::_('AdminMain.index.change_auto_renewal', true),
             'domain_renewal' => Language::_('AdminMain.index.domain_renewal', true),
             'update_nameservers' => Language::_('AdminMain.index.update_nameservers', true),
-            'domain_push_to_client' => Language::_('AdminMain.index.domain_push_to_client', true)
+            'domain_push_to_client' => Language::_('AdminMain.index.domain_push_to_client', true),
+            'unparent' => Language::_('AdminMain.index.unparent', true)
         ];
     }
 
@@ -253,6 +257,34 @@ class AdminMain extends DomainsController
 
                     // Move service
                     $this->Services->move($service->id, $this->post['client_id'] ?? $data['client_id']);
+
+                    if (($errors = $this->Services->errors())) {
+                        return $errors;
+                    }
+                }
+                break;
+            case 'unparent':
+                foreach ($data['service_ids'] as $service_id) {
+                    Loader::loadModels($this, ['Services']);
+
+                    // Get service
+                    $service = $this->Services->get($service_id);
+                    if (!$service) {
+                        break;
+                    }
+
+                    // Skip if the service is not a child
+                    if (empty($service->parent_service_id)) {
+                        continue;
+                    }
+
+                    // Remove override price
+                    $pricing = ['override_price' => null, 'override_currency' => null];
+                    $this->Services->edit($service_id, $pricing, true);
+
+                    // Remove parent service
+                    $parent_service = ['parent_service_id' => null];
+                    $this->Services->edit($service_id, $parent_service, true);
 
                     if (($errors = $this->Services->errors())) {
                         return $errors;

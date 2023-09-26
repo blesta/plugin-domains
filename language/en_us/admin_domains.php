@@ -14,6 +14,7 @@ $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal ha
 $lang['AdminDomains.!success.domain_renewal'] = 'The Domain has been renewed!';
 $lang['AdminDomains.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 $lang['AdminDomains.!success.domains_pushed'] = 'The selected domains were successfully pushed to the new client.';
+$lang['AdminDomains.!success.domains_unparented'] = 'The selected domains were removed from their parent services and the price has been reset successfully!';
 $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
 $lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
 $lang['AdminDomains.!success.tlds_imported'] = 'The TLDs were successfully imported!';
@@ -57,6 +58,7 @@ $lang['AdminDomains.browse.change_auto_renewal'] = 'Change Auto Renewal';
 $lang['AdminDomains.browse.domain_renewal'] = 'Renew Domain';
 $lang['AdminDomains.browse.update_nameservers'] = 'Update Nameservers';
 $lang['AdminDomains.browse.push_to_client'] = 'Push to Client';
+$lang['AdminDomains.browse.unparent'] = 'Unparent and Reset Price';
 
 $lang['AdminDomains.browse.action.field_years'] = 'Years';
 $lang['AdminDomains.browse.action.field_nameservers'] = 'Nameservers';
