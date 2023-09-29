@@ -4,6 +4,7 @@ $lang['AdminMain.!success.change_auto_renewal'] = 'The Domain auto renewal has b
 $lang['AdminMain.!success.domain_renewal'] = 'The Domain has been renewed!';
 $lang['AdminMain.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 $lang['AdminMain.!success.domains_pushed'] = 'The selected domains were successfully pushed to the new client.';
+$lang['AdminMain.!success.domains_unparented'] = 'The selected domains were removed from their parent services and the price has been reset successfully!';
 
 
 // Domains
@@ -44,6 +45,7 @@ $lang['AdminMain.index.change_auto_renewal'] = 'Change Auto Renewal';
 $lang['AdminMain.index.domain_renewal'] = 'Renew Domain';
 $lang['AdminMain.index.update_nameservers'] = 'Update Nameservers';
 $lang['AdminMain.index.domain_push_to_client'] = 'Push to Client';
+$lang['AdminMain.index.unparent'] = 'Unparent and Reset Price';
 $lang['AdminMain.index.field_actionsubmit'] = 'Submit';
 
 $lang['AdminMain.domains.action.field_years'] = 'Years';
