@@ -2087,7 +2087,7 @@ class AdminDomains extends DomainsController
         );
 
         // Get company default currency
-        $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
+        $default_currency = $company_settings['default_currency'] ?? 'USD';
 
         // Get company currencies
         $currencies = $this->Currencies->getAll(Configure::get('Blesta.company_id'));
@@ -2116,6 +2116,9 @@ class AdminDomains extends DomainsController
                 foreach ($currencies as $code => $currency) {
                     if (!isset($this->post['pricing'][$i][$code]['enabled'])) {
                         $this->post['pricing'][$i][$code]['enabled'] = 0;
+                    }
+                    if (!isset($this->post['pricing'][$i][$code]['enabled_transfer'])) {
+                        $this->post['pricing'][$i][$code]['enabled_transfer'] = 0;
                     }
                 }
             }
@@ -2169,6 +2172,7 @@ class AdminDomains extends DomainsController
                         if ($pricing->term == $i && $pricing->period == 'year' && $pricing->currency == $currency->code) {
                             $exists_pricing = true;
                             $pricing->enabled = true;
+                            $pricing->enabled_transfer = !is_null($pricing->price_transfer);
                             $tld_pricings[] = $pricing;
                             break;
                         }
@@ -2180,7 +2184,8 @@ class AdminDomains extends DomainsController
                             'term' => $i,
                             'period' => 'year',
                             'currency' => $currency->code,
-                            'enabled' => false
+                            'enabled' => false,
+                            'enabled_transfer' => false
                         ];
                     }
                 }

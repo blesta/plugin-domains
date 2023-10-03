@@ -93,26 +93,32 @@
                                             foreach ($package->pricing ?? [] as $package_pricing) {
                                                 if ($package_pricing->currency == $currency->code && $package_pricing->term == $i) {
                                         ?>
-                                            <tr<?php echo ($r % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo (isset($tld->package_id) ? $tld->package_id : null);?>">
+                                            <tr<?php echo ($r % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo ($tld->package_id ?? null);?>">
                                                 <td class="icon center">
                                                     <?php
-                                                    $this->Form->fieldCheckbox('pricing[' . $package_pricing->term . '][' . $currency->code . '][enabled]', '1', (isset($package_pricing->enabled) ? $package_pricing->enabled : false));
+                                                    $this->Form->fieldCheckbox('pricing[' . $package_pricing->term . '][' . $currency->code . '][enabled]', '1', ($package_pricing->enabled ?? false));
                                                     ?>
                                                 </td>
                                                 <td><?php echo $package_pricing->term; ?> <?php echo $package_pricing->period; ?></td>
                                                 <td>
                                                     <?php
-                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price]', $this->CurrencyFormat->format((isset($package_pricing->price) ? $package_pricing->price : 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'stretch']);
+                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price]', $this->CurrencyFormat->format(($package_pricing->price ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'stretch']);
                                                     ?>
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_renews]', $this->CurrencyFormat->format((isset($package_pricing->price_renews) ? $package_pricing->price_renews : 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'stretch']);
+                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_renews]', $this->CurrencyFormat->format(($package_pricing->price_renews ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'stretch']);
                                                     ?>
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_transfer]', $this->CurrencyFormat->format((isset($package_pricing->price_transfer) ? $package_pricing->price_transfer : 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'stretch']);
+                                                    $disabled = [];
+                                                    if (!($package_pricing->enabled_transfer ?? false)) {
+                                                        $disabled = ['disabled' => 'disabled'];
+                                                    }
+
+                                                    $this->Form->fieldCheckbox('pricing[' . $package_pricing->term . '][' . $currency->code . '][enabled_transfer]', '1', ($package_pricing->enabled_transfer ?? false), ['class' => 'd-inline-block']);
+                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_transfer]', $this->CurrencyFormat->format(($package_pricing->price_transfer ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), array_merge(['class' => 'w-75 d-inline-block'], $disabled));
                                                     ?>
                                                 </td>
                                             </tr>
@@ -330,18 +336,40 @@
             }
         });
 
+        // Disable transfer price
+        function disableTransfer() {
+            $('.table td input[name*="enabled_transfer"]').each(function () {
+                if ($(this).is(":checked")) {
+                    $(this).parent().find('input[type="text"]').prop('disabled', false);
+                } else {
+                    $(this).parent().find('input[type="text"]').prop('disabled', true);
+                }
+            });
+        }
+
+        disableTransfer();
+        $('.table td input[name*="enabled_transfer"]').change(function() {
+            disableTransfer();
+        });
+
         // Disable pricing rows
         function disablePricings() {
             $('.table .icon input[name*="enabled"]').each(function () {
                 if ($(this).is(":checked")) {
                     $(this).parent().parent().find('input[type="text"]').prop('disabled', false);
+                    $(this).parent().parent().find('input[type="checkbox"]').prop('disabled', false);
                 } else {
                     $(this).parent().parent().find('input[type="text"]').prop('disabled', true);
+                    $(this).parent().parent().find('input[type="checkbox"]').prop('disabled', true);
                 }
-            });
-        }
-        disablePricings();
 
+                $('.table .icon input[name*="enabled"]').prop('disabled', false);
+            });
+
+            disableTransfer();
+        }
+
+        disablePricings();
         $('.table .icon input[name*="enabled"]').change(function() {
             disablePricings();
         });

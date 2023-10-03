@@ -923,6 +923,15 @@ class DomainsTlds extends DomainsModel
 
                     $pricing_row = $pricings_by_currency[$currency][$term] ?? null;
 
+                    // Set price transfer as null, if transfers are disabled
+                    if (!isset($pricing['enabled_transfer'])) {
+                        $pricing['enabled_transfer'] = is_null($pricing_row->price_transfer ?? null) ? 0 : 1;
+                    }
+                    if (!($pricing['enabled_transfer'] ?? 0)) {
+                        $pricing['price_transfer'] = null;
+                    }
+
+                    // Update pricing
                     if (!empty($pricing_row)) {
                         if ((bool) ($pricing['enabled'] ?? 1)) {
                             $this->updatePricing($pricing_row->id, $pricing);
