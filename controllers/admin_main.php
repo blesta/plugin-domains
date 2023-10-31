@@ -21,8 +21,14 @@ class AdminMain extends DomainsController
         // Load required models
         $this->uses(['Clients', 'Companies', 'ModuleManager', 'Packages', 'Invoices', 'Services']);
         $this->helpers(['Form', 'CurrencyFormat']);
+        $this->components(['Session']);
 
-        $this->structure->set('page_title', Language::_('AdminMain.index.page_title', true));
+        // Set the client info
+        if ($this->Session->read('blesta_client_id')) {
+            $this->client = $this->Clients->get($this->Session->read('blesta_client_id'));
+        }
+
+        $this->structure->set('page_title', Language::_('AdminMain.index.page_title', true, $this->client->id_code));
     }
 
     /**
@@ -188,21 +194,13 @@ class AdminMain extends DomainsController
         $configuration_fields = $this->Session->read('domain_configuration_fields');
         if (!empty($configuration_fields)) {
             $this->post = $configuration_fields;
-            $this->post[$configuration_fields['action']] = $configuration_fields['action'];
-
             $this->Session->clear('domain_configuration_fields');
         }
 
         // Set action
-        $action = null;
-        if (isset($this->post['register'])) {
-            $action = 'register';
-        }
-        if (isset($this->post['transfer'])) {
+        $action = 'register';
+        if (isset($this->post['transfer']) && $this->post['transfer'] == '1') {
             $action = 'transfer';
-        }
-        if (isset($this->post['add'])) {
-            $action = 'add';
         }
 
         // Redirect to lookup if no post data has been passed
@@ -297,9 +295,9 @@ class AdminMain extends DomainsController
     private function renderConfirmationStep($client)
     {
         // Set action
-        $action = null;
-        if (isset($this->post['action'])) {
-            $action = $this->post['action'];
+        $action = 'register';
+        if (isset($this->post['transfer']) && $this->post['transfer'] == '1') {
+            $action = 'transfer';
         }
 
         // Redirect to lookup if no post data has been passed
@@ -314,6 +312,14 @@ class AdminMain extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_main/add/' . $client->id . '/lookup/');
         }
 
+        // Set checkboxes
+        $checkboxes = ['use_module', 'notify_order'];
+        foreach ($checkboxes as $checkbox) {
+            if (!isset($this->post[$checkbox])) {
+                $this->post[$checkbox] = 'false';
+            }
+        }
+
         // Get TLD from domain
         $domain = $this->post['domain'];
         $tld = strstr($this->post['domain'] ?? '', '.');
@@ -324,6 +330,11 @@ class AdminMain extends DomainsController
             $this->post['module'],
             Configure::get('Blesta.company_id')
         );
+
+        // If a package exists, but it's not active, make it restricted
+        if (isset($package->status) && $package->status == 'inactive') {
+            $this->Packages->edit($package->id, ['status' => 'restricted']);
+        }
 
         // If a package doesn't exist for this TLD and the provided module, clone the default one
         if (empty($package)) {
@@ -426,13 +437,6 @@ class AdminMain extends DomainsController
             $params = $this->post;
             unset($params['save']);
             unset($params['years']);
-
-            // Do not use the module if the domain is being added
-            $params['use_module'] = 'true';
-            if ($action == 'add') {
-                $params['use_module'] = 'false';
-            }
-            unset($params['action']);
 
             // Set module row
             if (!empty($params['module_row'])) {
@@ -651,7 +655,7 @@ class AdminMain extends DomainsController
             }
 
             if (!empty($errors)) {
-                $this->setMessage('error', $errors);
+                $this->setMessage('error', $errors, false, null, false);
             } else {
                 $this->flashMessage('message', Language::_('AdminMain.!success.service_edited', true));
                 $this->redirect($this->base_uri . 'clients/view/' . $client->id);
@@ -698,6 +702,11 @@ class AdminMain extends DomainsController
         $fields_type = 'getClientAddFields';
         if (isset($this->get[2]) && $this->get[2] == 'edit') {
             $fields_type = 'getAdminEditFields';
+        }
+
+        // Set package type to domain
+        if (!isset($package->meta->type)) {
+            $package->meta->type = 'domain';
         }
 
         // Get module fields
@@ -889,7 +898,7 @@ class AdminMain extends DomainsController
      */
     private function updateDomains(array $data)
     {
-        $this->uses(['Domains.DomainsDomains']);
+        $this->uses(['Services', 'Domains.DomainsDomains']);
 
         // Require authorization to update a client's service
         if (!$this->authorized('admin_clients', 'editservice')) {
@@ -946,8 +955,6 @@ class AdminMain extends DomainsController
                 break;
             case 'domain_push_to_client':
                 foreach ($data['service_ids'] as $service_id) {
-                    Loader::loadModels($this, ['Services']);
-
                     // Get service
                     $service = $this->Services->get($service_id);
                     if (!$service) {

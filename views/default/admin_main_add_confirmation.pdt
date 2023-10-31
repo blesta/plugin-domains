@@ -67,7 +67,13 @@
     $this->Form->create();
 
     foreach ((array) ($vars ?? []) as $key => $value) {
-        $this->Form->fieldHidden($key, $value);
+        if (is_array($value)) {
+            foreach ($value as $sub_key => $sub_value) {
+                $this->Form->fieldHidden($key . '[' . $sub_key . ']', $sub_value);
+            }
+        } else {
+            $this->Form->fieldHidden($key, $value);
+        }
     }
     ?>
         <div class="pad reverse">

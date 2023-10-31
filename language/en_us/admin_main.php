@@ -125,7 +125,6 @@ $lang['AdminMain.add_confirmation.field_update_coupon'] = 'Update';
 $lang['AdminMain.add_confirmation.field_add'] = 'Add Domain';
 $lang['AdminMain.add_confirmation.field_edit'] = 'Edit';
 
-$lang['AdminMain.add_confirmation.type_add'] = 'Addition';
 $lang['AdminMain.add_confirmation.type_register'] = 'Registration';
 $lang['AdminMain.add_confirmation.type_transfer'] = 'Transfer';
 

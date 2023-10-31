@@ -84,7 +84,7 @@
                     </td>
                     <td>
                         <?php
-                        $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id) . '/configuration/');
+                        $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id ?? null) . '/configuration/');
                         $this->Form->fieldHidden('domain', $result['domain'] ?? '');
 
                         $disabled = !($result['available'] ?? false) ? ['disabled' => 'disabled'] : [];
@@ -93,8 +93,6 @@
                         } else {
                             $this->Form->fieldSubmit('register', $this->_('AdminMain.add.field_register', true), array_merge(['class' => 'btn btn-sm btn-secondary'], $disabled));
                         }
-
-                        $this->Form->fieldSubmit('add', $this->_('AdminMain.add.field_add', true), ['class' => 'btn btn-sm btn-default']);
 
                         $this->Form->end();
                         ?>

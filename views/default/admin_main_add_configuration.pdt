@@ -2,10 +2,11 @@
     <?php
     $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id) . '/confirmation/', ['id' => 'add_configuration']);
 
-    $this->Form->fieldHidden('action', $action ?? 'register');
     if (($action ?? 'register') == 'transfer') {
         $this->Form->fieldHidden('transfer', '1');
     }
+
+    $this->Form->fieldHidden('domain', $domain ?? $vars->domain ?? '');
     ?>
     <div class="title_row first">
         <h3><?php echo $this->_('AdminMain.add.title_basic_options', true);?></h3>
@@ -45,18 +46,10 @@
                 <?php $this->Form->label($this->_('AdminMain.add.field_module', true));?>
                 <?php $this->Form->fieldSelect('module', $modules ?? [], ($vars->module ?? null), ['id' => 'module']);?>
             </li>
-            <?php
-            if (($action ?? 'register') !== 'add') {
-            ?>
-                <li>
-                    <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module']);?>
-                    <?php $this->Form->label($this->_('AdminMain.add.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'inline']);?>
-                </li>
-            <?php
-            } else {
-                $this->Form->fieldHidden('use_module', 'false');
-            }
-            ?>
+            <li>
+                <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module']);?>
+                <?php $this->Form->label($this->_('AdminMain.add.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'inline']);?>
+            </li>
             <li>
                 <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order']);?>
                 <?php $this->Form->label($this->_('AdminMain.add.field_notify_order', true), 'notify_order', ['class' => 'inline']);?>
@@ -70,7 +63,6 @@
     <div class="pad">
         <div id="module_fields">
             <?php
-            $this->Form->fieldHidden('domain', $domain ?? $vars->domain ?? '');
             $this->Form->fieldHidden('module_row', $vars->module_row ?? '');
             ?>
         </div>
@@ -95,7 +87,7 @@
 
         function updateModuleFields() {
             var module_id = $('#module').val();
-            var form_data = $('#add_configuration').serialize("serialize");
+            var form_data = $('#add_configuration').serialize('serialize');
 
             $(this).blestaRequest(
                 "POST",
@@ -107,6 +99,39 @@
                 null,
                 {dataType: 'json'}
             );
+        }
+
+        $('#status').on('change', function() {
+            updateStatusFields();
+        });
+        updateStatusFields();
+
+        function updateStatusFields() {
+            var status = $('#status').val();
+
+            if (status !== 'active') {
+                $('#use_module').prop('disabled', true);
+                $('#notify_order').prop('disabled', true);
+
+                if (status == 'pending') {
+                    $('#use_module').prop('checked', true);
+                    $('#notify_order').prop('checked', true);
+                } else {
+                    $('#use_module').prop('checked', false);
+                    $('#notify_order').prop('checked', false);
+                }
+            } else {
+                $('#use_module').prop('disabled', false);
+                $('#notify_order').prop('disabled', false);
+
+                if (status == 'active') {
+                    $('#use_module').prop('checked', true);
+                    $('#notify_order').prop('checked', true);
+                } else {
+                    $('#use_module').prop('checked', false);
+                    $('#notify_order').prop('checked', false);
+                }
+            }
         }
     });
 </script>
