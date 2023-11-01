@@ -243,7 +243,7 @@ class DomainsFeed extends AbstractDataFeed
         }
 
         // Get clients count
-        $domains = $this->DomainsDomains->getListCount($vars['status']);
+        $domains = $this->DomainsDomains->getListCount(['status' => $vars['status']]);
         if (($errors = $this->DomainsDomains->errors())) {
             $this->setErrors($errors);
 
