@@ -24,9 +24,8 @@ class AdminMain extends DomainsController
         $this->components(['Session']);
 
         // Set the client info
-        if ($this->Session->read('blesta_client_id')) {
-            $this->client = $this->Clients->get($this->Session->read('blesta_client_id'));
-        }
+        $client_id = ($this->get['client_id'] ?? ($this->get[0] ?? null));
+        $this->client = $this->Clients->get($client_id);
 
         $this->structure->set('page_title', Language::_('AdminMain.index.page_title', true, $this->client->id_code));
     }
@@ -331,19 +330,15 @@ class AdminMain extends DomainsController
             Configure::get('Blesta.company_id')
         );
 
+        // If a package doesn't exist for this TLD and the provided module, clone the default one
+        if (empty($package)) {
+            $package_id = $this->DomainsTlds->duplicate($tld, $this->post['module']);
+            $package = $this->Packages->get($package_id);
+        }
+
         // If a package exists, but it's not active, make it restricted
         if (isset($package->status) && $package->status == 'inactive') {
             $this->Packages->edit($package->id, ['status' => 'restricted']);
-        }
-
-        // If a package doesn't exist for this TLD and the provided module, clone the default one
-        if (empty($package)) {
-            $this->DomainsTlds->duplicate($tld, $this->post['module']);
-            $package = $this->DomainsTlds->getTldPackageByModuleId(
-                $tld,
-                $this->post['module'],
-                Configure::get('Blesta.company_id')
-            );
         }
 
         // Get service statuses

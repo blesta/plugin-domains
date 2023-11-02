@@ -720,6 +720,19 @@ class DomainsTlds extends DomainsModel
         // Create new package for the new module
         $package_id = $this->migrateModule($tld, $module_id, $company_id, false);
 
+        if (!$package_id) {
+            try {
+                $package = $this->add([
+                    'tld' => $tld,
+                    'company_id' => $company_id,
+                    'module_id' => $module_id
+                ]);
+                $package_id = $package['package_id'];
+            } catch (Throwable $e) {
+                return;
+            }
+        }
+
         // Set the status of the package as restricted, that way can be used for adding new services
         $this->Packages->edit($package_id, ['status' => 'restricted']);
 
@@ -728,22 +741,24 @@ class DomainsTlds extends DomainsModel
         $default_pricing = $this->getPricingsByTermCurrency($default_package->id);
 
         // Set default pricing to the new package
-        foreach ($default_pricing as $currency => $pricings) {
-            foreach ($pricings as $pricing) {
-                $params = [
-                    'price' => $pricing->price,
-                    'price_renews' => $pricing->price_renews,
-                    'price_transfer' => $pricing->price_transfer,
-                    'setup_fee' => $pricing->setup_fee
-                ];
+        if ($default_pricing) {
+            foreach ($default_pricing as $currency => $pricings) {
+                foreach ($pricings as $pricing) {
+                    $params = [
+                        'price' => $pricing->price,
+                        'price_renews' => $pricing->price_renews,
+                        'price_transfer' => $pricing->price_transfer,
+                        'setup_fee' => $pricing->setup_fee
+                    ];
 
-                $this->Record->where('pricings.currency', '=', $currency)
-                    ->where('pricings.term', '=', $pricing->term)
-                    ->where('pricings.period', '=', $pricing->period)
-                    ->where('pricings.company_id', '=', $company_id)
-                    ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
-                    ->where('package_pricing.package_id', '=', $package_id)
-                    ->update('pricings', $params);
+                    $this->Record->where('pricings.currency', '=', $currency)
+                        ->where('pricings.term', '=', $pricing->term)
+                        ->where('pricings.period', '=', $pricing->period)
+                        ->where('pricings.company_id', '=', $company_id)
+                        ->innerJoin('package_pricing', 'package_pricing.pricing_id', '=', 'pricings.id', false)
+                        ->where('package_pricing.package_id', '=', $package_id)
+                        ->update('pricings', $params);
+                }
             }
         }
 
