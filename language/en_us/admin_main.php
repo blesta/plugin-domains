@@ -75,8 +75,6 @@ $lang['AdminMain.add.field_invoice_method'] = 'Invoice Method';
 $lang['AdminMain.add.field_invoice_method_create'] = 'Create New Invoice';
 $lang['AdminMain.add.field_invoice_method_append'] = 'Append to Existing Invoice';
 $lang['AdminMain.add.field_invoice_method_dont'] = 'Do Not Invoice';
-$lang['AdminMain.add.field_years'] = 'Years';
-$lang['AdminMain.add.field_status'] = 'Status';
 $lang['AdminMain.add.field_module'] = 'Registrar Module';
 $lang['AdminMain.add.field_use_module'] = 'Provision the domain using the registrar module when activated';
 $lang['AdminMain.add.field_notify_order'] = 'Send order confirmation email when activated';
@@ -141,15 +139,39 @@ $lang['AdminMain.edit.boxtitle_edit'] = 'Edit Domain: %1$s'; // %1$s is the TLD 
 
 $lang['AdminMain.edit.link_viewclient'] = 'View Client';
 
+$lang['AdminMain.edit.field_action'] = 'Action';
 $lang['AdminMain.edit.field_years'] = 'Years';
-$lang['AdminMain.edit.field_status'] = 'Status';
+$lang['AdminMain.edit.field_auto_renewal'] = 'Enable Auto-Renewal';
+$lang['AdminMain.edit.field_nameserver'] = 'Nameserver';
+$lang['AdminMain.edit.field_client'] = 'Client';
 $lang['AdminMain.edit.field_module'] = 'Registrar Module';
 $lang['AdminMain.edit.field_use_module'] = 'Use module';
 $lang['AdminMain.edit.field_notify_order'] = 'Send order confirmation email when activated';
-$lang['AdminMain.edit.field_submit'] = 'Update Domain';
-$lang['AdminMain.edit.field_activate'] = 'Activate Domain';
+$lang['AdminMain.edit.field_submit'] = 'Update';
+$lang['AdminMain.edit.field_activate'] = 'Activate';
 $lang['AdminMain.edit.field_edit_service'] = 'Edit Service';
 
+$lang['AdminMain.edit.text_domain'] = 'Domain:';
+$lang['AdminMain.edit.text_years'] = 'Registered Years:';
+$lang['AdminMain.edit.text_status'] = 'Status:';
+$lang['AdminMain.edit.text_date_added'] = 'Creation Date:';
+$lang['AdminMain.edit.text_date_renews'] = 'Renewal Date:';
+$lang['AdminMain.edit.text_never'] = 'Never';
+$lang['AdminMain.edit.text_date_last_renewed'] = 'Last Renewed Date:';
+$lang['AdminMain.edit.text_date_suspended'] = 'Suspension Date:';
+$lang['AdminMain.edit.text_date_canceled'] = 'Cancellation Date:';
+
+$lang['AdminMain.edit.term_day'] = '%1$s Day'; // %1$s is the term
+$lang['AdminMain.edit.term_days'] = '%1$s Days'; // %1$s is the term
+$lang['AdminMain.edit.term_week'] = '%1$s Week'; // %1$s is the term
+$lang['AdminMain.edit.term_weeks'] = '%1$s Weeks'; // %1$s is the term
+$lang['AdminMain.edit.term_month'] = '%1$s Month'; // %1$s is the term
+$lang['AdminMain.edit.term_months'] = '%1$s Months'; // %1$s is the term
+$lang['AdminMain.edit.term_year'] = '%1$s Year'; // %1$s is the term
+$lang['AdminMain.edit.term_years'] = '%1$s Years'; // %1$s is the term
+
+$lang['AdminMain.edit.title_domain_information'] = 'Domain Information';
+$lang['AdminMain.edit.title_actions'] = 'Actions';
 $lang['AdminMain.edit.title_basic_options'] = 'Basic Options';
 
 

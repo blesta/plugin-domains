@@ -23,11 +23,16 @@ class AdminMain extends DomainsController
         $this->helpers(['Form', 'CurrencyFormat']);
         $this->components(['Session']);
 
-        // Set the client info
-        $client_id = ($this->get['client_id'] ?? ($this->get[0] ?? null));
-        $this->client = $this->Clients->get($client_id);
+        // Set the client info, if the request is not going through AJAX
+        if (!$this->isAjax()) {
+            $client_id = ($this->get['client_id'] ?? ($this->get[0] ?? null));
+            $this->client = $this->Clients->get($client_id);
 
-        $this->structure->set('page_title', Language::_('AdminMain.index.page_title', true, $this->client->id_code));
+            $this->structure->set(
+                'page_title',
+                Language::_('AdminMain.index.page_title', true, $this->client->id_code)
+            );
+        }
     }
 
     /**
@@ -565,18 +570,16 @@ class AdminMain extends DomainsController
         );
 
         // Get service statuses
-        $status = $this->Services->getStatusTypes();
-        unset($status['in_review']);
-        unset($status['pending']);
+        $statuses = $this->Services->getStatusTypes();
+        unset($statuses['in_review']);
+        unset($statuses['pending']);
 
-        // Build array of years for renewal in advance
-        $years = [];
-        if ($service->package_pricing->period == 'year') {
-            for ($i = $service->package_pricing->term; $i <= 10; $i++) {
-                $years[$i] = $i;
-            }
-        }
-        $vars->years = $service->package_pricing->term;
+        // Get domain actions
+        $actions = ['' => Language::_('AppController.select.please', true)];
+        $actions = array_merge($actions, $this->getDomainActions());
+
+        // Set action vars
+        $vars->auto_renewal = empty($service->date_canceled) ? 'on' : 'off';
 
         // If the domain is not pending, fetch the module fields
         $service_fields = (array) $this->Form->collapseObjectArray($service->fields, 'value', 'key');
@@ -596,8 +599,16 @@ class AdminMain extends DomainsController
 
         // Process edit
         if (!empty($this->post)) {
+            // Set checkboxes
+            $checkboxes = ['use_module'];
+            foreach ($checkboxes as $checkbox) {
+                if (!isset($this->post[$checkbox])) {
+                    $this->post[$checkbox] = 'false';
+                }
+            }
+
             // Update package
-            if (isset($this->post['module']) && $module->id !== $this->post['module']) {
+            if (isset($this->post['module']) && $module->id !== $this->post['module'] && $service->status == 'pending') {
                 $tld = strstr($service->name ?? $this->post['domain'] ?? '', '.');
                 $package = $this->DomainsTlds->getTldPackageByModuleId(
                     $tld,
@@ -624,29 +635,28 @@ class AdminMain extends DomainsController
                 $this->post['pricing_id'] = $pricing->id;
             }
 
-            // Update service
-            $allowed_fields = ['status', 'pricing_id', 'use_module'];
-            foreach ($fields->getFields() as $field) {
-                foreach ($field->fields as $subfield) {
-                    $allowed_fields[] = $subfield->params['name'];
+            // Update service fields
+            if (empty($this->post['action'])) {
+                $allowed_fields = ['status', 'pricing_id', 'use_module'];
+                foreach ($fields->getFields() as $field) {
+                    foreach ($field->fields as $subfield) {
+                        $allowed_fields[] = $subfield->params['name'];
+                    }
+
+                    if ($field->type !== 'label') {
+                        $allowed_fields[] = $field->params['name'];
+                    }
                 }
 
-                if ($field->type !== 'label') {
-                    $allowed_fields[] = $field->params['name'];
-                }
+                $params = array_intersect_key($this->post, array_flip($allowed_fields));
+                $this->Services->edit($service->id, $params);
+                $errors = $this->Services->errors();
             }
 
-            $params = array_intersect_key($this->post, array_flip($allowed_fields));
-            $this->Services->edit($service->id, $params);
-            $errors = $this->Services->errors();
-
-            // Renew domain, if required
-            if (($this->post['years'] ?? 0) > $service->package_pricing->term) {
-                $this->DomainsDomains->renewDomain($service->id, $this->post['years']);
-
-                if (empty($errors)) {
-                    $errors = $this->DomainsDomains->errors();
-                }
+            // Process domain actions
+            if (!empty($this->post['action'])) {
+                $this->post['service_ids'] = [$service->id];
+                $errors = $this->updateDomains($this->post);
             }
 
             if (!empty($errors)) {
@@ -663,8 +673,8 @@ class AdminMain extends DomainsController
         $this->set('service', $service);
         $this->set('package', $package);
         $this->set('modules', $modules);
-        $this->set('status', $status);
-        $this->set('years', $years);
+        $this->set('statuses', $statuses);
+        $this->set('actions', $actions);
         $this->set('module', $module);
         $this->set('fields', (new Html($fields))->generate());
         $this->set('vars', $vars);
@@ -912,7 +922,7 @@ class AdminMain extends DomainsController
         }
 
         $data['service_ids'] = $service_ids;
-        $data['action'] = (isset($data['action']) ? $data['action'] : null);
+        $data['action'] = ($data['action'] ?? null);
         $errors = false;
 
         switch ($data['action']) {

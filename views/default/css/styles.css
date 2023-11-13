@@ -1,15 +1,8 @@
 .whois {
-    width: 75%;
+    width: 100%;
     margin: 1em auto 0 auto;
     padding: 2em;
     box-sizing: border-box;
-}
-
-@media (max-width: 576px) {
-    .whois {
-        width: 100%;
-        padding: 1em;
-    }
 }
 
 .whois input[type="text"] {
