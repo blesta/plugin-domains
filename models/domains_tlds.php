@@ -894,6 +894,16 @@ class DomainsTlds extends DomainsModel
             if ($override) {
                 $this->Packages->edit($package_id, ['status' => $old_package->status]);
             }
+
+            // Set type package meta field
+            $fields = [
+                'package_id' => $package_id,
+                'key' => 'type',
+                'value' => 'domain',
+                'serialized' => '0'
+            ];
+            $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+                ->insert('package_meta', $fields);
         } else {
             // Create a new package with the same tld and using the new module
             $params = [
