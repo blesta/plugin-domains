@@ -92,9 +92,9 @@
                     ?>
                 </ul>
             </div>
-
             <?php
-            $this->Form->create(null, ['id' => 'action_domain']);
+            if ($service->status == 'active' || $service->status == 'suspended') {
+                $this->Form->create(null, ['id' => 'action_domain']);
             ?>
                 <div class="title_row">
                     <h3><?php $this->_('AdminMain.edit.title_actions');?></h3>
@@ -147,10 +147,9 @@
                     ?>
                 </div>
             <?php
-            $this->Form->end();
-            ?>
+                $this->Form->end();
+            }
 
-            <?php
             $this->Form->create(null, ['id' => 'edit_domain']);
             ?>
                 <div class="title_row">

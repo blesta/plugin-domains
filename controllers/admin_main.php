@@ -479,15 +479,13 @@ class AdminMain extends DomainsController
                     }
 
                     // Redirect the client to pay the invoice
-                    if ($invoice_id) {
-                        $this->flashMessage(
-                            'message',
-                            Language::_('AdminMain.!success.domain_' . $action, true),
-                            null,
-                            false
-                        );
-                        $this->redirect($this->base_uri . 'clients/view/' . $client->id . '/');
-                    }
+                    $this->flashMessage(
+                        'message',
+                        Language::_('AdminMain.!success.domain_' . $action, true),
+                        null,
+                        false
+                    );
+                    $this->redirect($this->base_uri . 'clients/view/' . $client->id . '/');
                 }
             } catch (Throwable $e) {
                 $this->setMessage('error', $e->getMessage(), false, null, false);
@@ -571,8 +569,6 @@ class AdminMain extends DomainsController
 
         // Get service statuses
         $statuses = $this->Services->getStatusTypes();
-        unset($statuses['in_review']);
-        unset($statuses['pending']);
 
         // Get domain actions
         $actions = ['' => Language::_('AppController.select.please', true)];

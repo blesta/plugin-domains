@@ -953,8 +953,7 @@ class DomainsTlds extends DomainsModel
     public function getTldPackageByModuleId($tld, $module_id, $company_id = null)
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
-
-        return $this->Record->select(['packages.*', 'domains_tlds.tld'])
+        $package = $this->Record->select(['packages.*', 'domains_tlds.tld'])
             ->from('domains_packages')
             ->innerJoin('packages', 'packages.id', '=', 'domains_packages.package_id', false)
             ->innerJoin('domains_tlds', 'domains_tlds.id', '=', 'domains_packages.tld_id', false)
@@ -962,6 +961,18 @@ class DomainsTlds extends DomainsModel
             ->where('domains_tlds.tld', '=', $tld)
             ->where('domains_tlds.company_id', '=', $company_id)
             ->fetch();
+
+        // Ensure that the type package meta field is always set to "domain"
+        $fields = [
+            'package_id' => $package->id,
+            'key' => 'type',
+            'value' => 'domain',
+            'serialized' => '0'
+        ];
+        $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+            ->insert('package_meta', $fields);
+
+        return $package;
     }
 
     /**
@@ -979,9 +990,20 @@ class DomainsTlds extends DomainsModel
             ->innerJoin('packages', 'packages.id', '=', 'domains_tlds.package_id', false)
             ->innerJoin('module_rows', 'module_rows.id', '=', 'packages.module_row', false)
             ->where('domains_tlds.tld', '=', $tld)
-            ->where('domains_tlds.company_id', '=', $company_id);
+            ->where('domains_tlds.company_id', '=', $company_id)
+            ->fetch();
 
-        return $package->fetch();
+        // Ensure that the type package meta field is always set to "domain"
+        $fields = [
+            'package_id' => $package->id,
+            'key' => 'type',
+            'value' => 'domain',
+            'serialized' => '0'
+        ];
+        $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+            ->insert('package_meta', $fields);
+
+        return $package;
     }
 
     /**
