@@ -125,14 +125,32 @@
                         </li>
                         <li class="update_nameservers">
                             <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_nameserver', true), 'nameservers');
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[0] ?? ''), ['class' => 'form-control', 'id' => 'nameservers']);
+                            $this->Form->label($this->_('AdminMain.edit.field_ns1', true), 'nameservers_1');
+                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[0] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_1']);
                             ?>
                         </li>
                         <li class="update_nameservers">
                             <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_nameserver', true), 'nameservers');
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[1] ?? ''), ['class' => 'form-control', 'id' => 'nameservers']);
+                            $this->Form->label($this->_('AdminMain.edit.field_ns2', true), 'nameservers_2');
+                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[1] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_2']);
+                            ?>
+                        </li>
+                        <li class="update_nameservers">
+                            <?php
+                            $this->Form->label($this->_('AdminMain.edit.field_ns3', true), 'nameservers_3');
+                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[2] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_3']);
+                            ?>
+                        </li>
+                        <li class="update_nameservers">
+                            <?php
+                            $this->Form->label($this->_('AdminMain.edit.field_ns4', true), 'nameservers_4');
+                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[3] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_4']);
+                            ?>
+                        </li>
+                        <li class="update_nameservers">
+                            <?php
+                            $this->Form->label($this->_('AdminMain.edit.field_ns5', true), 'nameservers_5');
+                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[4] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_5']);
                             ?>
                         </li>
                         <li class="domain_push_to_client">
@@ -186,7 +204,7 @@
                                     $this->Form->fieldHidden('domain', $domain ?? $vars->domain ?? '');
                                     $this->Form->fieldHidden('module_row', $vars->module_row ?? '');
                                 } else {
-                                    $this->Form->fieldHidden('module', $module->id ?? null);
+                                    $this->Form->fieldHidden('module', $module->id ?? null, ['id' => 'module']);
                                     echo $fields ?? '';
                                 }
                                 ?>

@@ -287,6 +287,53 @@ class DomainsDomains extends DomainsModel
 
         return $result;
     }
+    
+    /**
+     * Get the nameservers for a given domain name
+     *
+     * @param int $service_id The id of the service to which the domain belongs
+     */
+    public function getNameservers($service_id)
+    {
+        Loader::loadModels($this, ['Services', 'ModuleManager']);
+
+        // Get service
+        $service = $this->Services->get($service_id);
+        if (!$service) {
+            return [];
+        }
+
+        // Get registrar module associated to the service
+        $module_row = $this->ModuleManager->getRow($service->module_row_id ?? null);
+        $module = $this->ModuleManager->get($module_row->module_id ?? null, false, false);
+
+        if (empty($module)) {
+            return [];
+        }
+
+        // Get service domain name
+        $service_name = $this->ModuleManager->moduleRpc($module->id, 'getServiceDomain', [$service], $module_row->id);
+
+        // Update nameservers
+        $params = [
+            $service_name,
+            $module_row->id
+        ];
+        $result = $this->ModuleManager->moduleRpc($module->id, 'getDomainNameservers', $params, $module_row->id);
+
+        if (($errors = $this->ModuleManager->errors())) {
+            $this->Input->setErrors($errors);
+
+            return [];
+        }
+        
+        $nameservers = [];
+        foreach ($result as $nameserver) {
+            $nameservers[] = $nameserver['url'];
+        }
+
+        return $nameservers;
+    }
 
     /**
      * Gets the domain expiration date
