@@ -158,6 +158,7 @@ $lang['AdminMain.edit.field_activate'] = 'Activate';
 $lang['AdminMain.edit.field_edit_service'] = 'Edit Service';
 
 $lang['AdminMain.edit.text_domain'] = 'Domain:';
+$lang['AdminMain.edit.text_registrar'] = 'Registrar:';
 $lang['AdminMain.edit.text_years'] = 'Registered Years:';
 $lang['AdminMain.edit.text_status'] = 'Status:';
 $lang['AdminMain.edit.text_date_added'] = 'Date Created:';

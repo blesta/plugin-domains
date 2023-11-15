@@ -49,6 +49,10 @@
                         <?php (print (isset($service->name) ? $this->Html->safe($service->name) : null));?>
                     </li>
                     <li>
+                        <?php $this->_('AdminMain.edit.text_registrar');?>
+                        <?php (print (isset($module->name) ? $this->Html->safe($module->name) : null));?>
+                    </li>
+                    <li>
                         <?php $this->_('AdminMain.edit.text_years');?>
                         <?php $this->_('AdminMain.edit.term_' . $service->package_pricing->period, false, $term ?? 1); ?>
                     </li>
