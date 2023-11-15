@@ -138,7 +138,7 @@ class TldSync
             return null;
         }
 
-        $final_price = number_format($price * (($markup / 100.00) + 1), 4, '.', '');
+        $final_price = number_format($price * (((int)$markup / 100.00) + 1), 4, '.', '');
         if (!is_null($rounding) && is_numeric($rounding)) {
             $subtracted_rounding_price = $final_price - (float) $rounding;
             $floored_price = floor($subtracted_rounding_price);

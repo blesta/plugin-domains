@@ -962,15 +962,17 @@ class DomainsTlds extends DomainsModel
             ->where('domains_tlds.company_id', '=', $company_id)
             ->fetch();
 
-        // Ensure that the type package meta field is always set to "domain"
-        $fields = [
-            'package_id' => $package->id,
-            'key' => 'type',
-            'value' => 'domain',
-            'serialized' => '0'
-        ];
-        $this->Record->duplicate('package_meta.value', '=', $fields['value'])
-            ->insert('package_meta', $fields);
+        if ($package) {
+            // Ensure that the type package meta field is always set to "domain"
+            $fields = [
+                'package_id' => $package->id,
+                'key' => 'type',
+                'value' => 'domain',
+                'serialized' => '0'
+            ];
+            $this->Record->duplicate('package_meta.value', '=', $fields['value'])
+                ->insert('package_meta', $fields);
+        }
 
         return $package;
     }
