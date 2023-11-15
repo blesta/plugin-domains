@@ -538,6 +538,7 @@ class AdminMain extends DomainsController
             $this->redirect($this->base_uri . 'clients/view/' . $client_id . '/');
         }
 
+        $service->expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
         $vars = $service;
 
         // Get the domains package group

@@ -64,6 +64,10 @@
                         <?php $this->_('AdminMain.edit.text_date_renews');?>
                         <?php echo (!empty($service->date_renews) ? $this->Date->cast($service->date_renews) : $this->_('AdminMain.edit.text_never', true));?>
                     </li>
+                    <li>
+                        <?php $this->_('AdminMain.edit.text_date_expires');?>
+                        <?php echo (!empty($service->expiration_date) ? $this->Date->cast($service->expiration_date) : $this->_('AdminMain.edit.text_never', true));?>
+                    </li>
                     <?php
                     if (!empty($service->date_last_renewed)) {
                     ?>
