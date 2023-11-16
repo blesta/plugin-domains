@@ -793,7 +793,7 @@ class AdminMain extends DomainsController
         }
 
         $years = $this->formatPricingOptions($package);
-        $this->outputAsJson($years);
+        $this->outputAsJson(['pricing' => $years, 'package_id' => $package->id]);
 
         return false;
     }

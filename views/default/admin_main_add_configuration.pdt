@@ -37,6 +37,7 @@
             <li>
                 <?php $this->Form->label($this->_('AdminMain.add.field_years', true));?>
                 <?php $this->Form->fieldSelect('years', $years ?? [], ($vars->years ?? null), ['id' => 'years']);?>
+                <a href="<?php echo $this->base_uri . 'packages/edit/' . (isset($package->id) ? $this->Html->safe($package->id) : null) . '/'; ?>" id="package_edit_link"><?php $this->_('AdminMain.add.edit_package_pricing'); ?></a>
             </li>
             <li>
                 <?php $this->Form->label($this->_('AdminMain.add.field_status', true));?>
@@ -114,9 +115,11 @@
                     $("option", "#years").remove();
 
                     // Append all new items
-                    $.each($(this).blestaSortObject(data), function(index, item) {
+                    $.each($(this).blestaSortObject(data.pricing), function(index, item) {
                         $("#years").append(new Option(item.value, item.key));
                     });
+                    
+                    $("#package_edit_link").attr("href", '<?php echo $this->base_uri . 'packages/edit/'; ?>' + data.package_id + '/')
                 },
                 null,
                 {dataType: 'json'}
