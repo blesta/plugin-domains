@@ -82,8 +82,10 @@
     $(document).ready(function() {
         $('#module').on('change', function() {
             updateModuleFields();
+            updatePricingOptions();
         });
         updateModuleFields();
+        updatePricingOptions();
 
         function updateModuleFields() {
             var module_id = $('#module').val();
@@ -95,6 +97,26 @@
                 form_data,
                 function(response) {
                     $('#module_fields').html(response);
+                },
+                null,
+                {dataType: 'json'}
+            );
+        }
+        
+        function updatePricingOptions() {
+            var module_id = $('#module').val();
+            $(this).blestaRequest(
+                "POST",
+                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getpricing/');?>' + module_id + '/<?php echo $this->Html->safe($package->id ?? null);?>/',
+                null,
+                function(data) {
+                    // Remove all existing items
+                    $("option", "#years").remove();
+
+                    // Append all new items
+                    $.each($(this).blestaSortObject(data), function(index, item) {
+                        $("#years").append(new Option(item.value, item.key));
+                    });
                 },
                 null,
                 {dataType: 'json'}

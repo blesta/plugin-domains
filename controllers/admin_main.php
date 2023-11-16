@@ -234,25 +234,7 @@ class AdminMain extends DomainsController
         }
 
         // Build years array
-        $years = [];
-        foreach ($package->pricing as $pricing) {
-            if ($pricing->period !== 'year') {
-                continue;
-            }
-
-            $price = $this->CurrencyFormat->format(
-                ($action == 'register' ? $pricing->price : $pricing->price_transfer) + $pricing->setup_fee,
-                $pricing->currency
-            );
-            $term = Language::_('AdminMain.add.term_' . $pricing->period . ($pricing->term > 1 ? 's' : ''), true, $pricing->term);
-
-            if ($pricing->price == $pricing->price_renews) {
-                $years[$pricing->term . '-' . $pricing->currency] = Language::_('AdminMain.add.term', true, $term, $price);
-            } else {
-                $renewal_price = $this->CurrencyFormat->format($pricing->price_renews, $pricing->currency);
-                $years[$pricing->term . '-' . $pricing->currency] = Language::_('AdminMain.add.term_recurring', true, $term, $price, $renewal_price);
-            }
-        }
+        $years = $this->formatPricingOptions($package, $action);
 
         // Get list of registrar modules
         $modules = $this->Form->collapseObjectArray(
@@ -291,6 +273,31 @@ class AdminMain extends DomainsController
                 )
             )
         );
+    }
+    
+    private function formatPricingOptions($package, $action = 'register')
+    {
+        $years = [];
+        foreach ($package->pricing as $pricing) {
+            if ($pricing->period !== 'year') {
+                continue;
+            }
+
+            $price = $this->CurrencyFormat->format(
+                ($action == 'register' ? $pricing->price : $pricing->price_transfer) + $pricing->setup_fee,
+                $pricing->currency
+            );
+            $term = Language::_('AdminMain.add.term_' . $pricing->period . ($pricing->term > 1 ? 's' : ''), true, $pricing->term);
+
+            if ($pricing->price == $pricing->price_renews) {
+                $years[$pricing->term . '-' . $pricing->currency] = Language::_('AdminMain.add.term', true, $term, $price);
+            } else {
+                $renewal_price = $this->CurrencyFormat->format($pricing->price_renews, $pricing->currency);
+                $years[$pricing->term . '-' . $pricing->currency] = Language::_('AdminMain.add.term_recurring', true, $term, $price, $renewal_price);
+            }
+        }
+        
+        return $years;
     }
 
     /**
@@ -740,6 +747,53 @@ class AdminMain extends DomainsController
         // Render HTML
         $html = (new Html($fields))->generate();
         $this->outputAsJson($html);
+
+        return false;
+    }
+    
+    /**
+     * Fetches the add service pricing options from a specific registrar module
+     */
+    public function getPricing()
+    {
+        // Check if the request was made through AJAX
+        if (!$this->isAjax()) {
+            header($this->server_protocol . ' 401 Unauthorized');
+            exit();
+        }
+        
+        $this->uses(['Domains.DomainsTlds']);
+
+        // Ensure a valid module was given
+        $module_id = ($this->get['module_id'] ?? ($this->get[0] ?? null));
+        if (empty($module_id) || !($module = $this->ModuleManager->get($module_id))) {
+            return false;
+        }
+
+        // Ensure a valid package was given
+        $package_id = ($this->get['package_id'] ?? ($this->get[1] ?? null));
+        if (empty($package_id) || !($package = $this->Packages->get($package_id)) || !isset($package->meta->tlds[0])) {
+            return false;
+        }
+
+        $tld = $package->meta->tlds[0];
+        // Check if a package exists for the given module
+        $package = $this->DomainsTlds->getTldPackageByModuleId(
+            $tld,
+            $module_id,
+            Configure::get('Blesta.company_id')
+        );
+
+        // If a package doesn't exist for this TLD and the provided module, clone the default one
+        if (empty($package)) {
+            $package_id = $this->DomainsTlds->duplicate($tld, $module_id, Configure::get('Blesta.company_id'));
+            $package = $this->Packages->get($package_id);
+        } else {
+            $package = $this->Packages->get($package->id);
+        }
+
+        $years = $this->formatPricingOptions($package);
+        $this->outputAsJson($years);
 
         return false;
     }
