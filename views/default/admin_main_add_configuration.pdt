@@ -1,0 +1,162 @@
+
+    <?php
+    $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id) . '/confirmation/', ['id' => 'add_configuration']);
+
+    if (($action ?? 'register') == 'transfer') {
+        $this->Form->fieldHidden('transfer', '1');
+    }
+
+    $this->Form->fieldHidden('domain', $domain ?? $vars->domain ?? '');
+    ?>
+    <div class="title_row first">
+        <h3><?php echo $this->_('AdminMain.add.title_basic_options', true);?></h3>
+    </div>
+    <div class="pad">
+        <ul>
+            <li>
+                <?php $this->Form->label($this->_('AdminMain.add.field_invoice_method', true));?>
+
+                <?php
+                $this->Form->fieldRadio('invoice_method', 'create', !isset($vars->invoice_method) || ($vars->invoice_method ?? null) == 'create', ['id' => 'invoice_method_create']);
+                $this->Form->label($this->_('AdminMain.add.field_invoice_method_create', true), 'invoice_method_create', ['class' => 'inline']);
+                ?>
+
+                <?php
+                if (!empty($invoices)) {
+                    $this->Form->fieldRadio('invoice_method', 'append', ($vars->invoice_method ?? null) == 'append', ['id' => 'invoice_method_append']);
+                    $this->Form->label($this->_('AdminMain.add.field_invoice_method_append', true), 'invoice_method_append', ['class' => 'inline']);
+                    $this->Form->fieldSelect('invoice_id', $invoices, ($vars->invoice_id ?? null), ['class' => 'inline']);
+                }
+                ?>
+
+                <?php
+                $this->Form->fieldRadio('invoice_method', 'none', ($vars->invoice_method ?? null) == 'none', ['id' => 'invoice_method_none']);
+                $this->Form->label($this->_('AdminMain.add.field_invoice_method_dont', true), 'invoice_method_none', ['class' => 'inline']);
+                ?>
+            </li>
+            <li>
+                <?php $this->Form->label($this->_('AdminMain.add.field_years', true));?>
+                <?php $this->Form->fieldSelect('years', $years ?? [], ($vars->years ?? null), ['id' => 'years']);?>
+                <a href="<?php echo $this->base_uri . 'packages/edit/' . (isset($package->id) ? $this->Html->safe($package->id) : null) . '/'; ?>" id="package_edit_link"><?php $this->_('AdminMain.add.edit_package_pricing'); ?></a>
+            </li>
+            <li>
+                <?php $this->Form->label($this->_('AdminMain.add.field_status', true));?>
+                <?php $this->Form->fieldSelect('status', $status ?? [], ($vars->status ?? null), ['id' => 'status']);?>
+            </li>
+            <li>
+                <?php $this->Form->label($this->_('AdminMain.add.field_module', true));?>
+                <?php $this->Form->fieldSelect('module', $modules ?? [], ($vars->module ?? null), ['id' => 'module']);?>
+            </li>
+            <li>
+                <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module']);?>
+                <?php $this->Form->label($this->_('AdminMain.add.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'inline']);?>
+            </li>
+            <li>
+                <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order']);?>
+                <?php $this->Form->label($this->_('AdminMain.add.field_notify_order', true), 'notify_order', ['class' => 'inline']);?>
+            </li>
+        </ul>
+    </div>
+
+    <div class="title_row">
+        <h3><?php echo $this->_('AdminMain.add.title_registrar_options', true);?></h3>
+    </div>
+    <div class="pad">
+        <div id="module_fields">
+            <?php
+            $this->Form->fieldHidden('module_row', $vars->module_row ?? '');
+            ?>
+        </div>
+    </div>
+
+    <div class="button_row">
+        <?php
+        $this->Form->fieldSubmit('submit', $this->_('AdminMain.add.field_submit', true), ['class' => 'btn btn-primary pull-right']);
+        ?>
+    </div>
+    <div class="clearfix"></div>
+    <?php
+    $this->Form->end();
+    ?>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#module').on('change', function() {
+            updateModuleFields();
+            updatePricingOptions();
+        });
+        updateModuleFields();
+        updatePricingOptions();
+
+        function updateModuleFields() {
+            var module_id = $('#module').val();
+            var form_data = $('#add_configuration').serialize('serialize');
+
+            $(this).blestaRequest(
+                "POST",
+                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getmodulefields/');?>' + module_id + '/<?php echo $this->Html->safe($package->id ?? null);?>/',
+                form_data,
+                function(response) {
+                    $('#module_fields').html(response);
+                },
+                null,
+                {dataType: 'json'}
+            );
+        }
+        
+        function updatePricingOptions() {
+            var module_id = $('#module').val();
+            $(this).blestaRequest(
+                "POST",
+                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getpricing/');?>' + module_id + '/<?php echo $this->Html->safe($package->id ?? null);?>/',
+                null,
+                function(data) {
+                    // Remove all existing items
+                    $("option", "#years").remove();
+
+                    // Append all new items
+                    $.each($(this).blestaSortObject(data.pricing), function(index, item) {
+                        $("#years").append(new Option(item.value, item.key));
+                    });
+                    
+                    $("#package_edit_link").attr("href", '<?php echo $this->base_uri . 'packages/edit/'; ?>' + data.package_id + '/')
+                },
+                null,
+                {dataType: 'json'}
+            );
+        }
+
+        $('#status').on('change', function() {
+            updateStatusFields();
+        });
+        updateStatusFields();
+
+        function updateStatusFields() {
+            var status = $('#status').val();
+
+            if (status !== 'active') {
+                $('#use_module').prop('disabled', true);
+                $('#notify_order').prop('disabled', true);
+
+                if (status == 'pending') {
+                    $('#use_module').prop('checked', true);
+                    $('#notify_order').prop('checked', true);
+                } else {
+                    $('#use_module').prop('checked', false);
+                    $('#notify_order').prop('checked', false);
+                }
+            } else {
+                $('#use_module').prop('disabled', false);
+                $('#notify_order').prop('disabled', false);
+
+                if (status == 'active') {
+                    $('#use_module').prop('checked', true);
+                    $('#notify_order').prop('checked', true);
+                } else {
+                    $('#use_module').prop('checked', false);
+                    $('#notify_order').prop('checked', false);
+                }
+            }
+        }
+    });
+</script>
