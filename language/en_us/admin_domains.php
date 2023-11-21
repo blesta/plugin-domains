@@ -54,12 +54,6 @@ $lang['AdminDomains.browse.field_actionsubmit'] = 'Submit';
 
 $lang['AdminDomains.browse.tooltip_renew'] = 'Auto Renewal for Blesta means that the user will be invoiced automatically and that the domain will be renewed once the invoice is paid.';
 
-$lang['AdminDomains.browse.change_auto_renewal'] = 'Change Auto Renewal';
-$lang['AdminDomains.browse.domain_renewal'] = 'Renew Domain';
-$lang['AdminDomains.browse.update_nameservers'] = 'Update Nameservers';
-$lang['AdminDomains.browse.push_to_client'] = 'Push to Client';
-$lang['AdminDomains.browse.unparent'] = 'Unparent and Reset Price';
-
 $lang['AdminDomains.browse.action.field_years'] = 'Years';
 $lang['AdminDomains.browse.action.field_nameservers'] = 'Nameservers';
 $lang['AdminDomains.browse.action.field_client'] = 'Client';

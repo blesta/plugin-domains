@@ -25,6 +25,7 @@ $lang['AdminMain.index.heading_status'] = 'Status';
 
 $lang['AdminMain.index.heading_domain'] = 'Domain';
 $lang['AdminMain.index.heading_term'] = 'Term';
+$lang['AdminMain.index.heading_registrar'] = 'Registrar';
 $lang['AdminMain.index.heading_datecreated'] = 'Date Created';
 $lang['AdminMain.index.heading_daterenews'] = 'Date Renews';
 $lang['AdminMain.index.heading_dateexpires'] = 'Date Expires';
@@ -50,11 +51,6 @@ $lang['AdminMain.index.text_never'] = 'Never';
 
 $lang['AdminMain.index.text_on'] = 'On';
 $lang['AdminMain.index.text_off'] = 'Off';
-$lang['AdminMain.index.change_auto_renewal'] = 'Change Auto Renewal';
-$lang['AdminMain.index.domain_renewal'] = 'Renew Domain';
-$lang['AdminMain.index.update_nameservers'] = 'Update Nameservers';
-$lang['AdminMain.index.domain_push_to_client'] = 'Push to Client';
-$lang['AdminMain.index.unparent'] = 'Unparent and Reset Price';
 $lang['AdminMain.index.field_actionsubmit'] = 'Submit';
 
 $lang['AdminMain.domains.action.field_years'] = 'Years';
