@@ -136,6 +136,7 @@ class DomainsController extends AppController
                 }
                 break;
             case 'change_registrar':
+                
                 break;
             case 'domain_renewal':
                 foreach ($data['service_ids'] as $service_id) {

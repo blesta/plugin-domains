@@ -447,70 +447,39 @@ class DomainsTlds extends DomainsModel
 
         // Add the package for this TLD
         $package_id = $this->Packages->add($package_params);
-
         if (($errors = $this->Packages->errors())) {
             $this->Input->setErrors($errors);
 
             return;
         }
 
-        // Set TLD to the package meta
-        $fields = [
-            'package_id' => $package_id,
-            'key' => 'tlds',
-            'value' => serialize([$vars['tld']]),
-            'serialized' => '1'
-        ];
-        $this->Record->duplicate('package_meta.value', '=', $fields['value'])
-            ->insert('package_meta', $fields);
-
-        // Set the nameservers to the package meta
-        if (isset($vars['ns'])) {
-            $fields = [
-                'package_id' => $package_id,
-                'key' => 'ns',
-                'value' => serialize($vars['ns']),
-                'serialized' => '1'
-            ];
-            $this->Record->duplicate('package_meta.value', '=', $fields['value'])
-                ->insert('package_meta', $fields);
-        }
-
-
-        // Set the epp_code package meta
+        // Set the default meta data to the new package
         $registrar = $this->ModuleManager->initModule($vars['module_id']);
         if (($vars['epp_code'] ?? '0') == '1' && !$registrar->supportsFeature('epp_code')) {
+            $vars['epp_code'] = '0';
             $this->Input->setErrors([
                 'feature' => [
                     'message' => Language::_('DomainsTlds.!error.feature.unsupported', true, 'epp_code')
                 ]
             ]);
-        } else {
-            $fields = [
-                'package_id' => $package_id,
-                'key' => 'epp_code',
-                'value' => $vars['epp_code'] ?? '0',
-                'serialized' => '0'
-            ];
-            $this->Record->duplicate('package_meta.value', '=', $fields['value'])
-                ->insert('package_meta', $fields);
         }
 
-        // Set type package meta field which exists on our registrar modules.
-        // This is a temporary measure.  We should really remove this field on those modules.
-        $fields = [
-            'package_id' => $package_id,
-            'key' => 'type',
-            'value' => 'domain',
-            'serialized' => '0'
+        $meta_fields = [
+            ['key' => 'tlds', 'value' => serialize([$vars['tld']]), 'serialized' => '1'],
+            ['key' => 'type', 'value' => 'domain', 'serialized' => '0'],
+            ['key' => 'epp_code', 'value' => ($vars['epp_code'] ?? '0'), 'serialized' => '0'],
+            ['key' => 'ns', 'value' => serialize($vars['ns'] ?? []), 'serialized' => '1']
         ];
-        $this->Record->duplicate('package_meta.value', '=', $fields['value'])
-            ->insert('package_meta', $fields);
+        if ($package_id) {
+            foreach ($meta_fields as $meta_field) {
+                $meta_field['package_id'] = $package_id;
+                $this->Record->duplicate('package_meta.value', '=', $meta_field['value'])
+                    ->insert('package_meta', $meta_field);
+            }
+        }
 
         // Set the default module row, if any
         $module = $this->ModuleManager->get($vars['module_id']);
-        $module_row = null;
-
         if (!empty($module->rows)) {
             $module_row = reset($module->rows);
             $this->Record->where('id', '=', $package_id)
@@ -717,6 +686,8 @@ class DomainsTlds extends DomainsModel
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
+        Loader::loadModels($this, ['ModuleManager', 'Packages']);
+
         // Create new package for the new module
         $package_id = $this->migrateModule($tld, $module_id, $company_id, false);
 
@@ -740,7 +711,7 @@ class DomainsTlds extends DomainsModel
         $default_package = $this->getTldPackage($tld, $company_id);
         $default_pricing = $this->getPricingsByTermCurrency($default_package->id);
 
-        // Set default pricing to the new package
+        // Set the default pricing to the new package
         if ($default_pricing) {
             foreach ($default_pricing as $currency => $pricings) {
                 foreach ($pricings as $pricing) {
@@ -760,6 +731,39 @@ class DomainsTlds extends DomainsModel
                         ->update('pricings', $params);
                 }
             }
+        }
+
+        // Set the default meta data to the new package
+        $package = $this->Packages->get($package_id);
+        $registrar = $this->ModuleManager->initModule($module_id);
+        if (($package->meta->epp_code ?? '0') == '1' && !$registrar->supportsFeature('epp_code')) {
+            $package->meta->epp_code = '0';
+        }
+
+        $meta_fields = [
+            ['key' => 'tlds', 'value' => serialize([$tld]), 'serialized' => '1'],
+            ['key' => 'type', 'value' => 'domain', 'serialized' => '0'],
+            ['key' => 'epp_code', 'value' => ($package->meta->epp_code ?? '0'), 'serialized' => '0'],
+            ['key' => 'ns', 'value' => serialize($package->meta->ns ?? []), 'serialized' => '1']
+        ];
+        if ($package_id) {
+            $this->Record->from('package_meta')
+                ->where('package_meta.package_id', '=', $package_id)
+                ->delete();
+
+            foreach ($meta_fields as $meta_field) {
+                $meta_field['package_id'] = $package_id;
+                $this->Record->duplicate('package_meta.value', '=', $meta_field['value'])
+                    ->insert('package_meta', $meta_field);
+            }
+        }
+
+        // Set the default module row, if any
+        $module = $this->ModuleManager->get($module_id);
+        if (!empty($module->rows)) {
+            $module_row = reset($module->rows);
+            $this->Record->where('id', '=', $package_id)
+                ->update('packages', ['module_row' => $module_row->id]);
         }
 
         return $package_id;
@@ -894,16 +898,6 @@ class DomainsTlds extends DomainsModel
             if ($override) {
                 $this->Packages->edit($package_id, ['status' => $old_package->status]);
             }
-
-            // Set type package meta field
-            $fields = [
-                'package_id' => $package_id,
-                'key' => 'type',
-                'value' => 'domain',
-                'serialized' => '0'
-            ];
-            $this->Record->duplicate('package_meta.value', '=', $fields['value'])
-                ->insert('package_meta', $fields);
         } else {
             // Create a new package with the same tld and using the new module
             $params = [
@@ -962,18 +956,6 @@ class DomainsTlds extends DomainsModel
             ->where('domains_tlds.company_id', '=', $company_id)
             ->fetch();
 
-        if ($package) {
-            // Ensure that the type package meta field is always set to "domain"
-            $fields = [
-                'package_id' => $package->id,
-                'key' => 'type',
-                'value' => 'domain',
-                'serialized' => '0'
-            ];
-            $this->Record->duplicate('package_meta.value', '=', $fields['value'])
-                ->insert('package_meta', $fields);
-        }
-
         return $package;
     }
 
@@ -994,16 +976,6 @@ class DomainsTlds extends DomainsModel
             ->where('domains_tlds.tld', '=', $tld)
             ->where('domains_tlds.company_id', '=', $company_id)
             ->fetch();
-
-        // Ensure that the type package meta field is always set to "domain"
-        $fields = [
-            'package_id' => $package->id,
-            'key' => 'type',
-            'value' => 'domain',
-            'serialized' => '0'
-        ];
-        $this->Record->duplicate('package_meta.value', '=', $fields['value'])
-            ->insert('package_meta', $fields);
 
         return $package;
     }

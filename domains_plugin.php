@@ -143,6 +143,7 @@ class DomainsPlugin extends Plugin
         $this->upgrade1_5_0();
         $this->upgrade1_6_2();
         $this->upgrade1_8_0();
+        $this->upgrade1_12_0();
 
         // Set the default renewal days before expiration
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
@@ -200,6 +201,11 @@ class DomainsPlugin extends Plugin
             // Upgrade to 1.8.0
             if (version_compare($current_version, '1.8.0', '<')) {
                 $this->upgrade1_8_0();
+            }
+
+            // Upgrade to 1.12.0
+            if (version_compare($current_version, '1.12.0', '<')) {
+                $this->upgrade1_12_0();
             }
         }
     }
@@ -565,6 +571,28 @@ class DomainsPlugin extends Plugin
             unset($options);
             unset($default);
             unset($vars);
+        }
+    }
+
+    /**
+     * Update to v1.12.0
+     */
+    private function upgrade1_12_0()
+    {
+        $domain_packages = $this->Record->select(['domains_packages.package_id'])
+            ->from('domains_packages')
+            ->fetchAll();
+
+        foreach ($domain_packages as $domain_package) {
+            // Ensure that the type package meta field is always set to "domain"
+            $field = [
+                'package_id' => $domain_package->package_id,
+                'key' => 'type',
+                'value' => 'domain',
+                'serialized' => '0'
+            ];
+            $this->Record->duplicate('package_meta.value', '=', $field['value'])
+                ->insert('package_meta', $field);
         }
     }
 
