@@ -136,7 +136,13 @@ class DomainsController extends AppController
                 }
                 break;
             case 'change_registrar':
-                
+                foreach ($data['service_ids'] as $service_id) {
+                    $this->DomainsDomains->updateRegistrar($service_id, $data['module_id'] ?? null);
+
+                    if (($errors = $this->DomainsDomains->errors())) {
+                        break;
+                    }
+                }
                 break;
             case 'domain_renewal':
                 foreach ($data['service_ids'] as $service_id) {

@@ -49,6 +49,9 @@ class AdminDomains extends DomainsController
                     case 'schedule_cancellation':
                         $term = 'AdminDomains.!success.change_auto_renewal';
                         break;
+                    case 'change_registrar':
+                        $term = 'AdminDomains.!success.domain_registrar_updated';
+                        break;
                     case 'domain_renewal':
                         $term = 'AdminDomains.!success.domain_renewal';
                         break;

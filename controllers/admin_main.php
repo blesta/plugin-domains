@@ -815,13 +815,16 @@ class AdminMain extends DomainsController
                     case 'schedule_cancellation':
                         $term = 'AdminMain.!success.change_auto_renewal';
                         break;
+                    case 'change_registrar':
+                        $term = 'AdminMain.!success.domain_registrar_updated';
+                        break;
                     case 'domain_renewal':
                         $term = 'AdminMain.!success.domain_renewal';
                         break;
                     case 'update_nameservers':
                         $term = 'AdminMain.!success.update_nameservers';
                         break;
-                    case 'domain_push_to_client':
+                    case 'push_to_client':
                         $term = 'AdminMain.!success.domains_pushed';
                         break;
                     case 'unparent':
@@ -876,6 +879,13 @@ class AdminMain extends DomainsController
             'suspended' => $this->DomainsDomains->getStatusCount('suspended', $domains_filters)
         ];
 
+        // Get list of registrar modules
+        $modules = $this->Form->collapseObjectArray(
+            $this->ModuleManager->getAll(Configure::get('Blesta.company_id'), 'name', 'asc', ['type' => 'registrar']),
+            'name',
+            'id'
+        );
+
         // Set the input field filters for the widget
         $filters = $this->getFilters($post_filters);
         $this->set('filters', $filters);
@@ -887,6 +897,7 @@ class AdminMain extends DomainsController
         $this->set('domains', $domains);
         $this->set('status_count', $status_count);
         $this->set('actions', $this->getDomainActions());
+        $this->set('modules', $modules);
         $this->set('widget_state', $this->widgets_state['main_domains'] ?? null);
         $this->set('sort', $sort);
         $this->set('order', $order);

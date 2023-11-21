@@ -11,6 +11,7 @@ $lang['AdminDomains.!success.tlds_updated'] = 'The TLDs were successfully update
 $lang['AdminDomains.!success.tld_sync'] = 'The TLD prices were successfully synced!';
 $lang['AdminDomains.!success.change_status'] = 'The TLD statuses were successfully updated!';
 $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
+$lang['AdminDomains.!success.domain_registrar_updated'] = 'The domain registrar has been updated!';
 $lang['AdminDomains.!success.domain_renewal'] = 'The Domain has been renewed!';
 $lang['AdminDomains.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 $lang['AdminDomains.!success.domains_pushed'] = 'The selected domains were successfully pushed to the new client.';
