@@ -50,6 +50,7 @@ $lang['AdminMain.index.text_never'] = 'Never';
 
 $lang['AdminMain.index.text_on'] = 'On';
 $lang['AdminMain.index.text_off'] = 'Off';
+$lang['AdminMain.index.text_date_added'] = 'Date Added:';
 $lang['AdminMain.index.change_auto_renewal'] = 'Change Auto Renewal';
 $lang['AdminMain.index.domain_renewal'] = 'Renew Domain';
 $lang['AdminMain.index.update_nameservers'] = 'Update Nameservers';
