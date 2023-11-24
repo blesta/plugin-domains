@@ -73,7 +73,7 @@ if (!empty($domains)) {
             </td>
             <td><?php echo $this->Html->safe(isset($domain->registrar) ? $domain->registrar : '');?></td>
             <td><?php echo isset($domain->renewal_price) ? $this->CurrencyFormat->format($domain->renewal_price, $domain->package_pricing->currency) : '';?></td>
-            <td><?php echo isset($domain->date_added) ? $this->Date->cast($domain->date_added) : '';?></td>
+            <td><?php echo isset($domain->registration_date) ? $this->Date->cast($domain->registration_date) : '';?></td>
             <td><?php echo isset($domain->date_renews) ? $this->Date->cast($domain->date_renews) : '';?></td>
             <td><?php echo isset($domain->expiration_date) ? $this->Date->cast($domain->expiration_date) : '';?></td>
             <td><?php echo isset($domain->date_canceled) ? $this->_('AdminDomains.browse.text_off') : $this->_('AdminDomains.browse.text_on');?></td>

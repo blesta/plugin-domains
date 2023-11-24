@@ -65,6 +65,10 @@
                         <?php echo (!empty($service->date_added) ? $this->Date->cast($service->date_added) : '');?>
                     </li>
                     <li>
+                        <?php $this->_('AdminMain.edit.text_registration_date');?>
+                        <?php echo (!empty($service->registration_date) ? $this->Date->cast($service->registration_date) : '');?>
+                    </li>
+                    <li>
                         <?php $this->_('AdminMain.edit.text_date_renews');?>
                         <?php echo (!empty($service->date_renews) ? $this->Date->cast($service->date_renews) : $this->_('AdminMain.edit.text_never', true));?>
                     </li>

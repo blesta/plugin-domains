@@ -25,7 +25,7 @@ $lang['AdminMain.index.heading_status'] = 'Status';
 
 $lang['AdminMain.index.heading_domain'] = 'Domain';
 $lang['AdminMain.index.heading_term'] = 'Term';
-$lang['AdminMain.index.heading_datecreated'] = 'Date Created';
+$lang['AdminMain.index.heading_dateregistration'] = 'Date Registered';
 $lang['AdminMain.index.heading_daterenews'] = 'Date Renews';
 $lang['AdminMain.index.heading_dateexpires'] = 'Date Expires';
 $lang['AdminMain.index.heading_datesuspended'] = 'Date Suspended';
@@ -165,6 +165,7 @@ $lang['AdminMain.edit.text_registrar'] = 'Registrar:';
 $lang['AdminMain.edit.text_years'] = 'Registered Years:';
 $lang['AdminMain.edit.text_status'] = 'Status:';
 $lang['AdminMain.edit.text_date_added'] = 'Date Created:';
+$lang['AdminMain.edit.text_registration_date'] = 'Date Registered:';
 $lang['AdminMain.edit.text_date_renews'] = 'Date Renews:';
 $lang['AdminMain.edit.text_date_expires'] = 'Date Expires:';
 $lang['AdminMain.edit.text_never'] = 'Never';

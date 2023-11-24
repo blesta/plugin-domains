@@ -48,6 +48,7 @@ class DomainsDomains extends DomainsModel
             $module = $this->ModuleManager->initModule($service->package->module_id);
             $service->registrar = $module->getName();
             $service->renewal_price = $this->Services->getRenewalPrice($service->id);
+            $service->registration_date = $this->getRegistrationDate($service->id);
             $service->expiration_date = $this->getExpirationDate($service->id);
         }
 
@@ -97,6 +98,7 @@ class DomainsDomains extends DomainsModel
             $module = $this->ModuleManager->initModule($service->package->module_id);
             $service->registrar = $module->getName();
             $service->renewal_price = $this->Services->getRenewalPrice($service->id);
+            $service->registration_date = $this->getRegistrationDate($service->id);
             $service->expiration_date = $this->getExpirationDate($service->id);
         }
 
@@ -336,6 +338,35 @@ class DomainsDomains extends DomainsModel
     }
 
     /**
+     * Gets the domain registration date
+     *
+     * @param int $service_id The id of the service where the domain belongs
+     * @param string $format The format to return the registration date in
+     * @return string The domain registration date in UTC time in the given format
+     * @see Services::get()
+     */
+    public function getRegistrationDate($service_id, $format = 'Y-m-d H:i:s')
+    {
+        if (is_null($format)) {
+            $format = 'Y-m-d H:i:s';
+        }
+
+        // Get the registration date from the registrar
+        if (($service = $this->Services->get($service_id))) {
+            $registration_date = $this->ModuleManager->moduleRpc(
+                $service->package->module_id,
+                'getRegistrationDate',
+                [$service, $format],
+                $service->module_row_id ?? null
+            );
+
+            return $registration_date;
+        }
+
+        return null;
+    }
+
+    /**
      * Gets the domain expiration date
      *
      * @param int $service_id The id of the service where the domain belongs
@@ -349,7 +380,7 @@ class DomainsDomains extends DomainsModel
             $format = 'Y-m-d H:i:s';
         }
 
-        if (is_numeric($service_id)) {
+        if (($service = $this->Services->get($service_id))) {
             // Check if there is an expiration date locally saved
             $domain = $this->Record->select()
                 ->from('domains_domains')
