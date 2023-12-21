@@ -549,13 +549,6 @@ class AdminMain extends DomainsController
         $service->nameservers = $this->DomainsDomains->getNameservers($service->id);
         $vars = $service;
 
-        // Get the domains package group
-        $domains_package_group = $this->Companies->getSetting(
-            Configure::get('Blesta.company_id'),
-            'domains_package_group'
-        );
-        $domains_package_group = $domains_package_group->value ?? 0;
-
         // Get package from the service
         $package = $service->package ?? (object) [];
         $package->groups = $this->Form->collapseObjectArray(
@@ -565,7 +558,7 @@ class AdminMain extends DomainsController
         );
 
         // Validate the provided service is a domain
-        if (!array_key_exists($domains_package_group, $package->groups)) {
+        if (!($this->ModuleManager->initModule($package->module_id) instanceof RegistrarModule)) {
             $this->redirect($this->base_uri . 'clients/view/' . $client_id . '/');
         }
 
