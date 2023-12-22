@@ -1718,9 +1718,14 @@ class DomainsTlds extends DomainsModel
      */
     public function import(array $tlds, int $module_id, int $company_id = null, array $filters = []) : bool
     {
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+
+        // Load required models
         Loader::loadModels($this, ['ModuleManager', 'Companies']);
 
-        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+        // Load TLD sync utility
+        Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
+        $tld_sync = new TldSync();
 
         // Fetch company default currency
         $default_currency = $this->Companies->getSetting('default_currency', $company_id);
@@ -1771,17 +1776,24 @@ class DomainsTlds extends DomainsModel
                 );
                 $this->updatePricings($tld, $pricings, $company_id, $filters);
 
-                if (($errors = $this->errors())) {
-                    return false;
+                // Sync the pricing with the registrar
+                try {
+                    $tld_sync->synchronizePrices(
+                        [$tld],
+                        $company_id,
+                        array_merge($filters, ['module_id' => $module_id])
+                    );
+                } catch (Throwable $e) {
+                    $this->Input->setErrors(['exception' => [$tld => $e->getMessage()]]);
+                    $this->delete($tld, $company_id);
+
+                    continue;
                 }
             }
 
-            // Sync TLD pricing
-            Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
-            $sync_utility = new TldSync();
-            $sync_utility->synchronizePrices($tlds, $company_id, array_merge($filters, ['module_id' => $module_id]));
-
-            return true;
+            if (!($errors = $this->errors())) {
+                return true;
+            }
         }
 
         return false;
