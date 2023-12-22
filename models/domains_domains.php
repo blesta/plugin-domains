@@ -408,6 +408,9 @@ class DomainsDomains extends DomainsModel
         if (!isset($this->DomainsTlds)) {
             Loader::loadModels($this, ['Domains.DomainsTlds']);
         }
+        if (!isset($this->ModuleManager)) {
+            Loader::loadModels($this, ['ModuleManager']);
+        }
 
         // Remove www from domain
         $domain = preg_replace('/^www\./i', '', $domain);
@@ -449,6 +452,9 @@ class DomainsDomains extends DomainsModel
     {
         if (!isset($this->DomainsTlds)) {
             Loader::loadModels($this, ['Domains.DomainsTlds']);
+        }
+        if (!isset($this->ModuleManager)) {
+            Loader::loadModels($this, ['ModuleManager']);
         }
 
         // Remove www from domain
