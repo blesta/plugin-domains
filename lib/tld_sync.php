@@ -107,16 +107,25 @@ class TldSync
                     $this->tld_settings['domains_sync_renewal_markup'] ?? 0,
                     $tld_rounding
                 );
-                $prices['transfer'] = $this->markup(
-                    $prices['transfer'],
-                    $this->tld_settings['domains_sync_transfer_markup'] ?? 0,
-                    $tld_rounding
-                );
+
+                // Registrar only supports transfers up to one year
+                if ($year == 1) {
+                    $prices['transfer'] = $this->markup(
+                        $prices['transfer'],
+                        $this->tld_settings['domains_sync_transfer_markup'] ?? 0,
+                        $tld_rounding
+                    );
+                    $prices['enabled_transfer'] = true;
+                } else {
+                    $prices['transfer'] = null;
+                    $prices['enabled_transfer'] = false;
+                }
 
                 $formatted_pricing[$year][$currency] = [
                     'price' => $prices['register'],
                     'price_renews' => $prices['renew'],
-                    'price_transfer' => $prices['transfer']
+                    'price_transfer' => $prices['transfer'],
+                    'enabled_transfer' => $prices['enabled_transfer']
                 ];
             }
         }
