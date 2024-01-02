@@ -1767,7 +1767,15 @@ class DomainsTlds extends DomainsModel
                 $pricings = array_fill(
                     1,
                     10,
-                    [$default_currency => ['price' => 0, 'price_renews' => 0, 'price_transfer' => 0, 'enabled' => 1]]
+                    [
+                        $default_currency => [
+                            'price' => 0,
+                            'price_renews' => 0,
+                            'price_transfer' => null,
+                            'enabled_transfer' => 0,
+                            'enabled' => 1
+                        ]
+                    ]
                 );
                 $this->updatePricings($tld, $pricings, $company_id, $filters);
 
