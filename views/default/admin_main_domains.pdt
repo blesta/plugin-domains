@@ -116,7 +116,7 @@
                     $show_parent = (($status ?? null) != 'canceled') && !empty($domains[$i]->parent_service_id);
                     if ($show_parent) {
                     ?>
-                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/edit/' . ($client->id ?? null) . '/' . ($domains[$i]->parent_service_id ?? null) . '/');?>"><?php $this->_('AdminMain.index.option_parent');?></a>,
+                    <a href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . ($client->id ?? null) . '/' . ($domains[$i]->parent_service_id ?? null) . '/');?>"><?php $this->_('AdminMain.index.option_parent');?></a>,
                     <?php
                     }
 
