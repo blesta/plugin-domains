@@ -1491,6 +1491,30 @@ class DomainsTlds extends DomainsModel
             where('domains_tlds.company_id', '=', $company_id)->
             delete(['domains_packages.*', 'domains_tlds.*']);
     }
+    
+    /**
+     * Permanently deletes packages for the given TLD.  NOTE: this triggers an event that will delete the tld itself
+     *
+     * @param int $tld The identifier of the TLD to delete
+     * @param int $company_id The ID of the company for which to filter by
+     */
+    public function deletePackages($tld, $company_id = null)
+    {
+        Loader::loadComponents($this, ['Packages']);
+        $packages = $this->Record->select('domains_packages.package_id')->
+            from('domains_tlds')->
+            leftJoin('domains_packages', 'domains_packages.tld_id', '=', 'domains_tlds.id', false)->
+            where('domains_tlds.tld', '=', $tld)->
+            where('domains_tlds.company_id', '=', $company_id)->
+            fetchAll();
+        
+        foreach ($packages as $package) {
+            $this->Packages->delete($package->package_id);
+        }
+        
+        // Call delete just in case there where no packages to delete 
+        $this->delete($tld, $company_id);
+    }
 
     /**
      * Enables the given TLD
@@ -1785,7 +1809,7 @@ class DomainsTlds extends DomainsModel
                     );
                 } catch (Throwable $e) {
                     $this->Input->setErrors(['exception' => [$tld => $e->getMessage()]]);
-                    $this->delete($tld, $company_id);
+                    $this->deletePackages($tld, $company_id);
 
                     continue;
                 }
