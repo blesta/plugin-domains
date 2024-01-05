@@ -94,7 +94,7 @@ if (!empty($domains)) {
                 $show_manage = ($status ?? null) != 'canceled';
                 if ($show_manage) {
                 ?>
-                <a class="manage" href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . (isset($domain->client_id) ? $domain->client_id : null) . '/' . (isset($domain->id) ? $domain->id : null) . '/');?>"><?php $this->_('AdminDomains.browse.option_manage');?></a>
+                <a class="manage" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/edit/' . (isset($domain->client_id) ? $domain->client_id : null) . '/' . (isset($domain->id) ? $domain->id : null) . '/');?>"><?php $this->_('AdminDomains.browse.option_manage');?></a>
                 <?php
                 }
 

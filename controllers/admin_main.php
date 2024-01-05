@@ -197,8 +197,8 @@ class AdminMain extends DomainsController
         // Get fields from session, if available
         $configuration_fields = $this->Session->read('domain_configuration_fields');
         if (!empty($configuration_fields)) {
-            $this->post = $configuration_fields;
-            $this->Session->clear('domain_configuration_fields');
+            $this->post = (array) $configuration_fields;
+            //$this->Session->clear('domain_configuration_fields');
         }
 
         // Set action
@@ -274,7 +274,14 @@ class AdminMain extends DomainsController
             )
         );
     }
-    
+
+    /**
+     * Fetch a list of pricing options
+     *
+     * @param stdClass $package An object representing the package
+     * @param string $action The domain action to fetch the pricing
+     * @return array A list of available years for the given package
+     */
     private function formatPricingOptions($package, $action = 'register')
     {
         $years = [];
@@ -720,7 +727,7 @@ class AdminMain extends DomainsController
         }
 
         // Get module fields
-        $vars = (object) $this->post;
+        $vars = (object) $_POST ?? $this->post;
         $fields = $this->ModuleManager->moduleRpc($module->id, $fields_type, [$package, $vars]);
 
         // Add module row dropdown
