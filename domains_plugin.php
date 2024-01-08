@@ -143,7 +143,7 @@ class DomainsPlugin extends Plugin
         $this->upgrade1_5_0();
         $this->upgrade1_6_2();
         $this->upgrade1_8_0();
-        $this->upgrade1_11_0();
+        $this->upgrade1_12_0();
 
         // Set the default renewal days before expiration
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
@@ -203,9 +203,9 @@ class DomainsPlugin extends Plugin
                 $this->upgrade1_8_0();
             }
 
-            // Upgrade to 1.11.0
-            if (version_compare($current_version, '1.11.0', '<')) {
-                $this->upgrade1_11_0();
+            // Upgrade to 1.12.0
+            if (version_compare($current_version, '1.12.0', '<')) {
+                $this->upgrade1_12_0();
             }
         }
     }
@@ -440,7 +440,7 @@ class DomainsPlugin extends Plugin
     /**
      * Update to v1.11.0
      */
-    private function upgrade1_11_0()
+    private function upgrade1_12_0()
     {
         Loader::loadModels($this, ['Companies', 'DataFeeds']);
 

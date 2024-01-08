@@ -243,13 +243,17 @@ class DomainsFeed extends AbstractDataFeed
         }
 
         // Get clients count
-        $domains = $this->DomainsDomains->getListCount(['status' => $vars['status']]);
+        $domains = $this->DomainsDomains->getAll(
+            ['status' => $vars['status'] ?? 'active'],
+            ['id' => 'asc'],
+            [['column' => 'package_names.name', 'value' => explode(',', $vars['tlds'] ?? ''), 'operator' => 'in']]
+        );
         if (($errors = $this->DomainsDomains->errors())) {
             $this->setErrors($errors);
 
             return;
         }
 
-        return $domains ?? 0;
+        return count($domains ?? []);
     }
 }
