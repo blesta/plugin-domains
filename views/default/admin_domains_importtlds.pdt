@@ -101,6 +101,9 @@
                 </div>
 
                 <div class="button_row">
+                    <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/importtlds/';?>" class="btn btn-default float-right" id="restart_button" style="display: none;">
+                        <i class="fas fa-redo-alt"></i> <?php $this->_('AdminDomains.import.field_restart');?>
+                    </a>
                     <?php
                     $this->Form->fieldSubmit('save', $this->_('AdminDomains.import.field_import', true), ['class' => 'btn btn-primary float-right', 'id' => 'import_tlds_button']);
                     ?>
@@ -192,6 +195,10 @@
                             "value": '1',
                             "class": 'mb-1'
                         });
+                        var tld_html = $('<div>', {
+                            class: 'tld-box'
+                        });
+
                         if (tld_object.disabled) {
                             checkbox = $('<input>', {
                                 "type": 'checkbox',
@@ -202,11 +209,10 @@
                                 "class": 'mb-1',
                                 "disabled": 'disabled'
                             });
+                            tld_html = $('<div>', {
+                                class: 'tld-box text-black-50'
+                            });
                         }
-
-                        var tld_html = $('<div>', {
-                            class: 'tld-box'
-                        });
                         $(checkbox).appendTo(tld_html);
                         $($('<label>', {
                             for: 'tld_' + tld,
@@ -264,7 +270,8 @@
             $(this).parent().remove();
         });
 
-        $(".tld-box").each(function() {
+        var total_tlds = $('.tld-box').length;
+        $(".tld-box").each(function(i) {
             if ($(this).find('input[type="checkbox"]').is(":checked")) {
                 var tld_box = $(this);
 
@@ -293,6 +300,10 @@
                             if (response.hasOwnProperty('error')) {
                                 $(".message_box").html(response.error);
                             }
+                        }
+
+                        if (i === (total_tlds - 1)) {
+                            $('#restart_button').show();
                         }
                     },
                     function(error) {
