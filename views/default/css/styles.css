@@ -1,3 +1,28 @@
+.whois {
+    width: 100%;
+    margin: 1em auto 0 auto;
+    padding: 2em;
+    box-sizing: border-box;
+}
+
+.whois input[type="text"] {
+    width: 100% !important;
+    padding: 10px;
+    height: 35px !important;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 576px) {
+    .whois input[type="text"] {
+        max-width: 100% !important;
+    }
+}
+
+.whois .spotlight_tld {
+    display: inline-block;
+}
+
 .table td.small {
     width: 130px;
 }

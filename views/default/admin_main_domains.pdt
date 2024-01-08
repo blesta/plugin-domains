@@ -14,7 +14,7 @@
                 'name' => '',
                 'attributes' => [
                     'title' => $this->_('AdminMain.index.categorylink_newservice', true),
-                    'href' => $this->base_uri . 'clients/addservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/'
+                    'href' => $this->base_uri . 'plugin/domains/admin_main/add/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/'
                 ]
             ]
         ];
@@ -124,7 +124,7 @@
                     $show_manage = ($status ?? null) != 'canceled';
                     if ($show_manage) {
                     ?>
-                    <a href="<?php echo $this->base_uri . 'clients/editservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null) . '/';?>" class="manage"><?php $this->_('AdminMain.index.option_manage');?></a><?php
+                    <a href="<?php echo $this->base_uri . 'plugin/domains/admin_main/edit/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null) . '/';?>" class="manage"><?php $this->_('AdminMain.index.option_manage');?></a><?php
                     }
 
                     if (in_array(($status ?? null), ['pending', 'canceled'])) {
