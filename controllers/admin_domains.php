@@ -434,7 +434,13 @@ class AdminDomains extends DomainsController
                     );
 
                     if (($errors = $this->DomainsTlds->errors())) {
-                        $response['error'] = $this->setMessage('error', $errors, true, null, false);
+                        $response['error'] = $this->setMessage(
+                            'error',
+                            Language::_('AdminDomains.!error.tlds_imported', true),
+                            true,
+                            null,
+                            false
+                        );
                     } else {
                         $response['message'] = $this->setMessage(
                             'message',
