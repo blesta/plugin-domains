@@ -31,7 +31,7 @@ class DomainsDomains extends DomainsModel
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
-    public function getAll(array $filters = [], array $order = ['id' => 'asc'])
+    public function getAll(array $filters = [], array $order = ['id' => 'asc'], array $formatted_filters = [])
     {
         Loader::loadModels($this, ['Services', 'Companies', 'ModuleManager']);
 
@@ -41,7 +41,7 @@ class DomainsDomains extends DomainsModel
         $package_group_id = $this->Companies->getSetting($filters['company_id'], 'domains_package_group');
         $filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
 
-        $services = $this->Services->getAll($order, true, $filters);
+        $services = $this->Services->getAll($order, true, $filters, $formatted_filters);
 
         // Add domain fields
         foreach ($services as &$service) {
