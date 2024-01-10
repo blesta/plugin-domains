@@ -201,6 +201,11 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.8.0', '<')) {
                 $this->upgrade1_8_0();
             }
+
+            // Upgrade to 1.12.0
+            if (version_compare($current_version, '1.12.0', '<')) {
+                $this->upgrade1_12_0();
+            }
         }
     }
 
@@ -566,6 +571,17 @@ class DomainsPlugin extends Plugin
             unset($default);
             unset($vars);
         }
+    }
+
+    /**
+     * Update to v1.12.0
+     */
+    private function upgrade1_12_0()
+    {
+        // Add a 'automatic_transition' column to the 'support_departments' table
+        $this->Record->query(
+            'ALTER TABLE `domains_domains` ADD `registration_date` DATETIME NULL DEFAULT NULL AFTER `service_id`;'
+        );
     }
 
     /**
@@ -1178,6 +1194,14 @@ class DomainsPlugin extends Plugin
                 $modules[$module_id] = $this->ModuleManager->initModule($module_id);
             }
 
+            // Fetch the domain registration date from the registrar, and update if different than what is stored locally
+            if (($new_registration_date = $modules[$module_id]->getRegistrationDate($service, 'Y-m-d H:i:s'))
+                && strtotime($service->registration_date) !== strtotime($new_registration_date)
+            ) {
+                $this->DomainsDomains->setRegistrationDate($service->id, $new_registration_date);
+                $service->registration_date = $new_registration_date;
+            }
+
             // Fetch the domain expiration date from the registrar, and update if different than what is stored locally
             if (($new_expiration_date = $modules[$module_id]->getExpirationDate($service, 'Y-m-d H:i:s'))
                 && strtotime($service->expiration_date) !== strtotime($new_expiration_date)
@@ -1655,6 +1679,15 @@ class DomainsPlugin extends Plugin
         ) {
             return;
         }
+
+        // Get the domain registration date for this service
+        $registration_date = $this->DomainsDomains->getRegistrationDate($params['service_id']);
+        if (!$registration_date) {
+            return;
+        }
+
+        // Save the registration date locally
+        $this->DomainsDomains->setRegistrationDate($params['service_id'], $registration_date);
 
         // Get the domain expiration date for this service
         $expiration_date = $this->DomainsDomains->getExpirationDate($params['service_id']);
