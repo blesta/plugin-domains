@@ -2,8 +2,12 @@
     <?php
     $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id ?? null) . '/confirmation/', ['id' => 'add_configuration']);
 
+    $this->Form->fieldHidden('domain', $vars->domain ?? '');
     if (($action ?? 'register') == 'transfer') {
         $this->Form->fieldHidden('transfer', '1');
+    }
+    if (($action ?? 'register') == 'register') {
+        $this->Form->fieldHidden('register', '1');
     }
     ?>
     <div class="title_row first">
