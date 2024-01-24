@@ -546,6 +546,7 @@ class AdminMain extends DomainsController
         }
 
         $service->expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
+        $service->registration_date = $this->DomainsDomains->getRegistrationDate($service->id);
         $service->nameservers = $this->DomainsDomains->getNameservers($service->id);
         $vars = $service;
 
