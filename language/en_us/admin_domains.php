@@ -33,6 +33,7 @@ $lang['AdminDomains.browse.heading_client'] = 'Client';
 $lang['AdminDomains.browse.heading_registrar'] = 'Registrar';
 $lang['AdminDomains.browse.heading_price'] = 'Price';
 $lang['AdminDomains.browse.heading_registration'] = 'Registration Date';
+$lang['AdminDomains.browse.heading_added'] = 'Added Date';
 $lang['AdminDomains.browse.heading_renewal'] = 'Renewal Date';
 $lang['AdminDomains.browse.heading_expiration'] = 'Expiration Date';
 $lang['AdminDomains.browse.heading_renew'] = 'Auto Renewal';
