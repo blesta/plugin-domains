@@ -201,9 +201,9 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.8.0', '<')) {
                 $this->upgrade1_8_0();
             }
-            
+
             // Upgrade to 1.11.4
-            if (version_compare($current_version, '1.11.5', '<')) {
+            if (version_compare($current_version, '1.11.4', '<')) {
                 $this->upgrade1_11_4();
             }
         }
@@ -572,7 +572,7 @@ class DomainsPlugin extends Plugin
             unset($vars);
         }
     }
-    
+
     /**
      * Update to v1.11.4
      */
