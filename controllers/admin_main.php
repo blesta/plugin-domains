@@ -467,6 +467,8 @@ class AdminMain extends DomainsController
 
             // Add service
             try {
+                $package_group_id = $this->Companies->getSetting(Configure::get('Blesta.company_id'), 'domains_package_group');
+                $params['package_group_id'] = $package_group_id->value;
                 $service_id = $this->Services->add($params, null, $notify);
 
                 $transfers = [];
