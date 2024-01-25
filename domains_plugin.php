@@ -203,6 +203,11 @@ class DomainsPlugin extends Plugin
                 $this->upgrade1_8_0();
             }
 
+            // Upgrade to 1.11.4
+            if (version_compare($current_version, '1.11.4', '<')) {
+                $this->upgrade1_11_4();
+            }
+
             // Upgrade to 1.12.0
             if (version_compare($current_version, '1.12.0', '<')) {
                 $this->upgrade1_12_0();
@@ -438,29 +443,6 @@ class DomainsPlugin extends Plugin
     }
 
     /**
-     * Update to v1.11.0
-     */
-    private function upgrade1_12_0()
-    {
-        Loader::loadModels($this, ['Companies', 'DataFeeds']);
-
-        // Add domain/count data feed
-        try {
-            $companies = $this->Companies->getAll();
-            foreach ($companies as $company) {
-                $this->DataFeeds->addEndpoint([
-                    'company_id' => $company->id,
-                    'feed' => 'domain',
-                    'endpoint' => 'count',
-                    'enabled' => 0
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Nothing to do
-        }
-    }
-
-    /**
      * Adds default terms for domain configurable options
      *
      * @param int $option_group_id The ID of the package group
@@ -598,14 +580,52 @@ class DomainsPlugin extends Plugin
     }
 
     /**
+     * Update to v1.11.4
+     */
+    private function upgrade1_11_4()
+    {
+        Loader::loadModels($this, ['Companies']);
+        Loader::loadComponents($this, ['Record']);
+        $companies = $this->Companies->getAll();
+        foreach ($companies as $company) {
+            $package_group_id_setting = $this->Companies->getSetting($company->id, 'domains_package_group');
+            $package_group_id = $package_group_id_setting->value;
+            $this->Record->
+                innerJoin('package_pricing', 'package_pricing.id', '=', 'services.pricing_id', false)->
+                innerJoin('packages', 'packages.id', '=', 'package_pricing.package_id', false)->
+                innerJoin('package_group', 'package_group.package_id', '=', 'package_pricing.package_id', false)->
+                where('package_group.package_group_id', '=', $package_group_id)->
+                where('services.package_group_id', '=', null)->
+                update('services', ['services.package_group_id' => $package_group_id]);
+        }
+    }
+
+    /**
      * Update to v1.12.0
      */
     private function upgrade1_12_0()
     {
+        Loader::loadModels($this, ['Companies', 'DataFeeds']);
+
         // Add a 'automatic_transition' column to the 'support_departments' table
         $this->Record->query(
             'ALTER TABLE `domains_domains` ADD `registration_date` DATETIME NULL DEFAULT NULL AFTER `service_id`;'
         );
+
+        // Add domain/count data feed
+        try {
+            $companies = $this->Companies->getAll();
+            foreach ($companies as $company) {
+                $this->DataFeeds->addEndpoint([
+                    'company_id' => $company->id,
+                    'feed' => 'domain',
+                    'endpoint' => 'count',
+                    'enabled' => 0
+                ]);
+            }
+        } catch (Throwable $e) {
+            // Nothing to do
+        }
     }
 
     /**
