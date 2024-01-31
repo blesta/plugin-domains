@@ -316,6 +316,18 @@ class DomainsTlds extends DomainsModel
                 ['package_id' => $vars['package_id'], 'tld_id' => $this->lastInsertId()]
             );
 
+            // Set the order as the very last package
+            $domains_package_group = $this->Companies->getSetting($vars['company_id'], 'domains_package_group');
+            $package_group_id = $domains_package_group->value ?? null;
+            $last_package = $this->Record->select()->from('package_group')
+                ->where('package_group_id', '=', $package_group_id)
+                ->order(['package_group.order' => 'DESC'])
+                ->fetch();
+
+            $this->Record->where('package_id', '=', $vars['package_id'])
+                ->where('package_group_id', '=', $package_group_id)
+                ->update('package_group', ['order' => $last_package->order + 1]);
+
             // Set the package configurable options and meta data
             $this->assignFeatures($vars['package_id'], $vars);
 
