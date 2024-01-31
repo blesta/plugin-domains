@@ -61,6 +61,8 @@ class DomainsFeed extends AbstractDataFeed
         switch ($endpoint) {
             case 'pricing':
                 return $this->pricingEndpoint($vars);
+            case 'count':
+                return $this->countEndpoint($vars);
             default:
                 return Language::_('DomainsFeed.!error.invalid_endpoint', true);
         }
@@ -91,12 +93,12 @@ class DomainsFeed extends AbstractDataFeed
         $fields->setHtml('
             <div class="title_row"><h3>' . Language::_('DomainsFeed.getOptionFields.title_row_example_code', true) . '</h3></div>
             <div class="pad">
-                <small>' . Language::_('DomainsFeed.getOptionFields.example_code_table', true) . '</small>
+                <small>' . Language::_('DomainsFeed.getOptionFields.example_code_pricing', true) . '</small>
                 <pre class="rounded bg-light text-secondary border border-secondary p-2 m-0 my-1">'
                     . '&lt;script src="' . $base_url . 'feed/domain/pricing/?currency=USD&style=bootstrap&term=1,2,3,4,5,10"&gt;&lt;/script&gt;'
                 . '</pre>
-                <h4><a id="domain_params" href="#" class="show_content"><i class="fas fa-chevron-down"></i> ' . Language::_('DomainsFeed.getOptionFields.params', true) . '</a></h4>
-                <div id="domain_params_content" class="pad_top hidden">
+                <h4 class="mb-1"><a id="domain_pricing_params" href="#" class="show_content"><i class="fas fa-chevron-down"></i> ' . Language::_('DomainsFeed.getOptionFields.params', true) . '</a></h4>
+                <div id="domain_pricing_params_content" class="pad_top mb-2 hidden">
                     <div>
                         <table class="table table-striped">
                             <thead>
@@ -107,16 +109,43 @@ class DomainsFeed extends AbstractDataFeed
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>' . Language::_('DomainsFeed.getOptionFields.param_currency', true) . '</td>
+                                    <td>currency</td>
                                     <td>' . Language::_('DomainsFeed.getOptionFields.param_currency_description', true) . '</td>
                                 </tr>
                                 <tr>
-                                    <td>' . Language::_('DomainsFeed.getOptionFields.param_style', true) . '</td>
+                                    <td>style</td>
                                     <td>' . Language::_('DomainsFeed.getOptionFields.param_style_description', true) . '</td>
                                 </tr>
                                 <tr>
-                                    <td>' . Language::_('DomainsFeed.getOptionFields.param_term', true) . '</td>
+                                    <td>term</td>
                                     <td>' . Language::_('DomainsFeed.getOptionFields.param_term_description', true) . '</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <small>' . Language::_('DomainsFeed.getOptionFields.example_code_count', true) . '</small>
+                <pre class="rounded bg-light text-secondary border border-secondary p-2 m-0 my-1">'
+                    . '&lt;script src="' . $base_url . 'feed/domain/count/?status=active&tlds=com,org"&gt;&lt;/script&gt;'
+                . '</pre>
+                <h4 class="mb-1"><a id="domain_count_params" href="#" class="show_content"><i class="fas fa-chevron-down"></i> ' . Language::_('DomainsFeed.getOptionFields.params', true) . '</a></h4>
+                <div id="domain_count_params_content" class="pad_top mb-2 hidden">
+                    <div>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr class="heading_row">
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.header_name', true) . '</td>
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.header_description', true) . '</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>status</td>
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.param_status_description', true) . '</td>
+                                </tr>
+                                <tr>
+                                    <td>tlds</td>
+                                    <td>' . Language::_('DomainsFeed.getOptionFields.param_tlds_description', true) . '</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -124,7 +153,8 @@ class DomainsFeed extends AbstractDataFeed
                 </div>
                 <script>
                     $(document).ready(function () {
-                        $(this).blestaBindToggleEvent("#domain_params", "#domain_params_content");
+                        $(this).blestaBindToggleEvent("#domain_pricing_params", "#domain_pricing_params_content");
+                        $(this).blestaBindToggleEvent("#domain_count_params", "#domain_count_params_content");
                     });
                 </script>
             </div>
@@ -194,5 +224,36 @@ class DomainsFeed extends AbstractDataFeed
         }
 
         return Language::_('DomainsFeed.!error.invalid_style', true);
+    }
+
+    /**
+     * Gets the number of domains of a particular status
+     *
+     * @param array $vars An array containing the following items:
+     *
+     *  - status The status type of the clients to fetch
+     *   ('active', 'canceled', 'pending', 'suspended', 'in_review', default null for all)
+     */
+    private function countEndpoint(array $vars)
+    {
+        Loader::loadModels($this, ['Domains.DomainsDomains']);
+
+        if (!isset($vars['status'])) {
+            $vars['status'] = 'all';
+        }
+
+        // Get clients count
+        $domains = $this->DomainsDomains->getAll(
+            ['status' => $vars['status'] ?? 'active'],
+            ['id' => 'asc'],
+            [['column' => 'package_names.name', 'value' => explode(',', $vars['tlds'] ?? ''), 'operator' => 'in']]
+        );
+        if (($errors = $this->DomainsDomains->errors())) {
+            $this->setErrors($errors);
+
+            return;
+        }
+
+        return count($domains ?? []);
     }
 }

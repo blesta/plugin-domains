@@ -1463,6 +1463,30 @@ class DomainsTlds extends DomainsModel
             where('domains_tlds.company_id', '=', $company_id)->
             delete(['domains_packages.*', 'domains_tlds.*']);
     }
+    
+    /**
+     * Permanently deletes packages for the given TLD.  NOTE: this triggers an event that will delete the tld itself
+     *
+     * @param int $tld The identifier of the TLD to delete
+     * @param int $company_id The ID of the company for which to filter by
+     */
+    public function deletePackages($tld, $company_id = null)
+    {
+        Loader::loadComponents($this, ['Packages']);
+        $packages = $this->Record->select('domains_packages.package_id')->
+            from('domains_tlds')->
+            leftJoin('domains_packages', 'domains_packages.tld_id', '=', 'domains_tlds.id', false)->
+            where('domains_tlds.tld', '=', $tld)->
+            where('domains_tlds.company_id', '=', $company_id)->
+            fetchAll();
+        
+        foreach ($packages as $package) {
+            $this->Packages->delete($package->package_id);
+        }
+        
+        // Call delete just in case there where no packages to delete 
+        $this->delete($tld, $company_id);
+    }
 
     /**
      * Enables the given TLD
@@ -1690,9 +1714,14 @@ class DomainsTlds extends DomainsModel
      */
     public function import(array $tlds, int $module_id, int $company_id = null, array $filters = []) : bool
     {
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+
+        // Load required models
         Loader::loadModels($this, ['ModuleManager', 'Companies']);
 
-        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+        // Load TLD sync utility
+        Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
+        $tld_sync = new TldSync();
 
         // Fetch company default currency
         $default_currency = $this->Companies->getSetting('default_currency', $company_id);
@@ -1739,21 +1768,36 @@ class DomainsTlds extends DomainsModel
                 $pricings = array_fill(
                     1,
                     10,
-                    [$default_currency => ['price' => 0, 'price_renews' => 0, 'price_transfer' => 0, 'enabled' => 1]]
+                    [
+                        $default_currency => [
+                            'price' => 0,
+                            'price_renews' => 0,
+                            'price_transfer' => null,
+                            'enabled_transfer' => 0,
+                            'enabled' => 1
+                        ]
+                    ]
                 );
                 $this->updatePricings($tld, $pricings, $company_id, $filters);
 
-                if (($errors = $this->errors())) {
-                    return false;
+                // Sync the pricing with the registrar
+                try {
+                    $tld_sync->synchronizePrices(
+                        [$tld],
+                        $company_id,
+                        array_merge($filters, ['module_id' => $module_id])
+                    );
+                } catch (Throwable $e) {
+                    $this->Input->setErrors(['exception' => [$tld => $e->getMessage()]]);
+                    $this->deletePackages($tld, $company_id);
+
+                    continue;
                 }
             }
 
-            // Sync TLD pricing
-            Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
-            $sync_utility = new TldSync();
-            $sync_utility->synchronizePrices($tlds, $company_id, array_merge($filters, ['module_id' => $module_id]));
-
-            return true;
+            if (!($errors = $this->errors())) {
+                return true;
+            }
         }
 
         return false;

@@ -203,6 +203,11 @@ class DomainsPlugin extends Plugin
                 $this->upgrade1_8_0();
             }
 
+            // Upgrade to 1.11.4
+            if (version_compare($current_version, '1.11.4', '<')) {
+                $this->upgrade1_11_4();
+            }
+
             // Upgrade to 1.12.0
             if (version_compare($current_version, '1.12.0', '<')) {
                 $this->upgrade1_12_0();
@@ -575,10 +580,35 @@ class DomainsPlugin extends Plugin
     }
 
     /**
+     * Update to v1.11.4
+     */
+    private function upgrade1_11_4()
+    {
+        Loader::loadModels($this, ['Companies']);
+        Loader::loadComponents($this, ['Record']);
+
+        $companies = $this->Companies->getAll();
+        foreach ($companies as $company) {
+            $package_group_id_setting = $this->Companies->getSetting($company->id, 'domains_package_group');
+            $package_group_id = $package_group_id_setting->value;
+            $this->Record->
+                innerJoin('package_pricing', 'package_pricing.id', '=', 'services.pricing_id', false)->
+                innerJoin('packages', 'packages.id', '=', 'package_pricing.package_id', false)->
+                innerJoin('package_group', 'package_group.package_id', '=', 'package_pricing.package_id', false)->
+                where('package_group.package_group_id', '=', $package_group_id)->
+                where('services.package_group_id', '=', null)->
+                update('services', ['services.package_group_id' => $package_group_id]);
+        }
+    }
+
+    /**
      * Update to v1.12.0
      */
     private function upgrade1_12_0()
     {
+        Loader::loadModels($this, ['Companies', 'DataFeeds']);
+
+        // Set all domain packages type to domain
         $domain_packages = $this->Record->select(['domains_packages.package_id'])
             ->from('domains_packages')
             ->fetchAll();
@@ -594,6 +624,26 @@ class DomainsPlugin extends Plugin
             $this->Record->duplicate('package_meta.value', '=', $field['value'])
                 ->insert('package_meta', $field);
         }
+
+        // Add a 'registration_date' column to the 'domains_domains' table
+        $this->Record->query(
+            'ALTER TABLE `domains_domains` ADD `registration_date` DATETIME NULL DEFAULT NULL AFTER `service_id`;'
+        );
+
+        // Add domain/count data feed
+        try {
+            $companies = $this->Companies->getAll();
+            foreach ($companies as $company) {
+                $this->DataFeeds->addEndpoint([
+                    'company_id' => $company->id,
+                    'feed' => 'domain',
+                    'endpoint' => 'count',
+                    'enabled' => 0
+                ]);
+            }
+        } catch (Throwable $e) {
+            // Nothing to do
+        }
     }
 
     /**
@@ -602,7 +652,8 @@ class DomainsPlugin extends Plugin
      * @param stdClass $object The object to cast to a multi-dimensional array
      * @return array The array from the object
      */
-    private function castToArray($object) {
+    private function castToArray($object)
+    {
         if (is_object($object) || is_array($object)) {
             $array = (array) $object;
             foreach($array as &$item) {
@@ -1206,9 +1257,24 @@ class DomainsPlugin extends Plugin
                 $modules[$module_id] = $this->ModuleManager->initModule($module_id);
             }
 
+            // Fetch the domain registration date from the registrar, and update if different than what is stored locally
+            if (method_exists($modules[$module_id], 'getRegistrationDate')
+                && ($new_registration_date = $modules[$module_id]->getRegistrationDate($service, 'Y-m-d H:i:s'))
+                && (strtotime($service->registration_date) !== strtotime($new_registration_date)
+                    || !(($domain = $this->Record->select()->from('domains_domains')->where('service_id', '=', $service->id)->fetch())
+                        && $domain->registration_date !== null)
+                )
+            ) {
+                $this->DomainsDomains->setRegistrationDate($service->id, $new_registration_date);
+                $service->registration_date = $new_registration_date;
+            }
+
             // Fetch the domain expiration date from the registrar, and update if different than what is stored locally
             if (($new_expiration_date = $modules[$module_id]->getExpirationDate($service, 'Y-m-d H:i:s'))
-                && strtotime($service->expiration_date) !== strtotime($new_expiration_date)
+                && (strtotime($service->expiration_date) !== strtotime($new_expiration_date)
+                    || !(($domain = $this->Record->select()->from('domains_domains')->where('service_id', '=', $service->id)->fetch())
+                        && $domain->expiration_date !== null)
+                )
             ) {
                 $this->DomainsDomains->setExpirationDate($service->id, $new_expiration_date);
                 $service->expiration_date = $new_expiration_date;
@@ -1683,6 +1749,15 @@ class DomainsPlugin extends Plugin
         ) {
             return;
         }
+
+        // Get the domain registration date for this service
+        $registration_date = $this->DomainsDomains->getRegistrationDate($params['service_id']);
+        if (!$registration_date) {
+            return;
+        }
+
+        // Save the registration date locally
+        $this->DomainsDomains->setRegistrationDate($params['service_id'], $registration_date);
 
         // Get the domain expiration date for this service
         $expiration_date = $this->DomainsDomains->getExpirationDate($params['service_id']);

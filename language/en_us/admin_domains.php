@@ -22,6 +22,7 @@ $lang['AdminDomains.!success.tlds_imported'] = 'The TLDs were successfully impor
 
 $lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not valid.';
 $lang['AdminDomains.!error.tlds_bulk[action].valid'] = 'Invalid value for TLDs Bulk Action, must be "enable" or "disable".';
+$lang['AdminDomains.!error.tlds_imported'] = 'Not all TLDS could be imported due to an error.';
 
 $lang['AdminDomains.!warning.automatic_currency_conversion'] = 'You have an exchange rate set for this currency, so it\'s not necessary to define prices here. If no prices are defined for this currency, the currency will be converted automatically from %1$s. If you define a price here, it will be used instead.'; // %1$s is the default currency
 $lang['AdminDomains.!warning.price_sync_unsupported'] = 'This registrar module does not support price synchronization, TLDs will be imported without any pricing.';
@@ -33,6 +34,7 @@ $lang['AdminDomains.browse.heading_client'] = 'Client';
 $lang['AdminDomains.browse.heading_registrar'] = 'Registrar';
 $lang['AdminDomains.browse.heading_price'] = 'Price';
 $lang['AdminDomains.browse.heading_registration'] = 'Registration Date';
+$lang['AdminDomains.browse.heading_added'] = 'Added Date';
 $lang['AdminDomains.browse.heading_renewal'] = 'Renewal Date';
 $lang['AdminDomains.browse.heading_expiration'] = 'Expiration Date';
 $lang['AdminDomains.browse.heading_renew'] = 'Auto Renewal';
@@ -247,6 +249,7 @@ $lang['AdminDomains.import.title_terms'] = 'Terms';
 $lang['AdminDomains.import.title_tlds'] = 'TLDs';
 $lang['AdminDomains.import.field_module'] = 'Module';
 $lang['AdminDomains.import.field_import'] = 'Import TLDs';
+$lang['AdminDomains.import.field_restart'] = 'Start Over';
 $lang['AdminDomains.import.text_refresh'] = 'Refresh';
 $lang['AdminDomains.import.text_install_modules'] = 'Install Modules';
 $lang['AdminDomains.import.text_tld_settings'] = 'TLD pricing markups, round, etc., will be set based on the TLD Sync settings.';

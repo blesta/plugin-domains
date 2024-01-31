@@ -1,12 +1,14 @@
 
     <?php
-    $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id) . '/confirmation/', ['id' => 'add_configuration']);
+    $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id ?? null) . '/confirmation/', ['id' => 'add_configuration']);
 
+    $this->Form->fieldHidden('domain', $vars->domain ?? '');
     if (($action ?? 'register') == 'transfer') {
         $this->Form->fieldHidden('transfer', '1');
     }
-
-    $this->Form->fieldHidden('domain', $domain ?? $vars->domain ?? '');
+    if (($action ?? 'register') == 'register') {
+        $this->Form->fieldHidden('register', '1');
+    }
     ?>
     <div class="title_row first">
         <h3><?php echo $this->_('AdminMain.add.title_basic_options', true);?></h3>
@@ -62,11 +64,7 @@
         <h3><?php echo $this->_('AdminMain.add.title_registrar_options', true);?></h3>
     </div>
     <div class="pad">
-        <div id="module_fields">
-            <?php
-            $this->Form->fieldHidden('module_row', $vars->module_row ?? '');
-            ?>
-        </div>
+        <div id="module_fields"></div>
     </div>
 
     <div class="button_row">
@@ -90,12 +88,11 @@
 
         function updateModuleFields() {
             var module_id = $('#module').val();
-            var form_data = $('#add_configuration').serialize('serialize');
 
             $(this).blestaRequest(
                 "POST",
                 '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getmodulefields/');?>' + module_id + '/<?php echo $this->Html->safe($package->id ?? null);?>/',
-                form_data,
+                <?php echo json_encode($vars);?>,
                 function(response) {
                     $('#module_fields').html(response);
                 },

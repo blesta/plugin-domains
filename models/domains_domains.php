@@ -31,7 +31,7 @@ class DomainsDomains extends DomainsModel
      * @param array $order A key/value pair array of fields to order the results by
      * @return array An array of stdClass objects
      */
-    public function getAll(array $filters = [], array $order = ['id' => 'asc'])
+    public function getAll(array $filters = [], array $order = ['id' => 'asc'], array $formatted_filters = [])
     {
         Loader::loadModels($this, ['Services', 'Companies', 'ModuleManager']);
 
@@ -41,13 +41,14 @@ class DomainsDomains extends DomainsModel
         $package_group_id = $this->Companies->getSetting($filters['company_id'], 'domains_package_group');
         $filters['package_group_id'] = $package_group_id ? $package_group_id->value : null;
 
-        $services = $this->Services->getAll($order, true, $filters);
+        $services = $this->Services->getAll($order, true, $filters, $formatted_filters);
 
         // Add domain fields
         foreach ($services as &$service) {
             $module = $this->ModuleManager->initModule($service->package->module_id);
             $service->registrar = $module->getName();
             $service->renewal_price = $this->Services->getRenewalPrice($service->id);
+            $service->registration_date = $this->getRegistrationDate($service->id);
             $service->expiration_date = $this->getExpirationDate($service->id);
         }
 
@@ -97,6 +98,7 @@ class DomainsDomains extends DomainsModel
             $module = $this->ModuleManager->initModule($service->package->module_id);
             $service->registrar = $module->getName();
             $service->renewal_price = $this->Services->getRenewalPrice($service->id);
+            $service->registration_date = $this->getRegistrationDate($service->id);
             $service->expiration_date = $this->getExpirationDate($service->id);
         }
 
@@ -422,6 +424,66 @@ class DomainsDomains extends DomainsModel
     }
 
     /**
+     * Gets the domain registration date
+     *
+     * @param int $service_id The id of the service where the domain belongs
+     * @param string $format The format to return the registration date in
+     * @return string The domain registration date in UTC time in the given format
+     * @see Services::get()
+     */
+    public function getRegistrationDate($service_id, $format = 'Y-m-d H:i:s')
+    {
+        if (!isset($this->Services)) {
+            Loader::loadModels($this, ['Services']);
+        }
+
+        if (is_null($format)) {
+            $format = 'Y-m-d H:i:s';
+        }
+
+        if (($service = $this->Services->get($service_id))) {
+            // Check if there is a registration date locally saved
+            $domain = $this->Record->select()
+                ->from('domains_domains')
+                ->where('service_id', '=', $service_id)
+                ->fetch();
+            $registration_date = $domain->registration_date ?? null;
+
+            // Get the registration date from the registrar
+            if ($registration_date == null) {
+                if (!isset($this->ModuleManager)) {
+                    Loader::loadModels($this, ['ModuleManager']);
+                }
+
+                try {
+                    $registration_date = $this->ModuleManager->moduleRpc(
+                        $service->package->module_id,
+                        'getRegistrationDate',
+                        [$service, $format],
+                        $service->module_row_id ?? null
+                    );
+                } catch (\Throwable $e) {
+                    // Nothing to do
+                }
+            }
+
+            if ($registration_date) {
+                return $this->Date->format(
+                    $format,
+                    $registration_date
+                );
+            }
+
+            return $this->Date->format(
+                $format,
+                $service->date_added
+            );
+        }
+
+        return null;
+    }
+
+    /**
      * Gets the domain expiration date
      *
      * @param int $service_id The id of the service where the domain belongs
@@ -431,11 +493,15 @@ class DomainsDomains extends DomainsModel
      */
     public function getExpirationDate($service_id, $format = 'Y-m-d H:i:s')
     {
+        if (!isset($this->Services)) {
+            Loader::loadModels($this, ['Services']);
+        }
+
         if (is_null($format)) {
             $format = 'Y-m-d H:i:s';
         }
 
-        if (is_numeric($service_id)) {
+        if (($service = $this->Services->get($service_id))) {
             // Check if there is an expiration date locally saved
             $domain = $this->Record->select()
                 ->from('domains_domains')
@@ -443,21 +509,22 @@ class DomainsDomains extends DomainsModel
                 ->fetch();
             $expiration_date = $domain->expiration_date ?? null;
 
+            // Get the expiration date from the registrar
             if ($expiration_date == null) {
-                if (!isset($this->Services) || !isset($this->ModuleManager)) {
-                    Loader::loadModels($this, ['Services', 'ModuleManager']);
+                if (!isset($this->ModuleManager)) {
+                    Loader::loadModels($this, ['ModuleManager']);
                 }
 
-                // Get the expiration date from the registrar
-                $service = $this->Services->get($service_id);
-                $remote_expiration_date = $this->ModuleManager->moduleRpc(
-                    $service->package->module_id,
-                    'getExpirationDate',
-                    [$service, $format],
-                    $service->module_row_id ?? null
-                );
-
-                $expiration_date = $remote_expiration_date;
+                try {
+                    $expiration_date = $this->ModuleManager->moduleRpc(
+                        $service->package->module_id,
+                        'getExpirationDate',
+                        [$service, $format],
+                        $service->module_row_id ?? null
+                    );
+                } catch (\Throwable $e) {
+                    // Nothing to do
+                }
             }
 
             if ($expiration_date) {
@@ -466,9 +533,26 @@ class DomainsDomains extends DomainsModel
                     $expiration_date
                 );
             }
+
+            return $this->Date->format(
+                $format,
+                $service->date_canceled ?? $service->date_renews
+            );
         }
 
         return null;
+    }
+
+    /**
+     * Sets the registration date of a given domain
+     *
+     * @param int $service_id The ID of the service belonging to the domain
+     * @param string $registration_date The registration date of the domain
+     */
+    public function setRegistrationDate($service_id, $registration_date)
+    {
+        $this->Record->duplicate('domains_domains.registration_date', '=', $registration_date)
+            ->insert('domains_domains', ['service_id' => $service_id, 'registration_date' => $registration_date]);
     }
 
     /**
@@ -493,6 +577,9 @@ class DomainsDomains extends DomainsModel
     {
         if (!isset($this->DomainsTlds)) {
             Loader::loadModels($this, ['Domains.DomainsTlds']);
+        }
+        if (!isset($this->ModuleManager)) {
+            Loader::loadModels($this, ['ModuleManager']);
         }
 
         // Remove www from domain
@@ -535,6 +622,9 @@ class DomainsDomains extends DomainsModel
     {
         if (!isset($this->DomainsTlds)) {
             Loader::loadModels($this, ['Domains.DomainsTlds']);
+        }
+        if (!isset($this->ModuleManager)) {
+            Loader::loadModels($this, ['ModuleManager']);
         }
 
         // Remove www from domain
