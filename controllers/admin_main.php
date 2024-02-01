@@ -559,7 +559,7 @@ class AdminMain extends DomainsController
 
         // Validate the provided service is a domain
         if (!($this->ModuleManager->initModule($package->module_id) instanceof RegistrarModule)) {
-            $this->redirect($this->base_uri . 'clients/view/' . $client_id . '/');
+            $this->redirect($this->base_uri . 'clients/editservice/' . $client_id . '/' . $service_id . '/');
         }
 
         // Get list of registrar modules
