@@ -143,6 +143,13 @@ class AdminDomains extends DomainsController
             $sort = $alt_sort;
         }
 
+        // Get list of registrar modules
+        $modules = $this->Form->collapseObjectArray(
+            $this->ModuleManager->getAll(Configure::get('Blesta.company_id'), 'name', 'asc', ['type' => 'registrar']),
+            'name',
+            'id'
+        );
+
         // Set the input field filters for the widget
         $this->set(
             'filters',
@@ -160,6 +167,7 @@ class AdminDomains extends DomainsController
         $this->set('domains', $services);
         $this->set('status_count', $status_count);
         $this->set('actions', $this->getDomainActions());
+        $this->set('modules', $modules);
         $this->set('widget_state', isset($this->widgets_state['services']) ? $this->widgets_state['services'] : null);
         $this->set('sort', $alt_sort ? $alt_sort : $sort);
         $this->set('order', $order);

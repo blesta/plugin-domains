@@ -204,8 +204,20 @@ class DomainsDomains extends DomainsModel
         // Set service fields
         $service_fields = $this->Form->collapseObjectArray($service->fields, 'value', 'key');
 
-        // Check if a package exists for the given module
+        // Check if the new module supports the tld
         $tld = strstr($service_fields['domain'] ?? '', '.');
+        $supported_tlds = $this->ModuleManager->moduleRpc($module_id, 'getTlds');
+
+        if (!in_array($tld, $supported_tlds)) {
+            $errors = [
+                'error' => ['cycles' => Language::_('DomainsDomains.!error.unsupported_tld', true)]
+            ];
+            $this->Input->setErrors($errors);
+
+            return;
+        }
+
+        // Check if a package exists for the given module
         $package = $this->DomainsTlds->getTldPackageByModuleId(
             $tld,
             $module_id,

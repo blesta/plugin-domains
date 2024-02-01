@@ -327,7 +327,7 @@
                 $('#domain_client_id').val(ui.item.id);
             }
         });
-        
+
         $('.registration_date').on('mouseover', function() {
             $(this).find('div').show();
         }).on('mouseout', function() {

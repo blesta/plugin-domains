@@ -641,6 +641,18 @@ class DomainsTlds extends DomainsModel
                 return;
             }
 
+            // Set the default meta data to the package
+            $meta_fields = [
+                ['key' => 'type', 'value' => 'domain', 'serialized' => '0'],
+            ];
+            if ($package->id) {
+                foreach ($meta_fields as $meta_field) {
+                    $meta_field['package_id'] = $package->id;
+                    $this->Record->duplicate('package_meta.value', '=', $meta_field['value'])
+                        ->insert('package_meta', $meta_field);
+                }
+            }
+
             // Update configurable options and meta data
             $this->assignFeatures($package->id, $vars);
 
@@ -910,9 +922,11 @@ class DomainsTlds extends DomainsModel
 
             // Set the old meta data and pricing to the new package
             $params = [
-                'pricing' => ($old_package->pricing ?? []),
-                'meta' => ($old_package->meta ?? [])
+                'pricing' => ($old_package->pricing ?? [])
             ];
+            foreach ($old_package->meta ?? [] as $key => $value) {
+                $params['meta'][] = ['key' => $key, 'value' => $value];
+            }
             $params = json_decode(json_encode($params), true);
             $this->Packages->edit($package_id, $params);
 
