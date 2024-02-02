@@ -127,8 +127,8 @@
                         </li>
                         <li class="change_registrar">
                             <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_module', true), 'module');
-                            $this->Form->fieldSelect('module', $modules ?? [], $vars->module ?? null);
+                            $this->Form->label($this->_('AdminMain.edit.field_module', true), 'module_id');
+                            $this->Form->fieldSelect('module_id', $modules ?? [], $vars->module ?? null, ['id' => 'module_id']);
                             ?>
                         </li>
                         <li class="change_auto_renewal">
