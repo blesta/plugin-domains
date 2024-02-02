@@ -825,13 +825,16 @@ class AdminMain extends DomainsController
                     case 'schedule_cancellation':
                         $term = 'AdminMain.!success.change_auto_renewal';
                         break;
+                    case 'change_registrar':
+                        $term = 'AdminMain.!success.domain_registrar_updated';
+                        break;
                     case 'domain_renewal':
                         $term = 'AdminMain.!success.domain_renewal';
                         break;
                     case 'update_nameservers':
                         $term = 'AdminMain.!success.update_nameservers';
                         break;
-                    case 'domain_push_to_client':
+                    case 'push_to_client':
                         $term = 'AdminMain.!success.domains_pushed';
                         break;
                     case 'unparent':
@@ -886,6 +889,13 @@ class AdminMain extends DomainsController
             'suspended' => $this->DomainsDomains->getStatusCount('suspended', $domains_filters)
         ];
 
+        // Get list of registrar modules
+        $modules = $this->Form->collapseObjectArray(
+            $this->ModuleManager->getAll(Configure::get('Blesta.company_id'), 'name', 'asc', ['type' => 'registrar']),
+            'name',
+            'id'
+        );
+
         // Set the input field filters for the widget
         $filters = $this->getFilters($post_filters);
         $this->set('filters', $filters);
@@ -897,6 +907,7 @@ class AdminMain extends DomainsController
         $this->set('domains', $domains);
         $this->set('status_count', $status_count);
         $this->set('actions', $this->getDomainActions());
+        $this->set('modules', $modules);
         $this->set('widget_state', $this->widgets_state['main_domains'] ?? null);
         $this->set('sort', $sort);
         $this->set('order', $order);
@@ -940,137 +951,6 @@ class AdminMain extends DomainsController
         echo $this->Services->getStatusCount($client_id, $status, false, ['type' => 'domains']);
 
         return false;
-    }
-
-    /**
-     * Gets a list of possible domain actions
-     *
-     * @return array A list of possible domain actions and their language
-     */
-    private function getDomainActions()
-    {
-        return [
-            'change_auto_renewal' => Language::_('AdminMain.index.change_auto_renewal', true),
-            'domain_renewal' => Language::_('AdminMain.index.domain_renewal', true),
-            'update_nameservers' => Language::_('AdminMain.index.update_nameservers', true),
-            'domain_push_to_client' => Language::_('AdminMain.index.domain_push_to_client', true),
-            'unparent' => Language::_('AdminMain.index.unparent', true)
-        ];
-    }
-
-    /**
-     * Updates the given domains
-     *
-     * @param array $data An array of POST data including:
-     *
-     *  - service_ids An array of each service ID
-     *  - action The action to perform, e.g. "change_auto_renewal"
-     * @return mixed An array of errors, or false otherwise
-     */
-    private function updateDomains(array $data)
-    {
-        $this->uses(['Services', 'Domains.DomainsDomains']);
-
-        // Require authorization to update a client's service
-        if (!$this->authorized('admin_clients', 'editservice')) {
-            $this->flashMessage('error', Language::_('AppController.!error.unauthorized_access', true), null, false);
-            $this->redirect($this->base_uri . 'clients/');
-        }
-
-        // Only include service IDs in the list
-        $service_ids = [];
-        if (isset($data['service_ids'])) {
-            foreach ((array)$data['service_ids'] as $service_id) {
-                if (is_numeric($service_id)) {
-                    $service_ids[] = $service_id;
-                }
-            }
-        }
-
-        $data['service_ids'] = $service_ids;
-        $data['action'] = ($data['action'] ?? null);
-        $errors = false;
-
-        switch ($data['action']) {
-            case 'change_auto_renewal':
-                // Schedule cancellation or remove scheduled cancellations for each service
-                foreach ($data['service_ids'] as $service_id) {
-                    if (isset($data['auto_renewal']) && $data['auto_renewal'] == 'off') {
-                        $this->Services->cancel($service_id, ['date_canceled' => 'end_of_term']);
-                    } else {
-                        $this->Services->unCancel($service_id);
-                    }
-
-                    if (($errors = $this->Services->errors())) {
-                        break;
-                    }
-                }
-                break;
-            case 'domain_renewal':
-                foreach ($data['service_ids'] as $service_id) {
-                    $this->DomainsDomains->renewDomain($service_id, $data['years'] ?? 1);
-
-                    if (($errors = $this->DomainsDomains->errors())) {
-                        break;
-                    }
-                }
-                break;
-            case 'update_nameservers':
-                foreach ($data['service_ids'] as $service_id) {
-                    $this->DomainsDomains->updateNameservers($service_id, $data['nameservers'] ?? []);
-
-                    if (($errors = $this->DomainsDomains->errors())) {
-                        break;
-                    }
-                }
-                break;
-            case 'domain_push_to_client':
-                foreach ($data['service_ids'] as $service_id) {
-                    // Get service
-                    $service = $this->Services->get($service_id);
-                    if (!$service) {
-                        break;
-                    }
-
-                    // Move service
-                    $this->Services->move($service->id, $this->post['client_id'] ?? $data['client_id']);
-
-                    if (($errors = $this->Services->errors())) {
-                        return $errors;
-                    }
-                }
-                break;
-            case 'unparent':
-                foreach ($data['service_ids'] as $service_id) {
-                    Loader::loadModels($this, ['Services']);
-
-                    // Get service
-                    $service = $this->Services->get($service_id);
-                    if (!$service) {
-                        break;
-                    }
-
-                    // Skip if the service is not a child
-                    if (empty($service->parent_service_id)) {
-                        continue;
-                    }
-
-                    // Remove override price
-                    $pricing = ['override_price' => null, 'override_currency' => null];
-                    $this->Services->edit($service_id, $pricing, true);
-
-                    // Remove parent service
-                    $parent_service = ['parent_service_id' => null];
-                    $this->Services->edit($service_id, $parent_service, true);
-
-                    if (($errors = $this->Services->errors())) {
-                        return $errors;
-                    }
-                }
-                break;
-        }
-
-        return $errors;
     }
 
     /**

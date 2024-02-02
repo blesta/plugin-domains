@@ -143,6 +143,11 @@ if (!empty($domains)) {
             $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], isset($vars->action) ? $vars->action : null);
             ?>
         </div>
+        <div id="change_registrar" class="action_section">
+            <?php
+            $this->Form->fieldSelect('module_id', ($modules ?? []), ($vars->client ?? ''));
+            ?>
+        </div>
         <div id="domain_renewal" class="action_section">
             <div class="float">
                 <?php

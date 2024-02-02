@@ -586,6 +586,7 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels($this, ['Companies']);
         Loader::loadComponents($this, ['Record']);
+
         $companies = $this->Companies->getAll();
         foreach ($companies as $company) {
             $package_group_id_setting = $this->Companies->getSetting($company->id, 'domains_package_group');
@@ -607,7 +608,24 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels($this, ['Companies', 'DataFeeds']);
 
-        // Add a 'automatic_transition' column to the 'support_departments' table
+        // Set all domain packages type to domain
+        $domain_packages = $this->Record->select(['domains_packages.package_id'])
+            ->from('domains_packages')
+            ->fetchAll();
+
+        foreach ($domain_packages as $domain_package) {
+            // Ensure that the type package meta field is always set to "domain"
+            $field = [
+                'package_id' => $domain_package->package_id,
+                'key' => 'type',
+                'value' => 'domain',
+                'serialized' => '0'
+            ];
+            $this->Record->duplicate('package_meta.value', '=', $field['value'])
+                ->insert('package_meta', $field);
+        }
+
+        // Add a 'registration_date' column to the 'domains_domains' table
         $this->Record->query(
             'ALTER TABLE `domains_domains` ADD `registration_date` DATETIME NULL DEFAULT NULL AFTER `service_id`;'
         );
@@ -634,7 +652,8 @@ class DomainsPlugin extends Plugin
      * @param stdClass $object The object to cast to a multi-dimensional array
      * @return array The array from the object
      */
-    private function castToArray($object) {
+    private function castToArray($object)
+    {
         if (is_object($object) || is_array($object)) {
             $array = (array) $object;
             foreach($array as &$item) {

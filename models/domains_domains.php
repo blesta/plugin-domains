@@ -183,6 +183,104 @@ class DomainsDomains extends DomainsModel
     }
 
     /**
+     * Updates the registrar for an existing domain
+     *
+     * @param int $service_id The ID of the service associated to the domain
+     * @param int $module_id The ID of the module of the new registrar
+     * @return int The ID of the service, void on error
+     */
+    public function updateRegistrar($service_id, $module_id)
+    {
+        Loader::loadModels($this, ['Services', 'Packages', 'ModuleManager', 'Domains.DomainsTlds']);
+
+        if (!($service = $this->Services->get($service_id))) {
+            return;
+        }
+
+        if (!($module = $this->ModuleManager->get($module_id))) {
+            return;
+        }
+
+        // Set service fields
+        $service_fields = $this->Form->collapseObjectArray($service->fields, 'value', 'key');
+
+        // Check if the new module supports the tld
+        $tld = strstr($service_fields['domain'] ?? '', '.');
+        $supported_tlds = $this->ModuleManager->moduleRpc($module_id, 'getTlds');
+
+        if (!in_array($tld, $supported_tlds)) {
+            $errors = [
+                'error' => ['cycles' => Language::_('DomainsDomains.!error.unsupported_tld', true)]
+            ];
+            $this->Input->setErrors($errors);
+
+            return;
+        }
+
+        // Check if a package exists for the given module
+        $package = $this->DomainsTlds->getTldPackageByModuleId(
+            $tld,
+            $module_id,
+            Configure::get('Blesta.company_id')
+        );
+
+        if ($package) {
+            $package = $this->Packages->get($package->id);
+        }
+
+        // If a package doesn't exist for this TLD and the provided module, clone the default one
+        if (empty($package)) {
+            $package_id = $this->DomainsTlds->duplicate($tld, $module_id);
+            $package = $this->Packages->get($package_id);
+        }
+
+        // Get the pricing from the amount of years
+        $pricing = $this->DomainsTlds->getPricing(
+            $package->id,
+            $service->package_pricing->term,
+            $service->package_pricing->currency
+        );
+
+        // Update service
+        $vars = [
+            'module_row_id' => $package->module_row ?? $service->module_row_id,
+            'pricing_id' => $pricing->pricing_id ?? $service->pricing_id
+        ];
+        $this->Record->where('id', '=', $service_id)
+            ->update('services', $vars);
+
+        // Update service fields
+        $fields = [
+            ['key' => 'domain', 'value' => $service_fields['domain'] ?? ''],
+            ['key' => 'ns1', 'value' => $service_fields['ns1'] ?? ''],
+            ['key' => 'ns2', 'value' => $service_fields['ns2'] ?? ''],
+            ['key' => 'ns3', 'value' => $service_fields['ns3'] ?? ''],
+            ['key' => 'ns4', 'value' => $service_fields['ns4'] ?? '']
+        ];
+
+        $this->Record->from('service_fields')
+            ->where('service_fields.service_id', '=', $service_id)
+            ->delete();
+
+        foreach ($fields as $field) {
+            $field['service_id'] = $service_id;
+            $this->Record->duplicate('service_fields.value', '=', $field['value'])
+                ->insert('service_fields', $field);
+        }
+
+        // Trigger module
+        $vars = array_intersect_key($service_fields, array_flip(['domain', 'ns1', 'ns2', 'ns3', 'ns4']));
+        try {
+            // Some registrar modules, like Logicboxes, are able to retrieve the remote service by the domain
+            $this->ModuleManager->moduleRpc($module_id, 'editService', [$package, $service, $vars]);
+        } catch (Throwable $e) {
+            // Nothing to do
+        }
+
+        return $service_id;
+    }
+
+    /**
      * Renews a domain name
      *
      * @param int $service_id The id of the service where the domain belongs

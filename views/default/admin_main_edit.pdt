@@ -125,6 +125,12 @@
                             $this->Form->fieldText('years', ($vars->years ?? 1), ['class' => 'form-control', 'id' => 'years']);
                             ?>
                         </li>
+                        <li class="change_registrar">
+                            <?php
+                            $this->Form->label($this->_('AdminMain.edit.field_module', true), 'module_id');
+                            $this->Form->fieldSelect('module_id', $modules ?? [], $vars->module ?? null, ['id' => 'module_id']);
+                            ?>
+                        </li>
                         <li class="change_auto_renewal">
                             <?php
                             $this->Form->label($this->_('AdminMain.edit.field_auto_renewal', true), 'auto_renewal');
@@ -272,6 +278,7 @@
         function serviceActionChange() {
             $(".domain_renewal").hide();
             $(".change_auto_renewal").hide();
+            $(".change_registrar").hide();
             $(".update_nameservers").hide();
             $(".domain_push_to_client").hide();
 
