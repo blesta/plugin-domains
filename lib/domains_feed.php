@@ -236,24 +236,22 @@ class DomainsFeed extends AbstractDataFeed
      */
     private function countEndpoint(array $vars)
     {
-        Loader::loadModels($this, ['Domains.DomainsDomains']);
+        Loader::loadModels($this, ['Services']);
 
         if (!isset($vars['status'])) {
             $vars['status'] = 'all';
         }
 
-        // Get clients count
-        $domains = $this->DomainsDomains->getAll(
-            ['status' => $vars['status'] ?? 'active'],
-            ['id' => 'asc'],
-            [['column' => 'package_names.name', 'value' => explode(',', $vars['tlds'] ?? ''), 'operator' => 'in']]
-        );
-        if (($errors = $this->DomainsDomains->errors())) {
+        // Get domains count
+        $status = $vars['status'] ?? 'active';
+        $domains = $this->Services->getListCount(null, $status, false, null, ['type' => 'domains']);
+
+        if (($errors = $this->Services->errors())) {
             $this->setErrors($errors);
 
             return;
         }
 
-        return count($domains ?? []);
+        return (int) $domains;
     }
 }
