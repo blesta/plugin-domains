@@ -118,19 +118,6 @@ class AdminDomains extends DomainsController
             'scheduled_cancellation' => $this->DomainsDomains->getStatusCount('scheduled_cancellation', $domains_filters)
         ];
 
-        // Set the expected service renewal price
-        $modules = [];
-        foreach ($services as $service) {
-            $module_id = $service->package->module_id;
-            if (!isset($modules[$module_id])) {
-                $modules[$module_id] = $this->ModuleManager->initModule($module_id);
-            }
-
-            $service->renewal_price = $this->Services->getRenewalPrice($service->id);
-            $service->registrar = $modules[$module_id]->getName();
-            $service->expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
-        }
-
         if ($alt_sort) {
             usort(
                 $services,
