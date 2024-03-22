@@ -1257,27 +1257,56 @@ class DomainsPlugin extends Plugin
                 $modules[$module_id] = $this->ModuleManager->initModule($module_id);
             }
 
-            // Fetch the domain registration date from the registrar, and update if different than what is stored locally
+            // Fetch the registration date that is stored locally
+            $domain = $this->Record->select()->from('domains_domains')->where('service_id', '=', $service->id)->fetch();
+            $database_registration_date = null;
+            if ($domain && $domain->registration_date !== null) {
+                $database_registration_date = $domain->registration_date;
+            }
+            
+            // Fetch the domain registration date from the registrar, and update
+            // if different than what is stored locally
             if (method_exists($modules[$module_id], 'getRegistrationDate')
                 && ($new_registration_date = $modules[$module_id]->getRegistrationDate($service, 'Y-m-d H:i:s'))
                 && (strtotime($service->registration_date) !== strtotime($new_registration_date)
-                    || !(($domain = $this->Record->select()->from('domains_domains')->where('service_id', '=', $service->id)->fetch())
-                        && $domain->registration_date !== null)
-                )
+                    || $database_registration_date == null)
             ) {
                 $this->DomainsDomains->setRegistrationDate($service->id, $new_registration_date);
                 $service->registration_date = $new_registration_date;
             }
-
-            // Fetch the domain expiration date from the registrar, and update if different than what is stored locally
-            if (($new_expiration_date = $modules[$module_id]->getExpirationDate($service, 'Y-m-d H:i:s'))
+            
+            // If there was nothing stored locally and we were not able to fetch from
+            // the registrar, just store the date_added
+            if ($database_registration_date == null && $new_registration_date == null) {
+                $this->DomainsDomains->setRegistrationDate($service->id, $service->date_added);
+            }
+            
+            // Fetch the expiration date that is stored locally
+            $database_expiration_date = null;
+            if ($domain && $domain->expiration_date !== null) {
+                $database_expiration_date = $domain->expiration_date;
+            }
+            
+            // Fetch the domain expiration date from the registrar, and update if
+            // different than what is stored locally
+            if (method_exists($modules[$module_id], 'getExpirationDate')
+                && ($new_expiration_date = $modules[$module_id]->getExpirationDate($service, 'Y-m-d H:i:s'))
                 && (strtotime($service->expiration_date) !== strtotime($new_expiration_date)
-                    || !(($domain = $this->Record->select()->from('domains_domains')->where('service_id', '=', $service->id)->fetch())
-                        && $domain->expiration_date !== null)
-                )
+                    || $database_expiration_date == null)
             ) {
                 $this->DomainsDomains->setExpirationDate($service->id, $new_expiration_date);
                 $service->expiration_date = $new_expiration_date;
+            }
+            
+            // If there was nothing stored locally and we were not able to fetch from the
+            // registrar, just store the adjusted date_renews
+            if ($database_expiration_date == null && $new_expiration_date == null) {
+                $this->DomainsDomains->setExpirationDate($service->id, $this->Services->Date->modify(
+                    $service->date_renews,
+                    '+' . ($renewal_days->value ?? 0) . ' days',
+                    'Y-m-d 00:00:00',
+                    Configure::get('Blesta.company_timezone')
+                ));
             }
 
             // Get the adjusted renew date base on the expiration date of this service and the configured
