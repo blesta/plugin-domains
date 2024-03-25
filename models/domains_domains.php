@@ -411,6 +411,16 @@ class DomainsDomains extends DomainsModel
             return [];
         }
 
+        // Fetch the nameservers from the cache, if they exist
+        $cache = Cache::fetchCache(
+            'nameservers_' . $service_id,
+            Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+        );
+
+        if ($cache) {
+            return unserialize(base64_decode($cache));
+        }
+
         // Get service domain name
         $service_name = $this->ModuleManager->moduleRpc($module->id, 'getServiceDomain', [$service], $module_row->id);
 
@@ -428,8 +438,27 @@ class DomainsDomains extends DomainsModel
         }
         
         $nameservers = [];
-        foreach ($result as $nameserver) {
+        foreach ($result ?? [] as $nameserver) {
             $nameservers[] = $nameserver['url'];
+        }
+
+        // Save nameservers on cache
+        if (Configure::get('Caching.on') && is_writable(CACHEDIR) && !empty($nameservers)) {
+            try {
+                if (!file_exists(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins')) {
+                    mkdir(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins');
+                }
+
+                Cache::writeCache(
+                    'nameservers_' . $service_id,
+                    base64_encode(serialize($nameservers)),
+                    strtotime(Configure::get('Blesta.cache_length')) - time(),
+                    Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+                );
+            } catch (Exception $e) {
+                // Write to cache failed, so disable caching
+                Configure::set('Caching.on', false);
+            }
         }
 
         return $nameservers;
@@ -461,8 +490,18 @@ class DomainsDomains extends DomainsModel
                 ->fetch();
             $registration_date = $domain->registration_date ?? null;
 
+            // Fetch the registration date from the cache, if they exist
+            $cache = Cache::fetchCache(
+                'registration_date_' . $service_id,
+                Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+            );
+
+            if ($cache && empty($registration_date)) {
+                $registration_date = base64_decode($cache);
+            }
+
             // Get the registration date from the registrar
-            if ($registration_date == null) {
+            if (empty($registration_date)) {
                 if (!isset($this->ModuleManager)) {
                     Loader::loadModels($this, ['ModuleManager']);
                 }
@@ -479,16 +518,33 @@ class DomainsDomains extends DomainsModel
                 }
             }
 
-            if ($registration_date) {
-                return $this->Date->format(
-                    $format,
-                    $registration_date
-                );
+            // Fallback to date added
+            if (empty($registration_date)) {
+                $registration_date = $service->date_added;
+            }
+
+            // Save registration date on cache
+            if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
+                try {
+                    if (!file_exists(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins')) {
+                        mkdir(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins');
+                    }
+
+                    Cache::writeCache(
+                        'registration_date_' . $service_id,
+                        base64_encode($registration_date),
+                        strtotime(Configure::get('Blesta.cache_length')) - time(),
+                        Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+                    );
+                } catch (Exception $e) {
+                    // Write to cache failed, so disable caching
+                    Configure::set('Caching.on', false);
+                }
             }
 
             return $this->Date->format(
                 $format,
-                $service->date_added
+                $registration_date
             );
         }
 
@@ -521,8 +577,18 @@ class DomainsDomains extends DomainsModel
                 ->fetch();
             $expiration_date = $domain->expiration_date ?? null;
 
+            // Fetch the expiration date from the cache, if they exist
+            $cache = Cache::fetchCache(
+                'expiration_date_' . $service_id,
+                Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+            );
+
+            if ($cache && empty($expiration_date)) {
+                $expiration_date = base64_decode($cache);
+            }
+
             // Get the expiration date from the registrar
-            if ($expiration_date == null) {
+            if (empty($expiration_date)) {
                 if (!isset($this->ModuleManager)) {
                     Loader::loadModels($this, ['ModuleManager']);
                 }
@@ -539,16 +605,33 @@ class DomainsDomains extends DomainsModel
                 }
             }
 
-            if ($expiration_date) {
-                return $this->Date->format(
-                    $format,
-                    $expiration_date
-                );
+            // Fallback to cancellation or renewal date
+            if (empty($expiration_date)) {
+                $expiration_date = $service->date_canceled ?? $service->date_renews;
+            }
+
+            // Save expiration date on cache
+            if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
+                try {
+                    if (!file_exists(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins')) {
+                        mkdir(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins');
+                    }
+
+                    Cache::writeCache(
+                        'expiration_date_' . $service_id,
+                        base64_encode($expiration_date),
+                        strtotime(Configure::get('Blesta.cache_length')) - time(),
+                        Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+                    );
+                } catch (Exception $e) {
+                    // Write to cache failed, so disable caching
+                    Configure::set('Caching.on', false);
+                }
             }
 
             return $this->Date->format(
                 $format,
-                $service->date_canceled ?? $service->date_renews
+                $expiration_date
             );
         }
 
