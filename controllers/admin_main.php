@@ -729,8 +729,21 @@ class AdminMain extends DomainsController
             $package->meta->type = 'domain';
         }
 
-        // Get module fields
+        // Get service fields, if a service id has been provided
         $vars = (object) $_POST ?? $this->post;
+
+        $service_fields = [];
+        if (($service = $this->Services->get($vars->service_id ?? null))) {
+            $service_fields = $this->Form->collapseObjectArray(
+                $service->fields ?? [],
+                'value',
+                'key'
+            );
+
+            $vars = (object) array_merge((array) $vars, (array) $service_fields);
+        }
+
+        // Get module fields
         $fields = $this->ModuleManager->moduleRpc($module->id, $fields_type, [$package, $vars]);
 
         // Add module row dropdown
