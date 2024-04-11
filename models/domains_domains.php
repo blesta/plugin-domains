@@ -424,7 +424,7 @@ class DomainsDomains extends DomainsModel
         // Get service domain name
         $service_name = $this->ModuleManager->moduleRpc($module->id, 'getServiceDomain', [$service], $module_row->id);
 
-        // Update nameservers
+        // Fetch remote nameservers
         $params = [
             $service_name,
             $module_row->id
@@ -436,10 +436,18 @@ class DomainsDomains extends DomainsModel
 
             return [];
         }
-        
+
         $nameservers = [];
         foreach ($result ?? [] as $nameserver) {
             $nameservers[] = $nameserver['url'];
+        }
+
+        // If there are no remote nameservers, fetch locally stored nameservers
+        $service_fields = $this->Form->collapseObjectArray($service->fields, 'value', 'key');
+        for ($i = 1; $i <= 5; $i++) {
+            if (!empty($service_fields['ns' . $i])) {
+                $nameservers[] = $service_fields['ns' . $i];
+            }
         }
 
         // Save nameservers on cache
