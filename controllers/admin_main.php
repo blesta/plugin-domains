@@ -607,7 +607,12 @@ class AdminMain extends DomainsController
 
         $module_row = $this->ModuleManager->getRow($service->module_row_id);
         $module = $this->ModuleManager->get($module_row->module_id);
-        $fields = $this->ModuleManager->moduleRpc($module_row->module_id, 'getAdminEditFields', [$package, $module_vars]);
+
+        $fields_type = 'getAdminEditFields';
+        if ($service->status == 'pending') {
+            $fields_type = 'getAdminAddFields';
+        }
+        $fields = $this->ModuleManager->moduleRpc($module_row->module_id, $fields_type, [$package, $module_vars]);
 
         $vars->module = $module_row->module_id;
         $vars->module_row = $service->module_row_id;
@@ -655,10 +660,20 @@ class AdminMain extends DomainsController
                 $allowed_fields = ['status', 'pricing_id', 'use_module'];
                 foreach ($fields->getFields() as $field) {
                     foreach ($field->fields as $subfield) {
+                        if (str_contains($subfield->params['name'], '[')) {
+                            $parts = explode('[', $subfield->params['name'], 2);
+                            $subfield->params['name'] = $parts[0];
+                        }
+
                         $allowed_fields[] = $subfield->params['name'];
                     }
 
                     if ($field->type !== 'label') {
+                        if (str_contains($subfield->params['name'], '[')) {
+                            $parts = explode('[', $subfield->params['name'], 2);
+                            $subfield->params['name'] = $parts[0];
+                        }
+
                         $allowed_fields[] = $field->params['name'];
                     }
                 }
