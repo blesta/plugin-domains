@@ -216,6 +216,7 @@
                                 <?php
                                 if ($service->status == 'pending') {
                                     $this->Form->fieldHidden('domain', $domain ?? $vars->domain ?? '');
+                                    $this->Form->fieldHidden('service_id', $service->id ?? '');
                                     $this->Form->fieldHidden('module_row', $vars->module_row ?? '');
                                 } else {
                                     $this->Form->fieldHidden('module', $module->id ?? null, ['id' => 'module']);
