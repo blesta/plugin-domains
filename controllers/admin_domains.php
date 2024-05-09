@@ -860,6 +860,17 @@ class AdminDomains extends DomainsController
                     }
                 }
 
+                // If the package belongs to the Domain Manager package group, but one of the TLDs doesn't
+                // exist, likely it is an orphaned packaged created by the Import Manager
+                foreach ((array) $package->meta->tlds as $key => $meta_tld) {
+                    if (!array_key_exists($meta_tld, $existing_tld_packages)) {
+                        $from_domain_manager = false;
+                        break;
+                    } else {
+                        unset($package->meta->tlds[$key]);
+                    }
+                }
+
                 // Skip the package if it has no assigned TLDs, is from the Domain Manager,
                 // or doesn't have any year(s) pricing terms
                 if (empty($package->meta->tlds) || $from_domain_manager || !$has_yearly_pricing) {
