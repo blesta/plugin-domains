@@ -1504,7 +1504,7 @@ class AdminDomains extends DomainsController
      */
     public function tlds()
     {
-        $this->uses(['ModuleManager', 'Packages', 'Domains.DomainsTlds']);
+        $this->uses(['ModuleManager', 'Packages', 'Services', 'Domains.DomainsTlds']);
         $this->helpers(['Form', 'Widget']);
 
         $company_id = Configure::get('Blesta.company_id');
@@ -1599,6 +1599,36 @@ class AdminDomains extends DomainsController
 
                         $this->flashMessage('message', Language::_('AdminDomains.!success.tld_sync', true));
                         break;
+                    case 'delete':
+                        $undeleted_tlds = [];
+
+                        // Validate if the TLD does not have any service associated and can be deleted
+                        foreach ($bulk_data['tlds'] as $tld) {
+                            $tld = $this->DomainsTlds->get($tld);
+                            $services = $this->Services->getAll(
+                                ['date_added' => 'DESC'],
+                                true,
+                                [],
+                                ['packages.id' => $tld->package_id]
+                            );
+
+                            if (empty($services)) {
+                                $this->DomainsTlds->delete($tld->tld, $tld->company_id);
+                            } else {
+                                $undeleted_tlds[] = $tld->tld;
+                            }
+                        }
+
+                        if (empty($undeleted_tlds)) {
+                            $this->flashMessage('message', Language::_('AdminDomains.!success.delete', true));
+                        } else {
+                            $this->flashMessage(
+                                'message',
+                                Language::_('AdminDomains.!success.delete_partial', true, implode(', ', $undeleted_tlds))
+                            );
+                        }
+
+                        break;
                 }
             }
 
@@ -1675,7 +1705,8 @@ class AdminDomains extends DomainsController
     {
         return [
             'change_status' => Language::_('AdminDomains.getTldActions.option_change_status', true),
-            'tld_sync' => Language::_('AdminDomains.getTldActions.option_tld_sync', true)
+            'tld_sync' => Language::_('AdminDomains.getTldActions.option_tld_sync', true),
+            'delete' => Language::_('AdminDomains.getTldActions.option_delete', true)
         ];
     }
 

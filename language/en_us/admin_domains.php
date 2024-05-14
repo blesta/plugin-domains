@@ -9,6 +9,8 @@ $lang['AdminDomains.!success.tld_added'] = 'The TLD was successfully added!';
 $lang['AdminDomains.!success.tld_updated'] = 'The TLD was successfully updated!';
 $lang['AdminDomains.!success.tlds_updated'] = 'The TLDs were successfully updated!';
 $lang['AdminDomains.!success.tld_sync'] = 'The TLD prices were successfully synced!';
+$lang['AdminDomains.!success.delete'] = 'The TLD were successfully deleted!';
+$lang['AdminDomains.!success.delete_partial'] = 'The following TLDs could not be deleted because they were in use: %1$s'; // %1$s is the list of TLDs
 $lang['AdminDomains.!success.change_status'] = 'The TLD statuses were successfully updated!';
 $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
 $lang['AdminDomains.!success.domain_registrar_updated'] = 'The domain registrar has been updated!';
@@ -189,6 +191,7 @@ $lang['AdminDomains.tlds.tooltip_epp_code'] = 'The availability of the EPP Code 
 // Get TLD Actions
 $lang['AdminDomains.getTldActions.option_change_status'] = 'Change Status';
 $lang['AdminDomains.getTldActions.option_tld_sync'] = 'Registrar Price Sync';
+$lang['AdminDomains.getTldActions.option_delete'] = 'Delete TLDs';
 
 
 // Get TLD Statuses
