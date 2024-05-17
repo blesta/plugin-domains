@@ -171,10 +171,12 @@ class DomainsController extends AppController
                     }
 
                     // Move service
-                    $this->Services->move($service->id, $this->post['client_id'] ?? $data['client_id']);
-
+                    $service_id = $this->Services->move($service->id, $this->post['client_id'] ?? $data['client_id']);
                     if (($errors = $this->Services->errors())) {
                         return $errors;
+                    }
+                    if (empty($service_id)) {
+                        $errors = ['move' => ['error' => Language::_('DomainsController.!error.move_error', true)]];
                     }
                 }
                 break;
