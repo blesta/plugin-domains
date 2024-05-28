@@ -266,7 +266,6 @@ $this->Widget->end();
 
         $('#domain_action').change(function() {
             $('.action_section').hide();
-            console.log('#' + $(this).val());
             $('#' + $(this).val()).show();
         });
         $('#domain_action').change();
