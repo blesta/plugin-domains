@@ -688,7 +688,7 @@ class DomainsPlugin extends Plugin
         $this->Record
             ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
             ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-            ->setField('expiration_date', ['type' => 'datetime'])
+            ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
             ->setKey(['id'], 'primary')
             ->setKey(['service_id'], 'unique')
             ->create('domains_domains', true);
