@@ -212,6 +212,11 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.12.0', '<')) {
                 $this->upgrade1_12_0();
             }
+            
+            // Upgrade to 1.13.2
+            if (version_compare($current_version, '1.13.2', '<')) {
+                $this->upgrade1_13_2();
+            }
         }
     }
 
@@ -644,6 +649,17 @@ class DomainsPlugin extends Plugin
         } catch (Throwable $e) {
             // Nothing to do
         }
+    }
+    
+    /**
+     * Update to v1.13.2
+     */
+    private function upgrade1_13_2()
+    {
+        // Add a 'registration_date' column to the 'domains_domains' table
+        $this->Record->query(
+            'ALTER TABLE `domains_domains` CHANGE `expiration_date` `expiration_date` DATETIME NULL DEFAULT NULL;'
+        );
     }
 
     /**
