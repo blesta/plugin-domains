@@ -212,6 +212,11 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.12.0', '<')) {
                 $this->upgrade1_12_0();
             }
+            
+            // Upgrade to 1.13.2
+            if (version_compare($current_version, '1.13.2', '<')) {
+                $this->upgrade1_13_2();
+            }
         }
     }
 
@@ -645,6 +650,17 @@ class DomainsPlugin extends Plugin
             // Nothing to do
         }
     }
+    
+    /**
+     * Update to v1.13.2
+     */
+    private function upgrade1_13_2()
+    {
+        // Add a 'registration_date' column to the 'domains_domains' table
+        $this->Record->query(
+            'ALTER TABLE `domains_domains` CHANGE `expiration_date` `expiration_date` DATETIME NULL DEFAULT NULL;'
+        );
+    }
 
     /**
      * Cast an object to a multi-dimensional array
@@ -688,7 +704,7 @@ class DomainsPlugin extends Plugin
         $this->Record
             ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
             ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-            ->setField('expiration_date', ['type' => 'datetime'])
+            ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
             ->setKey(['id'], 'primary')
             ->setKey(['service_id'], 'unique')
             ->create('domains_domains', true);

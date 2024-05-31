@@ -252,7 +252,7 @@ class DomainsTlds extends DomainsModel
      */
     public function add(array $vars)
     {
-        Loader::loadModels($this, ['ModuleManager', 'Packages']);
+        Loader::loadModels($this, ['Companies', 'ModuleManager', 'Packages']);
 
         // Trigger the Domains.addBefore event
         extract($this->triggerEvent('addBefore', ['vars' => $vars]));
