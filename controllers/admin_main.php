@@ -198,7 +198,7 @@ class AdminMain extends DomainsController
         $configuration_fields = $this->Session->read('domain_configuration_fields');
         if (!empty($configuration_fields)) {
             $this->post = (array) $configuration_fields;
-            //$this->Session->clear('domain_configuration_fields');
+            $this->Session->clear('domain_configuration_fields');
         }
 
         // Set action
