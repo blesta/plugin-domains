@@ -11,6 +11,7 @@ $lang['AdminDomains.!success.tlds_updated'] = 'The TLDs were successfully update
 $lang['AdminDomains.!success.tld_sync'] = 'The TLD prices were successfully synced!';
 $lang['AdminDomains.!success.change_status'] = 'The TLD statuses were successfully updated!';
 $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
+$lang['AdminDomains.!success.domain_registrar_updated'] = 'The domain registrar has been updated!';
 $lang['AdminDomains.!success.domain_renewal'] = 'The Domain has been renewed!';
 $lang['AdminDomains.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 $lang['AdminDomains.!success.domains_pushed'] = 'The selected domains were successfully pushed to the new client.';
@@ -55,12 +56,6 @@ $lang['AdminDomains.browse.category_scheduled_cancellation'] = 'Scheduled';
 $lang['AdminDomains.browse.field_actionsubmit'] = 'Submit';
 
 $lang['AdminDomains.browse.tooltip_renew'] = 'Auto Renewal for Blesta means that the user will be invoiced automatically and that the domain will be renewed once the invoice is paid.';
-
-$lang['AdminDomains.browse.change_auto_renewal'] = 'Change Auto Renewal';
-$lang['AdminDomains.browse.domain_renewal'] = 'Renew Domain';
-$lang['AdminDomains.browse.update_nameservers'] = 'Update Nameservers';
-$lang['AdminDomains.browse.push_to_client'] = 'Push to Client';
-$lang['AdminDomains.browse.unparent'] = 'Unparent and Reset Price';
 
 $lang['AdminDomains.browse.action.field_years'] = 'Years';
 $lang['AdminDomains.browse.action.field_nameservers'] = 'Nameservers';

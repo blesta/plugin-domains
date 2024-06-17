@@ -183,6 +183,104 @@ class DomainsDomains extends DomainsModel
     }
 
     /**
+     * Updates the registrar for an existing domain
+     *
+     * @param int $service_id The ID of the service associated to the domain
+     * @param int $module_id The ID of the module of the new registrar
+     * @return int The ID of the service, void on error
+     */
+    public function updateRegistrar($service_id, $module_id)
+    {
+        Loader::loadModels($this, ['Services', 'Packages', 'ModuleManager', 'Domains.DomainsTlds']);
+
+        if (!($service = $this->Services->get($service_id))) {
+            return;
+        }
+
+        if (!($module = $this->ModuleManager->get($module_id))) {
+            return;
+        }
+
+        // Set service fields
+        $service_fields = $this->Form->collapseObjectArray($service->fields, 'value', 'key');
+
+        // Check if the new module supports the tld
+        $tld = strstr($service_fields['domain'] ?? '', '.');
+        $supported_tlds = $this->ModuleManager->moduleRpc($module_id, 'getTlds');
+
+        if (!in_array($tld, $supported_tlds)) {
+            $errors = [
+                'error' => ['cycles' => Language::_('DomainsDomains.!error.unsupported_tld', true)]
+            ];
+            $this->Input->setErrors($errors);
+
+            return;
+        }
+
+        // Check if a package exists for the given module
+        $package = $this->DomainsTlds->getTldPackageByModuleId(
+            $tld,
+            $module_id,
+            Configure::get('Blesta.company_id')
+        );
+
+        if ($package) {
+            $package = $this->Packages->get($package->id);
+        }
+
+        // If a package doesn't exist for this TLD and the provided module, clone the default one
+        if (empty($package)) {
+            $package_id = $this->DomainsTlds->duplicate($tld, $module_id);
+            $package = $this->Packages->get($package_id);
+        }
+
+        // Get the pricing from the amount of years
+        $pricing = $this->DomainsTlds->getPricing(
+            $package->id,
+            $service->package_pricing->term,
+            $service->package_pricing->currency
+        );
+
+        // Update service
+        $vars = [
+            'module_row_id' => $package->module_row ?? $service->module_row_id,
+            'pricing_id' => $pricing->pricing_id ?? $service->pricing_id
+        ];
+        $this->Record->where('id', '=', $service_id)
+            ->update('services', $vars);
+
+        // Update service fields
+        $fields = [
+            ['key' => 'domain', 'value' => $service_fields['domain'] ?? ''],
+            ['key' => 'ns1', 'value' => $service_fields['ns1'] ?? ''],
+            ['key' => 'ns2', 'value' => $service_fields['ns2'] ?? ''],
+            ['key' => 'ns3', 'value' => $service_fields['ns3'] ?? ''],
+            ['key' => 'ns4', 'value' => $service_fields['ns4'] ?? '']
+        ];
+
+        $this->Record->from('service_fields')
+            ->where('service_fields.service_id', '=', $service_id)
+            ->delete();
+
+        foreach ($fields as $field) {
+            $field['service_id'] = $service_id;
+            $this->Record->duplicate('service_fields.value', '=', $field['value'])
+                ->insert('service_fields', $field);
+        }
+
+        // Trigger module
+        $vars = array_intersect_key($service_fields, array_flip(['domain', 'ns1', 'ns2', 'ns3', 'ns4']));
+        try {
+            // Some registrar modules, like Logicboxes, are able to retrieve the remote service by the domain
+            $this->ModuleManager->moduleRpc($module_id, 'editService', [$package, $service, $vars]);
+        } catch (Throwable $e) {
+            // Nothing to do
+        }
+
+        return $service_id;
+    }
+
+    /**
      * Renews a domain name
      *
      * @param int $service_id The id of the service where the domain belongs
@@ -313,10 +411,20 @@ class DomainsDomains extends DomainsModel
             return [];
         }
 
+        // Fetch the nameservers from the cache, if they exist
+        $cache = Cache::fetchCache(
+            'nameservers_' . $service_id,
+            Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+        );
+
+        if ($cache) {
+            return unserialize(base64_decode($cache));
+        }
+
         // Get service domain name
         $service_name = $this->ModuleManager->moduleRpc($module->id, 'getServiceDomain', [$service], $module_row->id);
 
-        // Update nameservers
+        // Fetch remote nameservers
         $params = [
             $service_name,
             $module_row->id
@@ -328,10 +436,37 @@ class DomainsDomains extends DomainsModel
 
             return [];
         }
-        
+
         $nameservers = [];
-        foreach ($result as $nameserver) {
+        foreach ($result ?? [] as $nameserver) {
             $nameservers[] = $nameserver['url'];
+        }
+
+        // If there are no remote nameservers, fetch locally stored nameservers
+        $service_fields = $this->Form->collapseObjectArray($service->fields, 'value', 'key');
+        for ($i = 1; $i <= 5; $i++) {
+            if (!empty($service_fields['ns' . $i])) {
+                $nameservers[] = $service_fields['ns' . $i];
+            }
+        }
+
+        // Save nameservers on cache
+        if (Configure::get('Caching.on') && is_writable(CACHEDIR) && !empty($nameservers)) {
+            try {
+                if (!file_exists(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins')) {
+                    mkdir(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins');
+                }
+
+                Cache::writeCache(
+                    'nameservers_' . $service_id,
+                    base64_encode(serialize($nameservers)),
+                    strtotime(Configure::get('Blesta.cache_length')) - time(),
+                    Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+                );
+            } catch (Exception $e) {
+                // Write to cache failed, so disable caching
+                Configure::set('Caching.on', false);
+            }
         }
 
         return $nameservers;
@@ -363,8 +498,18 @@ class DomainsDomains extends DomainsModel
                 ->fetch();
             $registration_date = $domain->registration_date ?? null;
 
+            // Fetch the registration date from the cache, if they exist
+            $cache = Cache::fetchCache(
+                'registration_date_' . $service_id,
+                Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+            );
+
+            if ($cache && empty($registration_date)) {
+                $registration_date = base64_decode($cache);
+            }
+
             // Get the registration date from the registrar
-            if ($registration_date == null) {
+            if (empty($registration_date)) {
                 if (!isset($this->ModuleManager)) {
                     Loader::loadModels($this, ['ModuleManager']);
                 }
@@ -381,16 +526,33 @@ class DomainsDomains extends DomainsModel
                 }
             }
 
-            if ($registration_date) {
-                return $this->Date->format(
-                    $format,
-                    $registration_date
-                );
+            // Fallback to date added
+            if (empty($registration_date)) {
+                $registration_date = $service->date_added;
+            }
+
+            // Save registration date on cache
+            if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
+                try {
+                    if (!file_exists(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins')) {
+                        mkdir(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins');
+                    }
+
+                    Cache::writeCache(
+                        'registration_date_' . $service_id,
+                        base64_encode($registration_date),
+                        strtotime(Configure::get('Blesta.cache_length')) - time(),
+                        Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+                    );
+                } catch (Exception $e) {
+                    // Write to cache failed, so disable caching
+                    Configure::set('Caching.on', false);
+                }
             }
 
             return $this->Date->format(
                 $format,
-                $service->date_added
+                $registration_date
             );
         }
 
@@ -423,8 +585,18 @@ class DomainsDomains extends DomainsModel
                 ->fetch();
             $expiration_date = $domain->expiration_date ?? null;
 
+            // Fetch the expiration date from the cache, if they exist
+            $cache = Cache::fetchCache(
+                'expiration_date_' . $service_id,
+                Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+            );
+
+            if ($cache && empty($expiration_date)) {
+                $expiration_date = base64_decode($cache);
+            }
+
             // Get the expiration date from the registrar
-            if ($expiration_date == null) {
+            if (empty($expiration_date)) {
                 if (!isset($this->ModuleManager)) {
                     Loader::loadModels($this, ['ModuleManager']);
                 }
@@ -441,16 +613,33 @@ class DomainsDomains extends DomainsModel
                 }
             }
 
-            if ($expiration_date) {
-                return $this->Date->format(
-                    $format,
-                    $expiration_date
-                );
+            // Fallback to cancellation or renewal date
+            if (empty($expiration_date)) {
+                $expiration_date = $service->date_canceled ?? $service->date_renews;
+            }
+
+            // Save expiration date on cache
+            if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
+                try {
+                    if (!file_exists(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins')) {
+                        mkdir(CACHEDIR . Configure::get('Blesta.company_id') . DS . 'plugins');
+                    }
+
+                    Cache::writeCache(
+                        'expiration_date_' . $service_id,
+                        base64_encode($expiration_date),
+                        strtotime(Configure::get('Blesta.cache_length')) - time(),
+                        Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+                    );
+                } catch (Exception $e) {
+                    // Write to cache failed, so disable caching
+                    Configure::set('Caching.on', false);
+                }
             }
 
             return $this->Date->format(
                 $format,
-                $service->date_canceled ?? $service->date_renews
+                $expiration_date
             );
         }
 

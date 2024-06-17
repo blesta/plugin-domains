@@ -96,6 +96,10 @@ class TldSync
         $formatted_pricing = [];
         foreach ($pricing as $currency => $terms) {
             foreach ($terms as $year => $prices) {
+                if (isset($formatted_pricing[$year][$currency])) {
+                    continue;
+                }
+
                 // Apply markup and rounding
                 $prices['register'] = $this->markup(
                     $prices['register'],

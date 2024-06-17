@@ -47,6 +47,7 @@
                 ?>
                 <td><span><?php $this->_('AdminMain.index.heading_domain');?></span></td>
                 <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=term&order=' . ($sort == 'term' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'term' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.index.heading_term');?></a></span></td>
+                <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=registrar&order=' . ($sort == 'registrar' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'registrar' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.index.heading_registrar');?></a></span></td>
                 <td><span><?php $this->_('AdminMain.index.heading_dateregistration');?></span></td>
                 <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=date_renews&order=' . ($sort == 'date_renews' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_renews' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.index.heading_daterenews');?></a></span></td>
                 <td><span><?php $this->_('AdminMain.index.heading_dateexpires');?></span></td>
@@ -96,6 +97,7 @@
                     }
                     ?>
                 </td>
+                <td><?php echo $this->Html->safe(isset($domains[$i]->registrar) ? $domains[$i]->registrar : '');?></td>
                 <td class="registration_date">
                     <?php echo isset($domains[$i]->registration_date) ? $this->Date->cast($domains[$i]->registration_date) : '';?>
                     <div class="bg-white text-black-50 font-italic border p-1 position-absolute rounded shadow-sm" style="z-index: 9; margin: -19px 0 0 95px; display: none;">
@@ -166,12 +168,17 @@
             $this->Form->fieldSubmit('save', $this->_('AdminMain.index.field_actionsubmit', true), ['class' => 'btn btn-primary pull-right btn-sm']);
             ?>
             <div class="actions">
-                <div id="change_auto_renewal" class="action_section">
+                <div id="domain_change_auto_renewal" class="action_section">
                     <?php
                     $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], isset($vars->action) ? $vars->action : null);
                     ?>
                 </div>
-                <div id="domain_renewal" class="action_section">
+                <div id="domain_change_registrar" class="action_section">
+                    <?php
+                    $this->Form->fieldSelect('module_id', ($modules ?? []), ($vars->client ?? ''));
+                    ?>
+                </div>
+                <div id="domain_domain_renewal" class="action_section">
                     <div class="float">
                         <?php
                         $this->Form->label($this->_('AdminMain.domains.action.field_years', true), 'years', ['class' => 'inline']);
@@ -179,7 +186,7 @@
                         ?>
                     </div>
                 </div>
-                <div id="update_nameservers" class="action_section">
+                <div id="domain_update_nameservers" class="action_section">
                     <div class="float">
                         <?php
                         $this->Form->label($this->_('AdminMain.domains.action.field_nameservers', true), 'nameservers', ['class' => 'inline']);
@@ -285,8 +292,7 @@
 
         $('#domain_action').change(function() {
             $('.action_section').hide();
-            console.log('#' + $(this).val());
-            $('#' + $(this).val()).show();
+            $('#domain_' + $(this).val()).show();
         });
         $('#domain_action').change();
 
@@ -320,9 +326,6 @@
                 $('#domain_client_id').val(ui.item.id);
             }
         });
-
-
-
 
         $('.registration_date').on('mouseover', function() {
             $(this).find('div').show();

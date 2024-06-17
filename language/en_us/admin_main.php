@@ -1,6 +1,7 @@
 <?php
 // Success messages
 $lang['AdminMain.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
+$lang['AdminMain.!success.domain_registrar_updated'] = 'The domain registrar has been updated!';
 $lang['AdminMain.!success.domain_renewal'] = 'The Domain has been renewed!';
 $lang['AdminMain.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 $lang['AdminMain.!success.domains_pushed'] = 'The selected domains were successfully pushed to the new client.';
@@ -25,6 +26,8 @@ $lang['AdminMain.index.heading_status'] = 'Status';
 
 $lang['AdminMain.index.heading_domain'] = 'Domain';
 $lang['AdminMain.index.heading_term'] = 'Term';
+$lang['AdminMain.index.heading_registrar'] = 'Registrar';
+$lang['AdminMain.index.heading_datecreated'] = 'Date Created';
 $lang['AdminMain.index.heading_dateregistration'] = 'Date Registered';
 $lang['AdminMain.index.heading_daterenews'] = 'Date Renews';
 $lang['AdminMain.index.heading_dateexpires'] = 'Date Expires';

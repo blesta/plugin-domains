@@ -212,6 +212,11 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.12.0', '<')) {
                 $this->upgrade1_12_0();
             }
+            
+            // Upgrade to 1.13.2
+            if (version_compare($current_version, '1.13.2', '<')) {
+                $this->upgrade1_13_2();
+            }
         }
     }
 
@@ -586,6 +591,7 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels($this, ['Companies']);
         Loader::loadComponents($this, ['Record']);
+
         $companies = $this->Companies->getAll();
         foreach ($companies as $company) {
             $package_group_id_setting = $this->Companies->getSetting($company->id, 'domains_package_group');
@@ -607,7 +613,24 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels($this, ['Companies', 'DataFeeds']);
 
-        // Add a 'automatic_transition' column to the 'support_departments' table
+        // Set all domain packages type to domain
+        $domain_packages = $this->Record->select(['domains_packages.package_id'])
+            ->from('domains_packages')
+            ->fetchAll();
+
+        foreach ($domain_packages as $domain_package) {
+            // Ensure that the type package meta field is always set to "domain"
+            $field = [
+                'package_id' => $domain_package->package_id,
+                'key' => 'type',
+                'value' => 'domain',
+                'serialized' => '0'
+            ];
+            $this->Record->duplicate('package_meta.value', '=', $field['value'])
+                ->insert('package_meta', $field);
+        }
+
+        // Add a 'registration_date' column to the 'domains_domains' table
         $this->Record->query(
             'ALTER TABLE `domains_domains` ADD `registration_date` DATETIME NULL DEFAULT NULL AFTER `service_id`;'
         );
@@ -627,6 +650,17 @@ class DomainsPlugin extends Plugin
             // Nothing to do
         }
     }
+    
+    /**
+     * Update to v1.13.2
+     */
+    private function upgrade1_13_2()
+    {
+        // Add a 'registration_date' column to the 'domains_domains' table
+        $this->Record->query(
+            'ALTER TABLE `domains_domains` CHANGE `expiration_date` `expiration_date` DATETIME NULL DEFAULT NULL;'
+        );
+    }
 
     /**
      * Cast an object to a multi-dimensional array
@@ -634,7 +668,8 @@ class DomainsPlugin extends Plugin
      * @param stdClass $object The object to cast to a multi-dimensional array
      * @return array The array from the object
      */
-    private function castToArray($object) {
+    private function castToArray($object)
+    {
         if (is_object($object) || is_array($object)) {
             $array = (array) $object;
             foreach($array as &$item) {
@@ -669,7 +704,7 @@ class DomainsPlugin extends Plugin
         $this->Record
             ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
             ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-            ->setField('expiration_date', ['type' => 'datetime'])
+            ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
             ->setKey(['id'], 'primary')
             ->setKey(['service_id'], 'unique')
             ->create('domains_domains', true);
@@ -1238,27 +1273,56 @@ class DomainsPlugin extends Plugin
                 $modules[$module_id] = $this->ModuleManager->initModule($module_id);
             }
 
-            // Fetch the domain registration date from the registrar, and update if different than what is stored locally
+            // Fetch the registration date that is stored locally
+            $domain = $this->Record->select()->from('domains_domains')->where('service_id', '=', $service->id)->fetch();
+            $database_registration_date = null;
+            if ($domain && $domain->registration_date !== null) {
+                $database_registration_date = $domain->registration_date;
+            }
+            
+            // Fetch the domain registration date from the registrar, and update
+            // if different than what is stored locally
             if (method_exists($modules[$module_id], 'getRegistrationDate')
                 && ($new_registration_date = $modules[$module_id]->getRegistrationDate($service, 'Y-m-d H:i:s'))
                 && (strtotime($service->registration_date) !== strtotime($new_registration_date)
-                    || !(($domain = $this->Record->select()->from('domains_domains')->where('service_id', '=', $service->id)->fetch())
-                        && $domain->registration_date !== null)
-                )
+                    || $database_registration_date == null)
             ) {
                 $this->DomainsDomains->setRegistrationDate($service->id, $new_registration_date);
                 $service->registration_date = $new_registration_date;
             }
-
-            // Fetch the domain expiration date from the registrar, and update if different than what is stored locally
-            if (($new_expiration_date = $modules[$module_id]->getExpirationDate($service, 'Y-m-d H:i:s'))
+            
+            // If there was nothing stored locally and we were not able to fetch from
+            // the registrar, just store the date_added
+            if ($database_registration_date == null && $new_registration_date == null) {
+                $this->DomainsDomains->setRegistrationDate($service->id, $service->date_added);
+            }
+            
+            // Fetch the expiration date that is stored locally
+            $database_expiration_date = null;
+            if ($domain && $domain->expiration_date !== null) {
+                $database_expiration_date = $domain->expiration_date;
+            }
+            
+            // Fetch the domain expiration date from the registrar, and update if
+            // different than what is stored locally
+            if (method_exists($modules[$module_id], 'getExpirationDate')
+                && ($new_expiration_date = $modules[$module_id]->getExpirationDate($service, 'Y-m-d H:i:s'))
                 && (strtotime($service->expiration_date) !== strtotime($new_expiration_date)
-                    || !(($domain = $this->Record->select()->from('domains_domains')->where('service_id', '=', $service->id)->fetch())
-                        && $domain->expiration_date !== null)
-                )
+                    || $database_expiration_date == null)
             ) {
                 $this->DomainsDomains->setExpirationDate($service->id, $new_expiration_date);
                 $service->expiration_date = $new_expiration_date;
+            }
+            
+            // If there was nothing stored locally and we were not able to fetch from the
+            // registrar, just store the adjusted date_renews
+            if ($database_expiration_date == null && $new_expiration_date == null) {
+                $this->DomainsDomains->setExpirationDate($service->id, $this->Services->Date->modify(
+                    $service->date_renews,
+                    '+' . ($renewal_days->value ?? 0) . ' days',
+                    'Y-m-d 00:00:00',
+                    Configure::get('Blesta.company_timezone')
+                ));
             }
 
             // Get the adjusted renew date base on the expiration date of this service and the configured
