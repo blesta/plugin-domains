@@ -1623,7 +1623,7 @@ class AdminDomains extends DomainsController
                             $this->flashMessage('message', Language::_('AdminDomains.!success.delete', true));
                         } else {
                             $this->flashMessage(
-                                'message',
+                                'error',
                                 Language::_('AdminDomains.!success.delete_partial', true, implode(', ', $undeleted_tlds))
                             );
                         }
