@@ -509,6 +509,7 @@
 
                     $(this).prop('disabled', false);
                     $(this).removeAttr('disabled');
+                    $("html, body").animate({ scrollTop: 0 }, "slow");
                 },
                 null,
                 {dataType: 'json'}

@@ -1581,7 +1581,7 @@ class AdminDomains extends DomainsController
                 $result = $this->processTldActions($this->post['tlds_bulk']);
 
                 if (!empty($result)) {
-                    $this->flashMessage('message', $result);
+                    $this->flashMessage('notice', $result);
                 } else {
                     $this->flashMessage('message', Language::_('AdminDomains.!success.' . $action, true));
                 }
@@ -1665,7 +1665,9 @@ class AdminDomains extends DomainsController
         $this->uses(['Domains.DomainsTlds']);
 
         $action = $params['action'] ?? null;
-        if (array_key_exists($action, $this->getTldActions())) {
+        $actions = $this->getTldActions();
+        if (array_key_exists($action, $actions)) {
+            $error_tlds = [];
             switch ($action) {
                 case 'change_status':
                     $status = $params['status'] ?? null;
@@ -1681,24 +1683,36 @@ class AdminDomains extends DomainsController
                     foreach ($params['tlds'] as $tld) {
                         $vars = ['dns_management' => ($params['status'] == 'enabled') ? '1' : '0'];
                         $this->DomainsTlds->edit($tld, $vars);
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
+                        }
                     }
                     break;
                 case 'email_forwarding':
                     foreach ($params['tlds'] as $tld) {
                         $vars = ['email_forwarding' => ($params['status'] == 'enabled') ? '1' : '0'];
                         $this->DomainsTlds->edit($tld, $vars);
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
+                        }
                     }
                     break;
                 case 'id_protection':
                     foreach ($params['tlds'] as $tld) {
                         $vars = ['id_protection' => ($params['status'] == 'enabled') ? '1' : '0'];
                         $this->DomainsTlds->edit($tld, $vars);
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
+                        }
                     }
                     break;
                 case 'epp_code':
                     foreach ($params['tlds'] as $tld) {
                         $vars = ['epp_code' => ($params['status'] == 'enabled') ? '1' : '0'];
                         $this->DomainsTlds->edit($tld, $vars);
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
+                        }
                     }
                     break;
                 case 'tld_sync':
@@ -1728,6 +1742,10 @@ class AdminDomains extends DomainsController
                         return Language::_('AdminDomains.!success.delete_partial', true, implode(', ', $undeleted_tlds));
                     }
                     break;
+            }
+
+            if (!empty($error_tlds)) {
+                return Language::_('AdminDomains.!warning.action_partial', true, $actions[$action], implode(', ', $error_tlds));
             }
         }
     }

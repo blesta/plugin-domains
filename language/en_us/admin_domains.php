@@ -30,6 +30,7 @@ $lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not va
 $lang['AdminDomains.!error.tlds_bulk[action].valid'] = 'Invalid value for TLDs Bulk Action, must be "enable" or "disable".';
 $lang['AdminDomains.!error.tlds_imported'] = 'Not all TLDS could be imported due to an error.';
 
+$lang['AdminDomains.!warning.action_partial'] = '%1$s could not be updated for following TLDs: %2$s'; // %1$s is the action being attempted, %2$s is the list of TLDs
 $lang['AdminDomains.!warning.automatic_currency_conversion'] = 'You have an exchange rate set for this currency, so it\'s not necessary to define prices here. If no prices are defined for this currency, the currency will be converted automatically from %1$s. If you define a price here, it will be used instead.'; // %1$s is the default currency
 $lang['AdminDomains.!warning.price_sync_unsupported'] = 'This registrar module does not support price synchronization, TLDs will be imported without any pricing.';
 
