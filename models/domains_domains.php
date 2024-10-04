@@ -297,14 +297,19 @@ class DomainsDomains extends DomainsModel
             return;
         }
 
+        // Determine if the domain is pending of renewal
+        $renewable_service = $this->Services->getRenewablePaidQuery()->
+            where('service_invoices.service_id', '=', $service->id)->
+            fetchAll();
+
         // Determine whether invoices for this service remain unpaid
         $unpaid_invoices = $this->Invoices->getAllWithService($service->id, $service->client_id, 'open');
 
         // Determine if this domain has pending service changes
         $service_changes = $this->ServiceChanges->getAll('pending', $service->id);
 
-        // Disallow renew if the current service has not been paid or has pending service changes
-        if (!empty($unpaid_invoices) || !empty($service_changes)) {
+        // Disallow renew if the current service has not been paid, has pending service changes or is not active
+        if (!empty($unpaid_invoices) || !empty($service_changes) || $service->status !== 'active' || !empty($renewable_service)) {
             $errors = [
                 'error' => ['cycles' => Language::_('DomainsDomains.!error.invoices_renew_service', true)]
             ];
