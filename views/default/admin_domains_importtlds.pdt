@@ -245,7 +245,7 @@
                 // Add "Please Select" option
                 $('#module_id').append($('<option>', {
                     value: '',
-                    text: '<?php echo $this->_('AppController.select.please', true);?>'
+                    text: '<?php echo addslashes($this->_('AppController.select.please', true));?>'
                 }));
 
                 // Add modules to the select field
