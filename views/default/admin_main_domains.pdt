@@ -238,7 +238,7 @@
             $('#delete_domain_service_id').val(service_id);
         });
         $('#plugin_domains_admin_main_domains a.manage[rel]').not('#plugin_domains_admin_main_domains .expand_details a.manage[rel]').each(function() {
-            $(this).blestaModalConfirm({base_url: '<?php echo $this->base_uri;?>', close: '<?php $this->_('AppController.modal.text_close');?>', submit: true, form: $('#delete_domain')});
+            $(this).blestaModalConfirm({base_url: '<?php echo $this->base_uri;?>', close: '<?php addslashes($this->_('AppController.modal.text_close', true));?>', submit: true, form: $('#delete_domain')});
         });
 
         showServiceActions();

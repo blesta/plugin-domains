@@ -465,7 +465,7 @@
         }
 
         $('.load_sample_email').on('click', function() {
-            if (confirm('<?php $this->_('AdminDomains.pricing.text_confirm_load_email');?>')) {
+            if (confirm('<?php echo addslashes($this->_('AdminDomains.pricing.text_confirm_load_email', true));?>')) {
                 <?php
                 foreach ((isset($languages) ? $languages : []) as $i => $lang) {
                 ?>

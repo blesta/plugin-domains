@@ -113,6 +113,6 @@
 $this->Javascript->setInline("
     $(document).ready(function() {
         // Handle confirmation on delete action
-        $('#registrars a.manage[rel]').blestaModalConfirm({base_url: '" . $this->base_uri . "', close: '" . $this->_('AppController.modal.text_close', true) . "', submit: true});
+        $('#registrars a.manage[rel]').blestaModalConfirm({base_url: '" . $this->base_uri . "', close: '" . addslashes($this->_('AppController.modal.text_close', true)) . "', submit: true});
     });
 ");
