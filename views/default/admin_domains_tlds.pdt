@@ -226,7 +226,7 @@
         // Handle confirmation
         $('#admin_domains_tlds .table a.manage[rel]').blestaModalConfirm({
             base_url: '<?php echo $this->base_uri;?>',
-            close: '<?php $this->_('AppController.modal.text_close');?>',
+            close: '<?php echo addslashes($this->_('AppController.modal.text_close', true));?>',
             submit: true
         });
 
@@ -370,7 +370,7 @@
         function setTldMeta(tld)
         {
             $('.common_box').blestaModal({
-                close: '<?php $this->_('AppController.modal.text_close');?>',
+                close: '<?php echo addslashes($this->_('AppController.modal.text_close', true));?>',
                 url: '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/meta/');?>' + tld.replace(/\./g, '_') + '/',
                 onShow: function (event, api) {
                     var qtip = $('#' + api._id);
@@ -428,7 +428,7 @@
         // Load modal content
         $('#admin_domains_tlds .table a.modal').each(function() {
             $(this).blestaModal({
-                close: '<?php $this->_('AppController.modal.text_close');?>',
+                close: '<?php echo addslashes($this->_('AppController.modal.text_close', true));?>',
                 url: $(this).attr('href'),
                 onShow: function (event, api) {
                     var qtip = $('#' + api._id);
