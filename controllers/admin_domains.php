@@ -1504,7 +1504,7 @@ class AdminDomains extends DomainsController
      */
     public function tlds()
     {
-        $this->uses(['ModuleManager', 'Packages', 'Domains.DomainsTlds']);
+        $this->uses(['ModuleManager', 'Packages', 'Services', 'Domains.DomainsTlds']);
         $this->helpers(['Form', 'Widget']);
 
         $company_id = Configure::get('Blesta.company_id');
@@ -1573,32 +1573,17 @@ class AdminDomains extends DomainsController
 
         // Process TLD bulk actions
         if (!empty($this->post['tlds_bulk'])) {
-            $bulk_data = $this->post['tlds_bulk'];
-            $action = $bulk_data['action'] ?? null;
+            $action = $this->post['tlds_bulk']['action'] ?? null;
 
             if (!array_key_exists($action, $this->getTldActions())) {
                 $this->flashMessage('error', Language::_('AdminDomains.!error.tlds_bulk[action].valid', true));
-            } else if (!empty($bulk_data['tlds']) && is_array($bulk_data['tlds'])) {
-                switch ($action) {
-                    case 'change_status':
-                        $status = $bulk_data['status'] ?? null;
-                        foreach ($bulk_data['tlds'] as $tld) {
-                            if ($status == 'enabled') {
-                                $this->DomainsTlds->enable($tld);
-                            } elseif ($status == 'disabled') {
-                                $this->DomainsTlds->disable($tld);
-                            }
-                        }
+            } else {
+                $result = $this->processTldActions($this->post['tlds_bulk']);
 
-                        $this->flashMessage('message', Language::_('AdminDomains.!success.change_status', true));
-                        break;
-                    case 'tld_sync':
-                        Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
-                        $sync_utility = new TldSync();
-                        $sync_utility->synchronizePrices($bulk_data['tlds']);
-
-                        $this->flashMessage('message', Language::_('AdminDomains.!success.tld_sync', true));
-                        break;
+                if (!empty($result)) {
+                    $this->flashMessage('notice', $result);
+                } else {
+                    $this->flashMessage('message', Language::_('AdminDomains.!success.' . $action, true));
                 }
             }
 
@@ -1667,6 +1652,105 @@ class AdminDomains extends DomainsController
     }
 
     /**
+     * Process bulk actions to a provided lists of TLDs
+     *
+     * @param array $params An array containing:
+     *  - action The bulk action to perform
+     *  - status Whether to enable or disable the provided action
+     *  - tlds A list of TLDs to update
+     * @return mixed A string containing any error or warning, void on success
+     */
+    private function processTldActions(array $params)
+    {
+        $this->uses(['Domains.DomainsTlds']);
+
+        $action = $params['action'] ?? null;
+        $actions = $this->getTldActions();
+        if (array_key_exists($action, $actions)) {
+            $error_tlds = [];
+            switch ($action) {
+                case 'change_status':
+                    $status = $params['status'] ?? null;
+                    foreach ($params['tlds'] as $tld) {
+                        if ($status == 'enabled') {
+                            $this->DomainsTlds->enable($tld);
+                        } elseif ($status == 'disabled') {
+                            $this->DomainsTlds->disable($tld);
+                        }
+                    }
+                    break;
+                case 'dns_management':
+                    foreach ($params['tlds'] as $tld) {
+                        $vars = ['dns_management' => ($params['status'] == 'enabled') ? '1' : '0'];
+                        $this->DomainsTlds->edit($tld, $vars);
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
+                        }
+                    }
+                    break;
+                case 'email_forwarding':
+                    foreach ($params['tlds'] as $tld) {
+                        $vars = ['email_forwarding' => ($params['status'] == 'enabled') ? '1' : '0'];
+                        $this->DomainsTlds->edit($tld, $vars);
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
+                        }
+                    }
+                    break;
+                case 'id_protection':
+                    foreach ($params['tlds'] as $tld) {
+                        $vars = ['id_protection' => ($params['status'] == 'enabled') ? '1' : '0'];
+                        $this->DomainsTlds->edit($tld, $vars);
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
+                        }
+                    }
+                    break;
+                case 'epp_code':
+                    foreach ($params['tlds'] as $tld) {
+                        $vars = ['epp_code' => ($params['status'] == 'enabled') ? '1' : '0'];
+                        $this->DomainsTlds->edit($tld, $vars);
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
+                        }
+                    }
+                    break;
+                case 'tld_sync':
+                    Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
+                    $sync_utility = new TldSync();
+                    $sync_utility->synchronizePrices($params['tlds']);
+                    break;
+                case 'delete':
+                    $undeleted_tlds = [];
+                    foreach ($params['tlds'] as $tld) {
+                        $tld = $this->DomainsTlds->get($tld);
+                        $services = $this->Services->getAll(
+                            ['date_added' => 'DESC'],
+                            true,
+                            [],
+                            ['packages.id' => $tld->package_id]
+                        );
+
+                        if (empty($services)) {
+                            $this->DomainsTlds->delete($tld->tld, $tld->company_id);
+                        } else {
+                            $undeleted_tlds[] = $tld->tld;
+                        }
+                    }
+
+                    if (!empty($undeleted_tlds)) {
+                        return Language::_('AdminDomains.!success.delete_partial', true, implode(', ', $undeleted_tlds));
+                    }
+                    break;
+            }
+
+            if (!empty($error_tlds)) {
+                return Language::_('AdminDomains.!warning.action_partial', true, $actions[$action], implode(', ', $error_tlds));
+            }
+        }
+    }
+
+    /**
      * Gets a list of the available bulk actions for TLDs
      *
      * @return array An array containing the available bulk actions for TLDs
@@ -1675,7 +1759,12 @@ class AdminDomains extends DomainsController
     {
         return [
             'change_status' => Language::_('AdminDomains.getTldActions.option_change_status', true),
-            'tld_sync' => Language::_('AdminDomains.getTldActions.option_tld_sync', true)
+            'tld_sync' => Language::_('AdminDomains.getTldActions.option_tld_sync', true),
+            'dns_management' => Language::_('AdminDomains.getTldActions.option_dns_management', true),
+            'email_forwarding' => Language::_('AdminDomains.getTldActions.option_email_forwarding', true),
+            'id_protection' => Language::_('AdminDomains.getTldActions.option_id_protection', true),
+            'epp_code' => Language::_('AdminDomains.getTldActions.option_epp_code', true),
+            'delete' => Language::_('AdminDomains.getTldActions.option_delete', true),
         ];
     }
 

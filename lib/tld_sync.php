@@ -104,12 +104,14 @@ class TldSync
                 $prices['register'] = $this->markup(
                     $prices['register'],
                     $this->tld_settings['domains_sync_price_markup'] ?? 0,
-                    $tld_rounding
+                    $tld_rounding,
+                    $currency
                 );
                 $prices['renew'] = $this->markup(
                     $prices['renew'],
                     $this->tld_settings['domains_sync_renewal_markup'] ?? 0,
-                    $tld_rounding
+                    $tld_rounding,
+                    $currency
                 );
 
                 // Registrar only supports transfers up to one year
@@ -117,7 +119,8 @@ class TldSync
                     $prices['transfer'] = $this->markup(
                         $prices['transfer'],
                         $this->tld_settings['domains_sync_transfer_markup'] ?? 0,
-                        $tld_rounding
+                        $tld_rounding,
+                        $currency
                     );
                     $prices['enabled_transfer'] = true;
                 } else {
@@ -143,9 +146,10 @@ class TldSync
      * @param float $price The price to add a markup
      * @param int $markup The percentage of markup to add
      * @param string $rounding The nearest decimal to round up the final price
+     * @param string $currency The currency of the given price
      * @return float The total amount of the price plus the markup
      */
-    private function markup($price, $markup, $rounding = null)
+    private function markup($price, $markup, $rounding = null, $currency = null)
     {
         if ($price == 0) {
             return null;
@@ -156,6 +160,25 @@ class TldSync
             $subtracted_rounding_price = $final_price - (float) $rounding;
             $floored_price = floor($subtracted_rounding_price);
             $final_price = $floored_price + (float) $rounding + ($subtracted_rounding_price == $floored_price ? 0 : 1);
+        } else if (!is_null($currency)) {
+            if (!isset($this->Currencies)) {
+                Loader::loadModels($this, ['Currencies']);
+            }
+
+            if (!isset($this->CurrencyFormat)) {
+                Loader::loadHelpers($this, ['CurrencyFormat']);
+            }
+
+            $currency = $this->Currencies->get($currency, Configure::get('Blesta.company_id'));
+            $options = [
+                'prefix' => false,
+                'suffix' => false,
+                'with_separator' => false,
+                'code' => false,
+                'html_code' => false,
+                'decimals' => $currency->precision ?? 2
+            ];
+            $final_price = $this->CurrencyFormat->format($final_price, $currency->code, $options);
         }
 
         return $final_price;
