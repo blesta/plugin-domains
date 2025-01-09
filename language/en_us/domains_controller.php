@@ -6,6 +6,8 @@ $lang['DomainsController.!error.move_error'] = 'The selected domains could not b
 
 
 $lang['DomainsController.getDomainActions.change_auto_renewal'] = 'Change Auto Renewal';
+$lang['DomainsController.getDomainActions.change_expiration_date'] = 'Change Expiration Date';
+$lang['DomainsController.getDomainActions.change_registration_date'] = 'Change Registration Date';
 $lang['DomainsController.getDomainActions.change_registrar'] = 'Change Registrar';
 $lang['DomainsController.getDomainActions.domain_renewal'] = 'Renew Domain';
 $lang['DomainsController.getDomainActions.update_nameservers'] = 'Update Nameservers';

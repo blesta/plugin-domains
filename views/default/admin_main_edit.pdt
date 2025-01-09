@@ -137,6 +137,18 @@
                             $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], $vars->auto_renewal ?? null);
                             ?>
                         </li>
+                        <li class="change_expiration_date">
+                            <?php
+                            $this->Form->label($this->_('AdminMain.edit.field_expiration_date', true));
+                            $this->Form->fieldText('expiration_date', $this->Date->cast($vars->expiration_date ?? $service->expiration_date, 'Y-m-d'), ['class' => 'date', 'id' => 'expiration_date']);
+                            ?>
+                        </li>
+                        <li class="change_registration_date">
+                            <?php
+                            $this->Form->label($this->_('AdminMain.edit.field_registration_date', true));
+                            $this->Form->fieldText('registration_date', $this->Date->cast($vars->registration_date ?? $service->registration_date, 'Y-m-d'), ['class' => 'date', 'id' => 'registration_date']);
+                            ?>
+                        </li>
                         <li class="update_nameservers">
                             <?php
                             $this->Form->label($this->_('AdminMain.edit.field_ns1', true), 'nameservers_1');
@@ -167,7 +179,7 @@
                             $this->Form->fieldText('nameservers[]', ($vars->nameservers[4] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_5']);
                             ?>
                         </li>
-                        <li class="domain_push_to_client">
+                        <li class="push_to_client">
                             <?php
                             $this->Form->label($this->_('AdminMain.edit.field_client', true), 'domain_client');
                             $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control ui-autocomplete-input', 'id' => 'client']);
@@ -279,9 +291,11 @@
         function serviceActionChange() {
             $(".domain_renewal").hide();
             $(".change_auto_renewal").hide();
+            $(".change_expiration_date").hide();
+            $(".change_registration_date").hide();
             $(".change_registrar").hide();
             $(".update_nameservers").hide();
-            $(".domain_push_to_client").hide();
+            $(".push_to_client").hide();
 
             var action = $("#action").val();
             if (action !== '') {
