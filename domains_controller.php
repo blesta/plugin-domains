@@ -148,7 +148,7 @@ class DomainsController extends AppController
                 break;
             case 'change_expiration_date':
                 foreach ($data['service_ids'] as $service_id) {
-                    $this->DomainsDomains->setExpirationDate($service_id, $data['expiration_date'] ?? null);
+                    $this->DomainsDomains->setExpirationDate($service_id, $this->DomainsDomains->dateToUtc($data['expiration_date'] ?? null));
 
                     if (($errors = $this->DomainsDomains->errors())) {
                         break;
@@ -157,7 +157,7 @@ class DomainsController extends AppController
                 break;
             case 'change_registration_date':
                 foreach ($data['service_ids'] as $service_id) {
-                    $this->DomainsDomains->setRegistrationDate($service_id, $data['registration_date'] ?? null);
+                    $this->DomainsDomains->setRegistrationDate($service_id, $this->DomainsDomains->dateToUtc($data['registration_date'] ?? null));
 
                     if (($errors = $this->DomainsDomains->errors())) {
                         break;
