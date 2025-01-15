@@ -46,8 +46,14 @@ class AdminDomains extends DomainsController
                 $this->setMessage('error', $errors, false, null, false);
             } else {
                 switch ($this->post['action']) {
-                    case 'schedule_cancellation':
+                    case 'change_auto_renewal':
                         $term = 'AdminDomains.!success.change_auto_renewal';
+                        break;
+                    case 'change_expiration_date':
+                        $term = 'AdminDomains.!success.change_expiration_date';
+                        break;
+                    case 'change_registration_date':
+                        $term = 'AdminDomains.!success.change_registration_date';
                         break;
                     case 'change_registrar':
                         $term = 'AdminDomains.!success.domain_registrar_updated';
@@ -69,6 +75,9 @@ class AdminDomains extends DomainsController
                 $this->setMessage('message', Language::_($term, true), false, null, false);
             }
         }
+
+        // Get the company settings
+        $company_settings = $this->SettingsCollection->fetchSettings(null, $this->company_id);
 
         // Set filters from post input
         $post_filters = [];
@@ -159,6 +168,12 @@ class AdminDomains extends DomainsController
         $this->set('sort', $alt_sort ? $alt_sort : $sort);
         $this->set('order', $order);
         $this->set('negate_order', ($order == 'asc' ? 'desc' : 'asc'));
+
+        $this->Javascript->setFile('date.min.js');
+        $this->Javascript->setFile('jquery.datePicker.min.js');
+        $this->Javascript->setInline(
+            'Date.firstDayOfWeek=' . ($company_settings['calendar_begins'] == 'sunday' ? 0 : 1) . ';'
+        );
 
         // Overwrite default pagination settings
         $settings = array_merge(
