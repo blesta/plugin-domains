@@ -217,6 +217,10 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.13.2', '<')) {
                 $this->upgrade1_13_2();
             }
+            // Upgrade to 1.15.1
+            if (version_compare($current_version, '1.15.1', '<')) {
+                $this->upgrade1_15_1();
+            }
         }
     }
 
@@ -660,6 +664,17 @@ class DomainsPlugin extends Plugin
         $this->Record->query(
             'ALTER TABLE `domains_domains` CHANGE `expiration_date` `expiration_date` DATETIME NULL DEFAULT NULL;'
         );
+    }
+    
+    /**
+     * Update to v1.15.1
+     */
+    private function upgrade1_15_1()
+    {
+        // Set 0 in place of an empty string for the domains_renewal_days_before_expiration settings
+        $this->Record->where('key', '=', 'domains_renewal_days_before_expiration')->
+            where('value', '=', '')->
+            update('company_settings', ['value' => 0]);
     }
 
     /**
