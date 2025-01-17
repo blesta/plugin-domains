@@ -671,7 +671,7 @@ class DomainsPlugin extends Plugin
      */
     private function upgrade1_15_1()
     {
-        // Add a 'registration_date' column to the 'domains_domains' table
+        // Set 0 in place of an empty string for the domains_renewal_days_before_expiration settings
         $this->Record->where('key', '=', 'domains_renewal_days_before_expiration')->
             where('value', '=', '')->
             update('company_settings', ['value' => 0]);
