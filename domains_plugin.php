@@ -696,9 +696,9 @@ class DomainsPlugin extends Plugin
             fetchAll();
 
         foreach ($emails as $email) {
-            $email->subject = str_replace('{service.date_renews}', '{service.expiration_date}', $email->subject);
-            $email->text = str_replace('{service.date_renews}', '{service.expiration_date}', $email->text);
-            $email->html = str_replace('{service.date_renews}', '{service.expiration_date}', $email->html);
+            $email->subject = str_replace(['{service.date_renews}', '{service.date_renews | e}'], '{service.expiration_date}', $email->subject);
+            $email->text = str_replace(['{service.date_renews}', '{service.date_renews | e}'], '{service.expiration_date}', $email->text);
+            $email->html = str_replace(['{service.date_renews}', '{service.date_renews | e}'], '{service.expiration_date}', $email->html);
 
             $this->Record->where('id', '=', $email->id)->
                 update('emails', ['subject' => $email->subject, 'text' => $email->text, 'html' => $email->html]);
