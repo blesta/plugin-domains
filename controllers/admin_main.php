@@ -303,7 +303,7 @@ class AdminMain extends DomainsController
                 $years[$pricing->term . '-' . $pricing->currency] = Language::_('AdminMain.add.term_recurring', true, $term, $price, $renewal_price);
             }
         }
-        
+
         return $years;
     }
 
@@ -624,7 +624,7 @@ class AdminMain extends DomainsController
             }
 
             // Update package
-            if (isset($this->post['module']) && $module->id !== $this->post['module'] && $service->status == 'pending') {
+            if (isset($this->post['module']) && $module->id != $this->post['module'] && $service->status == 'pending') {
                 $tld = strstr($service->name ?? $this->post['domain'] ?? '', '.');
                 $package = $this->DomainsTlds->getTldPackageByModuleId(
                     $tld,
@@ -648,7 +648,7 @@ class AdminMain extends DomainsController
                     $service->package_pricing->term,
                     $service->package_pricing->currency
                 );
-                $this->post['pricing_id'] = $pricing->id;
+                $this->post['pricing_id'] = $pricing->pricing_id;
             }
 
             // Update service fields
@@ -790,7 +790,7 @@ class AdminMain extends DomainsController
 
         return false;
     }
-    
+
     /**
      * Fetches the add service pricing options from a specific registrar module
      */
@@ -801,7 +801,7 @@ class AdminMain extends DomainsController
             header($this->server_protocol . ' 401 Unauthorized');
             exit();
         }
-        
+
         $this->uses(['Domains.DomainsTlds']);
 
         // Ensure a valid module was given
