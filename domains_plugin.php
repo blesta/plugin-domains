@@ -217,6 +217,16 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.13.2', '<')) {
                 $this->upgrade1_13_2();
             }
+
+            // Upgrade to 1.15.1
+            if (version_compare($current_version, '1.15.1', '<')) {
+                $this->upgrade1_15_1();
+            }
+
+            // Upgrade to 1.15.2
+            if (version_compare($current_version, '1.15.2', '<')) {
+                $this->upgrade1_15_2();
+            }
         }
     }
 
@@ -670,6 +680,39 @@ class DomainsPlugin extends Plugin
             // Nothing to do
         }
     }
+    
+    /**
+     * Update to v1.15.1
+     */
+    private function upgrade1_15_1()
+    {
+        // Set 0 in place of an empty string for the domains_renewal_days_before_expiration settings
+        $this->Record->where('key', '=', 'domains_renewal_days_before_expiration')->
+            where('value', '=', '')->
+            update('company_settings', ['value' => 0]);
+    }
+
+    /**
+     * Update to v1.15.2
+     */
+    private function upgrade1_15_2()
+    {
+        $email_actions = ['Domains.domain_renewal_1', 'Domains.domain_renewal_2', 'Domains.domain_expiration'];
+        $emails = $this->Record->select('emails.*')->
+            from('emails')->
+            on('email_groups.action', 'in', $email_actions)->
+            innerJoin('email_groups', 'email_groups.id', '=', 'emails.email_group_id', false)->
+            fetchAll();
+
+        foreach ($emails as $email) {
+            $email->subject = str_replace(['{service.date_renews}', '{service.date_renews | e}'], '{service.expiration_date}', $email->subject);
+            $email->text = str_replace(['{service.date_renews}', '{service.date_renews | e}'], '{service.expiration_date}', $email->text);
+            $email->html = str_replace(['{service.date_renews}', '{service.date_renews | e}'], '{service.expiration_date}', $email->html);
+
+            $this->Record->where('id', '=', $email->id)->
+                update('emails', ['subject' => $email->subject, 'text' => $email->text, 'html' => $email->html]);
+        }
+    }
 
     /**
      * Cast an object to a multi-dimensional array
@@ -688,20 +731,6 @@ class DomainsPlugin extends Plugin
             return $array;
         } else {
             return $object;
-        }
-
-        $email_actions = ['Domains.domain_renewal_1', 'Domains.domain_renewal_2', 'Domains.domain_expiration'];
-        $emails = $this->Record->select('emails.*')->
-            from('emails')->
-            on('email_groups.action', 'in', $email_actions)->
-            innerJoin('email_groups', 'email_groups.id', '=', 'emails.email_group_id', false)->
-            fetchAll();
-        foreach ($emails as $email) {
-            $email->subject = str_replace('{service.date_renews}', '{service.expiration_date}', $email->subject);
-            $email->text = str_replace('{service.date_renews}', '{service.expiration_date}', $email->text);
-            $email->html = str_replace('{service.date_renews}', '{service.expiration_date}', $email->html);
-            $this->Record->where('id', '=', $email->id)->
-                update('emails', ['subject' => $email->subject, 'text' => $email->text, 'html' => $email->html]);
         }
     }
 
@@ -1482,7 +1511,7 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels(
             $this,
-            ['Domains.DomainsTlds', 'Clients', 'Companies', 'Contacts', 'Emails', 'Services']
+            ['Domains.DomainsTlds', 'ModuleManager', 'Clients', 'Companies', 'Contacts', 'Emails', 'Services']
         );
         Loader::loadHelpers($this, ['Form']);
 
@@ -1553,19 +1582,37 @@ class DomainsPlugin extends Plugin
                 $lang = null;
                 $client = $this->Clients->get($service->client_id);
                 $contact = $this->Contacts->get($client->contact_id);
-                $service->expiration_date = $date->format(
-                        'Y-m-d',
-                        $domains_by_service_id[$service->id]->expiration_date
-                    );
                 if ($client && $client->settings['language']) {
                     $lang = $client->settings['language'];
                 }
 
-                $tags = ['service' => $service, 'client' => $client, 'contact' => $contact, 'domain' => $service->name];
+                // Fetch expiration date from the registrar
+                $registrar = $this->ModuleManager->initModule(
+                    $service->package->module_id,
+                    Configure::get('Blesta.company_id')
+                );
+                $service->expiration_date = $registrar->getExpirationDate($service);
+
+                // Format the service dates
+                $dates = ['date_added', 'date_renews', 'date_last_renewed', 'expiration_date'];
+                foreach ($dates as $date_field) {
+                    if (!isset($service->{$date_field})) {
+                        continue;
+                    }
+
+                    $service->{$date_field} = $date->format('Y-m-d', $service->{$date_field});
+                }
+
+                // Build tags array
+                $tags = [
+                    'service' => $service,
+                    'client' => $client,
+                    'contact' => $contact,
+                    'domain' => $service->name
+                ];
                 $options = ['to_client_id' => $service->client_id];
 
-                // Format the renew date
-                $service->date_renews = $date->format('Y-m-d', $service->date_renews);
+                // Send email notification
                 $this->Emails->send(
                     'Domains.' . $reminder,
                     Configure::get('Blesta.company_id'),

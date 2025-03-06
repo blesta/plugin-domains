@@ -79,6 +79,8 @@ class DomainsController extends AppController
     {
         return [
             'change_auto_renewal' => Language::_('DomainsController.getDomainActions.change_auto_renewal', true),
+            'change_expiration_date' => Language::_('DomainsController.getDomainActions.change_expiration_date', true),
+            'change_registration_date' => Language::_('DomainsController.getDomainActions.change_registration_date', true),
             'change_registrar' => Language::_('DomainsController.getDomainActions.change_registrar', true),
             'domain_renewal' => Language::_('DomainsController.getDomainActions.domain_renewal', true),
             'update_nameservers' => Language::_('DomainsController.getDomainActions.update_nameservers', true),
@@ -138,6 +140,24 @@ class DomainsController extends AppController
             case 'change_registrar':
                 foreach ($data['service_ids'] as $service_id) {
                     $this->DomainsDomains->updateRegistrar($service_id, $data['module_id'] ?? null);
+
+                    if (($errors = $this->DomainsDomains->errors())) {
+                        break;
+                    }
+                }
+                break;
+            case 'change_expiration_date':
+                foreach ($data['service_ids'] as $service_id) {
+                    $this->DomainsDomains->setExpirationDate($service_id, $this->DomainsDomains->dateToUtc($data['expiration_date'] ?? null));
+
+                    if (($errors = $this->DomainsDomains->errors())) {
+                        break;
+                    }
+                }
+                break;
+            case 'change_registration_date':
+                foreach ($data['service_ids'] as $service_id) {
+                    $this->DomainsDomains->setRegistrationDate($service_id, $this->DomainsDomains->dateToUtc($data['registration_date'] ?? null));
 
                     if (($errors = $this->DomainsDomains->errors())) {
                         break;

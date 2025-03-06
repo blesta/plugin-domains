@@ -9,8 +9,16 @@ $lang['AdminDomains.!success.tld_added'] = 'The TLD was successfully added!';
 $lang['AdminDomains.!success.tld_updated'] = 'The TLD was successfully updated!';
 $lang['AdminDomains.!success.tlds_updated'] = 'The TLDs were successfully updated!';
 $lang['AdminDomains.!success.tld_sync'] = 'The TLD prices were successfully synced!';
+$lang['AdminDomains.!success.delete'] = 'The TLD were successfully deleted!';
+$lang['AdminDomains.!success.delete_partial'] = 'The following TLDs could not be deleted because they were in use: %1$s'; // %1$s is the list of TLDs
 $lang['AdminDomains.!success.change_status'] = 'The TLD statuses were successfully updated!';
+$lang['AdminDomains.!success.dns_management'] = 'DNS Management was successfully updated!';
+$lang['AdminDomains.!success.email_forwarding'] = 'Email Forwarding was successfully updated!';
+$lang['AdminDomains.!success.id_protection'] = 'ID Protection was successfully updated!';
+$lang['AdminDomains.!success.epp_code'] = 'EPP Code access was successfully updated!';
 $lang['AdminDomains.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
+$lang['AdminDomains.!success.change_expiration_date'] = 'The Domain expiration date has been updated!';
+$lang['AdminDomains.!success.change_registration_date'] = 'The Domain registration date has been updated!';
 $lang['AdminDomains.!success.domain_registrar_updated'] = 'The domain registrar has been updated!';
 $lang['AdminDomains.!success.domain_renewal'] = 'The Domain has been renewed!';
 $lang['AdminDomains.!success.update_nameservers'] = 'The Domain name servers has been updated!';
@@ -24,6 +32,7 @@ $lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not va
 $lang['AdminDomains.!error.tlds_bulk[action].valid'] = 'Invalid value for TLDs Bulk Action, must be "enable" or "disable".';
 $lang['AdminDomains.!error.tlds_imported'] = 'Not all TLDS could be imported due to an error.';
 
+$lang['AdminDomains.!warning.action_partial'] = '%1$s could not be updated for following TLDs: %2$s'; // %1$s is the action being attempted, %2$s is the list of TLDs
 $lang['AdminDomains.!warning.automatic_currency_conversion'] = 'You have an exchange rate set for this currency, so it\'s not necessary to define prices here. If no prices are defined for this currency, the currency will be converted automatically from %1$s. If you define a price here, it will be used instead.'; // %1$s is the default currency
 $lang['AdminDomains.!warning.price_sync_unsupported'] = 'This registrar module does not support price synchronization, TLDs will be imported without any pricing.';
 
@@ -189,6 +198,11 @@ $lang['AdminDomains.tlds.tooltip_epp_code'] = 'The availability of the EPP Code 
 // Get TLD Actions
 $lang['AdminDomains.getTldActions.option_change_status'] = 'Change Status';
 $lang['AdminDomains.getTldActions.option_tld_sync'] = 'Registrar Price Sync';
+$lang['AdminDomains.getTldActions.option_dns_management'] = 'DNS Management';
+$lang['AdminDomains.getTldActions.option_email_forwarding'] = 'Email Forwarding';
+$lang['AdminDomains.getTldActions.option_id_protection'] = 'ID Protection';
+$lang['AdminDomains.getTldActions.option_epp_code'] = 'EPP Code';
+$lang['AdminDomains.getTldActions.option_delete'] = 'Delete TLDs';
 
 
 // Get TLD Statuses

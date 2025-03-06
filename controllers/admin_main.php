@@ -303,7 +303,7 @@ class AdminMain extends DomainsController
                 $years[$pricing->term . '-' . $pricing->currency] = Language::_('AdminMain.add.term_recurring', true, $term, $price, $renewal_price);
             }
         }
-        
+
         return $years;
     }
 
@@ -554,6 +554,9 @@ class AdminMain extends DomainsController
             $this->redirect($this->base_uri . 'clients/view/' . $client_id . '/');
         }
 
+        // Get the company settings
+        $company_settings = $this->SettingsCollection->fetchSettings(null, $this->company_id);
+
         $service->expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
         $service->registration_date = $this->DomainsDomains->getRegistrationDate($service->id);
         $service->nameservers = $this->DomainsDomains->getNameservers($service->id);
@@ -621,7 +624,7 @@ class AdminMain extends DomainsController
             }
 
             // Update package
-            if (isset($this->post['module']) && $module->id !== $this->post['module'] && $service->status == 'pending') {
+            if (isset($this->post['module']) && $module->id != $this->post['module'] && $service->status == 'pending') {
                 $tld = strstr($service->name ?? $this->post['domain'] ?? '', '.');
                 $package = $this->DomainsTlds->getTldPackageByModuleId(
                     $tld,
@@ -645,7 +648,7 @@ class AdminMain extends DomainsController
                     $service->package_pricing->term,
                     $service->package_pricing->currency
                 );
-                $this->post['pricing_id'] = $pricing->id;
+                $this->post['pricing_id'] = $pricing->pricing_id;
             }
 
             // Update service fields
@@ -701,6 +704,12 @@ class AdminMain extends DomainsController
         $this->set('module', $module);
         $this->set('fields', (new Html($fields))->generate());
         $this->set('vars', $vars);
+
+        $this->Javascript->setFile('date.min.js');
+        $this->Javascript->setFile('jquery.datePicker.min.js');
+        $this->Javascript->setInline(
+            'Date.firstDayOfWeek=' . ($company_settings['calendar_begins'] == 'sunday' ? 0 : 1) . ';'
+        );
     }
 
     /**
@@ -781,7 +790,7 @@ class AdminMain extends DomainsController
 
         return false;
     }
-    
+
     /**
      * Fetches the add service pricing options from a specific registrar module
      */
@@ -792,7 +801,7 @@ class AdminMain extends DomainsController
             header($this->server_protocol . ' 401 Unauthorized');
             exit();
         }
-        
+
         $this->uses(['Domains.DomainsTlds']);
 
         // Ensure a valid module was given
@@ -843,8 +852,14 @@ class AdminMain extends DomainsController
                 $this->setMessage('error', $errors, false, null, false);
             } else {
                 switch ($this->post['action']) {
-                    case 'schedule_cancellation':
+                    case 'change_auto_renewal':
                         $term = 'AdminMain.!success.change_auto_renewal';
+                        break;
+                    case 'change_expiration_date':
+                        $term = 'AdminMain.!success.change_expiration_date';
+                        break;
+                    case 'change_registration_date':
+                        $term = 'AdminMain.!success.change_registration_date';
                         break;
                     case 'change_registrar':
                         $term = 'AdminMain.!success.domain_registrar_updated';
@@ -867,6 +882,9 @@ class AdminMain extends DomainsController
                 $this->redirect($this->base_uri . 'clients/view/'. ($this->get['client_id'] ?? ($this->get[0] ?? null)));
             }
         }
+
+        // Get the company settings
+        $company_settings = $this->SettingsCollection->fetchSettings(null, $this->company_id);
 
         // Ensure a valid client was given
         $client_id = ($this->get['client_id'] ?? ($this->get[0] ?? null));
@@ -935,6 +953,12 @@ class AdminMain extends DomainsController
         $this->set('negate_order', ($order == 'asc' ? 'desc' : 'asc'));
 
         $this->structure->set('page_title', Language::_('AdminMain.index.page_title', true, $client->id_code));
+
+        $this->Javascript->setFile('date.min.js');
+        $this->Javascript->setFile('jquery.datePicker.min.js');
+        $this->Javascript->setInline(
+            'Date.firstDayOfWeek=' . ($company_settings['calendar_begins'] == 'sunday' ? 0 : 1) . ';'
+        );
 
         // Set language for periods
         $periods = $this->Packages->getPricingPeriods();

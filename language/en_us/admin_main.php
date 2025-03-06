@@ -1,6 +1,8 @@
 <?php
 // Success messages
 $lang['AdminMain.!success.change_auto_renewal'] = 'The Domain auto renewal has been updated!';
+$lang['AdminMain.!success.change_expiration_date'] = 'The Domain expiration date has been updated!';
+$lang['AdminMain.!success.change_registration_date'] = 'The Domain registration date has been updated!';
 $lang['AdminMain.!success.domain_registrar_updated'] = 'The domain registrar has been updated!';
 $lang['AdminMain.!success.domain_renewal'] = 'The Domain has been renewed!';
 $lang['AdminMain.!success.update_nameservers'] = 'The Domain name servers has been updated!';
@@ -150,6 +152,8 @@ $lang['AdminMain.edit.link_viewclient'] = 'View Client';
 
 $lang['AdminMain.edit.field_action'] = 'Action';
 $lang['AdminMain.edit.field_years'] = 'Years';
+$lang['AdminMain.edit.field_expiration_date'] = 'Change Expiration Date';
+$lang['AdminMain.edit.field_registration_date'] = 'Change Registration Date';
 $lang['AdminMain.edit.field_auto_renewal'] = 'Enable Auto-Renewal';
 $lang['AdminMain.edit.field_ns1'] = 'Name Server 1';
 $lang['AdminMain.edit.field_ns2'] = 'Name Server 2';

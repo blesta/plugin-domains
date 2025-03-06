@@ -173,6 +173,20 @@
                     $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], isset($vars->action) ? $vars->action : null);
                     ?>
                 </div>
+                <div id="domain_change_expiration_date" class="action_section">
+                    <div class="float">
+                        <?php
+                        $this->Form->fieldText('expiration_date', $this->Date->cast($vars->expiration_date ?? date('c'), 'Y-m-d'), ['class' => 'date form-control input-md']);
+                        ?>
+                    </div>
+                </div>
+                <div id="domain_change_registration_date" class="action_section">
+                    <div class="float">
+                        <?php
+                        $this->Form->fieldText('registration_date', $this->Date->cast($vars->registration_date ?? date('c'), 'Y-m-d'), ['class' => 'date form-control input-md']);
+                        ?>
+                    </div>
+                </div>
                 <div id="domain_change_registrar" class="action_section">
                     <?php
                     $this->Form->fieldSelect('module_id', ($modules ?? []), ($vars->client ?? ''));
@@ -331,6 +345,10 @@
             $(this).find('div').show();
         }).on('mouseout', function() {
             $(this).find('div').hide();
+        });
+
+        $('.dp-choose-date').on('click', function() {
+            $('.dp-popup').css('left', (parseInt($('.dp-popup').css('left')) - 125) + 'px');
         });
     });
 </script>
