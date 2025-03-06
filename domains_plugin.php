@@ -65,6 +65,7 @@ class DomainsPlugin extends Plugin
                 ->create('domains_packages', true);
 
             $this->createDomainsDomainsTable();
+            $this->addDomainCountDataFeed();
         } catch (Exception $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
@@ -143,7 +144,6 @@ class DomainsPlugin extends Plugin
         $this->upgrade1_5_0();
         $this->upgrade1_6_2();
         $this->upgrade1_8_0();
-        $this->upgrade1_12_0();
 
         // Set the default renewal days before expiration
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
@@ -621,7 +621,7 @@ class DomainsPlugin extends Plugin
      */
     private function upgrade1_12_0()
     {
-        Loader::loadModels($this, ['Companies', 'DataFeeds']);
+        Loader::loadModels($this, ['Companies']);
 
         // Set all domain packages type to domain
         $domain_packages = $this->Record->select(['domains_packages.package_id'])
@@ -645,6 +645,26 @@ class DomainsPlugin extends Plugin
             'ALTER TABLE `domains_domains` ADD `registration_date` DATETIME NULL DEFAULT NULL AFTER `service_id`;'
         );
 
+        $this->addDomainCountDataFeed();
+    }
+    
+    /**
+     * Update to v1.13.2
+     */
+    private function upgrade1_13_2()
+    {
+        // Add a 'registration_date' column to the 'domains_domains' table
+        $this->Record->query(
+            'ALTER TABLE `domains_domains` CHANGE `expiration_date` `expiration_date` DATETIME NULL DEFAULT NULL;'
+        );
+    }
+    
+    /**
+     * Adds the domain count data feed
+     */
+    private function addDomainCountDataFeed()
+    {
+        Loader::loadModels($this, ['Companies', 'DataFeeds']);
         // Add domain/count data feed
         try {
             $companies = $this->Companies->getAll();
@@ -659,17 +679,6 @@ class DomainsPlugin extends Plugin
         } catch (Throwable $e) {
             // Nothing to do
         }
-    }
-    
-    /**
-     * Update to v1.13.2
-     */
-    private function upgrade1_13_2()
-    {
-        // Add a 'registration_date' column to the 'domains_domains' table
-        $this->Record->query(
-            'ALTER TABLE `domains_domains` CHANGE `expiration_date` `expiration_date` DATETIME NULL DEFAULT NULL;'
-        );
     }
     
     /**
@@ -733,6 +742,7 @@ class DomainsPlugin extends Plugin
         $this->Record
             ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
             ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+            ->setField('registration_date', ['type' => 'datetime', 'is_null' => true])
             ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
             ->setKey(['id'], 'primary')
             ->setKey(['service_id'], 'unique')
