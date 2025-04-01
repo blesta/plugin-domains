@@ -273,7 +273,7 @@ $lang['AdminDomains.import.text_years'] = '%1$s Years'; // %1$s is the number of
 $lang['AdminDomains.import.text_terms_notice'] = 'At least one term must be selected.';
 
 
-$lang['AdminDomains.getDays.same_day'] = 'Same Day';
+$lang['AdminDomains.getDays.never'] = 'Never';
 $lang['AdminDomains.getDays.text_day'] = '%1$s Day'; // %1$s is the number of days
 $lang['AdminDomains.getDays.text_days'] = '%1$s Days'; // %1$s is the number of days
 
