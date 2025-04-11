@@ -567,7 +567,7 @@ class AdminDomains extends DomainsController
         $this->set('first_reminder_days', $this->getDays(26, 35));
         $this->set('second_reminder_days', $this->getDays(4, 10));
         $this->set('expiration_notice_days', $this->getDays(1, 5));
-        $this->set('sync_days', $this->getDays(1, 30));
+        $this->set('sync_days', $this->getDays(1, 30, false));
         $this->set('rounding_options', $this->getRoundingOptions());
         $this->set('first_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_1'));
         $this->set('second_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_2'));
@@ -1494,11 +1494,12 @@ class AdminDomains extends DomainsController
      * @param int $max_days The upper bound of the day range
      * @return array A list of days and their language
      */
-    private function getDays($min_days, $max_days)
+    private function getDays($min_days, $max_days, $include_same_day = true)
     {
-        $days = [
-            0 => Language::_('AdminDomains.getDays.same_day', true)
-        ];
+        $days = [];
+        if ($include_same_day) {
+            $days[0] = Language::_('AdminDomains.getDays.same_day', true);
+        }
         for ($i = $min_days; $i <= $max_days; $i++) {
             $days[$i] = Language::_(
                 'AdminDomains.getDays.text_day'
