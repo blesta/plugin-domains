@@ -39,7 +39,10 @@
             <li>
                 <?php $this->Form->label($this->_('AdminMain.add.field_years', true));?>
                 <?php $this->Form->fieldSelect('years', $years ?? [], ($vars->years ?? null), ['id' => 'years']);?>
-                <a href="<?php echo $this->base_uri . 'packages/edit/' . (isset($package->id) ? $this->Html->safe($package->id) : null) . '/'; ?>" id="package_edit_link"><?php $this->_('AdminMain.add.edit_package_pricing'); ?></a>
+                <a class="ml-1" id="refresh_modules" href="#"><i class="fas fa-sync"></i> <?php $this->_('AdminMain.add.text_refresh');?></a>
+                <a class="d-block mt-1" href="<?php echo $this->base_uri . 'packages/edit/' . (isset($package->id) ? $this->Html->safe($package->id) : null) . '/'; ?>" target="_blank" id="package_edit_link">
+                    <i class="fas fa-edit"></i> <?php $this->_('AdminMain.add.edit_package_pricing'); ?>
+                </a>
             </li>
             <li>
                 <?php $this->Form->label($this->_('AdminMain.add.field_status', true));?>
@@ -83,6 +86,9 @@
             updateModuleFields();
             updatePricingOptions();
         });
+        $('#refresh_modules').on('click', function() {
+            updatePricingOptions();
+        });
         updateModuleFields();
         updatePricingOptions();
 
@@ -100,7 +106,7 @@
                 {dataType: 'json'}
             );
         }
-        
+
         function updatePricingOptions() {
             var module_id = $('#module').val();
             $(this).blestaRequest(
@@ -115,7 +121,7 @@
                     $.each($(this).blestaSortObject(data.pricing), function(index, item) {
                         $("#years").append(new Option(item.value, item.key));
                     });
-                    
+
                     $("#package_edit_link").attr("href", '<?php echo $this->base_uri . 'packages/edit/'; ?>' + data.package_id + '/')
                 },
                 null,

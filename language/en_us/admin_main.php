@@ -113,6 +113,7 @@ $lang['AdminMain.add.order_btn'] = 'Order Selected';
 $lang['AdminMain.add.term'] = '%1$s @ %2$s'; // %1$s is the term, %2$s is the currency price
 $lang['AdminMain.add.term_recurring'] = '%1$s @ %2$s (renews @ %3$s)'; // %1$s is the term, %2$s is the initial price, %3$s is the renewal price
 $lang['AdminMain.add.edit_package_pricing'] = 'Edit Pricing';
+$lang['AdminMain.add.text_refresh'] = 'Refresh';
 
 
 // Domain confirmation
