@@ -6,6 +6,7 @@
  */
 class TldSync
 {
+    private $tld_settings;
     /**
      * Initialize TLD Sync class
      */
