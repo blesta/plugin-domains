@@ -391,9 +391,7 @@ class AdminMain extends DomainsController
         }
 
         $this->post['pricing_id'] = $pricing->pricing_id;
-        if (is_numeric($term[0])) {
-            $this->post['qty'] = $term[0];
-        }
+        $this->post['qty'] = 1;
 
         // Process coupon
         if (isset($this->post['submit']) && !empty($this->post['coupon_code'])) {
