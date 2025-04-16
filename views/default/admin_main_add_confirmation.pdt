@@ -66,15 +66,17 @@
     <?php
     $this->Form->create();
 
-    foreach ((array) ($vars ?? []) as $key => $value) {
-        if (is_array($value)) {
-            foreach ($value as $sub_key => $sub_value) {
-                $this->Form->fieldHidden($key . '[' . $sub_key . ']', $sub_value);
+    function parseFields($vars, $that, $parent_key = null) {
+        foreach((array) ($vars ?? []) as $key => $value) {
+            $value_key = $parent_key ? ($parent_key . '[' . $key . ']') : $key;
+            if (is_array($value)) {
+                parseFields($value, $that, $value_key);
+            } else {
+                $that->Form->fieldHidden($value_key, $value);
             }
-        } else {
-            $this->Form->fieldHidden($key, $value);
         }
     }
+    parseFields($vars, $this);
     ?>
         <div class="pad reverse">
             <div class="date_section">
