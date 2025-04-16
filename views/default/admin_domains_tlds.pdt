@@ -80,7 +80,7 @@
                             $this->Form->fieldCheckbox('tlds_bulk[tlds][]', $this->Html->safe($tld->tld), false);
                             ?>
                         </td>
-                        <td class="icon center"><i class="fas <?php echo ($tld->package->status !== 'inactive') ? 'fa-check text-success' : 'fa-times text-danger';?>"></i></td>
+                        <td class="icon center"><i class="fas <?php echo ($tld->package->status == 'active') ? 'fa-check text-success' : 'fa-times text-danger';?>"></i></td>
                         <td class="small"><?php echo $this->Html->safe($tld->tld);?></td>
                         <td>
                             <?php
@@ -111,7 +111,7 @@
                             <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/';?>" class="modal"><?php $this->_('AdminDomains.tlds.option_edit');?></a>,
 
                             <?php
-                            if ($tld->package->status == 'inactive') {
+                            if ($tld->package->status !== 'active') {
                             ?>
                                 <?php
                                 $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/enabletld/');
