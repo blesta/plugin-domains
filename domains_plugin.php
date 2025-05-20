@@ -144,6 +144,7 @@ class DomainsPlugin extends Plugin
         $this->upgrade1_5_0();
         $this->upgrade1_6_2();
         $this->upgrade1_8_0();
+        $this->upgrade1_17_0();
 
         // Set the default renewal days before expiration
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
@@ -226,6 +227,11 @@ class DomainsPlugin extends Plugin
             // Upgrade to 1.15.2
             if (version_compare($current_version, '1.15.2', '<')) {
                 $this->upgrade1_15_2();
+            }
+
+            // Upgrade to 1.17.0
+            if (version_compare($current_version, '1.17.0', '<')) {
+                $this->upgrade1_17_0();
             }
         }
     }
@@ -657,6 +663,30 @@ class DomainsPlugin extends Plugin
         $this->Record->query(
             'ALTER TABLE `domains_domains` CHANGE `expiration_date` `expiration_date` DATETIME NULL DEFAULT NULL;'
         );
+    }
+
+    /**
+     * Update to v1.17.0
+     */
+    private function upgrade1_17_0()
+    {
+        Loader::loadModels($this, ['Services']);
+
+        // Add a 'last_sync_date' column to the 'domains_domains' table
+        $this->Record->query(
+            'ALTER TABLE `domains_domains` ADD `last_sync_date` DATETIME NULL DEFAULT NULL AFTER `expiration_date`;'
+        );
+
+        // Add a 'found' column to the 'domains_domains' table
+        $this->Record->query(
+            "ALTER TABLE `domains_domains` ADD `found` TINYINT(1) DEFAULT '1' AFTER `last_sync_date`;"
+        );
+
+        $this->Record->where('last_sync_date', '=', null)
+            ->update('domains_domains', [
+                'last_sync_date' => $this->Services->Date->format('Y-m-d H:i:s', date('c')),
+                'found' => true
+            ]);
     }
     
     /**
@@ -1390,6 +1420,20 @@ class DomainsPlugin extends Plugin
                 $this->Record->where('id', '=', $service->id)
                     ->update('services', ['date_renews' => $new_renew_date]);
             }
+
+            // Update the last synced date
+            $found = $modules[$module_id]->getExpirationDate($service);
+            $module = $this->ModuleManager->get($module_id);
+            if ($found !== false || $module->class == 'generic_domains') {
+                $this->Record->where('service_id', '=', $service->id)
+                    ->update('domains_domains', [
+                        'last_sync_date' => $this->Services->Date->format('Y-m-d H:i:s', date('c')),
+                        'found' => true
+                    ]);
+            } else {
+                $this->Record->where('service_id', '=', $service->id)
+                    ->update('domains_domains', ['found' => false]);
+            }
         }
     }
 
@@ -1840,7 +1884,7 @@ class DomainsPlugin extends Plugin
      */
     public function updateRenewalDate($event)
     {
-        Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'Services']);
+        Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'Services', 'ModuleManager']);
         $params = $event->getParams();
 
         if (!($this->DomainsDomains->isManagedDomain($params['service_id'] ?? null)
@@ -1886,6 +1930,19 @@ class DomainsPlugin extends Plugin
 
         $this->Record->where('id', '=', $params['service_id'])
             ->update('services', ['date_renews' => $renewal_date]);
+
+        // Update the last synced date
+        $module = $this->ModuleManager->get($service->package->module_id);
+        if ($expiration_date !== false || $module->class == 'generic_domains') {
+            $this->Record->where('service_id', '=', $params['service_id'])
+                ->update('domains_domains', [
+                    'last_sync_date' => $this->Services->Date->format('Y-m-d H:i:s', date('c')),
+                    'found' => true
+                ]);
+        } else {
+            $this->Record->where('service_id', '=', $params['service_id'])
+                ->update('domains_domains', ['found' => false]);
+        }
     }
 
     /**
