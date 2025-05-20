@@ -62,6 +62,7 @@
                 <?php
                 }
                 ?>
+                <td><?php $this->_('AdminMain.index.heading_found');?></td>
                 <td class="last"><span><?php $this->_('AdminMain.index.heading_options');?></span></td>
             </tr>
             <?php
@@ -117,6 +118,19 @@
                 <?php
                 }
                 ?>
+                <td>
+                    <?php
+                    if ($domains[$i]->found == '1') {
+                        ?>
+                        <i class="fas fa-check"></i>
+                        <?php
+                    } else {
+                        ?>
+                        <i class="fas fa-times"></i>
+                        <?php
+                    }
+                    ?>
+                </td>
                 <td>
                     <?php
                     // Show parent, if the domain belongs to another package

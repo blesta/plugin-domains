@@ -47,6 +47,7 @@ $lang['AdminDomains.browse.heading_added'] = 'Added Date';
 $lang['AdminDomains.browse.heading_renewal'] = 'Renewal Date';
 $lang['AdminDomains.browse.heading_expiration'] = 'Expiration Date';
 $lang['AdminDomains.browse.heading_renew'] = 'Auto Renewal';
+$lang['AdminDomains.browse.heading_found'] = 'Found on Registrar';
 $lang['AdminDomains.browse.heading_options'] = 'Options';
 $lang['AdminDomains.browse.option_delete'] = 'Delete';
 $lang['AdminDomains.browse.option_parent'] = 'Parent';

@@ -35,6 +35,7 @@ $lang['AdminMain.index.heading_daterenews'] = 'Date Renews';
 $lang['AdminMain.index.heading_dateexpires'] = 'Date Expires';
 $lang['AdminMain.index.heading_datesuspended'] = 'Date Suspended';
 $lang['AdminMain.index.heading_datecanceled'] = 'Date Canceled';
+$lang['AdminMain.index.heading_found'] = 'Found on Registrar';
 $lang['AdminMain.index.heading_options'] = 'Options';
 
 $lang['AdminMain.index.category_active'] = 'Active';

@@ -50,6 +50,11 @@ class DomainsDomains extends DomainsModel
             $service->renewal_price = $this->Services->getRenewalPrice($service->id);
             $service->registration_date = $this->getRegistrationDate($service->id);
             $service->expiration_date = $this->getExpirationDate($service->id);
+            $service->found = $this->Record->select()
+                ->from('domains_domains')
+                ->where('service_id', '=', $service->id)
+                ->fetch()
+                ->found;
         }
 
         return $services;
@@ -100,6 +105,12 @@ class DomainsDomains extends DomainsModel
             $service->renewal_price = $this->Services->getRenewalPrice($service->id);
             $service->registration_date = $this->getRegistrationDate($service->id);
             $service->expiration_date = $this->getExpirationDate($service->id);
+
+            $found = $this->Record->select()
+                ->from('domains_domains')
+                ->where('service_id', '=', $service->id)
+                ->fetch();
+            $service->found = $found->found ?? '1';
         }
 
         return $services;
