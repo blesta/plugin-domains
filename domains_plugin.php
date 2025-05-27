@@ -1218,8 +1218,8 @@ class DomainsPlugin extends Plugin
                     'DomainsPlugin.getCronTasks.domain_synchronization_description',
                     true
                 ),
-                'type' => 'time',
-                'type_value' => '08:00:00',
+                'type' => 'interval',
+                'type_value' => '5',
                 'enabled' => 1
             ],
             [
@@ -1290,11 +1290,25 @@ class DomainsPlugin extends Plugin
      */
     private function synchronizeDomains()
     {
-        Loader::loadModels($this, ['Companies', 'Domains.DomainsDomains', 'ModuleManager', 'Services']);
-        Loader::loadHelpers($this, ['Form']);
+        Loader::loadModels($this, ['Companies', 'Domains.DomainsDomains', 'ModuleManager', 'Services', 'Logs']);
+        Loader::loadHelpers($this, ['Form', 'Date']);
+
+        // Check last time this task ran
+        $last_run = $this->Logs->getCronLastRun('domain_synchronization', dirname(__FILE__));
+        $last_run = $this->Date->cast($last_run ?? date('c'), 'Y-m-d H:i:s');
 
         // Find all domain services
-        $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC']);
+        if ($this->Date->cast($last_run, 'H:i') == '08:00') {
+            $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC']);
+        } else {
+            $filters = [
+                'services' => [
+                    ['column' => 'date_last_renewed', 'operator' => '>=', 'value' => $last_run]
+                ]
+            ];
+            $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC'], $filters);
+        }
+
         $renewal_days = $this->Companies->getSetting(
             Configure::get('Blesta.company_id'),
             'domains_renewal_days_before_expiration'
@@ -1805,6 +1819,10 @@ class DomainsPlugin extends Plugin
             ],
             [
                 'event' => 'Services.addAfter',
+                'callback' => ['this', 'updateRenewalDate']
+            ],
+            [
+                'event' => 'Services.renewAfter',
                 'callback' => ['this', 'updateRenewalDate']
             ],
             [
