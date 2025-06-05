@@ -37,7 +37,7 @@ class TldSync
             $company_id = Configure::get('Blesta.company_id');
         }
 
-        set_time_limit(60*60*15); // 15 minutes
+        set_time_limit(60 * 15); // 15 minutes
 
         // Get TLD records
         $tld_records = $this->DomainsTlds->getAll(
