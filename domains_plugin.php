@@ -212,7 +212,7 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.12.0', '<')) {
                 $this->upgrade1_12_0();
             }
-            
+
             // Upgrade to 1.13.2
             if (version_compare($current_version, '1.13.2', '<')) {
                 $this->upgrade1_13_2();
@@ -647,7 +647,7 @@ class DomainsPlugin extends Plugin
 
         $this->addDomainCountDataFeed();
     }
-    
+
     /**
      * Update to v1.13.2
      */
@@ -658,7 +658,7 @@ class DomainsPlugin extends Plugin
             'ALTER TABLE `domains_domains` CHANGE `expiration_date` `expiration_date` DATETIME NULL DEFAULT NULL;'
         );
     }
-    
+
     /**
      * Adds the domain count data feed
      */
@@ -680,7 +680,7 @@ class DomainsPlugin extends Plugin
             // Nothing to do
         }
     }
-    
+
     /**
      * Update to v1.15.1
      */
@@ -1295,7 +1295,7 @@ class DomainsPlugin extends Plugin
 
         // Check last time this task ran
         $last_run = $this->Logs->getCronLastRun('domain_synchronization', dirname(__FILE__));
-        $last_run = $this->Date->cast($last_run ?? date('c'), 'Y-m-d H:i:s');
+        $last_run = $this->Date->cast($last_run ?: date('c'), 'Y-m-d H:i:s');
 
         // Find all domain services
         if ($this->Date->cast($last_run, 'H:i') == '08:00') {
@@ -1332,7 +1332,7 @@ class DomainsPlugin extends Plugin
             if ($domain && $domain->registration_date !== null) {
                 $database_registration_date = $domain->registration_date;
             }
-            
+
             // Fetch the domain registration date from the registrar, and update
             // if different than what is stored locally
             if (method_exists($modules[$module_id], 'getRegistrationDate')
@@ -1343,19 +1343,19 @@ class DomainsPlugin extends Plugin
                 $this->DomainsDomains->setRegistrationDate($service->id, $new_registration_date);
                 $service->registration_date = $new_registration_date;
             }
-            
+
             // If there was nothing stored locally and we were not able to fetch from
             // the registrar, just store the date_added
             if ($database_registration_date == null && $new_registration_date == null) {
                 $this->DomainsDomains->setRegistrationDate($service->id, $service->date_added);
             }
-            
+
             // Fetch the expiration date that is stored locally
             $database_expiration_date = null;
             if ($domain && $domain->expiration_date !== null) {
                 $database_expiration_date = $domain->expiration_date;
             }
-            
+
             // Fetch the domain expiration date from the registrar, and update if
             // different than what is stored locally
             if (method_exists($modules[$module_id], 'getExpirationDate')
@@ -1366,7 +1366,7 @@ class DomainsPlugin extends Plugin
                 $this->DomainsDomains->setExpirationDate($service->id, $new_expiration_date);
                 $service->expiration_date = $new_expiration_date;
             }
-            
+
             // If there was nothing stored locally and we were not able to fetch from the
             // registrar, just store the adjusted date_renews
             if ($database_expiration_date == null && $new_expiration_date == null) {
