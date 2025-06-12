@@ -54,7 +54,10 @@
                     </li>
                     <li>
                         <?php $this->_('AdminMain.edit.text_years');?>
-                        <?php $this->_('AdminMain.edit.term_' . $service->package_pricing->period, false, $term ?? 1); ?>
+                        <?php
+                        $period = (($service->package_pricing->term ?? 1) > 1) ? $service->package_pricing->period . 's' : $service->package_pricing->period;
+                        $this->_('AdminMain.edit.term_' . $period, false, ($service->package_pricing->term ?? 1));
+                        ?>
                     </li>
                     <li>
                         <?php $this->_('AdminMain.edit.text_status');?>
