@@ -227,6 +227,11 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.15.2', '<')) {
                 $this->upgrade1_15_2();
             }
+
+            // Upgrade to 1.16.0
+            if (version_compare($current_version, '1.16.0', '<')) {
+                $this->upgrade1_16_0();
+            }
         }
     }
 
@@ -711,6 +716,25 @@ class DomainsPlugin extends Plugin
 
             $this->Record->where('id', '=', $email->id)->
                 update('emails', ['subject' => $email->subject, 'text' => $email->text, 'html' => $email->html]);
+        }
+    }
+
+    /**
+     * Update to v1.16.0
+     */
+    private function upgrade1_16_0()
+    {
+        Loader::loadComponents($this, ['Record']);
+
+        // Convert existing cron task runs to 5 minute interval
+        $cron_task_runs = $this->Record->select()->
+            from('cron_tasks')->
+            innerJoin('cron_task_runs')->
+            where('cron_tasks.key', '=', 'domain_synchronization')->
+            where('cron_tasks.dir', '=', 'domains')->
+            fetchAll();
+        foreach ($cron_task_runs as $cron_task_run) {
+            $this->Record->where('id', '=', $cron_task_run->id)->update('cron_task_runs', ['time' => null, 'interval' => '5']);
         }
     }
 
