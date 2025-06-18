@@ -1743,17 +1743,18 @@ class DomainsTlds extends DomainsModel
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
         // Load required models
-        Loader::loadModels($this, ['ModuleManager', 'Companies']);
+        Loader::loadModels($this, ['ModuleManager', 'Companies', 'Currencies']);
 
         // Load TLD sync utility
         Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
         $tld_sync = new TldSync();
 
-        // Fetch company default currency
-        $default_currency = $this->Companies->getSetting('default_currency', $company_id);
-        if (!$default_currency) {
-            $default_currency = 'USD';
-        }
+        // Get company currencies
+        $currencies = $this->Form->collapseObjectArray(
+            $this->Currencies->getAll($company_id),
+            'code',
+            'code'
+        );
 
         // Format TLDs
         $tlds = array_keys($tlds);
@@ -1790,24 +1791,22 @@ class DomainsTlds extends DomainsModel
                     'module_id' => $module_id
                 ]);
 
-                // Set empty pricings for all terms in the default currency so they will be sync'd
-                $pricings = array_fill(
-                    1,
-                    10,
-                    [
-                        $default_currency => [
-                            'price' => 0,
-                            'price_renews' => 0,
-                            'price_transfer' => null,
-                            'enabled_transfer' => 0,
-                            'enabled' => 1
-                        ]
-                    ]
-                );
-                $this->updatePricings($tld, $pricings, $company_id, $filters);
+                // Set empty pricings for all terms in all currencies
+                $pricings = [];
+                foreach ($currencies as $currency) {
+                    $pricings[$currency] = [
+                        'price' => 0,
+                        'price_renews' => 0,
+                        'price_transfer' => null,
+                        'enabled_transfer' => 0,
+                        'enabled' => 1
+                    ];
+                }
+                $pricings = array_fill(1, 10, $pricings);
 
                 // Sync the pricing with the registrar
                 try {
+                    $this->updatePricings($tld, $pricings, $company_id, $filters);
                     $tld_sync->synchronizePrices(
                         [$tld],
                         $company_id,

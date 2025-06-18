@@ -1520,7 +1520,7 @@ class AdminDomains extends DomainsController
      */
     public function tlds()
     {
-        $this->uses(['ModuleManager', 'Packages', 'Services', 'Domains.DomainsTlds']);
+        $this->uses(['ModuleManager', 'Packages', 'Services', 'Currencies', 'Domains.DomainsTlds']);
         $this->helpers(['Form', 'Widget']);
 
         $company_id = Configure::get('Blesta.company_id');
@@ -1632,6 +1632,9 @@ class AdminDomains extends DomainsController
         $select = ['' => Language::_('AppController.select.please', true)];
         $modules = $select + $this->Form->collapseObjectArray($modules, 'name', 'id');
 
+        // Get company currencies
+        $currencies = $this->Form->collapseObjectArray($this->Currencies->getAll($company_id), 'code', 'code');
+
         // Overwrite default pagination settings
         $settings = array_merge(
             Configure::get('Blesta.pagination'),
@@ -1647,6 +1650,7 @@ class AdminDomains extends DomainsController
         $this->set('added_tld', $this->get['added_tld'] ?? null);
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
+        $this->set('currencies', $currencies);
         $this->set('tld_actions', $this->getTldActions());
         $this->set('tld_statuses', $this->getTldStatuses());
 
@@ -1734,7 +1738,12 @@ class AdminDomains extends DomainsController
                 case 'tld_sync':
                     Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
                     $sync_utility = new TldSync();
-                    $sync_utility->synchronizePrices($params['tlds']);
+                    $sync_utility->synchronizePrices(
+                        $params['tlds'],
+                        null,
+                        [],
+                        $params['currencies']
+                    );
                     break;
                 case 'delete':
                     $undeleted_tlds = [];
