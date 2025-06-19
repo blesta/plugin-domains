@@ -213,7 +213,7 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.12.0', '<')) {
                 $this->upgrade1_12_0();
             }
-            
+
             // Upgrade to 1.13.2
             if (version_compare($current_version, '1.13.2', '<')) {
                 $this->upgrade1_13_2();
@@ -227,6 +227,11 @@ class DomainsPlugin extends Plugin
             // Upgrade to 1.15.2
             if (version_compare($current_version, '1.15.2', '<')) {
                 $this->upgrade1_15_2();
+            }
+
+            // Upgrade to 1.16.0
+            if (version_compare($current_version, '1.16.0', '<')) {
+                $this->upgrade1_16_0();
             }
 
             // Upgrade to 1.17.0
@@ -653,7 +658,7 @@ class DomainsPlugin extends Plugin
 
         $this->addDomainCountDataFeed();
     }
-    
+
     /**
      * Update to v1.13.2
      */
@@ -665,52 +670,6 @@ class DomainsPlugin extends Plugin
         );
     }
 
-    /**
-     * Update to v1.17.0
-     */
-    private function upgrade1_17_0()
-    {
-        Loader::loadModels($this, ['Services']);
-
-        // Add a 'last_sync_date' column to the 'domains_domains' table
-        $this->Record->query(
-            'ALTER TABLE `domains_domains` ADD `last_sync_date` DATETIME NULL DEFAULT NULL AFTER `expiration_date`;'
-        );
-
-        // Add a 'found' column to the 'domains_domains' table
-        $this->Record->query(
-            "ALTER TABLE `domains_domains` ADD `found` TINYINT(1) DEFAULT '1' AFTER `last_sync_date`;"
-        );
-
-        $this->Record->where('last_sync_date', '=', null)
-            ->update('domains_domains', [
-                'last_sync_date' => $this->Services->Date->format('Y-m-d H:i:s', date('c')),
-                'found' => true
-            ]);
-    }
-    
-    /**
-     * Adds the domain count data feed
-     */
-    private function addDomainCountDataFeed()
-    {
-        Loader::loadModels($this, ['Companies', 'DataFeeds']);
-        // Add domain/count data feed
-        try {
-            $companies = $this->Companies->getAll();
-            foreach ($companies as $company) {
-                $this->DataFeeds->addEndpoint([
-                    'company_id' => $company->id,
-                    'feed' => 'domain',
-                    'endpoint' => 'count',
-                    'enabled' => 0
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Nothing to do
-        }
-    }
-    
     /**
      * Update to v1.15.1
      */
@@ -742,6 +701,49 @@ class DomainsPlugin extends Plugin
             $this->Record->where('id', '=', $email->id)->
                 update('emails', ['subject' => $email->subject, 'text' => $email->text, 'html' => $email->html]);
         }
+    }
+
+    /**
+     * Update to v1.16.0
+     */
+    private function upgrade1_16_0()
+    {
+        Loader::loadComponents($this, ['Record']);
+
+        // Convert existing cron task runs to 5 minute interval
+        $cron_task_runs = $this->Record->select()->
+            from('cron_tasks')->
+            innerJoin('cron_task_runs')->
+            where('cron_tasks.key', '=', 'domain_synchronization')->
+            where('cron_tasks.dir', '=', 'domains')->
+            fetchAll();
+        foreach ($cron_task_runs as $cron_task_run) {
+            $this->Record->where('id', '=', $cron_task_run->id)->update('cron_task_runs', ['time' => null, 'interval' => '5']);
+        }
+    }
+  
+    /**
+     * Update to v1.17.0
+     */
+    private function upgrade1_17_0()
+    {
+        Loader::loadModels($this, ['Services']);
+
+        // Add a 'last_sync_date' column to the 'domains_domains' table
+        $this->Record->query(
+            'ALTER TABLE `domains_domains` ADD `last_sync_date` DATETIME NULL DEFAULT NULL AFTER `expiration_date`;'
+        );
+
+        // Add a 'found' column to the 'domains_domains' table
+        $this->Record->query(
+            "ALTER TABLE `domains_domains` ADD `found` TINYINT(1) DEFAULT '1' AFTER `last_sync_date`;"
+        );
+
+        $this->Record->where('last_sync_date', '=', null)
+            ->update('domains_domains', [
+                'last_sync_date' => $this->Services->Date->format('Y-m-d H:i:s', date('c')),
+                'found' => true
+            ]);
     }
 
     /**
@@ -777,6 +779,28 @@ class DomainsPlugin extends Plugin
             ->setKey(['id'], 'primary')
             ->setKey(['service_id'], 'unique')
             ->create('domains_domains', true);
+    }
+
+    /**
+     * Adds the domain count data feed
+     */
+    private function addDomainCountDataFeed()
+    {
+        Loader::loadModels($this, ['Companies', 'DataFeeds']);
+        // Add domain/count data feed
+        try {
+            $companies = $this->Companies->getAll();
+            foreach ($companies as $company) {
+                $this->DataFeeds->addEndpoint([
+                    'company_id' => $company->id,
+                    'feed' => 'domain',
+                    'endpoint' => 'count',
+                    'enabled' => 0
+                ]);
+            }
+        } catch (Throwable $e) {
+            // Nothing to do
+        }
     }
 
     /**
@@ -1248,8 +1272,8 @@ class DomainsPlugin extends Plugin
                     'DomainsPlugin.getCronTasks.domain_synchronization_description',
                     true
                 ),
-                'type' => 'time',
-                'type_value' => '08:00:00',
+                'type' => 'interval',
+                'type_value' => '5',
                 'enabled' => 1
             ],
             [
@@ -1320,11 +1344,25 @@ class DomainsPlugin extends Plugin
      */
     private function synchronizeDomains()
     {
-        Loader::loadModels($this, ['Companies', 'Domains.DomainsDomains', 'ModuleManager', 'Services']);
-        Loader::loadHelpers($this, ['Form']);
+        Loader::loadModels($this, ['Companies', 'Domains.DomainsDomains', 'ModuleManager', 'Services', 'Logs']);
+        Loader::loadHelpers($this, ['Form', 'Date']);
+
+        // Check last time this task ran
+        $last_run = $this->Logs->getCronLastRun('domain_synchronization', dirname(__FILE__));
+        $last_run = $this->Date->cast($last_run ?: date('c'), 'Y-m-d H:i:s');
 
         // Find all domain services
-        $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC']);
+        if ($this->Date->cast($last_run, 'H:i') == '08:00') {
+            $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC']);
+        } else {
+            $filters = [
+                'services' => [
+                    ['column' => 'date_last_renewed', 'operator' => '>=', 'value' => $last_run]
+                ]
+            ];
+            $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC'], $filters);
+        }
+
         $renewal_days = $this->Companies->getSetting(
             Configure::get('Blesta.company_id'),
             'domains_renewal_days_before_expiration'
@@ -1348,7 +1386,7 @@ class DomainsPlugin extends Plugin
             if ($domain && $domain->registration_date !== null) {
                 $database_registration_date = $domain->registration_date;
             }
-            
+
             // Fetch the domain registration date from the registrar, and update
             // if different than what is stored locally
             if (method_exists($modules[$module_id], 'getRegistrationDate')
@@ -1359,19 +1397,19 @@ class DomainsPlugin extends Plugin
                 $this->DomainsDomains->setRegistrationDate($service->id, $new_registration_date);
                 $service->registration_date = $new_registration_date;
             }
-            
+
             // If there was nothing stored locally and we were not able to fetch from
             // the registrar, just store the date_added
             if ($database_registration_date == null && $new_registration_date == null) {
                 $this->DomainsDomains->setRegistrationDate($service->id, $service->date_added);
             }
-            
+
             // Fetch the expiration date that is stored locally
             $database_expiration_date = null;
             if ($domain && $domain->expiration_date !== null) {
                 $database_expiration_date = $domain->expiration_date;
             }
-            
+
             // Fetch the domain expiration date from the registrar, and update if
             // different than what is stored locally
             if (method_exists($modules[$module_id], 'getExpirationDate')
@@ -1382,7 +1420,7 @@ class DomainsPlugin extends Plugin
                 $this->DomainsDomains->setExpirationDate($service->id, $new_expiration_date);
                 $service->expiration_date = $new_expiration_date;
             }
-            
+
             // If there was nothing stored locally and we were not able to fetch from the
             // registrar, just store the adjusted date_renews
             if ($database_expiration_date == null && $new_expiration_date == null) {
@@ -1849,6 +1887,10 @@ class DomainsPlugin extends Plugin
             ],
             [
                 'event' => 'Services.addAfter',
+                'callback' => ['this', 'updateRenewalDate']
+            ],
+            [
+                'event' => 'Services.renewAfter',
                 'callback' => ['this', 'updateRenewalDate']
             ],
             [
