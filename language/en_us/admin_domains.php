@@ -47,7 +47,6 @@ $lang['AdminDomains.browse.heading_added'] = 'Added Date';
 $lang['AdminDomains.browse.heading_renewal'] = 'Renewal Date';
 $lang['AdminDomains.browse.heading_expiration'] = 'Expiration Date';
 $lang['AdminDomains.browse.heading_renew'] = 'Auto Renewal';
-$lang['AdminDomains.browse.heading_found'] = 'Found on Registrar';
 $lang['AdminDomains.browse.heading_options'] = 'Options';
 $lang['AdminDomains.browse.option_delete'] = 'Delete';
 $lang['AdminDomains.browse.option_parent'] = 'Parent';
@@ -66,6 +65,7 @@ $lang['AdminDomains.browse.category_scheduled_cancellation'] = 'Scheduled';
 $lang['AdminDomains.browse.field_actionsubmit'] = 'Submit';
 
 $lang['AdminDomains.browse.tooltip_renew'] = 'Auto Renewal for Blesta means that the user will be invoiced automatically and that the domain will be renewed once the invoice is paid.';
+$lang['AdminDomains.browse.tooltip_transferred'] = 'The domain has been transferred away from the registrar.';
 
 $lang['AdminDomains.browse.action.field_years'] = 'Years';
 $lang['AdminDomains.browse.action.field_nameservers'] = 'Nameservers';

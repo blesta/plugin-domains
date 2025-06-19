@@ -26,6 +26,7 @@ if (!empty($domains)) {
 <table class="table table-striped">
     <thead>
         <tr class="heading_row">
+            <td class="icon"></td>
             <?php
             if (!in_array($this->Html->ifSet($status), ['in_review', 'canceled'])) {
             ?>
@@ -45,7 +46,6 @@ if (!empty($domains)) {
                 <span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=date_canceled&order=' . ($sort == 'date_canceled' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_canceled' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_renew');?></a></span>
                 <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.browse.tooltip_renew');?></div></span>
             </td>
-            <td><?php $this->_('AdminDomains.browse.heading_found');?></td>
             <td><?php $this->_('AdminDomains.browse.heading_options');?></td>
         </tr>
     </thead>
@@ -54,6 +54,19 @@ if (!empty($domains)) {
         foreach ($domains as $domain) {
         ?>
         <tr>
+            <td class="text-center">
+                <?php
+                if ($domain->found == '1') {
+                ?>
+                    <i class="fas fa-check text-success"></i>
+                <?php
+                } else {
+                ?>
+                    <span class="tooltip block border-0 m-0"><i class="fas fa-exclamation-triangle text-warning"></i><div><?php $this->_('AdminDomains.browse.tooltip_transferred');?></div></span>
+                <?php
+                }
+                ?>
+            </td>
             <?php
             if (!in_array($this->Html->ifSet($status), ['in_review', 'canceled'])) {
             ?>
@@ -80,19 +93,6 @@ if (!empty($domains)) {
             <td><?php echo isset($domain->date_renews) ? $this->Date->cast($domain->date_renews) : '';?></td>
             <td><?php echo isset($domain->expiration_date) ? $this->Date->cast($domain->expiration_date) : '';?></td>
             <td><?php echo isset($domain->date_canceled) ? $this->_('AdminDomains.browse.text_off') : $this->_('AdminDomains.browse.text_on');?></td>
-            <td>
-                <?php
-                if ($domain->found == '1') {
-                ?>
-                    <i class="fas fa-check"></i>
-                <?php
-                } else {
-                ?>
-                    <i class="fas fa-times"></i>
-                <?php
-                }
-                ?>
-            </td>
             <?php
             if (in_array(($status ?? null), ['active', 'pending', 'suspended', 'canceled', 'in_review'])) {
             ?>
