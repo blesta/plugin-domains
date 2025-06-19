@@ -1,6 +1,7 @@
         <?php
         echo (isset($message) ? $message : null);
 
+        $id = '_' . md5($tld->tld ?? uniqid());
         $tabs = [
             [
                 'name' => $this->_('AdminDomains.pricing.tab_pricing', true),
@@ -38,9 +39,9 @@
 
         $this->Widget->clear();
         $this->Widget->setTabs($tabs);
-        $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, (isset($tld->tld) ? $tld->tld : null)), ['id' => 'edit_tld' . str_replace('.', '_', (isset($tld->tld) ? $tld->tld : null))], (isset($render_section) ? $render_section : null));
+        $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, ($tld->tld ?? null)), ['id' => 'edit_tld' . $id], ($render_section ?? null));
 
-        $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe(str_replace('.', '_', $tld->tld))]);
+        $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
         ?>
 
         <div class="inner">
@@ -298,20 +299,20 @@
     $(document).ready(function() {
         // Set tabs
         function hideAllTabs() {
-            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .main_tab').hide();
-            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .tabs_nav').hide();
+            $('#edit_tld<?php echo $this->Html->safe($id);?> .main_tab').hide();
+            $('#edit_tld<?php echo $this->Html->safe($id);?> .tabs_nav').hide();
         }
 
         hideAllTabs();
-        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .main_tab').first().show();
-        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .tab_slider ul li').on('click', function() {
+        $('#edit_tld<?php echo $this->Html->safe($id);?> .main_tab').first().show();
+        $('#edit_tld<?php echo $this->Html->safe($id);?> .tab_slider ul li').on('click', function() {
             var tab = $(this).find('a').attr('class');
 
             $('.tab_slider ul li').removeClass('current');
             $(this).addClass('current');
 
             hideAllTabs();
-            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .main_tab#tab_' + tab).show();
+            $('#edit_tld<?php echo $this->Html->safe($id);?> .main_tab#tab_' + tab).show();
         });
 
         // Set secondary tabs
@@ -321,7 +322,7 @@
         $('.wysiwyg').blestaBindWysiwygEditor({language: '<?php echo substr(Configure::get('Blesta.language'), 0, 2);?>'});
 
         // Close modal
-        $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .btn.close').on('click', function() {
+        $('#edit_tld<?php echo $this->Html->safe($id);?> .btn.close').on('click', function() {
             $(this).closest('.qtip').find('.qtip-close').click();
         });
 
@@ -375,35 +376,35 @@
         });
 
         // Move configurable options from right to left
-        $(document).on('click', '#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .move_left', function() {
-            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .available_option_groups option:selected').appendTo(
-                $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .assigned_option_groups')
+        $(document).on('click', '#edit_tld<?php echo $this->Html->safe($id);?> .move_left', function() {
+            $('#edit_tld<?php echo $this->Html->safe($id);?> .available_option_groups option:selected').appendTo(
+                $('#edit_tld<?php echo $this->Html->safe($id);?> .assigned_option_groups')
             );
             return false;
         });
 
         // Move configurable options from left to right
-        $(document).on('click', '#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .move_right', function() {
-            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .assigned_option_groups option:selected').appendTo(
-                $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .available_option_groups')
+        $(document).on('click', '#edit_tld<?php echo $this->Html->safe($id);?> .move_right', function() {
+            $('#edit_tld<?php echo $this->Html->safe($id);?> .assigned_option_groups option:selected').appendTo(
+                $('#edit_tld<?php echo $this->Html->safe($id);?> .available_option_groups')
             );
             return false;
         });
 
         // Update TLD
-        $('#edit_tld_form<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').on('submit', function(event) {
+        $('#edit_tld_form<?php echo $this->Html->safe($id);?>').on('submit', function(event) {
             event.preventDefault();
 
-            $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> .assigned_option_groups option').prop('selected', true);
+            $('#edit_tld<?php echo $this->Html->safe($id);?> .assigned_option_groups option').prop('selected', true);
 
             $(this).blestaRequest(
                 "POST",
-                $('#edit_tld_form<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').attr('action'),
-                $('#edit_tld_form<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').serialize("serialize"),
+                $('#edit_tld_form<?php echo $this->Html->safe($id);?>').attr('action'),
+                $('#edit_tld_form<?php echo $this->Html->safe($id);?>').serialize("serialize"),
                 function(response) {
                     // Show messages
                     if (response.hasOwnProperty('message')) {
-                        var parent = $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').parents().find('#body_container .gap_row #right_outer');
+                        var parent = $('#edit_tld<?php echo $this->Html->safe($id);?>').parents().find('#body_container .gap_row #right_outer');
 
                         parent.find('.error_section').remove();
                         parent.prepend(response.message);
@@ -448,7 +449,7 @@
                             });
                         }
                     );
-                    $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?>').closest('.qtip').find('.qtip-close').click();
+                    $('#edit_tld<?php echo $this->Html->safe($id);?>').closest('.qtip').find('.qtip-close').click();
                 },
                 null,
                 {dataType: 'json'}
@@ -469,14 +470,14 @@
                 <?php
                 foreach ((isset($languages) ? $languages : []) as $i => $lang) {
                 ?>
-                    $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> textarea').each(function() {
+                    $('#edit_tld<?php echo $this->Html->safe($id);?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> textarea').each(function() {
                         $(this).val('');
                     });
 
-                    $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_html textarea').val(templates.<?php echo $lang->code;?>.html);
-                    $('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_text textarea').val(templates.<?php echo $lang->code;?>.text);
+                    $('#edit_tld<?php echo $this->Html->safe($id);?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_html textarea').val(templates.<?php echo $lang->code;?>.html);
+                    $('#edit_tld<?php echo $this->Html->safe($id);?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_text textarea').val(templates.<?php echo $lang->code;?>.text);
 
-                    var ck_editor = document.querySelector('#edit_tld<?php echo $this->Html->safe(str_replace('.', '_', $tld->tld));?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_html .ck-editor__editable');
+                    var ck_editor = document.querySelector('#edit_tld<?php echo $this->Html->safe($id);?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_html .ck-editor__editable');
                     var ck_editor_instance = ck_editor.ckeditorInstance;
 
                     ck_editor_instance.setData(templates.<?php echo $lang->code;?>.html);
