@@ -187,7 +187,7 @@
                 </tfoot>
             </table>
 
-            <div id="tld_action" class="button_row pad_top">
+            <div id="tld_action" class="button_row pad_top mt-1">
                 <a class="btn btn-primary btn-sm bulk_tld float-right" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/tlds/';?>"><?php $this->_('AdminDomains.tlds.option_submit');?></a>
                 <div class="actions">
                     <div class="change_status dns_management email_forwarding id_protection epp_code">
@@ -200,11 +200,28 @@
                     </div>
                     <div class="tld_sync">
                         <div class="float">
-                            <a class="text-sm" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync';?>" target="_blank"><?php $this->_('AdminDomains.tlds.option_configure_sync');?></a>
+                            <div class="currency_selector d-inline-block mr-2">
+                                <?php
+                                $this->Form->label($this->_('AdminDomains.tlds.field_currency', true), 'currency_selector', ['class' => 'inline mr-0 ml-2']);
+                                $this->Form->fieldSelect('currency_selector', ['' => $this->_('AppController.select.please', true)] + ($currencies ?? []), $default_currency ?? 'USD', ['id' => 'currency_selector']);
+
+                                foreach ($currencies ?? [] as $currency) {
+                                ?>
+                                <p id="currency_selector_<?php echo $this->Html->safe($currency);?>" class="border bg-light rounded-pill text-secondary font-weight-bold d-inline-block py-1 px-2" style="display: none !important">
+                                    <?php
+                                    $this->Form->fieldCheckbox('tlds_bulk[currencies][]', $currency, null, ['class' => 'h-auto']);
+                                    echo $this->Html->safe($currency);
+                                    ?>
+                                </p>
+                                <?php
+                                }
+                                ?>
+                            </div>
+                            <a class="text-sm mx-1" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync';?>" target="_blank"><?php $this->_('AdminDomains.tlds.option_configure_sync');?></a>
                         </div>
                     </div>
                     <?php
-                    $this->Form->fieldSelect('tlds_bulk[action]', ($tld_actions ?? []), null, ['id' => 'tlds_bulk_action']);
+                    $this->Form->fieldSelect('tlds_bulk[action]', ($tld_actions ?? []), null, ['id' => 'tlds_bulk_action', 'style' => 'margin-top: 6px']);
                     ?>
                 </div>
             </div>
@@ -514,6 +531,24 @@
                 null,
                 {dataType: 'json'}
             );
+        });
+
+        // Handle currency selector for TLD sync bulk action
+        $('#currency_selector').on('change', function() {
+            var currency = $(this).val();
+
+            $('#currency_selector option[value="' + currency + '"]').remove();
+            $('#currency_selector_' + currency).addClass('d-inline-block').show();
+            $('#currency_selector_' + currency).find('input[type="checkbox"]').prop('checked', true);
+        });
+        $('#currency_selector').change();
+        $('.currency_selector input[type="checkbox"]').on('change', function() {
+            if (!$(this).is(':checked')) {
+                var currency = $(this).val();
+
+                $('#currency_selector').append($('<option>', {value: currency, text: currency}));
+                $(this).parent().removeClass('d-inline-block').hide();
+            }
         });
     });
 </script>

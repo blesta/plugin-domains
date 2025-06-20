@@ -7,6 +7,7 @@
 class TldSync
 {
     private $tld_settings;
+
     /**
      * Initialize TLD Sync class
      */
@@ -28,7 +29,7 @@ class TldSync
      *  - module_id If given, only TLDs belonging to this module ID will be updated
      *  - terms A list of terms to import for the TLD, if supported
      */
-    public function synchronizePrices(array $tlds, $company_id = null, array $filters = [])
+    public function synchronizePrices(array $tlds, $company_id = null, array $filters = [], array $currencies = [])
     {
         Loader::loadModels($this, ['ModuleManager', 'Currencies']);
         Loader::loadHelpers($this, ['Form']);
@@ -55,19 +56,36 @@ class TldSync
         }
 
         // Get company currencies
-        $currencies = $this->Form->collapseObjectArray($this->Currencies->getAll($company_id), 'code', 'code');
+        if (empty($currencies)) {
+            $currencies = $this->Form->collapseObjectArray($this->Currencies->getAll($company_id), 'code', 'code');
+        }
 
         // Get TLD prices from the registrar module
         foreach ($module_tlds as $module_id => $list_tlds) {
             $module = $this->ModuleManager->initModule($module_id);
-            $module->setModuleRow($module->getModuleRows()[0] ?? null);
-            $module_pricing = $module->getFilteredTldPricing(
-                null,
-                ['tlds' => $tlds, 'currencies' => array_values($currencies)]
-            );
+            $module_row = $module->getModuleRows()[0] ?? null;
+
+            try {
+                $module->setModuleRow($module_row);
+                $tlds_pricing = $module->getFilteredTldPricing(
+                    null,
+                    ['tlds' => $tlds, 'currencies' => array_values($currencies)]
+                );
+            } catch (Throwable $e) {
+                continue;
+            }
+
+            foreach ($tlds_pricing as &$pricing) {
+                $pricing = array_intersect_key($pricing, array_flip($currencies));
+            }
+
+            // Filter the prices by the given TLDs
+            $tlds_pricing = array_intersect_key($tlds_pricing, array_flip($list_tlds));
+            if (empty($tlds_pricing)) {
+                continue;
+            }
 
             // Set the price for each TLD
-            $tlds_pricing = array_intersect_key($module_pricing, array_flip($list_tlds));
             foreach ($tlds_pricing as $tld => $pricing) {
                 $this->DomainsTlds->updatePricings(
                     $tld,
