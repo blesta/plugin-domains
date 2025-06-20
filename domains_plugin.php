@@ -742,7 +742,7 @@ class DomainsPlugin extends Plugin
         $this->Record->where('last_sync_date', '=', null)
             ->update('domains_domains', [
                 'last_sync_date' => $this->Services->Date->format('Y-m-d H:i:s', date('c')),
-                'found' => true
+                'found' => 1
             ]);
     }
 
@@ -1466,11 +1466,11 @@ class DomainsPlugin extends Plugin
                 $this->Record->where('service_id', '=', $service->id)
                     ->update('domains_domains', [
                         'last_sync_date' => $this->Services->Date->format('Y-m-d H:i:s', date('c')),
-                        'found' => true
+                        'found' => 1
                     ]);
             } else {
                 $this->Record->where('service_id', '=', $service->id)
-                    ->update('domains_domains', ['found' => false]);
+                    ->update('domains_domains', ['found' => 0]);
             }
         }
     }
@@ -1979,11 +1979,11 @@ class DomainsPlugin extends Plugin
             $this->Record->where('service_id', '=', $params['service_id'])
                 ->update('domains_domains', [
                     'last_sync_date' => $this->Services->Date->format('Y-m-d H:i:s', date('c')),
-                    'found' => true
+                    'found' => 1
                 ]);
         } else {
             $this->Record->where('service_id', '=', $params['service_id'])
-                ->update('domains_domains', ['found' => false]);
+                ->update('domains_domains', ['found' => 0]);
         }
     }
 

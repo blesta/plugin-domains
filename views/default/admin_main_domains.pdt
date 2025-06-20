@@ -72,11 +72,7 @@
             <tr class="<?php echo $this->Html->concat(' ', ($i % 2 == 1) ? 'odd_row' : '', 'expand', 'domain_info');?>">
                 <td class="text-center">
                     <?php
-                    if ($domains[$i]->found == '1') {
-                    ?>
-                        <i class="fas fa-check text-success"></i>
-                    <?php
-                    } else {
+                    if ($domains[$i]->found != '1') {
                     ?>
                         <span class="tooltip block border-0 m-0"><i class="fas fa-exclamation-triangle text-warning"></i><div><?php $this->_('AdminMain.index.tooltip_transferred');?></div></span>
                     <?php
