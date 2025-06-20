@@ -1527,6 +1527,16 @@ class AdminDomains extends DomainsController
         $page = (isset($this->get[0]) ? (int) $this->get[0] : 1);
         $this->tlds_per_page = !empty($this->post['filters']['limit']) ? $this->post['filters']['limit'] : $this->tlds_per_page;
 
+        // Get company settings
+        $company_settings = $this->Form->collapseObjectArray(
+            $this->Companies->getSettings(Configure::get('Blesta.company_id')),
+            'value',
+            'key'
+        );
+
+        // Get company default currency
+        $default_currency = $company_settings['default_currency'] ?? 'USD';
+
         // Set filters from post input
         $post_filters = [];
         if (isset($this->post['filters'])) {
@@ -1650,6 +1660,7 @@ class AdminDomains extends DomainsController
         $this->set('added_tld', $this->get['added_tld'] ?? null);
         $this->set('tlds', $tlds);
         $this->set('modules', $modules);
+        $this->set('default_currency', $default_currency);
         $this->set('currencies', $currencies);
         $this->set('tld_actions', $this->getTldActions());
         $this->set('tld_statuses', $this->getTldStatuses());

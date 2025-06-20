@@ -203,7 +203,7 @@
                             <div class="currency_selector d-inline-block mr-2">
                                 <?php
                                 $this->Form->label($this->_('AdminDomains.tlds.field_currency', true), 'currency_selector', ['class' => 'inline mr-0 ml-2']);
-                                $this->Form->fieldSelect('currency_selector', ['' => $this->_('AppController.select.please', true)] + ($currencies ?? []), null, ['id' => 'currency_selector']);
+                                $this->Form->fieldSelect('currency_selector', ['' => $this->_('AppController.select.please', true)] + ($currencies ?? []), $default_currency ?? 'USD', ['id' => 'currency_selector']);
 
                                 foreach ($currencies ?? [] as $currency) {
                                 ?>
@@ -541,6 +541,7 @@
             $('#currency_selector_' + currency).addClass('d-inline-block').show();
             $('#currency_selector_' + currency).find('input[type="checkbox"]').prop('checked', true);
         });
+        $('#currency_selector').change();
         $('.currency_selector input[type="checkbox"]').on('change', function() {
             if (!$(this).is(':checked')) {
                 var currency = $(this).val();
