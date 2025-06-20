@@ -65,6 +65,7 @@ $lang['AdminDomains.browse.category_scheduled_cancellation'] = 'Scheduled';
 $lang['AdminDomains.browse.field_actionsubmit'] = 'Submit';
 
 $lang['AdminDomains.browse.tooltip_renew'] = 'Auto Renewal for Blesta means that the user will be invoiced automatically and that the domain will be renewed once the invoice is paid.';
+$lang['AdminDomains.browse.tooltip_transferred'] = 'The domain has been transferred away from the registrar.';
 
 $lang['AdminDomains.browse.action.field_years'] = 'Years';
 $lang['AdminDomains.browse.action.field_nameservers'] = 'Nameservers';

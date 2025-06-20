@@ -33,6 +33,7 @@
         ?>
         <table class="table">
             <tr class="heading_row">
+                <td class="icon"></td>
                 <?php
                 if (!in_array((isset($status) ? $status : null), ['in_review', 'canceled'])) {
                 ?>
@@ -69,6 +70,15 @@
             for ($i = 0; $i < $num_domains; $i++) {
             ?>
             <tr class="<?php echo $this->Html->concat(' ', ($i % 2 == 1) ? 'odd_row' : '', 'expand', 'domain_info');?>">
+                <td class="text-center">
+                    <?php
+                    if ($domains[$i]->found != '1') {
+                    ?>
+                        <span class="tooltip block border-0 m-0"><i class="fas fa-exclamation-triangle text-warning"></i><div><?php $this->_('AdminMain.index.tooltip_transferred');?></div></span>
+                    <?php
+                    }
+                    ?>
+                </td>
                 <?php
                 if (!in_array((isset($status) ? $status : null), ['in_review', 'canceled'])) {
                 ?>
@@ -238,6 +248,8 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+        $(this).blestaBindToolTips();
+        
         // Fetch all transactions applied to the given invoices
         $("#plugin_domains_admin_main_domains").on('click', '.domain_info a,.domain_info input', function(e) {
             e.stopPropagation();

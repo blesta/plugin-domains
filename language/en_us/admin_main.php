@@ -44,6 +44,8 @@ $lang['AdminMain.index.category_canceled'] = 'Canceled';
 
 $lang['AdminMain.index.categorylink_newservice'] = 'New Domain';
 
+$lang['AdminMain.index.tooltip_transferred'] = 'The domain has been transferred away from the registrar.';
+
 $lang['AdminMain.index.recurring_term'] = '%1$s %2$s @ %3$s'; // %1$s is the service term length (number), %2$s is the service period, %3$s is the formatted service renewal price
 $lang['AdminMain.index.option_parent'] = 'Parent';
 $lang['AdminMain.index.option_manage'] = 'Manage';

@@ -26,6 +26,7 @@ if (!empty($domains)) {
 <table class="table table-striped">
     <thead>
         <tr class="heading_row">
+            <td class="icon"></td>
             <?php
             if (!in_array($this->Html->ifSet($status), ['in_review', 'canceled'])) {
             ?>
@@ -53,6 +54,15 @@ if (!empty($domains)) {
         foreach ($domains as $domain) {
         ?>
         <tr>
+            <td class="text-center">
+                <?php
+                if ($domain->found != '1') {
+                ?>
+                    <span class="tooltip block border-0 m-0"><i class="fas fa-exclamation-triangle text-warning"></i><div><?php $this->_('AdminDomains.browse.tooltip_transferred');?></div></span>
+                <?php
+                }
+                ?>
+            </td>
             <?php
             if (!in_array($this->Html->ifSet($status), ['in_review', 'canceled'])) {
             ?>
