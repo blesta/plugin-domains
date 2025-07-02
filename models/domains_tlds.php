@@ -936,10 +936,10 @@ class DomainsTlds extends DomainsModel
             $params = [
                 'pricing' => ($old_package->pricing ?? []),
                 'meta' => [
-                    ['key' => 'tlds', 'value' => ($old_package->meta->tlds ?? serialize([$tld])), 'serialized' => '1'],
+                    ['key' => 'tlds', 'value' => serialize($old_package->meta->tlds ?? [$tld]), 'serialized' => '1'],
                     ['key' => 'type', 'value' => ($old_package->meta->type ?? 'domain'), 'serialized' => '0'],
                     ['key' => 'epp_code', 'value' => ($old_package->meta->epp_code ?? '0'), 'serialized' => '0'],
-                    ['key' => 'ns', 'value' => ($old_package->meta->ns ?? serialize([])), 'serialized' => '1']
+                    ['key' => 'ns', 'value' => serialize($old_package->meta->ns ?? []), 'serialized' => '1']
                 ]
             ];
             foreach ($old_package->meta ?? [] as $key => $value) {
