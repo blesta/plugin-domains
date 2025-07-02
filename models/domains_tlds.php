@@ -934,11 +934,21 @@ class DomainsTlds extends DomainsModel
 
             // Set the old meta data and pricing to the new package
             $params = [
-                'pricing' => ($old_package->pricing ?? [])
+                'pricing' => ($old_package->pricing ?? []),
+                'meta' => [
+                    ['key' => 'tlds', 'value' => ($old_package->meta->tlds ?? serialize([$tld])), 'serialized' => '1'],
+                    ['key' => 'type', 'value' => ($old_package->meta->type ?? 'domain'), 'serialized' => '0'],
+                    ['key' => 'epp_code', 'value' => ($old_package->meta->epp_code ?? '0'), 'serialized' => '0'],
+                    ['key' => 'ns', 'value' => ($old_package->meta->ns ?? serialize([])), 'serialized' => '1']
+                ]
             ];
             foreach ($old_package->meta ?? [] as $key => $value) {
+                if (in_array($key, ['tlds', 'type', 'epp_code', 'ns'])) {
+                    continue;
+                }
                 $params['meta'][] = ['key' => $key, 'value' => $value];
             }
+
             $params = json_decode(json_encode($params), true);
             $this->Packages->edit($package_id, $params);
 
@@ -956,7 +966,8 @@ class DomainsTlds extends DomainsModel
         if ($override) {
             $this->Record->duplicate('domains_packages.package_id', '=', $old_package_id)
                 ->insert('domains_packages', ['tld_id' => $tld->id, 'package_id' => $old_package_id]);
-            $this->Packages->edit($old_package_id, ['status' => 'inactive']);
+            $this->Record->where('id', '=', $old_package_id)
+                ->update('packages', ['status' => 'inactive']);
         }
 
         return $package_id;
