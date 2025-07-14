@@ -155,6 +155,12 @@
                         <?php
                         }
                         ?>
+                        <li>
+                            <?php
+                            $this->Form->label($this->_('AdminDomains.pricing.field_nameserver_scope', true), 'nameserver_scope');
+                            $this->Form->fieldSelect('nameserver_scope', ($nameserver_scopes ?? []), null, ['id' => 'nameserver_scope']);
+                            ?>
+                        </li>
                     </ul>
                 </div>
             </div>
