@@ -727,7 +727,7 @@ class DomainsPlugin extends Plugin
         Loader::loadComponents($this, ['Record']);
 
         // Convert existing cron task runs to 5 minute interval
-        $cron_task_runs = $this->Record->select('cron_task_runs.id')->
+        $cron_task_runs = $this->Record->select(['cron_task_runs.id', 'cron_tasks.id' => 'task_id'])->
             from('cron_task_runs')->
             innerJoin('cron_tasks', 'cron_tasks.id', '=', 'cron_task_runs.task_id', false)->
             where('cron_tasks.key', '=', 'domain_synchronization')->
@@ -735,6 +735,7 @@ class DomainsPlugin extends Plugin
             fetchAll();
         foreach ($cron_task_runs as $cron_task_run) {
             $this->Record->where('id', '=', $cron_task_run->id)->update('cron_task_runs', ['time' => null, 'interval' => '5']);
+            $this->Record->where('id', '=', $cron_task_run->task_id)->update('cron_tasks', ['type' => 'interval']);
         }
     }
 
