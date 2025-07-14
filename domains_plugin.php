@@ -237,6 +237,30 @@ class DomainsPlugin extends Plugin
             // Upgrade to 1.17.0
             if (version_compare($current_version, '1.17.0', '<')) {
                 $this->upgrade1_17_0();
+
+                Loader::loadModels($this, ['CronTasks']);
+
+                // Remove the cron tasks
+                $cron_tasks = $this->getCronTasks();
+                foreach ($cron_tasks as $task) {
+                    $cron_task = $this->CronTasks->getByKey($task['key'], $task['dir'], $task['task_type']);
+                    if ($cron_task) {
+                        $this->CronTasks->deleteTask($cron_task->id, $task['task_type'], $task['dir']);
+                    }
+
+                    $cron_task_run = $this->CronTasks->getTaskRunByKey($task['key'], $task['dir'], false, $task['task_type']);
+                    if ($cron_task_run) {
+                        $this->CronTasks->deleteTaskRun($cron_task_run->task_run_id);
+                    }
+                }
+
+                // Re-add cron tasks
+                $this->addCronTasks($cron_tasks);
+            }
+
+            // Upgrade to 1.17.1
+            if (version_compare($current_version, '1.17.1', '<')) {
+                $this->upgrade1_17_1();
             }
         }
     }
@@ -745,6 +769,40 @@ class DomainsPlugin extends Plugin
                 'last_sync_date' => $this->Services->Date->format('Y-m-d H:i:s', date('c')),
                 'found' => 1
             ]);
+    }
+
+    /**
+     * Update to v1.17.1
+     */
+    private function upgrade1_17_1()
+    {
+        Loader::loadModels($this, ['Companies']);
+
+        $companies = $this->Companies->getAll();
+        foreach ($companies as $company) {
+            $domains_package_group = $this->Companies->getSetting($company->id, 'domains_package_group');
+            $domains_package_group = $domains_package_group->value ?? null;
+
+            if (!$domains_package_group) {
+                continue;
+            }
+
+            $packages = $this->Record->select('package_group.package_id')->
+                from('package_group')->
+                where('package_group.package_group_id', '=', $domains_package_group)->
+                fetchAll();
+
+            foreach ($packages as $package) {
+                $meta_field = [
+                    'package_id' => $package->package_id,
+                    'key' => 'type',
+                    'value' => 'domain',
+                    'serialized' => '0'
+                ];
+                $this->Record->duplicate('package_meta.value', '=', $meta_field['value'])
+                    ->insert('package_meta', $meta_field);
+            }
+        }
     }
 
     /**
