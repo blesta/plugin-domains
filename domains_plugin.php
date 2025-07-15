@@ -237,25 +237,6 @@ class DomainsPlugin extends Plugin
             // Upgrade to 1.17.0
             if (version_compare($current_version, '1.17.0', '<')) {
                 $this->upgrade1_17_0();
-
-                Loader::loadModels($this, ['CronTasks']);
-
-                // Remove the cron tasks
-                $cron_tasks = $this->getCronTasks();
-                foreach ($cron_tasks as $task) {
-                    $cron_task = $this->CronTasks->getByKey($task['key'], $task['dir'], $task['task_type']);
-                    if ($cron_task) {
-                        $this->CronTasks->deleteTask($cron_task->id, $task['task_type'], $task['dir']);
-                    }
-
-                    $cron_task_run = $this->CronTasks->getTaskRunByKey($task['key'], $task['dir'], false, $task['task_type']);
-                    if ($cron_task_run) {
-                        $this->CronTasks->deleteTaskRun($cron_task_run->task_run_id);
-                    }
-                }
-
-                // Re-add cron tasks
-                $this->addCronTasks($cron_tasks);
             }
 
             // Upgrade to 1.17.1
@@ -745,7 +726,7 @@ class DomainsPlugin extends Plugin
             $this->Record->where('id', '=', $cron_task_run->id)->update('cron_task_runs', ['time' => null, 'interval' => '5']);
         }
     }
-  
+
     /**
      * Update to v1.17.0
      */
