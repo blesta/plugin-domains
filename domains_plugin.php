@@ -1633,7 +1633,7 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels(
             $this,
-            ['Domains.DomainsTlds', 'ModuleManager', 'Clients', 'Companies', 'Contacts', 'Emails', 'Services']
+            ['Domains.DomainsTlds', 'Domains.DomainsDomains', 'ModuleManager', 'Clients', 'Companies', 'Contacts', 'Emails', 'Services']
         );
         Loader::loadHelpers($this, ['Form']);
 
@@ -1713,7 +1713,7 @@ class DomainsPlugin extends Plugin
                     $service->package->module_id,
                     Configure::get('Blesta.company_id')
                 );
-                $service->expiration_date = $registrar->getExpirationDate($service);
+                $service->expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
 
                 // Format the service dates
                 $dates = ['date_added', 'date_renews', 'date_last_renewed', 'expiration_date'];
