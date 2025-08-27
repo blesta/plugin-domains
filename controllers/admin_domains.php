@@ -1700,6 +1700,21 @@ class AdminDomains extends DomainsController
         if (array_key_exists($action, $actions)) {
             $error_tlds = [];
             switch ($action) {
+                case 'update_nameservers':
+                    foreach ($params['tlds'] as $tld) {
+                        // Update TLD
+                        $params = [
+                            'meta' => [
+                                'ns' => $params['nameservers'] ?? []
+                            ]
+                        ];
+                        $this->DomainsTlds->edit($tld, $params);
+
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
+                        }
+                    }
+                    break;
                 case 'change_status':
                     $status = $params['status'] ?? null;
                     foreach ($params['tlds'] as $tld) {
@@ -1707,6 +1722,10 @@ class AdminDomains extends DomainsController
                             $this->DomainsTlds->enable($tld);
                         } elseif ($status == 'disabled') {
                             $this->DomainsTlds->disable($tld);
+                        }
+
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
                         }
                     }
                     break;
@@ -1794,6 +1813,7 @@ class AdminDomains extends DomainsController
     private function getTldActions()
     {
         return [
+            'update_nameservers' => Language::_('AdminDomains.getTldActions.option_update_nameservers', true),
             'change_status' => Language::_('AdminDomains.getTldActions.option_change_status', true),
             'tld_sync' => Language::_('AdminDomains.getTldActions.option_tld_sync', true),
             'dns_management' => Language::_('AdminDomains.getTldActions.option_dns_management', true),
