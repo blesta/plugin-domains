@@ -190,6 +190,15 @@
             <div id="tld_action" class="button_row pad_top mt-1">
                 <a class="btn btn-primary btn-sm bulk_tld float-right" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/tlds/';?>"><?php $this->_('AdminDomains.tlds.option_submit');?></a>
                 <div class="actions">
+                    <div class="update_nameservers">
+                        <div class="float">
+                            <?php
+                            $this->Form->label($this->_('AdminDomains.browse.action.field_nameservers', true), 'nameservers', ['class' => 'inline']);
+                            $this->Form->fieldText('tlds_bulk[nameservers][0]', ($vars->tlds_bulk['nameservers'][0] ?? ''), ['class' => 'form-control input-md']);
+                            $this->Form->fieldText('tlds_bulk[nameservers][1]', ($vars->tlds_bulk['nameservers'][1] ?? ''), ['class' => 'form-control input-md']);
+                            ?>
+                        </div>
+                    </div>
                     <div class="change_status dns_management email_forwarding id_protection epp_code">
                         <div class="float">
                             <?php
