@@ -83,7 +83,7 @@ if (!empty($domains)) {
                 </a>
             </td>
             <td><?php echo $this->Html->safe(isset($domain->registrar) ? $domain->registrar : '');?></td>
-            <td><?php echo isset($domain->renewal_price) ? $this->CurrencyFormat->format($domain->renewal_price, $domain->package_pricing->currency) : '';?></td>
+            <td <?php echo (!is_null($domain->override_price) ? 'class="text-warning font-weight-bold"' : ''); ?>><?php echo isset($domain->renewal_price) ? $this->CurrencyFormat->format($domain->renewal_price, $domain->package_pricing->currency) : '';?></td>
             <td><?php echo isset($domain->registration_date) ? $this->Date->cast($domain->registration_date) : '';?></td>
             <td><?php echo isset($domain->date_added) ? $this->Date->cast($domain->date_added) : '';?></td>
             <td><?php echo isset($domain->date_renews) ? $this->Date->cast($domain->date_renews) : '';?></td>
@@ -177,6 +177,14 @@ if (!empty($domains)) {
                 <?php
                 $this->Form->label($this->_('AdminDomains.browse.action.field_years', true), 'years', ['class' => 'inline']);
                 $this->Form->fieldText('years', ($vars->cycles ?? 1), ['class' => 'form-control input-md']);
+                ?>
+            </div>
+        </div>
+        <div id="set_price_override" class="action_section">
+            <div class="float">
+                <?php
+                $this->Form->fieldText('override_price', ($vars->override_price ?? 0), ['class' => 'form-control input-md']);
+                $this->Form->fieldSelect('override_currency', ($currencies ?? []), ($vars->override_currency ?? ''));
                 ?>
             </div>
         </div>
