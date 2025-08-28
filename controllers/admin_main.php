@@ -841,7 +841,11 @@ class AdminMain extends DomainsController
      */
     public function domains()
     {
-        $this->uses(['Domains.DomainsDomains', 'ModuleManager']);
+        $this->uses(['Domains.DomainsDomains', 'ModuleManager', 'Currencies']);
+        $this->helpers(['Form']);
+
+        // Get all currencies
+        $currencies = $this->Form->collapseObjectArray($this->Currencies->getAll($this->company_id), 'code', 'code');
 
         // Process bulk domains options
         if (!empty($this->post) && isset($this->post['service_ids'])) {
@@ -864,6 +868,12 @@ class AdminMain extends DomainsController
                         break;
                     case 'domain_renewal':
                         $term = 'AdminMain.!success.domain_renewal';
+                        break;
+                    case 'set_price_override':
+                        $term = 'AdminMain.!success.set_price_override';
+                        break;
+                    case 'remove_price_override':
+                        $term = 'AdminMain.!success.remove_price_override';
                         break;
                     case 'update_nameservers':
                         $term = 'AdminMain.!success.update_nameservers';
@@ -945,6 +955,7 @@ class AdminMain extends DomainsController
         $this->set('status_count', $status_count);
         $this->set('actions', $this->getDomainActions());
         $this->set('modules', $modules);
+        $this->set('currencies', $currencies);
         $this->set('widget_state', $this->widgets_state['main_domains'] ?? null);
         $this->set('sort', $sort);
         $this->set('order', $order);
