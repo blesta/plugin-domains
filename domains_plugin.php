@@ -64,7 +64,7 @@ class DomainsPlugin extends Plugin
                 ->setKey(['tld_id', 'package_id'], 'unique')
                 ->create('domains_packages', true);
 
-            $this->createDomainsDomainsTable();
+            $this->createDomainsDomainsTable(false);
             $this->addDomainCountDataFeed();
         } catch (Exception $e) {
             // Error adding... no permission?
@@ -144,7 +144,6 @@ class DomainsPlugin extends Plugin
         $this->upgrade1_5_0();
         $this->upgrade1_6_2();
         $this->upgrade1_8_0();
-        $this->upgrade1_17_0();
 
         // Set the default renewal days before expiration
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
@@ -809,16 +808,29 @@ class DomainsPlugin extends Plugin
     /**
      * Creates the domains_domains database table
      */
-    private function createDomainsDomainsTable()
+    private function createDomainsDomainsTable($upgrade = true)
     {
-        $this->Record
-            ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-            ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-            ->setField('registration_date', ['type' => 'datetime', 'is_null' => true])
-            ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
-            ->setKey(['id'], 'primary')
-            ->setKey(['service_id'], 'unique')
-            ->create('domains_domains', true);
+        if ($upgrade) {
+            $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('registration_date', ['type' => 'datetime', 'is_null' => true])
+                ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
+                ->setKey(['id'], 'primary')
+                ->setKey(['service_id'], 'unique')
+                ->create('domains_domains', true);
+        } else {
+            $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('registration_date', ['type' => 'datetime', 'is_null' => true])
+                ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
+                ->setField('last_sync_date', ['type' => 'datetime', 'is_null' => true])
+                ->setField('found', ['type' => 'TINYINT', 'size' => '1', 'default' => '1'])
+                ->setKey(['id'], 'primary')
+                ->setKey(['service_id'], 'unique')
+                ->create('domains_domains', true);
+        }
     }
 
     /**
