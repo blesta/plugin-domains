@@ -2071,7 +2071,7 @@ class AdminDomains extends DomainsController
      */
     public function pricing()
     {
-        $this->uses(['Packages', 'Currencies', 'Languages', 'Domains.DomainsTlds']);
+        $this->uses(['Packages', 'Currencies', 'Languages', 'ModuleManager', 'Domains.DomainsTlds']);
         $this->helpers(['Form', 'CurrencyFormat']);
 
         // Fetch the package belonging to this TLD
@@ -2082,6 +2082,17 @@ class AdminDomains extends DomainsController
             || !($tld = $this->DomainsTlds->getByPackage($this->get[0]))
         ) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
+        }
+
+        // Return view from cache
+        $cache = Cache::fetchCache(
+            $package->id . '_tld_pricing',
+            Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+        );
+        if ($cache && empty($this->post)) {
+            echo base64_decode($cache);
+
+            return false;
         }
 
         // Get company settings
@@ -2232,18 +2243,45 @@ class AdminDomains extends DomainsController
             }
         }
 
-        echo $this->partial(
+        // Fetch module
+        $module = $this->ModuleManager->get($package->module_id);
+
+        // Set nameservers update scopes
+        $nameserver_scopes = [
+            'current_tld' => Language::_('AdminDomains.pricing.text_current_tld', true),
+            'all_tlds' => Language::_('AdminDomains.pricing.text_all_tlds', true, $module->name),
+        ];
+
+        $view = $this->partial(
             'admin_domains_pricing',
             compact(
                 'package',
                 'package_fields',
                 'package_fields_view',
+                'nameserver_scopes',
                 'tld',
                 'currencies',
                 'default_currency',
                 'languages'
             )
         );
+
+        // Save view on cache
+        if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
+            try {
+                Cache::writeCache(
+                    $package->id . '_tld_pricing',
+                    base64_encode($view),
+                    strtotime(Configure::get('Blesta.cache_length')) - time(),
+                    Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+                );
+            } catch (Exception $e) {
+                // Write to cache failed, so disable caching
+                Configure::set('Caching.on', false);
+            }
+        }
+
+        echo $view;
 
         return false;
     }
