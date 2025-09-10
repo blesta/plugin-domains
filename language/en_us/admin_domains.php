@@ -198,6 +198,7 @@ $lang['AdminDomains.tlds.tooltip_epp_code'] = 'The availability of the EPP Code 
 
 
 // Get TLD Actions
+$lang['AdminDomains.getTldActions.option_update_nameservers'] = 'Name Servers';
 $lang['AdminDomains.getTldActions.option_change_status'] = 'Change Status';
 $lang['AdminDomains.getTldActions.option_tld_sync'] = 'Registrar Price Sync';
 $lang['AdminDomains.getTldActions.option_dns_management'] = 'DNS Management';

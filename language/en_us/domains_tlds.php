@@ -14,6 +14,7 @@ $lang['DomainsTlds.!error.dns_management.valid'] = 'Invalid value for DNS Manage
 $lang['DomainsTlds.!error.email_forwarding.valid'] = 'Invalid value for Email Forwarding, must be 0 or 1.';
 $lang['DomainsTlds.!error.id_protection.valid'] = 'Invalid value for ID Protection, must be 0 or 1.';
 $lang['DomainsTlds.!error.epp_code.valid'] = 'Invalid value for EPP Code, must be 0 or 1.';
+$lang['DomainsTlds.!error.ns.invalid'] = '"%1$s" is not a valid nameserver.'; // %1$s is the nameserver
 
 $lang['DomainsTlds.!error.package_pricing.count'] = 'The pricing cannot be disabled, the TLD must have at least one pricing.';
 $lang['DomainsTlds.!error.package_pricing.service'] = 'The pricing could not be disabled because a service is currently using it.';

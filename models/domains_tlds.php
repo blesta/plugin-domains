@@ -612,6 +612,21 @@ class DomainsTlds extends DomainsModel
                 $vars['module_group'] = null;
             }
 
+            // Validate nameservers
+            if (isset($vars['meta']['ns'])) {
+                foreach ($vars['meta']['ns'] as $ns) {
+                    if (!filter_var($ns, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+                        $this->Input->setErrors([
+                            'service' => [
+                                'message' => Language::_('DomainsTlds.!error.ns.invalid', true, $ns)
+                            ]
+                        ]);
+
+                        return;
+                    }
+                }
+            }
+
             // Update package
             $fields = [
                 'module_id' => isset($vars['module_id'])
@@ -628,7 +643,7 @@ class DomainsTlds extends DomainsModel
                 'meta' => (array)(
                     isset($vars['meta'])
                         ? array_merge((isset($package->meta) ? (array)$package->meta : []), $vars['meta'])
-                        : (isset($package->meta) ? $package->meta : [])
+                        : ($package->meta ?? [])
                 )
             ];
             $fields = json_decode(json_encode($fields), true);
