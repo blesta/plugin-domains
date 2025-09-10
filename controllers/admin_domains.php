@@ -1929,6 +1929,9 @@ class AdminDomains extends DomainsController
                 if (empty($vars['epp_code'])) {
                     $vars['epp_code'] = '0';
                 }
+                if (empty($vars['module_group'])) {
+                    unset($vars['module_group']);
+                }
 
                 // Check if the module has been updated and is required to update the package meta
                 if (!is_null($updated_tld)) {
@@ -2116,6 +2119,11 @@ class AdminDomains extends DomainsController
             // Update TLD package
             $this->DomainsTlds->edit($tld->tld, $this->post);
 
+            // Update welcome email
+            if (isset($this->post['update_scope']) && in_array($this->post['update_scope'], ['module', 'all'])) {
+                $this->DomainsTlds->updateWelcomeEmail($tld->tld, array_intersect_key($this->post, array_flip(['update_scope', 'email_content'])));
+            }
+
             // Set empty checkboxes
             for ($i = 1; $i <= 10; $i++) {
                 foreach ($currencies as $code => $currency) {
@@ -2232,12 +2240,16 @@ class AdminDomains extends DomainsController
             }
         }
 
+        // Fetch update scopes
+        $update_scopes = $this->getUpdateScopes();
+
         echo $this->partial(
             'admin_domains_pricing',
             compact(
                 'package',
                 'package_fields',
                 'package_fields_view',
+                'update_scopes',
                 'tld',
                 'currencies',
                 'default_currency',
@@ -2471,5 +2483,19 @@ class AdminDomains extends DomainsController
         $fields->setField($limit);
 
         return $fields;
+    }
+
+    /**
+     * Fetches a list of the available update scopes
+     *
+     * @return array A list of the update scopes
+     */
+    private function getUpdateScopes()
+    {
+        return [
+            'tld' => Language::_('AdminDomains.getUpdateScopes.tld', true),
+            'module' => Language::_('AdminDomains.getUpdateScopes.module', true),
+            'all' => Language::_('AdminDomains.getUpdateScopes.all', true)
+        ];
     }
 }

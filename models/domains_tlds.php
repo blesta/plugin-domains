@@ -139,7 +139,7 @@ class DomainsTlds extends DomainsModel
     /**
      * Fetches the given TLD
      *
-     * @param int $tld The TLD of the record to fetch
+     * @param string $tld The TLD of the record to fetch
      * @param int $company_id The ID of the company for which to filter by
      * @return mixed A stdClass object representing the TLD, false if no such record exists
      */
@@ -504,7 +504,7 @@ class DomainsTlds extends DomainsModel
     /**
      * Edit a TLD
      *
-     * @param int $tld The identifier of the TLD to edit
+     * @param string $tld The identifier of the TLD to edit
      * @param array $vars An array of input data including:
      *
      *  - company_id The ID of the company for which this TLD is available (optional)
@@ -1045,7 +1045,7 @@ class DomainsTlds extends DomainsModel
     /**
      * Updates the pricings of a TLD
      *
-     * @param int $tld The identifier of the TLD to edit
+     * @param string $tld The identifier of the TLD to edit
      * @param array $pricings A key => value array, where the key is the package pricing ID
      *  and the value the pricing row
      * @param int $company_id The ID of the company for which to filter by
@@ -1483,7 +1483,7 @@ class DomainsTlds extends DomainsModel
     /**
      * Permanently deletes the given TLD
      *
-     * @param int $tld The identifier of the TLD to delete
+     * @param string $tld The identifier of the TLD to delete
      * @param int $company_id The ID of the company for which to filter by
      */
     public function delete($tld, $company_id = null)
@@ -1504,7 +1504,7 @@ class DomainsTlds extends DomainsModel
     /**
      * Permanently deletes packages for the given TLD.  NOTE: this triggers an event that will delete the tld itself
      *
-     * @param int $tld The identifier of the TLD to delete
+     * @param string $tld The identifier of the TLD to delete
      * @param int $company_id The ID of the company for which to filter by
      */
     public function deletePackages($tld, $company_id = null)
@@ -1528,7 +1528,7 @@ class DomainsTlds extends DomainsModel
     /**
      * Enables the given TLD
      *
-     * @param int $tld The identifier of the TLD to enable
+     * @param string $tld The identifier of the TLD to enable
      * @param int $company_id The ID of the company for which to filter by
      */
     public function enable($tld, $company_id = null)
@@ -1548,7 +1548,7 @@ class DomainsTlds extends DomainsModel
     /**
      * Disables the given TLD
      *
-     * @param int $tld The identifier of the TLD to disable
+     * @param string $tld The identifier of the TLD to disable
      * @param int $company_id The ID of the company for which to filter by
      */
     public function disable($tld, $company_id = null)
@@ -1688,6 +1688,67 @@ class DomainsTlds extends DomainsModel
         }
 
         return $domains_settings;
+    }
+
+    /**
+     * Updates the Welcome Email template for a given TLD
+     *
+     * @param string $tld The identifier of the TLD
+     * @param array $vars An array of input data including:
+     *
+     * - update_scope The scope of the template update, it could be:
+     *      - tld Updates the welcome email for this TLD
+     *      - module Updates the welcome email for all TLDs using this module
+     *      - all Updates the welcome email for all TLDs, regardless of the module
+     * - email_content A numerically indexed array of email content including:
+     *      - lang The language of the email content
+     *      - html The html content for the email (optional)
+     *      - text The text content for the email, will be created automatically from html if not given (optional)
+     * @param int $company_id The ID of the company for which to filter by
+     * @return void
+     */
+    public function updateWelcomeEmail($tld, $vars, $company_id = null)
+    {
+        $packages = [];
+
+        // Set company ID
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+
+        // Get TLD package
+        $tld = $this->get($tld, $company_id);
+        if (isset($tld->package_id)) {
+            $packages[] = $tld->package_id;
+        }
+
+        // Fetch module TLDs
+        if (($vars['update_scope'] ?? null) === 'module') {
+            $params = [
+                'company_id' => $company_id,
+                'module_id' => $tld->module_id
+            ];
+            $tlds = $this->getTlds($params)->fetchAll();
+
+            foreach ($tlds as $module_tld) {
+                $packages[] = $module_tld->package_id;
+            }
+        }
+
+        // Fetch all TLDs
+        if (($vars['update_scope'] ?? null) === 'all') {
+            $params = [
+                'company_id' => $company_id
+            ];
+            $tlds = $this->getTlds($params)->fetchAll();
+
+            foreach ($tlds as $module_tld) {
+                $packages[] = $module_tld->package_id;
+            }
+        }
+
+        // Update packages
+        foreach ($packages as $package_id) {
+            $this->Packages->edit($package_id, $vars);
+        }
     }
 
     /**

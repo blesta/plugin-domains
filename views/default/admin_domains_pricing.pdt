@@ -279,6 +279,12 @@
                             }
                             ?>
                         </div>
+                        <div class="pt-2 float-right">
+                            <?php
+                            $this->Form->label($this->_('AdminDomains.pricing.field_update_scope', true), 'update_scope', ['class' => 'inline']);
+                            $this->Form->fieldSelect('update_scope', ($update_scopes ?? []), ($vars['update_scope'] ?? null), ['id' => 'update_scope', 'class' => 'inline']);
+                            ?>
+                        </div>
                     </div>
                 </div>
             </div>
