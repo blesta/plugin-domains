@@ -2121,10 +2121,7 @@ class AdminDomains extends DomainsController
 
             // Update welcome email
             if (isset($this->post['update_scope']) && in_array($this->post['update_scope'], ['module', 'all'])) {
-                if (empty($this->post['module_group'])) {
-                    unset($this->post['module_group']);
-                }
-                $this->DomainsTlds->updateWelcomeEmail($tld->tld, $this->post);
+                $this->DomainsTlds->updateWelcomeEmail($tld->tld, array_intersect_key($this->post, array_flip(['update_scope', 'email_content'])));
             }
 
             // Set empty checkboxes
