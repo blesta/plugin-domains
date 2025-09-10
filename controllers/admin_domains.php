@@ -1929,6 +1929,9 @@ class AdminDomains extends DomainsController
                 if (empty($vars['epp_code'])) {
                     $vars['epp_code'] = '0';
                 }
+                if (empty($vars['module_group'])) {
+                    unset($vars['module_group']);
+                }
 
                 // Check if the module has been updated and is required to update the package meta
                 if (!is_null($updated_tld)) {
@@ -2118,6 +2121,9 @@ class AdminDomains extends DomainsController
 
             // Update welcome email
             if (isset($this->post['update_scope']) && in_array($this->post['update_scope'], ['module', 'all'])) {
+                if (empty($this->post['module_group'])) {
+                    unset($this->post['module_group']);
+                }
                 $this->DomainsTlds->updateWelcomeEmail($tld->tld, $this->post);
             }
 
