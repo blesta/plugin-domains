@@ -23,6 +23,9 @@ class AdminMain extends DomainsController
         $this->helpers(['Form', 'CurrencyFormat']);
         $this->components(['Session']);
 
+        // Load required language
+        Language::loadLang('admin_clients', null, ROOTWEBDIR . 'language' . DS);
+
         // Set the client info, if the request is not going through AJAX
         if (!$this->isAjax()) {
             $client_id = ($this->get['client_id'] ?? ($this->get[0] ?? null));
@@ -611,6 +614,9 @@ class AdminMain extends DomainsController
         $vars->module = $module_row->module_id;
         $vars->module_row = $service->module_row_id;
 
+        // Fetch module management tabs
+        $tabs = $this->getServiceTabs($service, $package, $module);
+
         // Process edit
         if (!empty($this->post)) {
             // Set checkboxes
@@ -693,20 +699,95 @@ class AdminMain extends DomainsController
             $vars = (object) $this->post;
         }
 
-        $this->set('client', $client);
-        $this->set('service', $service);
-        $this->set('package', $package);
-        $this->set('modules', $modules);
-        $this->set('statuses', $statuses);
-        $this->set('actions', $actions);
-        $this->set('module', $module);
-        $this->set('fields', (new Html($fields))->generate());
-        $this->set('vars', $vars);
+        $fields = (new Html($fields))->generate();
 
         $this->Javascript->setFile('date.min.js');
         $this->Javascript->setFile('jquery.datePicker.min.js');
         $this->Javascript->setInline(
             'Date.firstDayOfWeek=' . ($company_settings['calendar_begins'] == 'sunday' ? 0 : 1) . ';'
+        );
+
+        return $this->clientProfileView(
+            'admin_main_edit',
+            compact(
+                'client',
+                'service',
+                'package',
+                'modules',
+                'statuses',
+                'actions',
+                'module',
+                'fields',
+                'tabs',
+                'vars'
+            )
+        );
+    }
+
+    /**
+     * Service tab request
+     */
+    public function tab()
+    {
+        $this->uses(['Services', 'Packages', 'ModuleManager']);
+
+        // Ensure we have a client to load
+        if (!isset($this->get[0]) || !($client = $this->Clients->get((int)$this->get[0]))) {
+            $this->redirect($this->base_uri . 'clients/');
+        }
+
+        // Ensure we have a service
+        if (!isset($this->get[1])
+            || !($service = $this->Services->get((int)$this->get[1]))
+            || $service->client_id != $client->id
+            || !isset($this->get[2])
+        ) {
+            $this->redirect($this->base_uri . 'clients/view/' . $client->id . '/');
+        }
+
+        $package = $this->Packages->get($service->package->id);
+        $module = $this->ModuleManager->initModule($service->package->module_id);
+        $module->base_uri = $this->base_uri;
+        $method = null;
+        $plugin_id = null;
+
+        // If the second GET argument is a number, we must infer this to mean a plugin, not a module
+        $tab_view = '';
+        if (is_numeric($this->get[2])) {
+            // No plugin method was given to call, or the plugin is not supported by the service
+            $valid_plugins = $this->Form->collapseObjectArray($package->plugins, 'plugin_id', 'plugin_id');
+            if (!isset($this->get[3]) || !array_key_exists($this->get[2], $valid_plugins)) {
+                $this->redirect($this->base_uri . 'plugin/domains/admin_main/edit/' . $client->id . '/' . $service->id . '/');
+            }
+
+            // Determine the plugin/method called
+            $plugin_id = $this->get[2];
+            $method = $this->get[3];
+
+            // Process and retrieve the plugin tab content
+            $tab_view = $this->processPluginTab($plugin_id, $method, $service);
+        } else {
+            // Determine the method called
+            $method = $this->get[2];
+
+            // Process and retrieve the module tab content
+            $tab_view = $this->processModuleTab($module, $method, $package, $service);
+        }
+
+        // Fetch service tabs
+        $module_row = $this->ModuleManager->getRow($service->module_row_id);
+        $module = $this->ModuleManager->get($module_row->module_id);
+        $tabs = $this->getServiceTabs($service, $package, $module, $method, $plugin_id);
+
+        return $this->clientProfileView(
+            'admin_main_tab',
+            compact(
+                'client',
+                'tab_view',
+                'service',
+                'package',
+                'tabs'
+            )
         );
     }
 
@@ -1049,5 +1130,285 @@ class AdminMain extends DomainsController
         $fields->setField($service_meta);
 
         return $fields;
+    }
+
+    /**
+     * Renders a view as a client profile page
+     *
+     * @param string $view The view file name to render
+     * @param array $vars An array of variables to pass to the view
+     */
+    private function clientProfileView($view, array $vars = [])
+    {
+        $this->uses([
+            'Contacts',
+            'ClientGroups',
+            'Actions',
+            'Logs'
+        ]);
+        $this->helpers(['Form', 'Color']);
+
+        // Fetch client
+        $client = $vars['client'] ?? null;
+        if (is_null($client)) {
+            $client = $this->Clients->get($vars['client_id'] ?? null);
+        }
+
+        // Get all contacts, excluding the primary
+        $client->contacts = array_merge(
+            $this->Contacts->getAll($client->id, 'billing'),
+            $this->Contacts->getAll($client->id, 'other')
+        );
+        $client->numbers = $this->Contacts->getNumbers($client->contact_id);
+        $client->note_count = $this->Clients->getNoteListCount($client->id);
+        $client->group = $this->ClientGroups->get($client->client_group_id);
+
+        // Get user logs
+        $user_log = $this->Logs->getUserLog($client->user_id, 'success');
+
+        // Set all contact types besides 'primary' and 'other'
+        $contact_types = $this->Contacts->getContactTypes();
+        $contact_type_ids = $this->Form->collapseObjectArray(
+            $this->Contacts->getTypes($this->company_id),
+            'real_name',
+            'id'
+        );
+        unset($contact_types['primary'], $contact_types['other']);
+
+        // Render content
+        $content = $this->partial($view, $vars);
+
+        // Set view variables
+        $this->set('contact_types', $contact_types + $contact_type_ids);
+        $this->set('user_log', $user_log);
+        $this->set('client', $client);
+        $this->set('content', $content);
+        $this->set('number_types', $this->Contacts->getNumberTypes());
+        $this->set('number_locations', $this->Contacts->getNumberLocations());
+        $this->set('status', $this->Clients->getStatusTypes());
+        $this->set('default_currency', $client->settings['default_currency']);
+        $this->set('multiple_groups', $this->ClientGroups->getListCount($this->company_id) > 0);
+        $this->set('delivery_methods', $this->Invoices->getDeliveryMethods($client->id));
+        $this->set(
+            'plugin_actions',
+            $this->Actions->getAll(
+                ['company_id' => $this->company_id, 'location' => 'action_staff_client', 'enabled' => 1],
+                true
+            )
+        );
+        $this->set('client_account', $this->Clients->getDebitAccount($client->id));
+        $this->set('is_ajax', $this->isAjax());
+
+        // Fetch default admin layout
+        $layout = 'default';
+        $admin_view_dir = $this->Companies->getSetting(Configure::get('Blesta.company_id'), 'admin_view_dir');
+        if (!empty($admin_view_dir->value)) {
+            $layout = $admin_view_dir->value;
+        }
+
+        // Render view
+        if ($this->isAjax()) {
+            $this->controller = $view;
+            $this->action = null;
+
+            foreach ($vars as $key => $value) {
+                $this->set($key, $value);
+            }
+
+            return $this->renderAjaxWidgetIfAsync();
+        } else {
+            // Set view path to app directory
+            $this->view->view_path = APPDIR;
+            $this->view->default_view_path = APPDIR;
+            $this->view->view_dir = str_replace(ROOTWEBDIR, DS, VIEWDIR . $this->portal . DS . $layout) . DS;
+
+            $this->render('admin_clients_view', VIEWDIR . $this->portal . DS . $layout);
+        }
+    }
+
+    /**
+     * Retrieves the service management tabs when editing a service
+     *
+     * @param stdClass $service An stdClass object representing the service
+     * @param stdClass $package An stdClass object representing the service's package
+     * @param Module $module An instance of the module used by the service
+     * @param string|null $method The method being called (i.e. the tab action, optional)
+     * @param int|null $plugin_id The ID of the plugin being called (optional)
+     */
+    private function getServiceTabs(stdClass $service, stdClass $package, $module, $method = null, $plugin_id = null)
+    {
+        // Get tabs
+        $tabs = [
+            [
+                'name' => Language::_('AdminClients.editservice.tab_basic', true),
+                'attributes' => [
+                    'href' => $this->base_uri . 'plugin/domains/admin_main/edit/' . $service->client_id . '/' . $service->id . '/',
+                    'class' => 'ajax'
+                ],
+                // Default to this basic tab as being the current one
+                'current' => ($method === null && $plugin_id === null)
+            ]
+        ];
+
+        // Set tabs only if the service has not been canceled
+        if ($service->status != 'canceled') {
+            $module_tabs = $this->ModuleManager->moduleRpc(
+                $module->id,
+                'getAdminServiceTabs',
+                [$service]
+            );
+
+            // Set each of the module tabs
+            foreach ($module_tabs ?? [] as $action => $name) {
+                $tabs[] = [
+                    'name' => $name,
+                    'attributes' => [
+                        'href' => $this->base_uri . 'plugin/domains/admin_main/tab/' . $service->client_id . '/'
+                            . $service->id . '/' . $action . '/',
+                        'class' => 'ajax'
+                    ],
+                    'current' => ($plugin_id === null && strtolower($action) === strtolower($method ?? ''))
+                ];
+            }
+
+            // Retrieve the plugin tabs
+            foreach ($package->plugins as $plug) {
+                // Skip the plugin if it is not available
+                if (!($plugin = $this->getPlugin($plug->plugin_id))) {
+                    continue;
+                }
+
+                foreach ($plugin->getAdminServiceTabs($service) as $action => $tab) {
+                    $attributes = [
+                        'href' => (!empty($tab['href'])
+                            ? $tab['href']
+                            : $this->base_uri . 'plugin/domains/admin_main/tab/' . $service->client_id . '/'
+                            . $service->id . '/' . $plug->plugin_id . '/' . $action . '/'
+                        ),
+                        'class' => 'ajax'
+                    ];
+
+                    $tabs[] = [
+                        'name' => $tab['name'],
+                        'attributes' => $attributes,
+                        'current' => ($plug->plugin_id == $plugin_id && strtolower($action) === strtolower($method ?? ''))
+                    ];
+                }
+            }
+        }
+
+        return $tabs;
+    }
+
+    /**
+     * Processes and retrieves the module tab content for the given method
+     *
+     * @param Module $module The module instance
+     * @param string $method The method on the module to call to retrieve the tab content
+     * @param stdClass $package An stdClass object representing the package
+     * @param stdClass $service An stdClass object representing the service being managed
+     * @return string The tab content
+     */
+    private function processModuleTab($module, $method, stdClass $package, stdClass $service)
+    {
+        $content = '';
+
+        // Get tabs
+        $admin_tabs = $module->getAdminServiceTabs($service);
+        $valid_method = array_key_exists(strtolower($method), array_change_key_case($admin_tabs, CASE_LOWER));
+
+        // Load/process the tab request
+        if ($valid_method && is_callable([$module, $method])) {
+            // Set the module row used for this service
+            $module->setModuleRow($module->getModuleRow($service->module_row_id));
+
+            // Call the module method and set any messages to the view
+            $content = $module->{$method}($package, $service, $this->get, $this->post, $this->files);
+            $this->setServiceTabMessages($module->errors(), $module->getMessages());
+        } else {
+            // Invalid method called, redirect
+            $this->redirect($this->base_uri . 'plugin/domains/admin_main/edit/' . $service->client_id . '/' . $service->id . '/');
+        }
+
+        return $content;
+    }
+
+    /**
+     * Processes and retrieves the plugin tab content for the given method
+     *
+     * @param int $plugin_id The ID of the plugin
+     * @param string $method The method on the plugin to call to retrieve the tab content
+     * @param stdClass $service An stdClass object representing the service being managed
+     * @return string The tab content
+     */
+    private function processPluginTab($plugin_id, $method, stdClass $service)
+    {
+        $content = '';
+
+        if (($plugin = $this->getPlugin($plugin_id))) {
+            $plugin->base_uri = $this->base_uri;
+
+            // Get tabs
+            $admin_tabs = $plugin->getAdminServiceTabs($service);
+            $valid_method = array_key_exists(strtolower($method), array_change_key_case($admin_tabs, CASE_LOWER));
+
+            // Retrieve the plugin tab content
+            if ($valid_method && is_callable([$plugin, $method])) {
+                // Call the plugin method and set any messages to the view
+                $content = $plugin->{$method}($service, $this->get, $this->post, $this->files);
+                $this->setServiceTabMessages($plugin->errors(), $plugin->getMessages());
+            } else {
+                // Invalid method called, redirect
+                $this->redirect(
+                    $this->base_uri . 'plugin/domains/admin_main/edit/' . $service->client_id . '/' . $service->id . '/'
+                );
+            }
+        }
+
+        return $content;
+    }
+
+    /**
+     * Retrieves an instance of the given plugin if it is enabled
+     *
+     * @param int $plugin_id The ID of the plugin
+     * @return Plugin|null An instance of the plugin
+     */
+    private function getPlugin($plugin_id)
+    {
+        $this->uses(['PluginManager']);
+        $this->components(['Plugins']);
+
+        if (($plugin = $this->PluginManager->get($plugin_id)) && $plugin->enabled == '1') {
+            try {
+                return $this->Plugins->create($plugin->dir);
+            } catch (Throwable $e) {
+                // Do nothing
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets messages to the view based on the given errors and messages provided
+     *
+     * @param array|bool|null $errors An array of error messages (optional)
+     * @param array $messages An array of any other messages keyed by type (optional)
+     */
+    private function setServiceTabMessages($errors = null, array $messages = null)
+    {
+        // Prioritize error messages over any other messages
+        if (!empty($errors)) {
+            $this->setMessage('error', $errors, false, null, false);
+        } elseif (!empty($messages)) {
+            // Display messages if any
+            foreach ($messages as $type => $message) {
+                $this->setMessage($type, $message, false, null, false);
+            }
+        } elseif (!empty($this->post)) {
+            // Default to display a message after POST
+            $this->setMessage('success', Language::_('AdminClients.!success.service_tab', true), false, null, false);
+        }
     }
 }
