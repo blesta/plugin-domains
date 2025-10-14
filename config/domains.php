@@ -78,6 +78,33 @@ If you believe this expiration is in error, please contact us.',
 To re-purchase this domain, please log in at: {client_uri}.</p>
 
 <p>If you believe this expiration is in error, please contact us.</p>'
+        ],
+        [
+            'action' => 'Domains.domain_auto_renewal_disabled',
+            'type' => 'client',
+            'plugin_dir' => 'domains',
+            'tags' => '{domain},{service},{contact},{client_uri}',
+            'from' => 'sales@mydomain.com',
+            'from_name' => 'Domain Manager',
+            'subject' => 'Auto-renewal disabled for {domain}',
+            'text' => 'Hi {contact.first_name},
+
+This is a notice that automatic renewal has been disabled for the domain {domain}.
+
+Your domain will expire on {service.date_canceled}. If you wish to keep this domain, you will need to manually renew it before the expiration date.
+
+To enable auto-renewal or manually renew this domain, please log in at: {client_uri}.
+
+Thank you for your business!',
+            'html' => '<p>Hi {contact.first_name},</p>
+
+<p>This is a notice that automatic renewal has been disabled for the domain {domain}.</p>
+
+<p>Your domain will expire on {service.date_canceled}. If you wish to keep this domain, you will need to manually renew it before the expiration date.</p>
+
+<p>To enable auto-renewal or manually renew this domain, please log in at: {client_uri}.</p>
+
+<p>Thank you for your business!</p>'
         ]
     ]
 );
