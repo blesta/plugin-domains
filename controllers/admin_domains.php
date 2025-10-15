@@ -2160,7 +2160,17 @@ class AdminDomains extends DomainsController
             if (!isset($this->post['pricing'])) {
                 $this->post['pricing'] = [];
             }
-            $this->DomainsTlds->updatePricings($tld->tld, $this->post['pricing']);
+
+            // Check if we should update all packages for this TLD
+            $update_all_packages = !empty($this->post['update_all_packages']);
+
+            $this->DomainsTlds->updatePricings(
+                $tld->tld,
+                $this->post['pricing'],
+                null,
+                [],
+                $update_all_packages
+            );
 
             if (($errors = $this->DomainsTlds->errors())) {
                 echo json_encode([
@@ -2263,6 +2273,13 @@ class AdminDomains extends DomainsController
         // Fetch update scopes
         $update_scopes = $this->getUpdateScopes();
 
+        // Check if there are multiple packages for this TLD
+        $has_multiple_packages = $this->DomainsTlds->hasMultipleTldPackages(
+            $tld->tld,
+            $package->id,
+            Configure::get('Blesta.company_id')
+        );
+
         echo $this->partial(
             'admin_domains_pricing',
             compact(
@@ -2273,7 +2290,8 @@ class AdminDomains extends DomainsController
                 'tld',
                 'currencies',
                 'default_currency',
-                'languages'
+                'languages',
+                'has_multiple_packages'
             )
         );
 
