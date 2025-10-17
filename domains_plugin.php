@@ -242,6 +242,11 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.17.1', '<')) {
                 $this->upgrade1_17_1();
             }
+
+            // Upgrade to 1.17.5
+            if (version_compare($current_version, '1.17.5', '<')) {
+                $this->upgrade1_17_5();
+            }
         }
     }
 
@@ -786,6 +791,17 @@ class DomainsPlugin extends Plugin
     }
 
     /**
+     * Update to v1.17.5
+     */
+    private function upgrade1_17_5()
+    {
+        // Add a 'awaiting_sync' column to the 'domains_domains' table
+        $this->Record->query(
+            "ALTER TABLE `domains_domains` ADD `awaiting_sync` TINYINT(1) DEFAULT '0' AFTER `found`;"
+        );
+    }
+
+    /**
      * Cast an object to a multi-dimensional array
      *
      * @param stdClass $object The object to cast to a multi-dimensional array
@@ -810,27 +826,23 @@ class DomainsPlugin extends Plugin
      */
     private function createDomainsDomainsTable($upgrade = true)
     {
-        if ($upgrade) {
+        $this->Record
+            ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+            ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+            ->setField('registration_date', ['type' => 'datetime', 'is_null' => true])
+            ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true]);
+        if (!$upgrade) {
+            // Don't add these fields on upgrade.  They'll get added later
             $this->Record
-                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-                ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                ->setField('registration_date', ['type' => 'datetime', 'is_null' => true])
-                ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
-                ->setKey(['id'], 'primary')
-                ->setKey(['service_id'], 'unique')
-                ->create('domains_domains', true);
-        } else {
-            $this->Record
-                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-                ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                ->setField('registration_date', ['type' => 'datetime', 'is_null' => true])
-                ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
                 ->setField('last_sync_date', ['type' => 'datetime', 'is_null' => true])
                 ->setField('found', ['type' => 'TINYINT', 'size' => '1', 'default' => '1'])
-                ->setKey(['id'], 'primary')
-                ->setKey(['service_id'], 'unique')
-                ->create('domains_domains', true);
+                ->setField('awaiting_sync', ['type' => 'TINYINT', 'size' => '1', 'default' => '0']);
         }
+
+        $this->Record
+            ->setKey(['id'], 'primary')
+            ->setKey(['service_id'], 'unique')
+            ->create('domains_domains', true);
     }
 
     /**
@@ -1403,22 +1415,28 @@ class DomainsPlugin extends Plugin
         $last_run = $this->Logs->getCronLastRun('domain_synchronization', dirname(__FILE__));
         $last_run = $this->Date->cast($last_run ?: date('c'), 'Y-m-d H:i:s');
 
-        // Find all domain services
-        if ($this->Date->cast($last_run, 'H:i') == '08:00') {
-            $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC']);
-        } else {
-            $filters = [
-                'services' => [
-                    ['column' => 'date_last_renewed', 'operator' => '>=', 'value' => $last_run]
-                ]
-            ];
-            $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC'], $filters);
-        }
-
         $renewal_days = $this->Companies->getSetting(
             Configure::get('Blesta.company_id'),
             'domains_renewal_days_before_expiration'
         );
+        $pre_renewal_date = $this->Date->modify(
+                date('c'),
+                '-' . ($renewal_days->value ?? 0) . ' days',
+                'Y-m-d 00:00:00',
+                Configure::get('Blesta.company_timezone')
+            );
+
+        // Find all domain services
+        if ($this->Date->cast($last_run, 'Y-m-d') !== $this->Date->cast(date('c'), 'Y-m-d')) {
+            $filters = [
+                'services' => [
+                    ['column' => 'date_renews', 'operator' => '>=', 'value' => $pre_renewal_date]
+                ],
+            ];
+            $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC'], $filters);
+        } else {
+            $services = $this->DomainsDomains->getAll(['awaiting_sync' => 1], ['date_added' => 'DESC']);
+        }
 
         // Set the service renew date based on the expiration date retrieved from the module
         $modules = [];
@@ -1518,7 +1536,8 @@ class DomainsPlugin extends Plugin
                 $this->Record->where('service_id', '=', $service->id)
                     ->update('domains_domains', [
                         'last_sync_date' => $this->Services->Date->format('Y-m-d H:i:s', date('c')),
-                        'found' => 1
+                        'found' => 1,
+                        'awaiting_sync' => 0
                     ]);
             } else {
                 $this->Record->where('service_id', '=', $service->id)
@@ -1943,7 +1962,7 @@ class DomainsPlugin extends Plugin
             ],
             [
                 'event' => 'Services.renewAfter',
-                'callback' => ['this', 'updateRenewalDate']
+                'callback' => ['this', 'handleServiceRenewal']
             ],
             [
                 'event' => 'Services.editAfter',
@@ -1969,6 +1988,17 @@ class DomainsPlugin extends Plugin
                 $this->DomainsTlds->delete($tld->tld);
             }
         }
+    }
+
+    /**
+     * Handles actions after a service renewal
+     *
+     * @param Blesta\Core\Util\Events\Common\EventInterface $event The event to process
+     */
+    public function handleServiceRenewal($event)
+    {
+        $this->updateRenewalDate($event);
+        $this->markDomainForResync($event);
     }
 
     /**
@@ -2037,6 +2067,28 @@ class DomainsPlugin extends Plugin
             $this->Record->where('service_id', '=', $params['service_id'])
                 ->update('domains_domains', ['found' => 0]);
         }
+    }
+
+    /**
+     * Marks a domain service as awaiting synchronization
+     *
+     * @param Blesta\Core\Util\Events\Common\EventInterface $event The event to process
+     */
+    public function markDomainForResync($event)
+    {
+        Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'Services', 'ModuleManager']);
+        $params = $event->getParams();
+        $this->logger->info(json_encode($params));
+
+        if (!($this->DomainsDomains->isManagedDomain($params['service_id'] ?? null)
+                && ($service = $this->Services->get($params['service_id'] ?? null))
+            )
+        ) {
+            return;
+        }
+
+        $this->Record->where('service_id', '=', $params['service_id'])
+            ->update('domains_domains', ['awaiting_sync' => 1]);
     }
 
     /**
