@@ -1408,36 +1408,56 @@ class DomainsPlugin extends Plugin
      */
     private function synchronizeDomains()
     {
-        Loader::loadModels($this, ['Companies', 'Domains.DomainsDomains', 'ModuleManager', 'Services', 'Logs']);
+        Loader::loadModels($this, ['Companies', 'ClientGroups', 'Domains.DomainsDomains', 'ModuleManager', 'Services', 'Logs']);
         Loader::loadHelpers($this, ['Form', 'Date']);
 
         // Check last time this task ran
-        $last_run = $this->Logs->getCronLastRun('domain_synchronization', dirname(__FILE__));
-        $last_run = $this->Date->cast($last_run ?: date('c'), 'Y-m-d H:i:s');
+        $last_run = $this->Record->select('log_cron.start_date')->from('log_cron')->
+            innerJoin('cron_task_runs', 'cron_task_runs.id', '=', 'log_cron.run_id', false)->
+            innerJoin('cron_tasks', 'cron_tasks.id', '=', 'cron_task_runs.task_id', false)->
+            where('cron_task_runs.company_id', '=', Configure::get('Blesta.company_id'))->
+            where('cron_tasks.key', '=', 'domain_synchronization')->
+            where('cron_tasks.dir', '=', 'domains')->
+            where('log_cron.end_date', '!=', null)->
+            order(['log_cron.start_date' => 'DESC'])->fetch();
 
         $renewal_days = $this->Companies->getSetting(
             Configure::get('Blesta.company_id'),
             'domains_renewal_days_before_expiration'
         );
-        $pre_renewal_date = $this->Date->modify(
-                date('c'),
-                '-' . ($renewal_days->value ?? 0) . ' days',
-                'Y-m-d 00:00:00',
-                Configure::get('Blesta.company_timezone')
-            );
+
 
         // Find all domain services
-        if ($this->Date->cast($last_run, 'Y-m-d') !== $this->Date->cast(date('c'), 'Y-m-d')) {
-            $filters = [
-                'services' => [
-                    ['column' => 'date_renews', 'operator' => '>=', 'value' => $pre_renewal_date]
-                ],
-            ];
-            $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC'], $filters);
+        if ($this->Date->cast($last_run->start_date ?: date('c'), 'Y-m-d') !== $this->Date->cast(date('c'), 'Y-m-d')) {
+            $client_groups = $this->ClientGroups->getAll(Configure::get('Blesta.company_id'));
+            foreach ($client_groups as $client_group) {
+                $inv_days_before_renewal = $this->ClientGroups->getSetting($client_group->id, 'inv_days_before_renewal');
+                $pre_renewal_invoice_date = $this->Date->modify(
+                        date('c'),
+                        '-' . (($renewal_days->value ?? 0) + ($inv_days_before_renewal->value ?? 0) + 1) . ' days',
+                        'Y-m-d 00:00:00',
+                        Configure::get('Blesta.company_timezone')
+                    );
+                $filters = [
+                    'services' => [
+                        ['column' => 'date_renews', 'operator' => '>=', 'value' => $pre_renewal_invoice_date]
+                    ],
+                    'clients' => [
+                        ['column' => 'client_group_id', 'operator' => '=', 'value' => $client_group->id]
+                    ],
+                ];
+                $services = $this->DomainsDomains->getAll([], ['date_added' => 'DESC'], $filters);
+                $this->synchronizeDomainServices($services, $renewal_days);
+            }
         } else {
             $services = $this->DomainsDomains->getAll(['awaiting_sync' => 1], ['date_added' => 'DESC']);
+            $this->synchronizeDomainServices($services, $renewal_days);
         }
 
+    }
+
+    private function synchronizeDomainServices($services, $renewal_days)
+    {
         // Set the service renew date based on the expiration date retrieved from the module
         $modules = [];
         foreach ($services as $service) {
