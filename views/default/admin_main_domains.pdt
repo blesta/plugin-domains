@@ -210,14 +210,6 @@
                         ?>
                     </div>
                 </div>
-                <div id="domain_set_price_override" class="action_section">
-                    <div class="float">
-                        <?php
-                        $this->Form->fieldText('override_price', ($vars->override_price ?? 0), ['class' => 'form-control input-md']);
-                        $this->Form->fieldSelect('override_currency', ($currencies ?? []), ($vars->override_currency ?? ''));
-                        ?>
-                    </div>
-                </div>
                 <div id="domain_update_nameservers" class="action_section">
                     <div class="float">
                         <?php
