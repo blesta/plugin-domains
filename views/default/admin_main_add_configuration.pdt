@@ -122,6 +122,8 @@
                         $("#years").append(new Option(item.value, item.key));
                     });
 
+                    $("#years option[value*='<?php echo $this->Html->safe($client->settings['default_currency'] ?? null); ?>']").first().prop('selected', 'selected');
+
                     $("#package_edit_link").attr("href", '<?php echo $this->base_uri . 'packages/edit/'; ?>' + data.package_id + '/')
                 },
                 null,

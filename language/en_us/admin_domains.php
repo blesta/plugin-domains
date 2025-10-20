@@ -198,6 +198,7 @@ $lang['AdminDomains.tlds.tooltip_epp_code'] = 'The availability of the EPP Code 
 
 
 // Get TLD Actions
+$lang['AdminDomains.getTldActions.option_update_nameservers'] = 'Name Servers';
 $lang['AdminDomains.getTldActions.option_change_status'] = 'Change Status';
 $lang['AdminDomains.getTldActions.option_tld_sync'] = 'Registrar Price Sync';
 $lang['AdminDomains.getTldActions.option_dns_management'] = 'DNS Management';
@@ -211,6 +212,11 @@ $lang['AdminDomains.getTldActions.option_delete'] = 'Delete TLDs';
 $lang['AdminDomains.getTldStatuses.option_disabled'] = 'Disabled';
 $lang['AdminDomains.getTldStatuses.option_enabled'] = 'Enabled';
 
+
+// Get Update Scopes
+$lang['AdminDomains.getUpdateScopes.tld'] = 'Only update for this TLD';
+$lang['AdminDomains.getUpdateScopes.module'] = 'Update for all TLDs using this module';
+$lang['AdminDomains.getUpdateScopes.all'] = 'Update for all TLDs regardless of module';
 
 $lang['AdminDomains.pricing.boxtitle_edit_tld'] = 'Update TLD %1$s'; // %1$s is the TLD
 $lang['AdminDomains.pricing.tab_pricing'] = 'Pricing';
@@ -237,6 +243,7 @@ $lang['AdminDomains.pricing.field_edit_package'] = 'Edit Package';
 $lang['AdminDomains.pricing.field_load_sample_email'] = 'Load Sample Email';
 $lang['AdminDomains.pricing.field_description_html'] = 'HTML';
 $lang['AdminDomains.pricing.field_description_text'] = 'Text';
+$lang['AdminDomains.pricing.field_update_scope'] = 'Apply to:';
 $lang['AdminDomains.pricing.field_cancel'] = 'Cancel';
 $lang['AdminDomains.pricing.field_update'] = 'Update';
 

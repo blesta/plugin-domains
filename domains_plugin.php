@@ -64,7 +64,7 @@ class DomainsPlugin extends Plugin
                 ->setKey(['tld_id', 'package_id'], 'unique')
                 ->create('domains_packages', true);
 
-            $this->createDomainsDomainsTable();
+            $this->createDomainsDomainsTable(false);
             $this->addDomainCountDataFeed();
         } catch (Exception $e) {
             // Error adding... no permission?
@@ -144,7 +144,6 @@ class DomainsPlugin extends Plugin
         $this->upgrade1_5_0();
         $this->upgrade1_6_2();
         $this->upgrade1_8_0();
-        $this->upgrade1_17_0();
 
         // Set the default renewal days before expiration
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
@@ -237,6 +236,11 @@ class DomainsPlugin extends Plugin
             // Upgrade to 1.17.0
             if (version_compare($current_version, '1.17.0', '<')) {
                 $this->upgrade1_17_0();
+            }
+
+            // Upgrade to 1.17.1
+            if (version_compare($current_version, '1.17.1', '<')) {
+                $this->upgrade1_17_1();
             }
         }
     }
@@ -711,7 +715,7 @@ class DomainsPlugin extends Plugin
         Loader::loadComponents($this, ['Record']);
 
         // Convert existing cron task runs to 5 minute interval
-        $cron_task_runs = $this->Record->select('cron_task_runs.id')->
+        $cron_task_runs = $this->Record->select(['cron_task_runs.id', 'cron_tasks.id' => 'task_id'])->
             from('cron_task_runs')->
             innerJoin('cron_tasks', 'cron_tasks.id', '=', 'cron_task_runs.task_id', false)->
             where('cron_tasks.key', '=', 'domain_synchronization')->
@@ -719,9 +723,10 @@ class DomainsPlugin extends Plugin
             fetchAll();
         foreach ($cron_task_runs as $cron_task_run) {
             $this->Record->where('id', '=', $cron_task_run->id)->update('cron_task_runs', ['time' => null, 'interval' => '5']);
+            $this->Record->where('id', '=', $cron_task_run->task_id)->update('cron_tasks', ['type' => 'interval']);
         }
     }
-  
+
     /**
      * Update to v1.17.0
      */
@@ -747,6 +752,40 @@ class DomainsPlugin extends Plugin
     }
 
     /**
+     * Update to v1.17.1
+     */
+    private function upgrade1_17_1()
+    {
+        Loader::loadModels($this, ['Companies']);
+
+        $companies = $this->Companies->getAll();
+        foreach ($companies as $company) {
+            $domains_package_group = $this->Companies->getSetting($company->id, 'domains_package_group');
+            $domains_package_group = $domains_package_group->value ?? null;
+
+            if (!$domains_package_group) {
+                continue;
+            }
+
+            $packages = $this->Record->select('package_group.package_id')->
+                from('package_group')->
+                where('package_group.package_group_id', '=', $domains_package_group)->
+                fetchAll();
+
+            foreach ($packages as $package) {
+                $meta_field = [
+                    'package_id' => $package->package_id,
+                    'key' => 'type',
+                    'value' => 'domain',
+                    'serialized' => '0'
+                ];
+                $this->Record->duplicate('package_meta.value', '=', $meta_field['value'])
+                    ->insert('package_meta', $meta_field);
+            }
+        }
+    }
+
+    /**
      * Cast an object to a multi-dimensional array
      *
      * @param stdClass $object The object to cast to a multi-dimensional array
@@ -769,16 +808,29 @@ class DomainsPlugin extends Plugin
     /**
      * Creates the domains_domains database table
      */
-    private function createDomainsDomainsTable()
+    private function createDomainsDomainsTable($upgrade = true)
     {
-        $this->Record
-            ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-            ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-            ->setField('registration_date', ['type' => 'datetime', 'is_null' => true])
-            ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
-            ->setKey(['id'], 'primary')
-            ->setKey(['service_id'], 'unique')
-            ->create('domains_domains', true);
+        if ($upgrade) {
+            $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('registration_date', ['type' => 'datetime', 'is_null' => true])
+                ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
+                ->setKey(['id'], 'primary')
+                ->setKey(['service_id'], 'unique')
+                ->create('domains_domains', true);
+        } else {
+            $this->Record
+                ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
+                ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('registration_date', ['type' => 'datetime', 'is_null' => true])
+                ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true])
+                ->setField('last_sync_date', ['type' => 'datetime', 'is_null' => true])
+                ->setField('found', ['type' => 'TINYINT', 'size' => '1', 'default' => '1'])
+                ->setKey(['id'], 'primary')
+                ->setKey(['service_id'], 'unique')
+                ->create('domains_domains', true);
+        }
     }
 
     /**
@@ -1593,7 +1645,7 @@ class DomainsPlugin extends Plugin
     {
         Loader::loadModels(
             $this,
-            ['Domains.DomainsTlds', 'ModuleManager', 'Clients', 'Companies', 'Contacts', 'Emails', 'Services']
+            ['Domains.DomainsTlds', 'Domains.DomainsDomains', 'ModuleManager', 'Clients', 'Companies', 'Contacts', 'Emails', 'Services']
         );
         Loader::loadHelpers($this, ['Form']);
 
@@ -1673,7 +1725,7 @@ class DomainsPlugin extends Plugin
                     $service->package->module_id,
                     Configure::get('Blesta.company_id')
                 );
-                $service->expiration_date = $registrar->getExpirationDate($service);
+                $service->expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
 
                 // Format the service dates
                 $dates = ['date_added', 'date_renews', 'date_last_renewed', 'expiration_date'];
