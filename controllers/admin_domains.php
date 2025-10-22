@@ -2130,7 +2130,6 @@ class AdminDomains extends DomainsController
 
         // Get company currencies
         $currencies = $this->Currencies->getAll(Configure::get('Blesta.company_id'));
-
         foreach ($currencies as $key => $currency) {
             $currencies[$currency->code] = $currency;
             unset($currencies[$key]);
@@ -2272,7 +2271,7 @@ class AdminDomains extends DomainsController
         }
 
         // Fetch update scopes
-        $update_scopes = $this->getUpdateScopes();
+        $nameserver_scope = $this->getUpdateScopes();
 
         $view = $this->partial(
             'admin_domains_pricing',
@@ -2280,7 +2279,7 @@ class AdminDomains extends DomainsController
                 'package',
                 'package_fields',
                 'package_fields_view',
-                'update_scopes',
+                'nameserver_scope',
                 'tld',
                 'currencies',
                 'default_currency',
