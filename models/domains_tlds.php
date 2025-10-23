@@ -919,7 +919,17 @@ class DomainsTlds extends DomainsModel
      */
     private function migrateModule($tld, $new_module_id, $company_id = null, bool $override = true)
     {
-        Loader::loadModels($this, ['Packages']);
+        Loader::loadModels($this, ['Packages', 'ModuleManager']);
+
+        // Verify the new module has at least one configured module row
+        $module_rows = $this->ModuleManager->getRows($new_module_id);
+        if (empty($module_rows)) {
+            $this->Input->setErrors([
+                'module_id' => ['no_rows' => Language::_('DomainsTlds.!error.module_id.no_rows', true)]
+            ]);
+
+            return;
+        }
 
         $tld = $this->get($tld);
 
