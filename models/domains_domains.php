@@ -212,6 +212,16 @@ class DomainsDomains extends DomainsModel
             return;
         }
 
+        // Validate that the module is a registrar module
+        if ($module->type != 'registrar') {
+            $errors = [
+                'module_id' => ['invalid' => Language::_('DomainsDomains.!error.module_not_registrar', true)]
+            ];
+            $this->Input->setErrors($errors);
+
+            return;
+        }
+
         // Set service fields
         $service_fields = $this->Form->collapseObjectArray($service->fields, 'value', 'key');
 
@@ -387,6 +397,16 @@ class DomainsDomains extends DomainsModel
             return false;
         }
 
+        // Validate that the module is a registrar module
+        if ($module->type != 'registrar') {
+            $errors = [
+                'module_id' => ['invalid' => Language::_('DomainsDomains.!error.module_not_registrar', true)]
+            ];
+            $this->Input->setErrors($errors);
+
+            return;
+        }
+
         // Get service domain name
         $service_name = $this->ModuleManager->moduleRpc($module->id, 'getServiceDomain', [$service], $module_row->id);
 
@@ -428,6 +448,16 @@ class DomainsDomains extends DomainsModel
 
         if (empty($module)) {
             return [];
+        }
+
+        // Validate that the module is a registrar module
+        if ($module->type != 'registrar') {
+            $errors = [
+                'module_id' => ['invalid' => Language::_('DomainsDomains.!error.module_not_registrar', true)]
+            ];
+            $this->Input->setErrors($errors);
+
+            return;
         }
 
         // Fetch the nameservers from the cache, if they exist
