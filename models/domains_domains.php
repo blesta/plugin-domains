@@ -212,6 +212,11 @@ class DomainsDomains extends DomainsModel
             return;
         }
 
+        // Validate that the module is a registrar module
+        if (!$this->validateRegistrarModule($module)) {
+            return;
+        }
+
         // Set service fields
         $service_fields = $this->Form->collapseObjectArray($service->fields, 'value', 'key');
 
@@ -387,6 +392,11 @@ class DomainsDomains extends DomainsModel
             return false;
         }
 
+        // Validate that the module is a registrar module
+        if (!$this->validateRegistrarModule($module)) {
+            return false;
+        }
+
         // Get service domain name
         $service_name = $this->ModuleManager->moduleRpc($module->id, 'getServiceDomain', [$service], $module_row->id);
 
@@ -427,6 +437,11 @@ class DomainsDomains extends DomainsModel
         $module = $this->ModuleManager->get($module_row->module_id ?? null, false, false);
 
         if (empty($module)) {
+            return [];
+        }
+
+        // Validate that the module is a registrar module
+        if (!$this->validateRegistrarModule($module)) {
             return [];
         }
 
@@ -806,5 +821,23 @@ class DomainsDomains extends DomainsModel
             && $module
             && $package_group_id->value == $service->package_group_id
             && $module->type == 'registrar';
+    }
+
+    /**
+     * Validates that a module is a registrar module
+     *
+     * @param stdClass $module The module object to validate
+     * @return bool True if valid registrar module, false otherwise
+     */
+    private function validateRegistrarModule($module)
+    {
+        if ($module->type != 'registrar') {
+            $errors = [
+                'module_id' => ['invalid' => Language::_('DomainsDomains.!error.module_not_registrar', true)]
+            ];
+            $this->Input->setErrors($errors);
+            return false;
+        }
+        return true;
     }
 }
