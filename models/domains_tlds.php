@@ -921,6 +921,9 @@ class DomainsTlds extends DomainsModel
     {
         Loader::loadModels($this, ['Packages', 'ModuleManager']);
 
+        // Get TLD first
+        $tld = $this->get($tld);
+
         // Verify the new module has at least one configured module row
         $module_rows = $this->ModuleManager->getRows($new_module_id);
         if (empty($module_rows)) {
@@ -930,8 +933,6 @@ class DomainsTlds extends DomainsModel
 
             return;
         }
-
-        $tld = $this->get($tld);
 
         // Get old package
         $old_package_id = $tld->package_id ?? null;
