@@ -34,6 +34,35 @@
             $this->Widget->setAjaxFiltering();
             $this->Widget->create($this->_('AdminDomains.tlds.boxtitle_tld_pricing', true), ['id' => 'admin_domains_tlds'], (isset($render_section) ? $render_section : null));
             ?>
+            <?php
+            if (!empty($duplicate_tlds)) {
+            ?>
+                <section class="error_section">
+                    <article class="error_box alert">
+                        <div class="row">
+                            <div class="col-md-9 pt-1">
+                                <div class="icon-line fa-2x">
+                                    <i class="fas fa-exclamation-triangle fa-fw"></i>
+                                    <p class="p-0"><?php $this->_('AdminDomains.!warning.duplicate_tlds_message', false, implode(', ', $duplicate_tlds)); ?></p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <?php
+                                $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/fixduplicates/');
+                                ?>
+                                    <button type="submit" class="btn btn-warning m-0 float-right">
+                                        <?php $this->_('AdminDomains.!button.fix_duplicates'); ?>
+                                    </button>
+                                <?php
+                                $this->Form->end();
+                                ?>
+                            </div>
+                        </div>
+                    </article>
+                </section>
+            <?php
+            }
+            ?>
             <table class="table option_table">
                 <thead>
                     <tr class="heading_row">
