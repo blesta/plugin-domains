@@ -9,6 +9,7 @@ $lang['DomainsTlds.!error.tld_id.exists'] = 'Invalid TLD ID.';
 $lang['DomainsTlds.!error.package_id.exists'] = 'Invalid package ID.';
 $lang['DomainsTlds.!error.package_group_id.exists'] = 'Invalid package group ID.';
 $lang['DomainsTlds.!error.module_id.exists'] = 'Invalid module ID.';
+$lang['DomainsTlds.!error.module_id.no_rows'] = 'The selected module has no configured module rows. Please configure the module before migrating.';
 $lang['DomainsTlds.!error.commpany_id.exists'] = 'Invalid company ID.';
 $lang['DomainsTlds.!error.dns_management.valid'] = 'Invalid value for DNS Management, must be 0 or 1.';
 $lang['DomainsTlds.!error.email_forwarding.valid'] = 'Invalid value for Email Forwarding, must be 0 or 1.';
