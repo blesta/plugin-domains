@@ -38,7 +38,7 @@ class AdminDomains extends DomainsController
      */
     public function browse()
     {
-        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services']);
+        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Companies', 'Services']);
 
         if (!empty($this->post) && isset($this->post['service_ids'])) {
             if (($errors = $this->updateDomains($this->post))) {
@@ -60,6 +60,12 @@ class AdminDomains extends DomainsController
                         break;
                     case 'domain_renewal':
                         $term = 'AdminDomains.!success.domain_renewal';
+                        break;
+                    case 'set_price_override':
+                        $term = 'AdminDomains.!success.set_price_override';
+                        break;
+                    case 'remove_price_override':
+                        $term = 'AdminDomains.!success.remove_price_override';
                         break;
                     case 'update_nameservers':
                         $term = 'AdminDomains.!success.update_nameservers';
@@ -2419,6 +2425,27 @@ class AdminDomains extends DomainsController
             )
         );
         $fields->setField($service_meta);
+
+        // Set Price Override filter
+        $options = [
+            'all' => Language::_('AdminDomains.getfilters.field_price_override_all', true),
+            'override' => Language::_('AdminDomains.getfilters.field_price_override_override', true),
+            'no_override' => Language::_('AdminDomains.getfilters.field_price_override_no_override', true)
+        ];
+
+        $price_override = $fields->label(
+            Language::_('AdminDomains.getfilters.field_price_override', true),
+            'price_override'
+        );
+        $price_override->attach(
+            $fields->fieldSelect(
+                'filters[price_override]',
+                $options,
+                isset($vars['price_override']) ? $vars['price_override'] : null,
+                ['id' => 'price_override', 'class' => 'form-control']
+            )
+        );
+        $fields->setField($price_override);
 
         return $fields;
     }

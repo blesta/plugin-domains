@@ -21,6 +21,8 @@ $lang['AdminDomains.!success.change_expiration_date'] = 'The Domain expiration d
 $lang['AdminDomains.!success.change_registration_date'] = 'The Domain registration date has been updated!';
 $lang['AdminDomains.!success.domain_registrar_updated'] = 'The domain registrar has been updated!';
 $lang['AdminDomains.!success.domain_renewal'] = 'The Domain has been renewed!';
+$lang['AdminDomains.!success.set_price_override'] = 'The domain override price has been updated!';
+$lang['AdminDomains.!success.remove_price_override'] = 'The domain override price has been removed!';
 $lang['AdminDomains.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 $lang['AdminDomains.!success.domains_pushed'] = 'The selected domains were successfully pushed to the new client.';
 $lang['AdminDomains.!success.domains_unparented'] = 'The selected domains were removed from their parent services and the price has been reset successfully!';
@@ -301,6 +303,10 @@ $lang['AdminDomains.getfilters.any'] = 'Any';
 $lang['AdminDomains.getfilters.field_module_id'] = 'Registrar Module';
 $lang['AdminDomains.getfilters.field_package_name'] = 'TLD';
 $lang['AdminDomains.getfilters.field_service_meta'] = 'Domain Name';
+$lang['AdminDomains.getfilters.field_price_override'] = 'Price Override';
+$lang['AdminDomains.getfilters.field_price_override_all'] = 'All';
+$lang['AdminDomains.getfilters.field_price_override_override'] = 'Has override';
+$lang['AdminDomains.getfilters.field_price_override_no_override'] = 'Does not have override';
 
 
 $lang['AdminDomains.gettldfilters.any'] = 'Any';

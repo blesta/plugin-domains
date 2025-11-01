@@ -833,7 +833,7 @@ class AdminMain extends DomainsController
      */
     public function domains()
     {
-        $this->uses(['Domains.DomainsDomains', 'ModuleManager']);
+        $this->uses(['Domains.DomainsDomains']);
 
         // Process bulk domains options
         if (!empty($this->post) && isset($this->post['service_ids'])) {
@@ -856,6 +856,12 @@ class AdminMain extends DomainsController
                         break;
                     case 'domain_renewal':
                         $term = 'AdminMain.!success.domain_renewal';
+                        break;
+                    case 'set_price_override':
+                        $term = 'AdminMain.!success.set_price_override';
+                        break;
+                    case 'remove_price_override':
+                        $term = 'AdminMain.!success.remove_price_override';
                         break;
                     case 'update_nameservers':
                         $term = 'AdminMain.!success.update_nameservers';
