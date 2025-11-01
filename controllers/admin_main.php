@@ -237,11 +237,7 @@ class AdminMain extends DomainsController
         $years = $this->formatPricingOptions($package, $action);
 
         // Get list of registrar modules
-        $modules = $this->Form->collapseObjectArray(
-            $this->ModuleManager->getAll(Configure::get('Blesta.company_id'), 'name', 'asc', ['type' => 'registrar']),
-            'name',
-            'id'
-        );
+        $modules = $this->getConfiguredRegistrarModules();
 
         // Get open invoices
         $invoices = $this->Form->collapseObjectArray(
@@ -574,11 +570,7 @@ class AdminMain extends DomainsController
         }
 
         // Get list of registrar modules
-        $modules = $this->Form->collapseObjectArray(
-            $this->ModuleManager->getAll(Configure::get('Blesta.company_id'), 'name', 'asc', ['type' => 'registrar']),
-            'name',
-            'id'
-        );
+        $modules = $this->getConfiguredRegistrarModules();
 
         // Get service statuses
         $statuses = $this->Services->getStatusTypes();
@@ -933,11 +925,7 @@ class AdminMain extends DomainsController
         ];
 
         // Get list of registrar modules
-        $modules = $this->Form->collapseObjectArray(
-            $this->ModuleManager->getAll(Configure::get('Blesta.company_id'), 'name', 'asc', ['type' => 'registrar']),
-            'name',
-            'id'
-        );
+        $modules = $this->getConfiguredRegistrarModules();
 
         // Set the input field filters for the widget
         $filters = $this->getFilters($post_filters);
@@ -1055,5 +1043,31 @@ class AdminMain extends DomainsController
         $fields->setField($service_meta);
 
         return $fields;
+    }
+
+    /**
+     * Get list of configured registrar modules
+     *
+     * @return array Array of module names keyed by module ID
+     */
+    private function getConfiguredRegistrarModules()
+    {
+        $all_modules = $this->ModuleManager->getAll(
+            Configure::get('Blesta.company_id'),
+            'name',
+            'asc',
+            ['type' => 'registrar']
+        );
+
+        // Filter out modules without configured module rows
+        $configured_modules = [];
+        foreach ($all_modules as $module) {
+            $module_rows = $this->ModuleManager->getRows($module->id);
+            if (!empty($module_rows)) {
+                $configured_modules[] = $module;
+            }
+        }
+
+        return $this->Form->collapseObjectArray($configured_modules, 'name', 'id');
     }
 }

@@ -1706,6 +1706,21 @@ class AdminDomains extends DomainsController
         if (array_key_exists($action, $actions)) {
             $error_tlds = [];
             switch ($action) {
+                case 'update_nameservers':
+                    foreach ($params['tlds'] as $tld) {
+                        // Update TLD
+                        $params = [
+                            'meta' => [
+                                'ns' => $params['nameservers'] ?? []
+                            ]
+                        ];
+                        $this->DomainsTlds->edit($tld, $params);
+
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
+                        }
+                    }
+                    break;
                 case 'change_status':
                     $status = $params['status'] ?? null;
                     foreach ($params['tlds'] as $tld) {
@@ -1713,6 +1728,10 @@ class AdminDomains extends DomainsController
                             $this->DomainsTlds->enable($tld);
                         } elseif ($status == 'disabled') {
                             $this->DomainsTlds->disable($tld);
+                        }
+
+                        if (($error = $this->DomainsTlds->errors())) {
+                            $error_tlds[] = $tld;
                         }
                     }
                     break;
@@ -1800,6 +1819,7 @@ class AdminDomains extends DomainsController
     private function getTldActions()
     {
         return [
+            'update_nameservers' => Language::_('AdminDomains.getTldActions.option_update_nameservers', true),
             'change_status' => Language::_('AdminDomains.getTldActions.option_change_status', true),
             'tld_sync' => Language::_('AdminDomains.getTldActions.option_tld_sync', true),
             'dns_management' => Language::_('AdminDomains.getTldActions.option_dns_management', true),
@@ -1934,6 +1954,9 @@ class AdminDomains extends DomainsController
                 }
                 if (empty($vars['epp_code'])) {
                     $vars['epp_code'] = '0';
+                }
+                if (empty($vars['module_group'])) {
+                    unset($vars['module_group']);
                 }
 
                 // Check if the module has been updated and is required to update the package meta
@@ -2122,6 +2145,11 @@ class AdminDomains extends DomainsController
             // Update TLD package
             $this->DomainsTlds->edit($tld->tld, $this->post);
 
+            // Update welcome email
+            if (isset($this->post['update_scope']) && in_array($this->post['update_scope'], ['module', 'all'])) {
+                $this->DomainsTlds->updateWelcomeEmail($tld->tld, array_intersect_key($this->post, array_flip(['update_scope', 'email_content'])));
+            }
+
             // Set empty checkboxes
             for ($i = 1; $i <= 10; $i++) {
                 foreach ($currencies as $code => $currency) {
@@ -2238,12 +2266,16 @@ class AdminDomains extends DomainsController
             }
         }
 
+        // Fetch update scopes
+        $update_scopes = $this->getUpdateScopes();
+
         echo $this->partial(
             'admin_domains_pricing',
             compact(
                 'package',
                 'package_fields',
                 'package_fields_view',
+                'update_scopes',
                 'tld',
                 'currencies',
                 'default_currency',
@@ -2498,5 +2530,19 @@ class AdminDomains extends DomainsController
         $fields->setField($limit);
 
         return $fields;
+    }
+
+    /**
+     * Fetches a list of the available update scopes
+     *
+     * @return array A list of the update scopes
+     */
+    private function getUpdateScopes()
+    {
+        return [
+            'tld' => Language::_('AdminDomains.getUpdateScopes.tld', true),
+            'module' => Language::_('AdminDomains.getUpdateScopes.module', true),
+            'all' => Language::_('AdminDomains.getUpdateScopes.all', true)
+        ];
     }
 }
