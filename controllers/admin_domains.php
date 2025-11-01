@@ -38,11 +38,7 @@ class AdminDomains extends DomainsController
      */
     public function browse()
     {
-        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services', 'Currencies']);
-        $this->helpers(['Form']);
-
-        // Get all currencies
-        $currencies = $this->Form->collapseObjectArray($this->Currencies->getAll($this->company_id), 'code', 'code');
+        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Companies', 'Services']);
 
         if (!empty($this->post) && isset($this->post['service_ids'])) {
             if (($errors = $this->updateDomains($this->post))) {
@@ -174,7 +170,6 @@ class AdminDomains extends DomainsController
         $this->set('status_count', $status_count);
         $this->set('actions', $this->getDomainActions());
         $this->set('modules', $modules);
-        $this->set('currencies', $currencies);
         $this->set('widget_state', isset($this->widgets_state['services']) ? $this->widgets_state['services'] : null);
         $this->set('sort', $alt_sort ? $alt_sort : $sort);
         $this->set('order', $order);

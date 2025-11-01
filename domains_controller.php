@@ -178,17 +178,19 @@ class DomainsController extends AppController
             case 'set_price_override':
                 foreach ($data['service_ids'] as $service_id) {
                     $service = $this->Services->get($service_id);
-                    $this->Services->edit(
-                        $service_id,
-                        [
-                            'override_price' => $service->package_pricing->price_renews,
-                            'override_currency' => $service->package_pricing->currency
-                        ],
-                        true
-                    );
+                    if ($service && isset($service->package_pricing)) {
+                        $this->Services->edit(
+                            $service_id,
+                            [
+                                'override_price' => $service->package_pricing->price_renews,
+                                'override_currency' => $service->package_pricing->currency
+                            ],
+                            true
+                        );
 
-                    if (($errors = $this->Services->errors())) {
-                        break;
+                        if (($errors = $this->Services->errors())) {
+                            break;
+                        }
                     }
                 }
                 break;
