@@ -629,17 +629,11 @@ class DomainsTlds extends DomainsModel
 
             // Update package
             $fields = [
-                'module_id' => isset($vars['module_id'])
-                    ? $vars['module_id']
-                    : (isset($package->module_id) ? $package->module_id : null),
+                'module_id' => $vars['module_id'] ?? ($package->module_id ?? null),
                 'module_row' => $vars['module_row'] ?? null,
                 'module_group' => $vars['module_group'] ?? null,
-                'taxable' => isset($vars['taxable'])
-                    ? $vars['taxable']
-                    : (isset($package->taxable) ? $package->taxable : 0),
-                'email_content' => isset($vars['email_content'])
-                    ? $vars['email_content']
-                    : (isset($package->email_content) ? $package->email_content : null),
+                'taxable' => $vars['taxable'] ?? ($package->taxable ?? 0),
+                'email_content' => $vars['email_content'] ?? ($package->email_content ?? null),
                 'meta' => (array)(
                     isset($vars['meta'])
                         ? array_merge((isset($package->meta) ? (array)$package->meta : []), $vars['meta'])
@@ -659,6 +653,7 @@ class DomainsTlds extends DomainsModel
                     unset($fields[$key]);
                 }
             }
+            unset($value);
 
             $this->Packages->edit($package->id, $fields);
 
@@ -666,6 +661,28 @@ class DomainsTlds extends DomainsModel
                 $this->Input->setErrors($errors);
 
                 return;
+            }
+
+            // Update nameservers
+            if (($vars['nameserver_scope'] ?? 'current_tld') == 'all_tlds') {
+                $packages = $this->Record->select('packages.*')
+                    ->from('packages')
+                    ->innerJoin('package_group', 'package_group.package_id', '=', 'packages.id', false)
+                    ->innerJoin('package_groups', 'package_groups.id', '=', 'package_group.package_group_id', false)
+                    ->where('packages.module_id', '=', $package->module_id)
+                    ->where('package_groups.company_id', '=', $company_id)
+                    ->fetchAll();
+                $name_servers = $vars['meta']['ns'] ?? [];
+                foreach ($packages as $module_package) {
+                    $params = [
+                        'package_id' => $module_package->id,
+                        'key' => 'ns',
+                        'value' => serialize($name_servers),
+                        'serialized' => 1
+                    ];
+                    $this->Record->duplicate('package_meta.value', '=', $params['value'])
+                        ->insert('package_meta', $params);
+                }
             }
 
             // Set the default meta data to the package

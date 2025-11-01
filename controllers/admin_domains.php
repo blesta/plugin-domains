@@ -2113,6 +2113,17 @@ class AdminDomains extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
+        // Return view from cache
+        $cache = Cache::fetchCache(
+            $package->id . '_tld_pricing',
+            Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+        );
+        if ($cache && empty($this->post)) {
+            echo base64_decode($cache);
+
+            return false;
+        }
+
         // Get company settings
         $company_settings = $this->Form->collapseObjectArray(
             $this->Companies->getSettings(Configure::get('Blesta.company_id')),
@@ -2125,7 +2136,6 @@ class AdminDomains extends DomainsController
 
         // Get company currencies
         $currencies = $this->Currencies->getAll(Configure::get('Blesta.company_id'));
-
         foreach ($currencies as $key => $currency) {
             $currencies[$currency->code] = $currency;
             unset($currencies[$key]);
@@ -2267,21 +2277,38 @@ class AdminDomains extends DomainsController
         }
 
         // Fetch update scopes
-        $update_scopes = $this->getUpdateScopes();
+        $nameserver_scope = $this->getUpdateScopes();
 
-        echo $this->partial(
+        $view = $this->partial(
             'admin_domains_pricing',
             compact(
                 'package',
                 'package_fields',
                 'package_fields_view',
-                'update_scopes',
+                'nameserver_scope',
                 'tld',
                 'currencies',
                 'default_currency',
                 'languages'
             )
         );
+
+        // Save view on cache
+        if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
+            try {
+                Cache::writeCache(
+                    $package->id . '_tld_pricing',
+                    base64_encode($view),
+                    strtotime(Configure::get('Blesta.cache_length')) - time(),
+                    Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+                );
+            } catch (Exception $e) {
+                // Write to cache failed, so disable caching
+                Configure::set('Caching.on', false);
+            }
+        }
+
+        echo $view;
 
         return false;
     }
