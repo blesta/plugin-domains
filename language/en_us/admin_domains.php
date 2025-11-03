@@ -250,6 +250,8 @@ $lang['AdminDomains.pricing.field_description_text'] = 'Text';
 $lang['AdminDomains.pricing.field_update_scope'] = 'Apply to:';
 $lang['AdminDomains.pricing.field_cancel'] = 'Cancel';
 $lang['AdminDomains.pricing.field_update'] = 'Update';
+$lang['AdminDomains.pricing.text_multiple_packages_info'] = 'There are other packages for this TLD that may have different pricing. Enable the option below when updating pricing if they should be updated with this pricing.';
+$lang['AdminDomains.pricing.field_update_all_packages'] = 'Update pricing for all packages that match this TLD';
 
 
 $lang['AdminDomains.meta.boxtitle_meta_tld'] = 'Update Package Meta for TLD %1$s'; // %1$s is the TLD

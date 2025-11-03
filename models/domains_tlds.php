@@ -614,6 +614,11 @@ class DomainsTlds extends DomainsModel
 
             // Validate nameservers
             if (isset($vars['meta']['ns'])) {
+                // Filter out empty nameservers
+                $vars['meta']['ns'] = array_filter($vars['meta']['ns'], function($ns) {
+                    return !empty(trim($ns));
+                });
+
                 foreach ($vars['meta']['ns'] as $ns) {
                     if (!filter_var($ns, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
                         $this->Input->setErrors([
@@ -1212,21 +1217,83 @@ class DomainsTlds extends DomainsModel
      * @param array $filters A list of filters for the process
      *
      *  - terms A list of terms to import for the TLD, if supported
+     * @param bool $update_all_packages If true, update pricing for all packages matching this TLD
      */
-    public function updatePricings($tld, array $pricings, $company_id = null, array $filters = [])
+    public function updatePricings($tld, array $pricings, $company_id = null, array $filters = [], $update_all_packages = false)
     {
-        Loader::loadModels($this, ['Pricings', 'Currencies']);
+        Loader::loadModels($this, ['Pricings', 'Currencies', 'Companies']);
         Loader::loadHelpers($this, ['Form']);
 
         // Trigger the Domains.updatePricingBefore event
         extract($this->triggerEvent('updatePricingBefore', ['tld' => $tld, 'pricings' => $pricings]));
 
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+
+        // Get the TLD object (needed for event triggering)
         $tld = $this->get($tld, $company_id);
 
+        // If update_all_packages is true, update pricing for all packages matching this TLD
+        if ($update_all_packages) {
+            // Get the domains package group
+            $domains_package_group = $this->Companies->getSetting($company_id, 'domains_package_group');
+            $package_group_id = $domains_package_group->value ?? null;
+
+            if (!empty($package_group_id)) {
+                // Get all packages for this TLD within the domains package group
+                $all_packages = $this->Record->select(['domains_packages.package_id', 'domains_tlds.tld'])
+                    ->from('domains_packages')
+                    ->innerJoin('domains_tlds', 'domains_tlds.id', '=', 'domains_packages.tld_id', false)
+                    ->innerJoin('package_group', 'package_group.package_id', '=', 'domains_packages.package_id', false)
+                    ->where('domains_tlds.tld', '=', $tld->tld)
+                    ->where('domains_tlds.company_id', '=', $company_id)
+                    ->where('package_group.package_group_id', '=', $package_group_id)
+                    ->fetchAll();
+
+                // Collect errors during bulk update
+                $errors = [];
+
+                // Update pricing for each package
+                foreach ($all_packages as $package) {
+                    $this->updateSinglePackagePricing($package->tld, $package->package_id, $pricings, $company_id, $filters);
+
+                    // Check for errors after updating each package
+                    if (($package_errors = $this->errors())) {
+                        $errors[$package->package_id] = $package_errors;
+                    }
+                }
+
+                // Set aggregated errors if any occurred
+                if (!empty($errors)) {
+                    $this->Input->setErrors(['packages' => $errors]);
+                }
+
+                // Trigger the event after updating all packages
+                extract($this->triggerEvent('updatePricingAfter', ['tld' => $tld, 'pricings' => $pricings]));
+                return;
+            }
+        }
+
+        // Update pricing for the single package
+        $this->updateSinglePackagePricing($tld->tld, $tld->package_id, $pricings, $company_id, $filters);
+
+        // Trigger the Domains.updatePricingAfter event
+        extract($this->triggerEvent('updatePricingAfter', ['tld' => $tld, 'pricings' => $pricings]));
+    }
+
+    /**
+     * Updates the pricings for a single package
+     *
+     * @param string $tld The TLD string
+     * @param int $package_id The package ID to update
+     * @param array $pricings The pricing data
+     * @param int $company_id The company ID
+     * @param array $filters Filters for the process
+     */
+    private function updateSinglePackagePricing($tld, $package_id, array $pricings, $company_id, array $filters = [])
+    {
         // Update pricing
         if (!empty($pricings)) {
-            $pricings_by_currency = $this->getPricingsByTermCurrency($tld->package_id);
+            $pricings_by_currency = $this->getPricingsByTermCurrency($package_id);
             foreach ($pricings as $term => $term_pricing) {
                 foreach ($term_pricing as $currency => $pricing) {
                     $pricing['currency'] = $currency;
@@ -1254,13 +1321,10 @@ class DomainsTlds extends DomainsModel
                             $this->disablePricing($pricing_row->id);
                         }
                     } else if ((bool) ($pricing['enabled'] ?? 0)) {
-                        $this->addPricing($tld->package_id, $pricing);
+                        $this->addPricing($package_id, $pricing);
                     }
                 }
             }
-
-            // Trigger the Domains.updatePricingAfter event
-            extract($this->triggerEvent('updatePricingAfter', ['tld' => $tld, 'pricings' => $pricings]));
         }
     }
 
