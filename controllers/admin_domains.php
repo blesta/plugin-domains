@@ -2107,17 +2107,6 @@ class AdminDomains extends DomainsController
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
         }
 
-        // Return view from cache
-        $cache = Cache::fetchCache(
-            $package->id . '_tld_pricing',
-            Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
-        );
-        if ($cache && empty($this->post)) {
-            echo base64_decode($cache);
-
-            return false;
-        }
-
         // Get company settings
         $company_settings = $this->Form->collapseObjectArray(
             $this->Companies->getSettings(Configure::get('Blesta.company_id')),
@@ -2273,7 +2262,7 @@ class AdminDomains extends DomainsController
         // Fetch update scopes
         $nameserver_scope = $this->getUpdateScopes();
 
-        $view = $this->partial(
+        echo $this->partial(
             'admin_domains_pricing',
             compact(
                 'package',
@@ -2286,23 +2275,6 @@ class AdminDomains extends DomainsController
                 'languages'
             )
         );
-
-        // Save view on cache
-        if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
-            try {
-                Cache::writeCache(
-                    $package->id . '_tld_pricing',
-                    base64_encode($view),
-                    strtotime(Configure::get('Blesta.cache_length')) - time(),
-                    Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
-                );
-            } catch (Exception $e) {
-                // Write to cache failed, so disable caching
-                Configure::set('Caching.on', false);
-            }
-        }
-
-        echo $view;
 
         return false;
     }
