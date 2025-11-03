@@ -924,9 +924,20 @@ class DomainsTlds extends DomainsModel
      */
     private function migrateModule($tld, $new_module_id, $company_id = null, bool $override = true)
     {
-        Loader::loadModels($this, ['Packages']);
+        Loader::loadModels($this, ['Packages', 'ModuleManager']);
 
+        // Get TLD first
         $tld = $this->get($tld);
+
+        // Verify the new module has at least one configured module row
+        $module_rows = $this->ModuleManager->getRows($new_module_id);
+        if (empty($module_rows)) {
+            $this->Input->setErrors([
+                'module_id' => ['no_rows' => Language::_('DomainsTlds.!error.module_id.no_rows', true)]
+            ]);
+
+            return;
+        }
 
         // Get old package
         $old_package_id = $tld->package_id ?? null;
@@ -1097,6 +1108,103 @@ class DomainsTlds extends DomainsModel
             ->numResults();
 
         return $count > 0;
+    }
+
+    /**
+     * Gets all TLDs that have multiple active packages for the same TLD and module
+     *
+     * @param int $company_id The ID of the company
+     * @return array An array of TLD names that have duplicate packages
+     */
+    public function getDuplicateTlds($company_id = null)
+    {
+        Loader::loadModels($this, ['Companies']);
+
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+
+        // Get the domains package group setting
+        $domains_package_group = $this->Companies->getSetting($company_id, 'domains_package_group');
+        $package_group_id = $domains_package_group->value ?? null;
+
+        if (empty($package_group_id)) {
+            return [];
+        }
+
+        // Fetch all company TLDs
+        $tlds = $this->getTlds(['company_id' => $company_id])
+            ->fetchAll();
+
+        // Check which TLDs has more than one active package
+        $duplicate_tlds = [];
+        foreach ($tlds as $tld) {
+            $tld_packages = $this->getTldPackages($tld->tld, 'active', $company_id);
+
+            if (count($tld_packages) == 1) {
+                continue;
+            }
+
+            $duplicate_tlds[] = $tld->tld;
+        }
+
+        return $duplicate_tlds;
+    }
+
+    /**
+     * Gets all packages for TLDs that have duplicates
+     *
+     * @param int $company_id The ID of the company
+     * @return array An array of duplicate packages grouped by TLD
+     */
+    public function getDuplicateTldPackages($company_id = null)
+    {
+        Loader::loadModels($this, ['Companies']);
+
+        $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
+
+        // Get the domains package group setting
+        $domains_package_group = $this->Companies->getSetting($company_id, 'domains_package_group');
+        $package_group_id = $domains_package_group->value ?? null;
+
+        if (empty($package_group_id)) {
+            return [];
+        }
+
+        // Get duplicate TLDs
+        $duplicate_tlds = $this->getDuplicateTlds($company_id);
+
+        if (empty($duplicate_tlds)) {
+            return [];
+        }
+
+        $result = [];
+
+        // For each duplicate TLD, get all its active packages
+        foreach ($duplicate_tlds as $tld) {
+            // Get all active packages for this TLD
+            $packages = $this->Record->select(['domains_packages.package_id'])
+                ->from('domains_packages')
+                ->innerJoin('domains_tlds', 'domains_tlds.id', '=', 'domains_packages.tld_id', false)
+                ->innerJoin('packages', 'packages.id', '=', 'domains_packages.package_id', false)
+                ->innerJoin('package_group', 'package_group.package_id', '=', 'domains_packages.package_id', false)
+                ->where('domains_tlds.tld', '=', $tld)
+                ->where('domains_tlds.company_id', '=', $company_id)
+                ->where('package_group.package_group_id', '=', $package_group_id)
+                ->where('packages.status', '=', 'active')
+                ->fetchAll();
+
+            // Collect all package IDs for this TLD
+            $package_ids = [];
+            foreach ($packages as $package) {
+                $package_ids[] = $package->package_id;
+            }
+
+            // Store all packages for this TLD (keep first, mark rest as duplicates)
+            if (count($package_ids) > 1) {
+                $result[$tld] = $package_ids;
+            }
+        }
+
+        return $result;
     }
 
     /**

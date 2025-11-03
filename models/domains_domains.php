@@ -92,11 +92,15 @@ class DomainsDomains extends DomainsModel
         // Filter by type
         $filters['type'] = 'domains';
 
+        // Filter by price override
+        $formatted_filters = [];
+        $this->applyPriceOverrideFilter($filters, $formatted_filters);
+
         // Set service status
         $status = $filters['status'] ?? 'active';
         $client_id = $filters['client_id'] ?? null;
 
-        $services = $this->Services->getList($client_id, $status, $page, $order, true, $filters);
+        $services = $this->Services->getList($client_id, $status, $page, $order, true, $filters, $formatted_filters);
 
         // Add domain fields
         foreach ($services as &$service) {
@@ -146,11 +150,15 @@ class DomainsDomains extends DomainsModel
         // Filter by type
         $filters['type'] = 'domains';
 
+        // Filter by price override
+        $formatted_filters = [];
+        $this->applyPriceOverrideFilter($filters, $formatted_filters);
+
         // Set service status
         $status = $filters['status'] ?? 'active';
         $client_id = $filters['client_id'] ?? null;
 
-        return $this->Services->getListCount($client_id, $status, true, null, $filters);
+        return $this->Services->getListCount($client_id, $status, true, null, $filters, $formatted_filters);
     }
 
     /**
@@ -184,13 +192,17 @@ class DomainsDomains extends DomainsModel
         // Filter by type
         $filters['type'] = 'domains';
 
+        // Filter by price override
+        $formatted_filters = [];
+        $this->applyPriceOverrideFilter($filters, $formatted_filters);
+
         // Set service status
         $status = $status ?? $filters['status'] ?? 'active';
         $client_id = $filters['client_id'] ?? null;
 
         unset($filters['status']);
 
-        return $this->Services->getListCount($client_id, $status, true, null, $filters);
+        return $this->Services->getListCount($client_id, $status, true, null, $filters, $formatted_filters);
     }
 
     /**
@@ -209,6 +221,11 @@ class DomainsDomains extends DomainsModel
         }
 
         if (!($module = $this->ModuleManager->get($module_id))) {
+            return;
+        }
+
+        // Validate that the module is a registrar module
+        if (!$this->validateRegistrarModule($module)) {
             return;
         }
 
@@ -387,6 +404,11 @@ class DomainsDomains extends DomainsModel
             return false;
         }
 
+        // Validate that the module is a registrar module
+        if (!$this->validateRegistrarModule($module)) {
+            return false;
+        }
+
         // Get service domain name
         $service_name = $this->ModuleManager->moduleRpc($module->id, 'getServiceDomain', [$service], $module_row->id);
 
@@ -427,6 +449,11 @@ class DomainsDomains extends DomainsModel
         $module = $this->ModuleManager->get($module_row->module_id ?? null, false, false);
 
         if (empty($module)) {
+            return [];
+        }
+
+        // Validate that the module is a registrar module
+        if (!$this->validateRegistrarModule($module)) {
             return [];
         }
 
@@ -806,5 +833,48 @@ class DomainsDomains extends DomainsModel
             && $module
             && $package_group_id->value == $service->package_group_id
             && $module->type == 'registrar';
+    }
+
+    /**
+     * Applies price override filter to the given filters arrays
+     *
+     * @param array $filters The filters array (modified by reference)
+     * @param array $formatted_filters The formatted filters array (modified by reference)
+     */
+    private function applyPriceOverrideFilter(array &$filters, array &$formatted_filters)
+    {
+        if (isset($filters['price_override'])) {
+            switch ($filters['price_override']) {
+                case 'override':
+                    $formatted_filters['services'][] = [
+                        'column' => 'override_price',
+                        'operator' => '>=',
+                        'value' => 0
+                    ];
+                    break;
+                case 'no_override':
+                    $formatted_filters['services.override_price'] = null;
+                    break;
+            }
+            unset($filters['price_override']);
+        }
+    }
+  
+    /**
+     * Validates that a module is a registrar module
+     *
+     * @param stdClass $module The module object to validate
+     * @return bool True if valid registrar module, false otherwise
+     */
+    private function validateRegistrarModule($module)
+    {
+        if ($module->type != 'registrar') {
+            $errors = [
+                'module_id' => ['invalid' => Language::_('DomainsDomains.!error.module_not_registrar', true)]
+            ];
+            $this->Input->setErrors($errors);
+            return false;
+        }
+        return true;
     }
 }

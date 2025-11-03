@@ -95,7 +95,7 @@
                 }
                 ?>
                 <td><?php (print (isset($domains[$i]->name) ? $this->Html->safe($domains[$i]->name) : null));?></td>
-                <td>
+                <td <?php echo (!is_null($domains[$i]->override_price) ? 'class="text-warning font-weight-bold"' : ''); ?>>
                     <?php
                     if (($domains[$i]->package_pricing->period ?? null) == 'onetime') {
                         (print (isset($periods[$domains[$i]->package_pricing->period]) ? $this->Html->safe($periods[$domains[$i]->package_pricing->period]) : null));
