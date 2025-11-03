@@ -29,6 +29,8 @@ $lang['AdminDomains.!success.domains_unparented'] = 'The selected domains were r
 $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
 $lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
 $lang['AdminDomains.!success.tlds_imported'] = 'The TLDs were successfully imported!';
+$lang['AdminDomains.!success.duplicates_fixed'] = '%1$s duplicate TLD package(s) have been fixed.'; // %1$s is the count of fixed packages
+$lang['AdminDomains.!success.no_duplicates'] = 'No duplicate TLD packages were found.';
 
 $lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not valid.';
 $lang['AdminDomains.!error.tlds_bulk[action].valid'] = 'Invalid value for TLDs Bulk Action, must be "enable" or "disable".';
@@ -37,6 +39,9 @@ $lang['AdminDomains.!error.tlds_imported'] = 'Not all TLDS could be imported due
 $lang['AdminDomains.!warning.action_partial'] = '%1$s could not be updated for following TLDs: %2$s'; // %1$s is the action being attempted, %2$s is the list of TLDs
 $lang['AdminDomains.!warning.automatic_currency_conversion'] = 'You have an exchange rate set for this currency, so it\'s not necessary to define prices here. If no prices are defined for this currency, the currency will be converted automatically from %1$s. If you define a price here, it will be used instead.'; // %1$s is the default currency
 $lang['AdminDomains.!warning.price_sync_unsupported'] = 'This registrar module does not support price synchronization, TLDs will be imported without any pricing.';
+$lang['AdminDomains.!warning.duplicate_tlds_message'] = 'The following TLDs have duplicate active packages associated with them: %1$s'; // %1$s is the list of duplicated TLDs
+
+$lang['AdminDomains.!button.fix_duplicates'] = 'Fix Duplicates';
 
 $lang['AdminDomains.browse.page_title'] = 'Domains > Browse';
 $lang['AdminDomains.browse.boxtitle_browse'] = 'Domains';

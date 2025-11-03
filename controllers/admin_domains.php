@@ -1671,6 +1671,10 @@ class AdminDomains extends DomainsController
         $this->set('tld_actions', $this->getTldActions());
         $this->set('tld_statuses', $this->getTldStatuses());
 
+        // Check for duplicate TLDs
+        $duplicate_tlds = $this->DomainsTlds->getDuplicateTlds($company_id);
+        $this->set('duplicate_tlds', $duplicate_tlds);
+
         // Set the input field filters for the widget
         $filters = $this->getTldFilters(
             [
@@ -1918,6 +1922,53 @@ class AdminDomains extends DomainsController
         }
 
         return false;
+    }
+
+    /**
+     * Fixes duplicate TLD packages by removing or deactivating duplicates
+     */
+    public function fixDuplicates()
+    {
+        $this->uses(['Packages', 'Domains.DomainsTlds']);
+
+        $company_id = Configure::get('Blesta.company_id');
+
+        // Get all duplicate TLD packages grouped by TLD
+        $duplicate_packages = $this->DomainsTlds->getDuplicateTldPackages($company_id);
+
+        if (empty($duplicate_packages)) {
+            $this->flashMessage('message', Language::_('AdminDomains.!success.no_duplicates', true));
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
+        }
+
+        $fixed_count = 0;
+
+        // Process each duplicate TLD
+        foreach ($duplicate_packages as $tld => $package_ids) {
+            // Keep the first package, process the rest
+            $primary_package_id = array_shift($package_ids);
+
+            foreach ($package_ids as $duplicate_package_id) {
+                // Check if the package has services
+                if ($this->Packages->validateServiceExists($duplicate_package_id)) {
+                    // Package has services, mark as inactive
+                    $this->Packages->edit($duplicate_package_id, ['status' => 'inactive']);
+                    $fixed_count++;
+                } else {
+                    // No services, safe to delete
+                    $this->Packages->delete($duplicate_package_id, true);
+                    $fixed_count++;
+                }
+            }
+        }
+
+        if ($fixed_count > 0) {
+            $this->flashMessage('message', Language::_('AdminDomains.!success.duplicates_fixed', true, $fixed_count));
+        } else {
+            $this->flashMessage('message', Language::_('AdminDomains.!success.no_duplicates', true));
+        }
+
+        $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
     }
 
     /**
