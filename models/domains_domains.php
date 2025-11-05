@@ -44,17 +44,22 @@ class DomainsDomains extends DomainsModel
         $services = $this->Services->getAll($order, true, $filters, $formatted_filters);
 
         // Add domain fields
-        foreach ($services as &$service) {
+        foreach ($services as $index => &$service) {
+            $domain = $this->Record->select()
+                ->from('domains_domains')
+                ->where('service_id', '=', $service->id)
+                ->fetch();
+            if (isset($filters['awaiting_sync']) && !$domain->awaiting_sync) {
+                unset($services[$index]);
+                continue;
+            }
+            
             $module = $this->ModuleManager->initModule($service->package->module_id);
             $service->registrar = $module->getName();
             $service->renewal_price = $this->Services->getRenewalPrice($service->id);
             $service->registration_date = $this->getRegistrationDate($service->id);
             $service->expiration_date = $this->getExpirationDate($service->id);
-            $service->found = $this->Record->select()
-                ->from('domains_domains')
-                ->where('service_id', '=', $service->id)
-                ->fetch()
-                ->found;
+            $service->found = $domain->found;
         }
 
         return $services;
