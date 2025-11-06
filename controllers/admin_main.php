@@ -240,11 +240,7 @@ class AdminMain extends DomainsController
         $years = $this->formatPricingOptions($package, $action);
 
         // Get list of registrar modules
-        $modules = $this->Form->collapseObjectArray(
-            $this->ModuleManager->getAll(Configure::get('Blesta.company_id'), 'name', 'asc', ['type' => 'registrar']),
-            'name',
-            'id'
-        );
+        $modules = $this->getConfiguredRegistrarModules();
 
         // Get open invoices
         $invoices = $this->Form->collapseObjectArray(
@@ -577,11 +573,7 @@ class AdminMain extends DomainsController
         }
 
         // Get list of registrar modules
-        $modules = $this->Form->collapseObjectArray(
-            $this->ModuleManager->getAll(Configure::get('Blesta.company_id'), 'name', 'asc', ['type' => 'registrar']),
-            'name',
-            'id'
-        );
+        $modules = $this->getConfiguredRegistrarModules();
 
         // Get service statuses
         $statuses = $this->Services->getStatusTypes();
@@ -922,7 +914,7 @@ class AdminMain extends DomainsController
      */
     public function domains()
     {
-        $this->uses(['Domains.DomainsDomains', 'ModuleManager']);
+        $this->uses(['Domains.DomainsDomains']);
 
         // Process bulk domains options
         if (!empty($this->post) && isset($this->post['service_ids'])) {
@@ -945,6 +937,12 @@ class AdminMain extends DomainsController
                         break;
                     case 'domain_renewal':
                         $term = 'AdminMain.!success.domain_renewal';
+                        break;
+                    case 'set_price_override':
+                        $term = 'AdminMain.!success.set_price_override';
+                        break;
+                    case 'remove_price_override':
+                        $term = 'AdminMain.!success.remove_price_override';
                         break;
                     case 'update_nameservers':
                         $term = 'AdminMain.!success.update_nameservers';
@@ -1008,11 +1006,7 @@ class AdminMain extends DomainsController
         ];
 
         // Get list of registrar modules
-        $modules = $this->Form->collapseObjectArray(
-            $this->ModuleManager->getAll(Configure::get('Blesta.company_id'), 'name', 'asc', ['type' => 'registrar']),
-            'name',
-            'id'
-        );
+        $modules = $this->getConfiguredRegistrarModules();
 
         // Set the input field filters for the widget
         $filters = $this->getFilters($post_filters);
@@ -1130,6 +1124,32 @@ class AdminMain extends DomainsController
         $fields->setField($service_meta);
 
         return $fields;
+    }
+
+    /**
+     * Get list of configured registrar modules
+     *
+     * @return array Array of module names keyed by module ID
+     */
+    private function getConfiguredRegistrarModules()
+    {
+        $all_modules = $this->ModuleManager->getAll(
+            Configure::get('Blesta.company_id'),
+            'name',
+            'asc',
+            ['type' => 'registrar']
+        );
+
+        // Filter out modules without configured module rows
+        $configured_modules = [];
+        foreach ($all_modules as $module) {
+            $module_rows = $this->ModuleManager->getRows($module->id);
+            if (!empty($module_rows)) {
+                $configured_modules[] = $module;
+            }
+        }
+
+        return $this->Form->collapseObjectArray($configured_modules, 'name', 'id');
     }
 
     /**

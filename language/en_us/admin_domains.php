@@ -21,12 +21,16 @@ $lang['AdminDomains.!success.change_expiration_date'] = 'The Domain expiration d
 $lang['AdminDomains.!success.change_registration_date'] = 'The Domain registration date has been updated!';
 $lang['AdminDomains.!success.domain_registrar_updated'] = 'The domain registrar has been updated!';
 $lang['AdminDomains.!success.domain_renewal'] = 'The Domain has been renewed!';
+$lang['AdminDomains.!success.set_price_override'] = 'The domain override price has been updated!';
+$lang['AdminDomains.!success.remove_price_override'] = 'The domain override price has been removed!';
 $lang['AdminDomains.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 $lang['AdminDomains.!success.domains_pushed'] = 'The selected domains were successfully pushed to the new client.';
 $lang['AdminDomains.!success.domains_unparented'] = 'The selected domains were removed from their parent services and the price has been reset successfully!';
 $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
 $lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
 $lang['AdminDomains.!success.tlds_imported'] = 'The TLDs were successfully imported!';
+$lang['AdminDomains.!success.duplicates_fixed'] = '%1$s duplicate TLD package(s) have been fixed.'; // %1$s is the count of fixed packages
+$lang['AdminDomains.!success.no_duplicates'] = 'No duplicate TLD packages were found.';
 
 $lang['AdminDomains.!error.value_id_invalid'] = 'The provided Value ID is not valid.';
 $lang['AdminDomains.!error.tlds_bulk[action].valid'] = 'Invalid value for TLDs Bulk Action, must be "enable" or "disable".';
@@ -35,6 +39,9 @@ $lang['AdminDomains.!error.tlds_imported'] = 'Not all TLDS could be imported due
 $lang['AdminDomains.!warning.action_partial'] = '%1$s could not be updated for following TLDs: %2$s'; // %1$s is the action being attempted, %2$s is the list of TLDs
 $lang['AdminDomains.!warning.automatic_currency_conversion'] = 'You have an exchange rate set for this currency, so it\'s not necessary to define prices here. If no prices are defined for this currency, the currency will be converted automatically from %1$s. If you define a price here, it will be used instead.'; // %1$s is the default currency
 $lang['AdminDomains.!warning.price_sync_unsupported'] = 'This registrar module does not support price synchronization, TLDs will be imported without any pricing.';
+$lang['AdminDomains.!warning.duplicate_tlds_message'] = 'The following TLDs have duplicate active packages associated with them: %1$s'; // %1$s is the list of duplicated TLDs
+
+$lang['AdminDomains.!button.fix_duplicates'] = 'Fix Duplicates';
 
 $lang['AdminDomains.browse.page_title'] = 'Domains > Browse';
 $lang['AdminDomains.browse.boxtitle_browse'] = 'Domains';
@@ -243,6 +250,8 @@ $lang['AdminDomains.pricing.field_description_text'] = 'Text';
 $lang['AdminDomains.pricing.field_update_scope'] = 'Apply to:';
 $lang['AdminDomains.pricing.field_cancel'] = 'Cancel';
 $lang['AdminDomains.pricing.field_update'] = 'Update';
+$lang['AdminDomains.pricing.text_multiple_packages_info'] = 'There are other packages for this TLD that may have different pricing. Enable the option below when updating pricing if they should be updated with this pricing.';
+$lang['AdminDomains.pricing.field_update_all_packages'] = 'Update pricing for all packages that match this TLD';
 
 
 $lang['AdminDomains.meta.boxtitle_meta_tld'] = 'Update Package Meta for TLD %1$s'; // %1$s is the TLD
@@ -301,6 +310,10 @@ $lang['AdminDomains.getfilters.any'] = 'Any';
 $lang['AdminDomains.getfilters.field_module_id'] = 'Registrar Module';
 $lang['AdminDomains.getfilters.field_package_name'] = 'TLD';
 $lang['AdminDomains.getfilters.field_service_meta'] = 'Domain Name';
+$lang['AdminDomains.getfilters.field_price_override'] = 'Price Override';
+$lang['AdminDomains.getfilters.field_price_override_all'] = 'All';
+$lang['AdminDomains.getfilters.field_price_override_override'] = 'Has override';
+$lang['AdminDomains.getfilters.field_price_override_no_override'] = 'Does not have override';
 
 
 $lang['AdminDomains.gettldfilters.any'] = 'Any';
