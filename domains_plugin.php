@@ -1433,14 +1433,14 @@ class DomainsPlugin extends Plugin
             foreach ($client_groups as $client_group) {
                 $inv_days_before_renewal = $this->ClientGroups->getSetting($client_group->id, 'inv_days_before_renewal');
                 $pre_renewal_invoice_date = $this->Date->modify(
-                        date('c'),
-                        '-' . (($renewal_days->value ?? 0) + ($inv_days_before_renewal->value ?? 0) + 1) . ' days',
-                        'Y-m-d 00:00:00',
-                        Configure::get('Blesta.company_timezone')
-                    );
+                    date('c'),
+                    '+' . (($inv_days_before_renewal->value ?? 0) + 5) . ' days',
+                    'Y-m-d 00:00:00',
+                    Configure::get('Blesta.company_timezone')
+                );
                 $filters = [
                     'services' => [
-                        ['column' => 'date_renews', 'operator' => '>=', 'value' => $pre_renewal_invoice_date]
+                        ['column' => 'date_renews', 'operator' => '<=', 'value' => $pre_renewal_invoice_date]
                     ],
                     'clients' => [
                         ['column' => 'client_group_id', 'operator' => '=', 'value' => $client_group->id]
