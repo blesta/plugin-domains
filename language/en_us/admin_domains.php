@@ -214,7 +214,7 @@ $lang['AdminDomains.getTldStatuses.option_enabled'] = 'Enabled';
 
 
 // Get Update Scopes
-$lang['AdminDomains.getUpdateScopes.tld'] = 'Only update for this TLD';
+$lang['AdminDomains.getUpdateScopes.current'] = 'Only update for this TLD';
 $lang['AdminDomains.getUpdateScopes.module'] = 'Update for all TLDs using this module';
 $lang['AdminDomains.getUpdateScopes.all'] = 'Update for all TLDs regardless of module';
 

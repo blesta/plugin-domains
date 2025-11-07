@@ -614,6 +614,14 @@ class DomainsTlds extends DomainsModel
 
             // Validate nameservers
             if (isset($vars['meta']['ns'])) {
+                // Filter out empty nameservers
+                $vars['meta']['ns'] = array_filter($vars['meta']['ns'], function($ns) {
+                    return !empty(trim($ns));
+                });
+
+                // Re-index array after filtering
+                $vars['meta']['ns'] = array_values($vars['meta']['ns']);
+
                 foreach ($vars['meta']['ns'] as $ns) {
                     if (!filter_var($ns, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
                         $this->Input->setErrors([
@@ -664,14 +672,17 @@ class DomainsTlds extends DomainsModel
             }
 
             // Update nameservers
-            if (($vars['nameserver_scope'] ?? 'current_tld') == 'all_tlds') {
-                $packages = $this->Record->select('packages.*')
+            if (($vars['nameserver_scope'] ?? 'current') !== 'current') {
+                $this->Record->select('packages.*')
                     ->from('packages')
                     ->innerJoin('package_group', 'package_group.package_id', '=', 'packages.id', false)
                     ->innerJoin('package_groups', 'package_groups.id', '=', 'package_group.package_group_id', false)
-                    ->where('packages.module_id', '=', $package->module_id)
-                    ->where('package_groups.company_id', '=', $company_id)
-                    ->fetchAll();
+                    ->where('package_groups.company_id', '=', $company_id);
+                if ($vars['nameserver_scope'] === 'module') {
+                    $this->Record->where('packages.module_id', '=', $package->module_id);
+                }
+                $packages = $this->Record->fetchAll();
+
                 $name_servers = $vars['meta']['ns'] ?? [];
                 foreach ($packages as $module_package) {
                     $params = [
@@ -1532,7 +1543,7 @@ class DomainsTlds extends DomainsModel
             where('domains_tlds.company_id', '=', $company_id)->
             delete(['domains_packages.*', 'domains_tlds.*']);
     }
-    
+
     /**
      * Permanently deletes packages for the given TLD.  NOTE: this triggers an event that will delete the tld itself
      *
@@ -1548,12 +1559,12 @@ class DomainsTlds extends DomainsModel
             where('domains_tlds.tld', '=', $tld)->
             where('domains_tlds.company_id', '=', $company_id)->
             fetchAll();
-        
+
         foreach ($packages as $package) {
             $this->Packages->delete($package->package_id);
         }
-        
-        // Call delete just in case there where no packages to delete 
+
+        // Call delete just in case there where no packages to delete
         $this->delete($tld, $company_id);
     }
 

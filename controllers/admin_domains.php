@@ -2512,7 +2512,7 @@ class AdminDomains extends DomainsController
     private function getUpdateScopes()
     {
         return [
-            'tld' => Language::_('AdminDomains.getUpdateScopes.tld', true),
+            'current' => Language::_('AdminDomains.getUpdateScopes.current', true),
             'module' => Language::_('AdminDomains.getUpdateScopes.module', true),
             'all' => Language::_('AdminDomains.getUpdateScopes.all', true)
         ];
