@@ -136,6 +136,27 @@
                         }
                         ?>
                     </div>
+                    <?php
+                    if (!empty($has_multiple_packages)) {
+                    ?>
+                        <section class="error_section">
+                            <article class="error_box alert">
+                                <div class="icon-line fa-2x">
+                                    <i class="fas fa-info-circle fa-fw"></i>
+                                    <p class="p-0 pl-2"><?php $this->_('AdminDomains.pricing.text_multiple_packages_info');?></p>
+                                </div>
+                            </article>
+                        </section>
+
+                        <div class="pad pt-2">
+                            <?php
+                            $this->Form->fieldCheckbox('update_all_packages', '1', false, ['id' => 'update_all_packages']);
+                            $this->Form->label($this->_('AdminDomains.pricing.field_update_all_packages', true), 'update_all_packages', ['class' => 'inline']);
+                            ?>
+                        </div>
+                    <?php
+                    }
+                    ?>
                 </div>
             </div>
 
@@ -155,6 +176,12 @@
                         <?php
                         }
                         ?>
+                        <li>
+                            <?php
+                            $this->Form->label($this->_('AdminDomains.pricing.field_nameserver_scope', true), 'nameserver_scope');
+                            $this->Form->fieldSelect('nameserver_scope', ($nameserver_scope ?? []), null, ['id' => 'nameserver_scope']);
+                            ?>
+                        </li>
                     </ul>
                 </div>
             </div>

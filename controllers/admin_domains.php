@@ -38,7 +38,7 @@ class AdminDomains extends DomainsController
      */
     public function browse()
     {
-        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Companies', 'ModuleManager', 'Services']);
+        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Companies', 'Services']);
 
         if (!empty($this->post) && isset($this->post['service_ids'])) {
             if (($errors = $this->updateDomains($this->post))) {
@@ -60,6 +60,12 @@ class AdminDomains extends DomainsController
                         break;
                     case 'domain_renewal':
                         $term = 'AdminDomains.!success.domain_renewal';
+                        break;
+                    case 'set_price_override':
+                        $term = 'AdminDomains.!success.set_price_override';
+                        break;
+                    case 'remove_price_override':
+                        $term = 'AdminDomains.!success.remove_price_override';
                         break;
                     case 'update_nameservers':
                         $term = 'AdminDomains.!success.update_nameservers';
@@ -1665,6 +1671,10 @@ class AdminDomains extends DomainsController
         $this->set('tld_actions', $this->getTldActions());
         $this->set('tld_statuses', $this->getTldStatuses());
 
+        // Check for duplicate TLDs
+        $duplicate_tlds = $this->DomainsTlds->getDuplicateTlds($company_id);
+        $this->set('duplicate_tlds', $duplicate_tlds);
+
         // Set the input field filters for the widget
         $filters = $this->getTldFilters(
             [
@@ -1915,6 +1925,53 @@ class AdminDomains extends DomainsController
     }
 
     /**
+     * Fixes duplicate TLD packages by removing or deactivating duplicates
+     */
+    public function fixDuplicates()
+    {
+        $this->uses(['Packages', 'Domains.DomainsTlds']);
+
+        $company_id = Configure::get('Blesta.company_id');
+
+        // Get all duplicate TLD packages grouped by TLD
+        $duplicate_packages = $this->DomainsTlds->getDuplicateTldPackages($company_id);
+
+        if (empty($duplicate_packages)) {
+            $this->flashMessage('message', Language::_('AdminDomains.!success.no_duplicates', true));
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
+        }
+
+        $fixed_count = 0;
+
+        // Process each duplicate TLD
+        foreach ($duplicate_packages as $tld => $package_ids) {
+            // Keep the first package, process the rest
+            $primary_package_id = array_shift($package_ids);
+
+            foreach ($package_ids as $duplicate_package_id) {
+                // Check if the package has services
+                if ($this->Packages->validateServiceExists($duplicate_package_id)) {
+                    // Package has services, mark as inactive
+                    $this->Packages->edit($duplicate_package_id, ['status' => 'inactive']);
+                    $fixed_count++;
+                } else {
+                    // No services, safe to delete
+                    $this->Packages->delete($duplicate_package_id, true);
+                    $fixed_count++;
+                }
+            }
+        }
+
+        if ($fixed_count > 0) {
+            $this->flashMessage('message', Language::_('AdminDomains.!success.duplicates_fixed', true, $fixed_count));
+        } else {
+            $this->flashMessage('message', Language::_('AdminDomains.!success.no_duplicates', true));
+        }
+
+        $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
+    }
+
+    /**
      * Update TLD
      */
     public function updateTlds()
@@ -2119,7 +2176,6 @@ class AdminDomains extends DomainsController
 
         // Get company currencies
         $currencies = $this->Currencies->getAll(Configure::get('Blesta.company_id'));
-
         foreach ($currencies as $key => $currency) {
             $currencies[$currency->code] = $currency;
             unset($currencies[$key]);
@@ -2160,7 +2216,17 @@ class AdminDomains extends DomainsController
             if (!isset($this->post['pricing'])) {
                 $this->post['pricing'] = [];
             }
-            $this->DomainsTlds->updatePricings($tld->tld, $this->post['pricing']);
+
+            // Check if we should update all packages for this TLD
+            $update_all_packages = !empty($this->post['update_all_packages']);
+
+            $this->DomainsTlds->updatePricings(
+                $tld->tld,
+                $this->post['pricing'],
+                null,
+                [],
+                $update_all_packages
+            );
 
             if (($errors = $this->DomainsTlds->errors())) {
                 echo json_encode([
@@ -2261,7 +2327,14 @@ class AdminDomains extends DomainsController
         }
 
         // Fetch update scopes
-        $update_scopes = $this->getUpdateScopes();
+        $nameserver_scope = $this->getUpdateScopes();
+
+        // Check if there are multiple packages for this TLD
+        $has_multiple_packages = $this->DomainsTlds->hasMultipleTldPackages(
+            $tld->tld,
+            $package->id,
+            Configure::get('Blesta.company_id')
+        );
 
         echo $this->partial(
             'admin_domains_pricing',
@@ -2269,11 +2342,12 @@ class AdminDomains extends DomainsController
                 'package',
                 'package_fields',
                 'package_fields_view',
-                'update_scopes',
+                'nameserver_scope',
                 'tld',
                 'currencies',
                 'default_currency',
-                'languages'
+                'languages',
+                'has_multiple_packages'
             )
         );
 
@@ -2420,6 +2494,27 @@ class AdminDomains extends DomainsController
         );
         $fields->setField($service_meta);
 
+        // Set Price Override filter
+        $options = [
+            'all' => Language::_('AdminDomains.getfilters.field_price_override_all', true),
+            'override' => Language::_('AdminDomains.getfilters.field_price_override_override', true),
+            'no_override' => Language::_('AdminDomains.getfilters.field_price_override_no_override', true)
+        ];
+
+        $price_override = $fields->label(
+            Language::_('AdminDomains.getfilters.field_price_override', true),
+            'price_override'
+        );
+        $price_override->attach(
+            $fields->fieldSelect(
+                'filters[price_override]',
+                $options,
+                isset($vars['price_override']) ? $vars['price_override'] : null,
+                ['id' => 'price_override', 'class' => 'form-control']
+            )
+        );
+        $fields->setField($price_override);
+
         return $fields;
     }
 
@@ -2513,7 +2608,7 @@ class AdminDomains extends DomainsController
     private function getUpdateScopes()
     {
         return [
-            'tld' => Language::_('AdminDomains.getUpdateScopes.tld', true),
+            'current' => Language::_('AdminDomains.getUpdateScopes.current', true),
             'module' => Language::_('AdminDomains.getUpdateScopes.module', true),
             'all' => Language::_('AdminDomains.getUpdateScopes.all', true)
         ];
