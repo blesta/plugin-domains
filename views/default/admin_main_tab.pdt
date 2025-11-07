@@ -1,0 +1,16 @@
+
+        <?php
+        echo ($message ?? null);
+
+        $this->Widget->clear();
+        $this->Widget->setTabs($tabs ?? []);
+        $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->name ?? null)), ['id' => 'admin_main_tab'], ($render_section ?? null));
+        ?>
+        <div class="inner">
+            <?php
+            echo ($tab_view ?? null);
+            ?>
+        </div>
+        <?php
+        $this->Widget->end();
+        ?>

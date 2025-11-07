@@ -83,6 +83,8 @@ class DomainsController extends AppController
             'change_registration_date' => Language::_('DomainsController.getDomainActions.change_registration_date', true),
             'change_registrar' => Language::_('DomainsController.getDomainActions.change_registrar', true),
             'domain_renewal' => Language::_('DomainsController.getDomainActions.domain_renewal', true),
+            'set_price_override' => Language::_('DomainsController.getDomainActions.set_price_override', true),
+            'remove_price_override' => Language::_('DomainsController.getDomainActions.remove_price_override', true),
             'update_nameservers' => Language::_('DomainsController.getDomainActions.update_nameservers', true),
             'push_to_client' => Language::_('DomainsController.getDomainActions.push_to_client', true),
             'unparent' => Language::_('DomainsController.getDomainActions.unparent', true)
@@ -169,6 +171,38 @@ class DomainsController extends AppController
                     $this->DomainsDomains->renewDomain($service_id, $data['years'] ?? 1);
 
                     if (($errors = $this->DomainsDomains->errors())) {
+                        break;
+                    }
+                }
+                break;
+            case 'set_price_override':
+                foreach ($data['service_ids'] as $service_id) {
+                    $service = $this->Services->get($service_id);
+                    if ($service && isset($service->package_pricing)) {
+                        $this->Services->edit(
+                            $service_id,
+                            [
+                                'override_price' => $service->package_pricing->price_renews,
+                                'override_currency' => $service->package_pricing->currency
+                            ],
+                            true
+                        );
+
+                        if (($errors = $this->Services->errors())) {
+                            break;
+                        }
+                    }
+                }
+                break;
+            case 'remove_price_override':
+                foreach ($data['service_ids'] as $service_id) {
+                    $this->Services->edit(
+                        $service_id,
+                        ['override_price' => null, 'override_currency' => null],
+                        true
+                    );
+
+                    if (($errors = $this->Services->errors())) {
                         break;
                     }
                 }
