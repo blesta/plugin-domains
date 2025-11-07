@@ -2176,7 +2176,6 @@ class AdminDomains extends DomainsController
 
         // Get company currencies
         $currencies = $this->Currencies->getAll(Configure::get('Blesta.company_id'));
-
         foreach ($currencies as $key => $currency) {
             $currencies[$currency->code] = $currency;
             unset($currencies[$key]);
@@ -2328,7 +2327,7 @@ class AdminDomains extends DomainsController
         }
 
         // Fetch update scopes
-        $update_scopes = $this->getUpdateScopes();
+        $nameserver_scope = $this->getUpdateScopes();
 
         // Check if there are multiple packages for this TLD
         $has_multiple_packages = $this->DomainsTlds->hasMultipleTldPackages(
@@ -2343,7 +2342,7 @@ class AdminDomains extends DomainsController
                 'package',
                 'package_fields',
                 'package_fields_view',
-                'update_scopes',
+                'nameserver_scope',
                 'tld',
                 'currencies',
                 'default_currency',
@@ -2609,7 +2608,7 @@ class AdminDomains extends DomainsController
     private function getUpdateScopes()
     {
         return [
-            'tld' => Language::_('AdminDomains.getUpdateScopes.tld', true),
+            'current' => Language::_('AdminDomains.getUpdateScopes.current', true),
             'module' => Language::_('AdminDomains.getUpdateScopes.module', true),
             'all' => Language::_('AdminDomains.getUpdateScopes.all', true)
         ];
