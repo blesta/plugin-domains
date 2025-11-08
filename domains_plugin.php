@@ -2010,7 +2010,7 @@ class DomainsPlugin extends Plugin
                 'callback' => ['this', 'updateRenewalDate']
             ],
             [
-                'event' => 'Services.cancelBefore',
+                'event' => 'Services.cancelAfter',
                 'callback' => ['this', 'notifyAutoRenewalDisabled']
             ]
         ];
@@ -2116,7 +2116,7 @@ class DomainsPlugin extends Plugin
         $params = $event->getParams();
 
         // Send notification, only if the service is being scheduled for cancellation and it is a domain
-        if (($params['vars']['date_canceled'] ?? '') == 'end_of_term') {
+        if (strtotime($params['vars']['date_canceled'] ?? '') == strtotime($params['vars']['date_renews'] ?? '')) {
             $service = $this->Services->get($params['service_id']);
 
             $package_group_id = $this->Companies->getSetting(
@@ -2158,6 +2158,7 @@ class DomainsPlugin extends Plugin
 
             // Set client uri
             $client_uri = $this->Html->safe($hostname . $webdir . Configure::get('Route.client') . '/');
+            $service->date_canceled = $this->Services->Date->format('Y-m-d', $service->date_canceled);
 
             // Build tags array
             $tags = [
