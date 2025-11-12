@@ -247,7 +247,7 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.17.5', '<')) {
                 $this->upgrade1_17_5();
             }
-          
+
             // Upgrade to 1.18.0
             if (version_compare($current_version, '1.18.0', '<')) {
                 $this->upgrade1_18_0();
@@ -794,7 +794,7 @@ class DomainsPlugin extends Plugin
             }
         }
     }
-  
+
     /**
      * Update to v1.17.5
      */
@@ -2160,7 +2160,7 @@ class DomainsPlugin extends Plugin
      */
     public function notifyAutoRenewalDisabled($event)
     {
-        Loader::loadModels($this, ['Services', 'Companies', 'Clients', 'Contacts', 'Settings', 'Emails']);
+        Loader::loadModels($this, ['Services', 'Companies', 'Clients', 'Contacts', 'Settings', 'Emails', 'Domains.DomainsDomains']);
         Loader::loadHelpers($this, ['Html']);
 
         $params = $event->getParams();
@@ -2209,6 +2209,7 @@ class DomainsPlugin extends Plugin
             // Set client uri
             $client_uri = $this->Html->safe($hostname . $webdir . Configure::get('Route.client') . '/');
             $service->date_canceled = $this->Services->Date->format('Y-m-d', $service->date_canceled);
+            $service->expiration_date = $this->Services->Date->format('Y-m-d', $this->DomainsDomains->getExpirationDate($service->id));
 
             // Build tags array
             $tags = [
@@ -2233,7 +2234,7 @@ class DomainsPlugin extends Plugin
             );
         }
     }
-  
+
     /**
      * Marks a domain service as awaiting synchronization
      *

@@ -91,7 +91,7 @@ To re-purchase this domain, please log in at: {client_uri}.</p>
 
 This is a notice that automatic renewal has been disabled for the domain {domain}.
 
-Your domain will expire on {service.date_canceled}. If you wish to keep this domain, you will need to manually renew it before the expiration date.
+Your domain will expire on {service.expiration_date}. If you wish to keep this domain, you will need to manually renew it before the expiration date.
 
 To enable auto-renewal or manually renew this domain, please log in at: {client_uri}.
 
@@ -100,7 +100,7 @@ Thank you for your business!',
 
 <p>This is a notice that automatic renewal has been disabled for the domain {domain}.</p>
 
-<p>Your domain will expire on {service.date_canceled}. If you wish to keep this domain, you will need to manually renew it before the expiration date.</p>
+<p>Your domain will expire on {service.expiration_date}. If you wish to keep this domain, you will need to manually renew it before the expiration date.</p>
 
 <p>To enable auto-renewal or manually renew this domain, please log in at: {client_uri}.</p>
 
