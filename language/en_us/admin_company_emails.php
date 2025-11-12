@@ -7,3 +7,6 @@ $lang['AdminCompanyEmails.templates.Domains.domain_renewal_2_desc'] = 'Second no
 
 $lang['AdminCompanyEmails.templates.Domains.domain_expiration_name'] = 'Domain Expiration Notice';
 $lang['AdminCompanyEmails.templates.Domains.domain_expiration_desc'] = 'Notice sent to a client soon after their domain has expired.';
+
+$lang['AdminCompanyEmails.templates.Domains.domain_auto_renewal_disabled_name'] = 'Domain Auto-Renewal Disabled';
+$lang['AdminCompanyEmails.templates.Domains.domain_auto_renewal_disabled_desc'] = 'Notice sent to a client when automatic renewal has been disabled for their domain.';
