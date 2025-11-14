@@ -247,6 +247,11 @@ class DomainsPlugin extends Plugin
             if (version_compare($current_version, '1.17.5', '<')) {
                 $this->upgrade1_17_5();
             }
+
+            // Upgrade to 1.18.0
+            if (version_compare($current_version, '1.18.0', '<')) {
+                $this->upgrade1_18_0();
+            }
         }
     }
 
@@ -799,6 +804,61 @@ class DomainsPlugin extends Plugin
         $this->Record->query(
             "ALTER TABLE `domains_domains` ADD `awaiting_sync` TINYINT(1) DEFAULT '0' AFTER `found`;"
         );
+    }
+
+    /**
+     * Update to v1.18.0
+     */
+    private function upgrade1_18_0()
+    {
+        Loader::loadModels($this, ['EmailGroups', 'Emails', 'Languages', 'PluginManager']);
+        Configure::load('domains', dirname(__FILE__) . DS . 'config' . DS);
+
+        $emails = Configure::get('Domains.install.emails');
+        $plugins = $this->PluginManager->getByDir('domains');
+
+        foreach ($plugins as $plugin) {
+            $languages = $this->Languages->getAll($plugin->company_id);
+
+            foreach ($emails as $email) {
+                if ($email['action'] !== 'Domains.domain_auto_renewal_disabled') {
+                    continue;
+                }
+
+                $group = $this->EmailGroups->getByAction($email['action']);
+                if ($group) {
+                    $group_id = $group->id;
+                } else {
+                    $group_id = $this->EmailGroups->add([
+                        'action' => $email['action'],
+                        'type' => $email['type'],
+                        'plugin_dir' => $email['plugin_dir'],
+                        'tags' => $email['tags']
+                    ]);
+                }
+
+                if (isset(Configure::get('Blesta.company')->hostname)) {
+                    $email['from'] = str_replace(
+                        '@mydomain.com',
+                        '@' . Configure::get('Blesta.company')->hostname,
+                        $email['from']
+                    );
+                }
+
+                foreach ($languages as $language) {
+                    $this->Emails->add([
+                        'email_group_id' => $group_id,
+                        'company_id' => $plugin->company_id,
+                        'lang' => $language->code,
+                        'from' => $email['from'],
+                        'from_name' => $email['from_name'],
+                        'subject' => $email['subject'],
+                        'text' => $email['text'],
+                        'html' => $email['html']
+                    ]);
+                }
+            }
+        }
     }
 
     /**
@@ -1987,6 +2047,10 @@ class DomainsPlugin extends Plugin
             [
                 'event' => 'Services.editAfter',
                 'callback' => ['this', 'updateRenewalDate']
+            ],
+            [
+                'event' => 'Services.cancelAfter',
+                'callback' => ['this', 'notifyAutoRenewalDisabled']
             ]
         ];
     }
@@ -2086,6 +2150,88 @@ class DomainsPlugin extends Plugin
         } else {
             $this->Record->where('service_id', '=', $params['service_id'])
                 ->update('domains_domains', ['found' => 0]);
+        }
+    }
+
+    /**
+     * Sends a notice to the client when automatic renewal has been disabled for their domain.
+     *
+     * @param Blesta\Core\Util\Events\Common\EventInterface $event The event to process
+     */
+    public function notifyAutoRenewalDisabled($event)
+    {
+        Loader::loadModels($this, ['Services', 'Companies', 'Clients', 'Contacts', 'Settings', 'Emails', 'Domains.DomainsDomains']);
+        Loader::loadHelpers($this, ['Html']);
+
+        $params = $event->getParams();
+
+        // Send notification, only if the service is being scheduled for cancellation and it is a domain
+        if (strtotime($params['vars']['date_canceled'] ?? '') == strtotime($params['vars']['date_renews'] ?? '')) {
+            $service = $this->Services->get($params['service_id']);
+
+            $package_group_id = $this->Companies->getSetting(
+                Configure::get('Blesta.company_id'),
+                'domains_package_group'
+            );
+
+            if ($package_group_id->value !== $service->package_group_id) {
+                return;
+            }
+
+            // Get client and contact information
+            $lang = Configure::get('Language.default');
+            $client = $this->Clients->get($service->client_id);
+            $contact = $this->Contacts->get($client->contact_id);
+            if ($client && $client->settings['language']) {
+                $lang = $client->settings['language'];
+            }
+
+            // Get the company hostname
+            $hostname = isset(Configure::get('Blesta.company')->hostname) ? Configure::get('Blesta.company')->hostname : '';
+
+            // Set web dir
+            $webdir = WEBDIR;
+            if (empty($_SERVER['REQUEST_URI'])) {
+                $root_web = $this->Settings->getSetting('root_web_dir');
+                if ($root_web) {
+                    $webdir = str_replace(
+                        DS,
+                        '/',
+                        str_replace(rtrim(strtolower($root_web->value), DS), '', strtolower(ROOTWEBDIR))
+                    );
+
+                    if (!HTACCESS) {
+                        $webdir .= 'index.php/';
+                    }
+                }
+            }
+
+            // Set client uri
+            $client_uri = $this->Html->safe($hostname . $webdir . Configure::get('Route.client') . '/');
+            $service->date_canceled = $this->Services->Date->format('Y-m-d', $service->date_canceled);
+            $service->expiration_date = $this->Services->Date->format('Y-m-d', $this->DomainsDomains->getExpirationDate($service->id));
+
+            // Build tags array
+            $tags = [
+                'service' => $service,
+                'contact' => $contact,
+                'domain' => $service->name,
+                'client_uri' => $client_uri
+            ];
+            $options = ['to_client_id' => $service->client_id];
+
+            // Send notification email
+            $this->Emails->send(
+                'Domains.domain_auto_renewal_disabled',
+                Configure::get('Blesta.company_id'),
+                $lang,
+                $contact->email,
+                $tags,
+                null,
+                null,
+                null,
+                $options
+            );
         }
     }
 
