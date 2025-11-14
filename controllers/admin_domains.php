@@ -2327,7 +2327,7 @@ class AdminDomains extends DomainsController
         }
 
         // Fetch update scopes
-        $nameserver_scope = $this->getUpdateScopes();
+        $nameserver_scope = $update_scopes = $this->getUpdateScopes();
 
         // Check if there are multiple packages for this TLD
         $has_multiple_packages = $this->DomainsTlds->hasMultipleTldPackages(
@@ -2343,6 +2343,7 @@ class AdminDomains extends DomainsController
                 'package_fields',
                 'package_fields_view',
                 'nameserver_scope',
+                'update_scopes',
                 'tld',
                 'currencies',
                 'default_currency',
