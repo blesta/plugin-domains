@@ -1162,7 +1162,7 @@ class DomainsTlds extends DomainsModel
         foreach ($tlds as $tld) {
             $tld_packages = $this->getTldPackages($tld->tld, 'active', $company_id);
 
-            if (count($tld_packages) == 1) {
+            if (count($tld_packages) <= 1) {
                 continue;
             }
 
