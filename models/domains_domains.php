@@ -3,6 +3,10 @@
 /**
  * Domain Manager TLDs Management Model
  *
+ * @package blesta
+ * @subpackage plugins.domains
+ * @copyright Copyright (c) 2010, Phillips Data, Inc.
+ * @license http://www.blesta.com/license/ The Blesta License Agreement
  * @link https://www.blesta.com Blesta
  */
 class DomainsDomains extends DomainsModel
@@ -53,7 +57,7 @@ class DomainsDomains extends DomainsModel
                 unset($services[$index]);
                 continue;
             }
-            
+
             $module = $this->ModuleManager->initModule($service->package->module_id);
             $service->registrar = $module->getName();
             $service->renewal_price = $this->Services->getRenewalPrice($service->id);
@@ -433,7 +437,7 @@ class DomainsDomains extends DomainsModel
 
         return $result;
     }
-    
+
     /**
      * Get the nameservers for a given domain name
      *
@@ -864,7 +868,7 @@ class DomainsDomains extends DomainsModel
             unset($filters['price_override']);
         }
     }
-  
+
     /**
      * Validates that a module is a registrar module
      *
