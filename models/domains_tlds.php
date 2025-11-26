@@ -6,6 +6,10 @@ use Blesta\Core\Util\Input\Fields\Html as FieldsHtml;
 /**
  * Domain Manager TLDs Management Model
  *
+ * @package blesta
+ * @subpackage plugins.domains
+ * @copyright Copyright (c) 2010, Phillips Data, Inc.
+ * @license http://www.blesta.com/license/ The Blesta License Agreement
  * @link https://www.blesta.com Blesta
  */
 class DomainsTlds extends DomainsModel
