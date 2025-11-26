@@ -6,6 +6,10 @@ use Blesta\Core\Util\Input\Fields\Html as FieldsHtml;
 /**
  * Domain Manager TLDs Management Model
  *
+ * @package blesta
+ * @subpackage plugins.domains
+ * @copyright Copyright (c) 2010, Phillips Data, Inc.
+ * @license http://www.blesta.com/license/ The Blesta License Agreement
  * @link https://www.blesta.com Blesta
  */
 class DomainsTlds extends DomainsModel
@@ -1162,7 +1166,7 @@ class DomainsTlds extends DomainsModel
         foreach ($tlds as $tld) {
             $tld_packages = $this->getTldPackages($tld->tld, 'active', $company_id);
 
-            if (count($tld_packages) == 1) {
+            if (count($tld_packages) <= 1) {
                 continue;
             }
 
