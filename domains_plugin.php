@@ -1488,7 +1488,7 @@ class DomainsPlugin extends Plugin
 
 
         // Find all domain services
-        if ($this->Date->cast($last_run->start_date ?: date('c'), 'Y-m-d') !== $this->Date->cast(date('c'), 'Y-m-d')) {
+        if ($this->Date->cast($last_run->start_date ?? date('c'), 'Y-m-d') !== $this->Date->cast(date('c'), 'Y-m-d')) {
             $client_groups = $this->ClientGroups->getAll(Configure::get('Blesta.company_id'));
             foreach ($client_groups as $client_group) {
                 $inv_days_before_renewal = $this->ClientGroups->getSetting($client_group->id, 'inv_days_before_renewal');

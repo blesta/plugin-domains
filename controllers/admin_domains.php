@@ -1945,9 +1945,6 @@ class AdminDomains extends DomainsController
 
         // Process each duplicate TLD
         foreach ($duplicate_packages as $tld => $package_ids) {
-            // Keep the first package, process the rest
-            $primary_package_id = array_shift($package_ids);
-
             foreach ($package_ids as $duplicate_package_id) {
                 // Check if the package has services
                 if ($this->Packages->validateServiceExists($duplicate_package_id)) {
