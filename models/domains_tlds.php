@@ -1138,7 +1138,7 @@ class DomainsTlds extends DomainsModel
     }
 
     /**
-     * Gets all TLDs that have multiple active packages for the same TLD and module
+     * Gets all TLDs that have active packages other than the primary a TLD and module
      *
      * @param int $company_id The ID of the company
      * @return array An array of TLD names that have duplicate packages
@@ -1166,7 +1166,12 @@ class DomainsTlds extends DomainsModel
         foreach ($tlds as $tld) {
             $tld_packages = $this->getTldPackages($tld->tld, 'active', $company_id);
 
-            if (count($tld_packages) <= 1) {
+            $active_non_primaries = 0;
+            foreach ($tld_packages as $tld_package) {
+                $active_non_primaries += $tld_package->package_id == $tld->package_id ? 0 : 1;
+
+            }
+            if ($active_non_primaries < 1) {
                 continue;
             }
 
@@ -1207,9 +1212,10 @@ class DomainsTlds extends DomainsModel
 
         // For each duplicate TLD, get all its active packages
         foreach ($duplicate_tlds as $tld) {
-            // Get all active packages for this TLD
+            // Get all active packages for this TLD that are not the primary assigned in the domains_tlds table
             $packages = $this->Record->select(['domains_packages.package_id'])
                 ->from('domains_packages')
+                ->on('domains_packages.package_id', '!=', 'domains_tlds.package_id', false)
                 ->innerJoin('domains_tlds', 'domains_tlds.id', '=', 'domains_packages.tld_id', false)
                 ->innerJoin('packages', 'packages.id', '=', 'domains_packages.package_id', false)
                 ->innerJoin('package_group', 'package_group.package_id', '=', 'domains_packages.package_id', false)
@@ -1219,16 +1225,14 @@ class DomainsTlds extends DomainsModel
                 ->where('packages.status', '=', 'active')
                 ->fetchAll();
 
-            // Collect all package IDs for this TLD
+            // Collect all non-primary package IDs for this TLD
             $package_ids = [];
             foreach ($packages as $package) {
                 $package_ids[] = $package->package_id;
             }
 
-            // Store all packages for this TLD (keep first, mark rest as duplicates)
-            if (count($package_ids) > 1) {
-                $result[$tld] = $package_ids;
-            }
+            // Store all packages for this TLD
+            $result[$tld] = $package_ids;
         }
 
         return $result;
