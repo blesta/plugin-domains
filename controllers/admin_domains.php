@@ -1823,13 +1823,13 @@ class AdminDomains extends DomainsController
     private function getTldActions()
     {
         return [
-            'update_nameservers' => Language::_('AdminDomains.getTldActions.option_update_nameservers', true),
             'change_status' => Language::_('AdminDomains.getTldActions.option_change_status', true),
             'tld_sync' => Language::_('AdminDomains.getTldActions.option_tld_sync', true),
             'dns_management' => Language::_('AdminDomains.getTldActions.option_dns_management', true),
             'email_forwarding' => Language::_('AdminDomains.getTldActions.option_email_forwarding', true),
             'id_protection' => Language::_('AdminDomains.getTldActions.option_id_protection', true),
             'epp_code' => Language::_('AdminDomains.getTldActions.option_epp_code', true),
+            'update_nameservers' => Language::_('AdminDomains.getTldActions.option_update_nameservers', true),
             'delete' => Language::_('AdminDomains.getTldActions.option_delete', true),
         ];
     }
