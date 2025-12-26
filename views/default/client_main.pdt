@@ -71,7 +71,13 @@
                                 </td>
                                 <td><?php echo $this->Date->cast((isset($domains[$i]->date_added) ? $this->Html->safe($domains[$i]->date_added) : null));?></td>
                                 <td>
-                                    <?php echo (empty($domains[$i]->date_renews) ? $this->_('ClientMain.index.text_never', true) : $this->Date->cast($domains[$i]->date_renews));?>
+                                    <?php echo (
+                                        empty($domains[$i]->date_paid_through)
+                                            ? (empty($domains[$i]->date_renews)
+                                                ? $this->_('ClientMain.index.text_never', true)
+                                                : $this->Date->cast($domains[$i]->date_renews))
+                                            : $this->Date->cast($domains[$i]->date_paid_through)
+                                    );?>
                                     <?php
                                     if ((isset($status) ? $status : null) != 'canceled' && !empty($domains[$i]->date_canceled) && $this->Date->toTime($this->Date->cast($domains[$i]->date_canceled)) > $this->Date->toTime($this->Date->cast(date('c')))) {
                                     ?>
