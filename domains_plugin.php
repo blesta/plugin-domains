@@ -1800,11 +1800,12 @@ class DomainsPlugin extends Plugin
                 $services = $this->Services->getAll(
                     ['date_added' => 'DESC'],
                     true,
-                    [],
+                    ['status' => 'all'],
                     [
                         'services' => [
                             'package_group_id' => $settings['domains_package_group'],
-                            ['column' => 'id', 'operator' => 'in', 'value' => array_keys($domains_by_service_id)]
+                            ['column' => 'id', 'operator' => 'in', 'value' => array_keys($domains_by_service_id)],
+                            ['column' => 'status', 'operator' => 'in', 'value' => ['active', 'suspended']]
                         ]
                     ]
                 );
