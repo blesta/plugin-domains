@@ -5,12 +5,12 @@ if (!(isset($render_section) ? $render_section : null)) {
 }
 
 $links = [
-    ['name' => $this->_('AdminDomains.browse.category_active', true) . ' <span>(' . $this->Html->safe(isset($status_count['active']) ? $status_count['active'] : null) . ')</span>', 'current' => ((isset($status) ? $status : null) == 'active' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/active/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_pending', true) . ' <span>(' . $this->Html->safe(isset($status_count['pending']) ? $status_count['pending'] : null) . ')</span>', 'current' => ((isset($status) ? $status : null) == 'pending' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/pending/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_suspended', true) . ' <span>(' . $this->Html->safe(isset($status_count['suspended']) ? $status_count['suspended'] : null) . ')</span>', 'current' => ((isset($status) ? $status : null) == 'suspended' ? true : false), 'highlight' => true, 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/suspended/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_canceled', true) . ' <span>(' . $this->Html->safe(isset($status_count['canceled']) ? $status_count['canceled'] : null) . ')</span>', 'current' => ((isset($status) ? $status : null) == 'canceled' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/canceled/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_scheduled_cancellation', true) . ' <span>(' . $this->Html->safe(isset($status_count['scheduled_cancellation']) ? $status_count['scheduled_cancellation'] : null) . ')</span>', 'current' => ((isset($status) ? $status : null) == 'scheduled_cancellation' ? true : false), 'highlight' => true, 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/scheduled_cancellation/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_in_review', true) . ' <span>(' . $this->Html->safe(isset($status_count['in_review']) ? $status_count['in_review'] : null) . ')</span>', 'current' => ((isset($status) ? $status : null) == 'in_review' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/in_review/'), 'class' => 'ajax']]
+    ['name' => $this->_('AdminDomains.browse.category_active', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['active']) ? $status_count['active'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'active' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/active/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_pending', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['pending']) ? $status_count['pending'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'pending' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/pending/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_suspended', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['suspended']) ? $status_count['suspended'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'suspended' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/suspended/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_canceled', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['canceled']) ? $status_count['canceled'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'canceled' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/canceled/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_scheduled_cancellation', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['scheduled_cancellation']) ? $status_count['scheduled_cancellation'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'scheduled_cancellation' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/scheduled_cancellation/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_in_review', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['in_review']) ? $status_count['in_review'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'in_review' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/in_review/'), 'class' => 'ajax']]
 ];
 
 $this->Widget->clear();
@@ -23,30 +23,32 @@ $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/browse/', ['
 
 if (!empty($domains)) {
 ?>
-<table class="table table-striped">
+<table class="table table-hover">
     <thead>
-        <tr class="heading_row">
-            <td class="icon"></td>
+        <tr>
+            <th style="width: 30px;"></th>
             <?php
             if (!in_array($this->Html->ifSet($status), ['in_review', 'canceled'])) {
             ?>
-            <td class="icon"><?php $this->Form->fieldCheckbox('service_ids[]', 'all', (($vars->service_ids[0] ?? '') == 'all'), ['class' => 'actions']);?></td>
+            <th style="width: 40px;"><?php $this->Form->fieldCheckbox('service_ids[]', 'all', (($vars->service_ids[0] ?? '') == 'all'), ['class' => 'actions form-check-input']);?></th>
             <?php
             }
             ?>
-            <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=name&order=' . ($sort == 'name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'name' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_domain');?></a></span></td>
-            <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=client_first_name&order=' . ($sort == 'client_first_name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'client_first_name' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_client');?></a></span></td>
-            <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=registrar&order=' . ($sort == 'registrar' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'registrar' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_registrar');?></a></span></td>
-            <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=renewal_price&order=' . ($sort == 'renewal_price' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'renewal_price' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_price');?></a></span></td>
-            <td><span><?php $this->_('AdminDomains.browse.heading_registration');?></span></td>
-            <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=date_added&order=' . ($sort == 'date_added' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_added' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_added');?></a></span></td>
-            <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=date_renews&order=' . ($sort == 'date_renews' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_renews' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_renewal');?></a></span></td>
-            <td><span><?php $this->_('AdminDomains.browse.heading_expiration');?></span></td>
-            <td>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=name&order=' . ($sort == 'name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'name' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_domain');?></a></span></th>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=client_first_name&order=' . ($sort == 'client_first_name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'client_first_name' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_client');?></a></span></th>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=registrar&order=' . ($sort == 'registrar' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'registrar' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_registrar');?></a></span></th>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=renewal_price&order=' . ($sort == 'renewal_price' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'renewal_price' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_price');?></a></span></th>
+            <th><span><?php $this->_('AdminDomains.browse.heading_registration');?></span></th>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=date_added&order=' . ($sort == 'date_added' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_added' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_added');?></a></span></th>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=date_renews&order=' . ($sort == 'date_renews' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_renews' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_renewal');?></a></span></th>
+            <th><span><?php $this->_('AdminDomains.browse.heading_expiration');?></span></th>
+            <th>
                 <span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=date_canceled&order=' . ($sort == 'date_canceled' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_canceled' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_renew');?></a></span>
-                <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.browse.tooltip_renew');?></div></span>
-            </td>
-            <td><?php $this->_('AdminDomains.browse.heading_options');?></td>
+                <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="<?php $this->_('AdminDomains.browse.tooltip_renew');?>">
+                    <i class="bi bi-info-circle text-secondary"></i>
+                </button>
+            </th>
+            <th><?php $this->_('AdminDomains.browse.heading_options');?></th>
         </tr>
     </thead>
     <tbody>
@@ -58,7 +60,9 @@ if (!empty($domains)) {
                 <?php
                 if ($domain->found != '1') {
                 ?>
-                    <span class="tooltip block border-0 m-0"><i class="fas fa-exclamation-triangle text-warning"></i><div><?php $this->_('AdminDomains.browse.tooltip_transferred');?></div></span>
+                    <button type="button" class="btn btn-link btn-sm p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="<?php $this->_('AdminDomains.browse.tooltip_transferred');?>">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                    </button>
                 <?php
                 }
                 ?>
@@ -67,14 +71,14 @@ if (!empty($domains)) {
             if (!in_array($this->Html->ifSet($status), ['in_review', 'canceled'])) {
             ?>
             <td>
-                <?php $this->Form->fieldCheckbox('service_ids[]', (isset($domain->id) ? $domain->id : null), in_array((isset($domain->id) ? $domain->id : null), (isset($vars->service_ids) ? $vars->service_ids : [])), ['class' => 'actions']);?>
+                <?php $this->Form->fieldCheckbox('service_ids[]', (isset($domain->id) ? $domain->id : null), in_array((isset($domain->id) ? $domain->id : null), (isset($vars->service_ids) ? $vars->service_ids : [])), ['class' => 'actions form-check-input']);?>
             </td>
             <?php
             }
             ?>
             <td><?php echo $this->Html->safe(isset($domain->name) ? $domain->name : '');?></td>
             <td>
-                <a href="<?php echo $this->base_uri . 'clients/view/' . $domain->client_id;?>">
+                <a href="<?php echo $this->base_uri . 'clients/view/' . $domain->client_id;?>" class="text-primary">
                     <?php echo $this->Html->safe(
                         isset($domain->client_first_name)
                             ? $domain->client_first_name . ' ' . $domain->client_last_name . ' (#' . $domain->client_id_code . ')'
@@ -83,7 +87,7 @@ if (!empty($domains)) {
                 </a>
             </td>
             <td><?php echo $this->Html->safe(isset($domain->registrar) ? $domain->registrar : '');?></td>
-            <td <?php echo (!is_null($domain->override_price) ? 'class="text-warning font-weight-bold"' : ''); ?>><?php echo isset($domain->renewal_price) ? $this->CurrencyFormat->format($domain->renewal_price, $domain->package_pricing->currency) : '';?></td>
+            <td <?php echo (!is_null($domain->override_price) ? 'class="text-warning fw-bold"' : ''); ?>><?php echo isset($domain->renewal_price) ? $this->CurrencyFormat->format($domain->renewal_price, $domain->package_pricing->currency) : '';?></td>
             <td><?php echo isset($domain->registration_date) ? $this->Date->cast($domain->registration_date) : '';?></td>
             <td><?php echo isset($domain->date_added) ? $this->Date->cast($domain->date_added) : '';?></td>
             <td><?php echo isset($domain->date_renews) ? $this->Date->cast($domain->date_renews) : '';?></td>
@@ -98,7 +102,7 @@ if (!empty($domains)) {
                 $show_parent = (($status ?? null) != 'canceled') && !empty($domain->parent_service_id);
                 if ($show_parent) {
                 ?>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . ($domain->client_id ?? null) . '/' . ($domain->parent_service_id ?? null) . '/');?>"><?php $this->_('AdminDomains.browse.option_parent');?></a>,
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . ($domain->client_id ?? null) . '/' . ($domain->parent_service_id ?? null) . '/');?>" class="btn btn-sm btn-outline-secondary me-1"><?php $this->_('AdminDomains.browse.option_parent');?></a>
                 <?php
                 }
 
@@ -106,15 +110,15 @@ if (!empty($domains)) {
                 $show_manage = ($status ?? null) != 'canceled';
                 if ($show_manage) {
                 ?>
-                <a class="manage" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/edit/' . (isset($domain->client_id) ? $domain->client_id : null) . '/' . (isset($domain->id) ? $domain->id : null) . '/');?>"><?php $this->_('AdminDomains.browse.option_manage');?></a>
+                <a class="btn btn-sm btn-primary manage" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/edit/' . (isset($domain->client_id) ? $domain->client_id : null) . '/' . (isset($domain->id) ? $domain->id : null) . '/');?>"><?php $this->_('AdminDomains.browse.option_manage');?></a>
                 <?php
                 }
 
                 // Delete pending services
                 if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
-                    echo ($show_manage ? ',' : '');
+                    echo ($show_manage ? ' ' : '');
                 ?>
-                <a class="manage submit" href="#" data-client-id="<?php echo $this->Html->safe((isset($domain->client_id) ? $domain->client_id : null));?>" data-service-id="<?php echo $this->Html->safe((isset($domain->id) ? $domain->id : null));?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.browse.confirm_delete', true));?>">
+                <a class="btn btn-sm btn-danger manage ms-1 submit" href="#" data-client-id="<?php echo $this->Html->safe((isset($domain->client_id) ? $domain->client_id : null));?>" data-service-id="<?php echo $this->Html->safe((isset($domain->id) ? $domain->id : null));?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.browse.confirm_delete', true));?>">
                     <?php $this->_('AdminDomains.browse.option_delete');?>
                 </a>
                 <?php
@@ -135,71 +139,87 @@ if (!empty($domains)) {
     $this->Pagination->build();
 } else {
 ?>
-<div class="empty_section">
-    <div class="empty_box">
-        <?php $this->_('AdminDomains.browse.text_none');?>
-    </div>
+<div class="alert alert-info">
+    <?php $this->_('AdminDomains.browse.text_none');?>
 </div>
 <?php
 }
 ?>
-<div id="domain_actions" class="button_row pad_top">
+<div id="domain_actions" class="button_row mt-3" style="display: none;">
     <?php
-    $this->Form->fieldSubmit('save', $this->_('AdminDomains.browse.field_actionsubmit', true), ['class' => 'btn btn-sm btn-primary pull-right']);
+    $this->Form->fieldSubmit('save', $this->_('AdminDomains.browse.field_actionsubmit', true), ['class' => 'btn btn-primary float-end']);
     ?>
     <div class="actions">
-        <div id="change_auto_renewal" class="action_section">
+        <div id="change_auto_renewal" class="action_section" style="display: none;">
             <?php
-            $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], isset($vars->action) ? $vars->action : null);
+            $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], isset($vars->action) ? $vars->action : null, ['class' => 'form-select']);
             ?>
         </div>
-        <div id="change_expiration_date" class="action_section">
-            <div class="float">
-                <?php
-                $this->Form->fieldText('expiration_date', $this->Date->cast($vars->expiration_date ?? date('c'), 'Y-m-d'), ['class' => 'date form-control input-md']);
-                ?>
-            </div>
-        </div>
-        <div id="change_registration_date" class="action_section">
-            <div class="float">
-                <?php
-                $this->Form->fieldText('registration_date', $this->Date->cast($vars->registration_date ?? date('c'), 'Y-m-d'), ['class' => 'date form-control input-md']);
-                ?>
-            </div>
-        </div>
-        <div id="change_registrar" class="action_section">
+        <div id="change_expiration_date" class="action_section" style="display: none;">
             <?php
-            $this->Form->fieldSelect('module_id', ($modules ?? []), ($vars->client ?? ''));
+            $this->Form->fieldText('expiration_date', $this->Date->cast($vars->expiration_date ?? date('c'), 'Y-m-d'), ['class' => 'form-control date']);
             ?>
         </div>
-        <div id="domain_renewal" class="action_section">
-            <div class="float">
-                <?php
-                $this->Form->label($this->_('AdminDomains.browse.action.field_years', true), 'years', ['class' => 'inline']);
-                $this->Form->fieldText('years', ($vars->cycles ?? 1), ['class' => 'form-control input-md']);
-                ?>
+        <div id="change_registration_date" class="action_section" style="display: none;">
+            <?php
+            $this->Form->fieldText('registration_date', $this->Date->cast($vars->registration_date ?? date('c'), 'Y-m-d'), ['class' => 'form-control date']);
+            ?>
+        </div>
+        <div id="change_registrar" class="action_section" style="display: none;">
+            <?php
+            $this->Form->fieldSelect('module_id', ($modules ?? []), ($vars->client ?? ''), ['class' => 'form-select']);
+            ?>
+        </div>
+        <div id="domain_renewal" class="action_section" style="display: none;">
+            <div class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <?php
+                    $this->Form->label($this->_('AdminDomains.browse.action.field_years', true), 'years', ['class' => 'col-form-label']);
+                    ?>
+                </div>
+                <div class="col-auto">
+                    <?php
+                    $this->Form->fieldText('years', ($vars->cycles ?? 1), ['class' => 'form-control', 'style' => 'width: 80px;']);
+                    ?>
+                </div>
             </div>
         </div>
-        <div id="update_nameservers" class="action_section">
-            <div class="float">
-                <?php
-                $this->Form->label($this->_('AdminDomains.browse.action.field_nameservers', true), 'nameservers', ['class' => 'inline']);
-                $this->Form->fieldText('nameservers[]', ($vars->nameservers[0] ?? ''), ['class' => 'form-control input-md']);
-                $this->Form->fieldText('nameservers[]', ($vars->nameservers[1] ?? ''), ['class' => 'form-control input-md']);
-                ?>
+        <div id="update_nameservers" class="action_section" style="display: none;">
+            <div class="row g-2">
+                <div class="col-12">
+                    <?php
+                    $this->Form->label($this->_('AdminDomains.browse.action.field_nameservers', true), 'nameservers1', ['class' => 'col-form-label']);
+                    ?>
+                </div>
+                <div class="col-md-6">
+                    <?php
+                    $this->Form->fieldText('nameservers[]', ($vars->nameservers[0] ?? ''), ['class' => 'form-control']);
+                    ?>
+                </div>
+                <div class="col-md-6">
+                    <?php
+                    $this->Form->fieldText('nameservers[]', ($vars->nameservers[1] ?? ''), ['class' => 'form-control']);
+                    ?>
+                </div>
             </div>
         </div>
-        <div id="push_to_client" class="action_section">
-            <div class="float">
-                <?php
-                $this->Form->label($this->_('AdminDomains.browse.action.field_client', true), 'client', ['class' => 'inline']);
-                $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control ui-autocomplete-input input-md', 'id' => 'client']);
-                $this->Form->fieldHidden('client_id', ($vars->client_id ?? null), ['id' => 'client_id']);
-                ?>
+        <div id="push_to_client" class="action_section" style="display: none;">
+            <div class="row g-2">
+                <div class="col-12">
+                    <?php
+                    $this->Form->label($this->_('AdminDomains.browse.action.field_client', true), 'client', ['class' => 'col-form-label']);
+                    ?>
+                </div>
+                <div class="col-md-10">
+                    <?php
+                    $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control', 'id' => 'client']);
+                    $this->Form->fieldHidden('client_id', ($vars->client_id ?? null), ['id' => 'client_id']);
+                    ?>
+                </div>
             </div>
         </div>
         <?php
-        $this->Form->fieldSelect('action', ['' => $this->_('AppController.select.please', true)] + (isset($actions) ? $actions : []), isset($vars->action) ? $vars->action : null, ['id' => 'domain_action']);
+        $this->Form->fieldSelect('action', ['' => $this->_('AppController.select.please', true)] + (isset($actions) ? $actions : []), isset($vars->action) ? $vars->action : null, ['id' => 'domain_action', 'class' => 'form-select']);
         ?>
     </div>
 </div>
@@ -217,116 +237,148 @@ $this->Widget->end();
 ?>
 
 <script type="text/javascript">
-    $(document).ready(function() {
-        $(this).blestaBindToolTips();
+(function() {
+    'use strict';
 
-        $(".service_info a,.service_info input", this).click(function(e) {
-            e.stopPropagation();
-        });
-        $(".service_info").click(function() {
-            $(this).blestaUpdateRow("<?php echo $this->Html->safe((isset($this->base_uri) ? $this->base_uri : null)) . 'billing/serviceinfo/';?>/" + $(this).next("tr").attr("id").split("_")[1], ".subtable");
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('browse_domains');
+        if (!form) return;
 
-        // Handle confirmation
-        $('#browse_domains a.manage[rel]').blestaModalConfirm({base_url: '<?php echo $this->base_uri;?>', close: '<?php $this->_('AppController.modal.text_close');?>'});
-
-        $('#browse_domains a.manage.submit[rel]').click(function() {
-            var service_id = $(this).attr('data-service-id');
-            $('#delete_service_client_id').val($(this).attr('data-client-id'));
-            $('#delete_service_service_id').val(service_id);
-        });
-        $('#browse_domains a.manage.submit[rel]').each(function() {
-            $(this).blestaModalConfirm({base_url: '<?php echo $this->base_uri;?>', close: '<?php $this->_('AppController.modal.text_close');?>', submit: true, form: $('#delete_service')});
+        // Initialize Bootstrap popovers
+        const popoverTriggers = form.querySelectorAll('[data-bs-toggle="popover"]');
+        popoverTriggers.forEach(trigger => {
+            new bootstrap.Popover(trigger);
         });
 
-        showServiceActions();
-        $('#browse_domains input.actions').click(function() {
-            // Show/hide actions
-            if ($('#browse_domains input.actions:checked').length > 0) {
-                // Check all checkboxes
-                if ($(this).val() === 'all') {
-                    if ($(this).prop('checked')) {
-                        // Check all checkboxes
-                        $('#browse_domains input.actions').each(function() {
-                            $(this).prop('checked', true);
-                        });
+        // Initialize Bootstrap tooltips
+        const tooltipTriggers = form.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltipTriggers.forEach(trigger => {
+            new bootstrap.Tooltip(trigger);
+        });
 
-                        // Show domain actions
-                        $('#domain_actions').show();
-                    }
-                    else {
-                        // Uncheck all checkboxes
-                        $('#browse_domains input.actions').each(function() {
-                            $(this).prop('checked', false);
-                        });
-
-                        // Hide domain actions
-                        $('#domain_actions').hide();
-                    }
+        // Handle confirmation for manage links
+        const manageLinks = form.querySelectorAll('a.manage[rel]');
+        manageLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                const message = this.getAttribute('rel');
+                if (message && !confirm(message)) {
+                    e.preventDefault();
+                    return false;
                 }
-                else {
-                    // Check individual checkboxes
-                    if ($(this).prop('checked')) {
-                        $('#domain_actions').show();
-                    }
-                    else {
-                        // Uncheck 'all'
-                        $('#browse_domains input[value=all].actions').prop('checked', false);
-                    }
-                }
-            } else {
-                // Hide domain actions
-                $('#domain_actions').hide();
-            }
+            });
         });
 
+        // Handle delete service
+        const deleteLinks = form.querySelectorAll('a.manage.submit[rel]');
+        deleteLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                const serviceId = this.getAttribute('data-service-id');
+                const clientId = this.getAttribute('data-client-id');
+
+                const clientIdField = document.getElementById('delete_service_client_id');
+                const serviceIdField = document.getElementById('delete_service_service_id');
+
+                if (clientIdField) clientIdField.value = clientId;
+                if (serviceIdField) serviceIdField.value = serviceId;
+            });
+        });
+
+        // Show service actions based on checkboxes
         function showServiceActions() {
-            if ($('#browse_domains input.actions:checked').length > 0) {
-                $('#domain_actions').show();
-            } else {
-                $('#domain_actions').hide();
+            const checkedCount = form.querySelectorAll('input.actions:checked').length;
+            const domainActions = document.getElementById('domain_actions');
+
+            if (domainActions) {
+                domainActions.style.display = checkedCount > 0 ? 'block' : 'none';
             }
         }
 
-        $('#domain_action').change(function() {
-            $('.action_section').hide();
-            $('#' + $(this).val()).show();
+        // Initialize action visibility
+        showServiceActions();
+
+        // Handle checkbox clicks
+        const actionCheckboxes = form.querySelectorAll('input.actions');
+        actionCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('click', function() {
+                // Show/hide actions
+                const checkedCount = form.querySelectorAll('input.actions:checked').length;
+
+                if (this.value === 'all') {
+                    if (this.checked) {
+                        // Check all checkboxes
+                        actionCheckboxes.forEach(cb => cb.checked = true);
+                    } else {
+                        // Uncheck all checkboxes
+                        actionCheckboxes.forEach(cb => cb.checked = false);
+                    }
+                } else {
+                    // Uncheck 'all' if individual checkbox is clicked
+                    const allCheckbox = form.querySelector('input.actions[value="all"]');
+                    if (allCheckbox) allCheckbox.checked = false;
+                }
+
+                showServiceActions();
+            });
         });
-        $('#domain_action').change();
 
-        $('#client').autocomplete({
-            minLength: 3,
-            source: function(request, response) {
-                $(document).blestaRequest('POST', '<?php echo $this->Html->safe($this->base_uri . 'clients/getclients/'); ?>',
-                    { _csrf_token: $('#domain_actions').closest('form').find('input[name=_csrf_token]').val(), search: request.term},
-                    function(data) {
-                        if (data && data.clients) {
-                            // Build the response to show
-                            var clients = [];
-                            for (var id in data.clients) {
-                                clients.push({label: data.clients[id], value: data.clients[id], id: id});
-                            }
-                            response(clients);
+        // Handle action select change
+        const actionSelect = document.getElementById('domain_action');
+        if (actionSelect) {
+            actionSelect.addEventListener('change', function() {
+                // Hide all action sections
+                const actionSections = form.querySelectorAll('.action_section');
+                actionSections.forEach(section => section.style.display = 'none');
 
-                            // No results
-                            if (clients.length == 0) {
-                                $('#no_clients').show();
-                            } else {
-                                $('#no_clients').hide();
+                // Show selected action section
+                const selectedSection = document.getElementById(this.value);
+                if (selectedSection) {
+                    selectedSection.style.display = 'block';
+                }
+            });
+
+            // Initialize first action
+            actionSelect.dispatchEvent(new Event('change'));
+        }
+
+        // Client autocomplete (if jQuery autocomplete exists)
+        const clientInput = document.getElementById('client');
+        if (clientInput && typeof jQuery !== 'undefined' && jQuery.fn.autocomplete) {
+            jQuery(clientInput).autocomplete({
+                minLength: 3,
+                source: function(request, response) {
+                    const csrfToken = form.querySelector('input[name="_csrf_token"]');
+                    jQuery.ajax({
+                        url: '<?php echo $this->Html->safe($this->base_uri . 'clients/getclients/'); ?>',
+                        method: 'POST',
+                        data: {
+                            _csrf_token: csrfToken ? csrfToken.value : null,
+                            search: request.term
+                        },
+                        dataType: 'json',
+                        success: function(data) {
+                            if (data && data.clients) {
+                                // Build the response
+                                const clients = [];
+                                for (const id in data.clients) {
+                                    clients.push({
+                                        label: data.clients[id],
+                                        value: data.clients[id],
+                                        id: id
+                                    });
+                                }
+                                response(clients);
                             }
                         }
-                    },
-                    null,
-                    {dataType:'json'}
-                );
-            },
-            select: function(event, ui) {
-                $('#client_id').val(ui.item.id);
-            }
-        });
-
-        $('.dp-choose-date').on('click', function() {
-            $('.dp-popup').css('left', (parseInt($('.dp-popup').css('left')) - 125) + 'px');
-        });
+                    });
+                },
+                select: function(event, ui) {
+                    const clientIdField = document.getElementById('client_id');
+                    if (clientIdField) {
+                        clientIdField.value = ui.item.id;
+                    }
+                }
+            });
+        }
     });
+})();
 </script>

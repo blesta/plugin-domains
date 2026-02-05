@@ -1,104 +1,115 @@
-        <aside id="left_container">
-            <section class="settings_detail_box">
-                <div class="settings_detail_box_inner">
-                <?php
-                $nav = [
+<aside id="left_container">
+    <div class="settings-nav">
+        <?php
+        $nav = [
+            [
+                'name' => Language::_('AdminDomains.leftnav.nav_tlds', true),
+                'class' => '',
+                'icon' => 'bi-globe',
+                'uri' => $this->base_uri . 'plugin/domains/admin_domains/tlds/',
+                'children' => [
                     [
-                        'name' => Language::_('AdminDomains.leftnav.nav_tlds', true),
-                        'class' => '',
-                        'icon' => 'globe-americas',
-                        'uri' => $this->base_uri . 'plugin/domains/admin_domains/tlds/',
-                        'children' => [
-                            [
-                                'name' => Language::_('AdminDomains.leftnav.nav_tlds_pricing', true),
-                                'uri' => $this->base_uri . 'plugin/domains/admin_domains/tlds/'
-                            ],
-                            [
-                                'name' => Language::_('AdminDomains.leftnav.nav_tlds_registrars', true),
-                                'uri' => $this->base_uri . 'plugin/domains/admin_domains/registrars/'
-                            ],
-                            [
-                                'name' => Language::_('AdminDomains.leftnav.nav_tlds_import', true),
-                                'uri' => $this->base_uri . 'plugin/domains/admin_domains/importtlds/'
-                            ]
-                        ]
+                        'name' => Language::_('AdminDomains.leftnav.nav_tlds_pricing', true),
+                        'uri' => $this->base_uri . 'plugin/domains/admin_domains/tlds/'
                     ],
                     [
-                        'name' => Language::_('AdminDomains.leftnav.nav_utilities', true),
-                        'class' => '',
-                        'icon' => 'wrench',
-                        'uri' => $this->base_uri . 'plugin/domains/admin_domains/whois/',
-                        'children' => [
-                            [
-                                'name' => Language::_('AdminDomains.leftnav.nav_domains_whois', true),
-                                'uri' => $this->base_uri . 'plugin/domains/admin_domains/whois/'
-                            ]
-                        ]
+                        'name' => Language::_('AdminDomains.leftnav.nav_tlds_registrars', true),
+                        'uri' => $this->base_uri . 'plugin/domains/admin_domains/registrars/'
                     ],
                     [
-                        'name' => Language::_('AdminDomains.leftnav.nav_configuration', true),
-                        'class' => '',
-                        'icon' => 'cogs',
-                        'uri' => $this->base_uri . 'plugin/domains/admin_domains/configuration/'
+                        'name' => Language::_('AdminDomains.leftnav.nav_tlds_import', true),
+                        'uri' => $this->base_uri . 'plugin/domains/admin_domains/importtlds/'
                     ]
-                ];
+                ]
+            ],
+            [
+                'name' => Language::_('AdminDomains.leftnav.nav_utilities', true),
+                'class' => '',
+                'icon' => 'bi-wrench',
+                'uri' => $this->base_uri . 'plugin/domains/admin_domains/whois/',
+                'children' => [
+                    [
+                        'name' => Language::_('AdminDomains.leftnav.nav_domains_whois', true),
+                        'uri' => $this->base_uri . 'plugin/domains/admin_domains/whois/'
+                    ]
+                ]
+            ],
+            [
+                'name' => Language::_('AdminDomains.leftnav.nav_configuration', true),
+                'class' => '',
+                'icon' => 'bi-gear',
+                'uri' => $this->base_uri . 'plugin/domains/admin_domains/configuration/'
+            ]
+        ];
 
-                if ((isset($nav) ? $nav : false) && ($num_nav = count($nav)) > 0) {
-                    for ($i = 0; $i < $num_nav; $i++) {
-                        $name = (isset($nav[$i]['name']) ? $this->Html->safe($nav[$i]['name']) : null);
-                        $attributes = isset($nav[$i]['attributes']) ? $nav[$i]['attributes'] : [];
-                        $attributes = array_merge($attributes, ['href' => (isset($nav[$i]['uri']) ? $nav[$i]['uri'] : null),'class' => (isset($nav[$i]['class']) ? $nav[$i]['class'] : null)]);
-                        $icon = (isset($nav[$i]['icon']) ? $nav[$i]['icon'] : null);
-                ?>
-                    <ul>
-                        <li class="<?php echo ($i == 0) ? 'heading' : 'parent'; ?><?php echo substr_compare((isset($nav[$i]['uri']) ? $nav[$i]['uri'] : null), $_SERVER['REQUEST_URI'], 0, strlen(rtrim($nav[$i]['uri'] ?? '', '/')), true) === 0 ? ' current' : '';?>">
-                            <a<?php echo $this->Html->buildAttributes($attributes);?>>
-                                <?php
-                                if (!empty($icon)) {
-                                ?>
-                                <i class="fas fa-<?php echo (isset($icon) ? $this->Html->safe($icon) : null);?> fa-fw"></i>
-                                <?php
-                                }
-                                ?>
-                                <?php echo $name;?>
-                            </a>
-                        </li>
-                    </ul>
-                        <?php
-                        if ((isset($nav[$i]['children']) ? $nav[$i]['children'] : false) && ($num_children = count($nav[$i]['children'])) > 0) {
-                        ?>
-                        <ul class="children">
-                            <?php
-                            $sub_nav = $nav[$i]['children'];
-                            for ($j = 0; $j < $num_children; $j++) {
-                                $name = (isset($sub_nav[$j]['name']) ? $this->Html->safe($sub_nav[$j]['name']) : null);
-                                $attributes = isset($sub_nav[$j]['attributes']) ? $sub_nav[$j]['attributes'] : [];
-                                $attributes = array_merge($attributes, ['href' => (isset($sub_nav[$j]['uri']) ? $sub_nav[$j]['uri'] : null)]);
-
-                                $is_index = false;
-                                if (basename((isset($sub_nav[$j]['uri']) ? $sub_nav[$j]['uri'] : null)) == 'index' && strcasecmp((isset($nav[$i]['uri']) ? $nav[$i]['uri'] : null), $_SERVER['REQUEST_URI']) === 0) {
-                                    $is_index = true;
-                                }
-                            ?>
-                            <li<?php echo substr_compare((isset($sub_nav[$j]['uri']) ? $sub_nav[$j]['uri'] : null), $_SERVER['REQUEST_URI'], 0, strlen(rtrim($sub_nav[$j]['uri'] ?? '', '/')), true) === 0 || $is_index ? ' class="current"' : '';?>><a<?php echo $this->Html->buildAttributes($attributes);?>><?php echo $name;?></a></li>
-                            <?php
-                            }
-                            ?>
-                        </ul>
-                        <?php
-                        }
+        if ((isset($nav) ? $nav : false) && ($num_nav = count($nav)) > 0) {
+            for ($i = 0; $i < $num_nav; $i++) {
+                $name = (isset($nav[$i]['name']) ? $this->Html->safe($nav[$i]['name']) : null);
+                $uri = (isset($nav[$i]['uri']) ? $nav[$i]['uri'] : null);
+                $icon = (isset($nav[$i]['icon']) ? $nav[$i]['icon'] : 'bi-chevron-right');
+                $has_children = (isset($nav[$i]['children']) ? $nav[$i]['children'] : false);
+                $is_current = substr_compare($uri, $_SERVER['REQUEST_URI'], 0, strlen(rtrim($uri ?? '', '/')), true) === 0;
+        ?>
+        <div class="settings-group">
+            <?php if ($has_children) { ?>
+                <a class="settings-group-header <?php echo $is_current ? '' : 'collapsed'; ?>"
+                   data-bs-toggle="collapse"
+                   href="#settingsGroup<?php echo $i; ?>"
+                   role="button"
+                   aria-expanded="<?php echo $is_current ? 'true' : 'false'; ?>"
+                   aria-controls="settingsGroup<?php echo $i; ?>">
+                    <i class="<?php echo $this->Html->safe($icon); ?>"></i>
+                    <span><?php echo $name; ?></span>
+                    <i class="bi bi-chevron-right ms-auto"></i>
+                </a>
+                <div class="collapse <?php echo $is_current ? 'show' : ''; ?>" id="settingsGroup<?php echo $i; ?>">
+                    <?php
+                    $sub_nav = $nav[$i]['children'];
+                    $num_children = count($sub_nav);
+                    for ($j = 0; $j < $num_children; $j++) {
+                        $sub_name = (isset($sub_nav[$j]['name']) ? $this->Html->safe($sub_nav[$j]['name']) : null);
+                        $sub_uri = (isset($sub_nav[$j]['uri']) ? $sub_nav[$j]['uri'] : null);
+                        $sub_attributes = isset($sub_nav[$j]['attributes']) ? $sub_nav[$j]['attributes'] : [];
+                        $sub_attributes = array_merge($sub_attributes, ['href' => $sub_uri]);
+                        $sub_is_current = substr_compare($sub_uri, $_SERVER['REQUEST_URI'], 0, strlen(rtrim($sub_uri ?? '', '/')), true) === 0;
+                    ?>
+                        <a href="<?php echo $this->Html->safe($sub_uri); ?>" class="settings-nav-item<?php echo $sub_is_current ? ' active' : ''; ?>">
+                            <?php echo $sub_name; ?>
+                        </a>
+                    <?php
                     }
-                }
-                ?>
+                    ?>
                 </div>
-                <div class="shadow"></div>
-            </section>
-        </aside>
-<?php
-$this->Javascript->setInline("
-    $(document).ready(function() {
-        // Handle confirmation on delete action
-        $(\"#left_container a[rel='modal']\").blestaModal({close: '" . $this->_('AppController.modal.text_close', true) . "'});
+            <?php } else { ?>
+                <a href="<?php echo $this->Html->safe($uri); ?>" class="settings-group-header<?php echo $is_current ? ' active' : ''; ?>">
+                    <i class="<?php echo $this->Html->safe($icon); ?>"></i>
+                    <span><?php echo $name; ?></span>
+                </a>
+            <?php } ?>
+        </div>
+        <?php
+            }
+        }
+        ?>
+    </div>
+</aside>
+
+<script type="text/javascript">
+(function() {
+    'use strict';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle modal confirmations
+        const modalLinks = document.querySelectorAll('#left_container a[rel="modal"]');
+        modalLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                const message = this.getAttribute('rel');
+                if (message && !confirm(message)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
     });
-");
-?>
+})();
+</script>

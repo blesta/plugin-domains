@@ -1,316 +1,471 @@
+<?php
+if (!(isset($is_ajax) ? $is_ajax : false)) {
+    echo (isset($left_nav) ? $left_nav : null);
+?>
+<div id="right_outer">
+    <?php
+    if (!(isset($render_section) ? $render_section : null)) {
+        echo (isset($message) ? $message : null);
+    }
+    ?>
+    <section id="right_container">
+<?php
+}
+?>
 
-        <?php
-        if (!(isset($is_ajax) ? $is_ajax : false)) {
-            echo (isset($left_nav) ? $left_nav : null);
-        ?>
-        <div id="right_outer">
+<div class="message_box"></div>
+
+<?php
+$this->Widget->clear();
+$this->Widget->setStyleSheet($this->view_dir . '/css/domains.css');
+$this->Widget->create(
+    $this->_('AdminDomains.import.boxtitle_import', true),
+    ['id' => 'admin_domains_import'],
+    (isset($render_section) ? $render_section : null)
+);
+
+$this->Form->create(null, ['id' => 'import_tlds_form']);
+?>
+
+<div class="inner">
+    <!-- Warning Alert -->
+    <div class="alert alert-warning d-flex align-items-center justify-content-between" role="alert">
+        <div class="d-flex align-items-start">
+            <i class="bi bi-exclamation-triangle-fill me-3"></i>
+            <div>
+                <?php $this->_('AdminDomains.import.text_tld_settings');?>
+            </div>
+        </div>
+        <a target="_blank" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync');?>" class="btn btn-warning">
+            <?php $this->_('AdminDomains.import.text_configuration');?>
+        </a>
+    </div>
+
+    <!-- Module Section -->
+    <h6><?php echo $this->_('AdminDomains.import.title_module', true);?></h6>
+    <div class="mb-4">
+        <div class="d-flex align-items-center gap-2 mb-3">
             <?php
-            if (!(isset($render_section) ? $render_section : null)) {
-                echo (isset($message) ? $message : null);
+            $this->Form->fieldSelect('module_id', [], $vars['module_id'] ?? '', ['id' => 'module_id', 'class' => 'form-select', 'style' => 'width: 200px;']);
+            ?>
+            <button type="button" class="btn btn-outline-primary" id="refresh_modules">
+                <i class="bi bi-arrow-repeat me-2"></i><?php $this->_('AdminDomains.import.text_refresh');?>
+            </button>
+        </div>
+        <div>
+            <a target="_blank" class="text-primary" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/registrars');?>">
+                <i class="bi bi-list me-1"></i><?php $this->_('AdminDomains.import.text_install_modules');?>
+            </a>
+        </div>
+    </div>
+
+    <!-- Terms Section -->
+    <div id="module_terms" style="display: none;">
+        <h6><?php echo $this->_('AdminDomains.import.title_terms', true);?></h6>
+        <div class="row g-3 mb-4">
+            <?php
+            for ($i = 1; $i <= 10; $i++) {
+            ?>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="form-check">
+                        <?php
+                        $this->Form->fieldCheckbox('terms[]', $i, (($vars['terms'][$i - 1] ?? $i) == $i), ['id' => 'terms_' . $i, 'class' => 'form-check-input']);
+                        $this->Form->label($this->_('AdminDomains.import.text_year' . ($i > 1 ? 's' : ''), true, $i), 'terms_' . $i, ['class' => 'form-check-label']);
+                        ?>
+                    </div>
+                </div>
+            <?php
             }
             ?>
-            <section id="right_container">
-        <?php
-        }
-        ?>
-            <div class="message_box">
-            </div>
-            <?php
-            $this->Widget->clear();
-            $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css');
-            $this->Widget->create(
-                $this->_('AdminDomains.import.boxtitle_import', true),
-                ['id' => 'admin_domains_import'],
-                (isset($render_section) ? $render_section : null)
-            );
-
-            $this->Form->create(null, ['id' => 'import_tlds_form']);
-            ?>
-
-            <div class="inner">
-                <div id="modules_section">
-                    <div class="title_row first">
-                        <h3><?php echo $this->_('AdminDomains.import.title_module', true);?></h3>
-                    </div>
-                    <div class="pad">
-                        <section class="error_section">
-                            <article class="error_box alert">
-                                <div class="row">
-                                    <div class="col-md-9 pt-1">
-                                        <div class="icon-line fa-2x">
-                                            <i class="fas fa-exclamation-triangle fa-fw"></i>
-                                            <p style="padding: 0px!important;"><?php $this->_('AdminDomains.import.text_tld_settings');?></p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <a target="_blank" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync');?>" class="btn btn-warning m-0 float-right"><?php $this->_('AdminDomains.import.text_configuration');?></a>
-                                    </div>
-                                </div>
-                            </article>
-                        </section>
-
-                        <ul>
-                            <li>
-                                <?php
-                                $this->Form->label($this->_('AdminDomains.import.field_module', true), 'module_id');
-                                $this->Form->fieldSelect('module_id', [], $vars['module_id'] ?? '', ['id' => 'module_id', 'class' => 'mb-2']);
-                                ?>
-                                <a class="ml-1" id="refresh_modules" href="#"><i class="fas fa-sync"></i> <?php $this->_('AdminDomains.import.text_refresh');?></a>
-                                <a target="_blank" class="d-block" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/registrars');?>"><i class="fas fa-list"></i> <?php $this->_('AdminDomains.import.text_install_modules');?></a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div id="module_terms" style="display: none;">
-                    <div class="title_row"><h3><?php echo $this->_('AdminDomains.import.title_terms', true);?></h3></div>
-                    <div class="pad">
-                        <ul>
-                            <?php
-                            for ($i = 1; $i <= 10; $i++) {
-                            ?>
-                            <li class="w-25 d-inline-block">
-                                <?php
-                                $this->Form->fieldCheckbox('terms[]', $i, (($vars['terms'][$i - 1] ?? $i) == $i), ['id' => 'terms_' . $i]);
-                                $this->Form->label($this->_('AdminDomains.import.text_year' . ($i > 1 ? 's' : ''), true, $i), 'terms_' . $i, ['class' => 'inline']);
-                                ?>
-                            </li>
-                            <?php
-                            }
-                            ?>
-                        </ul>
-                    </div>
-                </div>
-
-                <div id="module_tlds" style="display: none;">
-                    <div class="title_row">
-                        <h3>
-                            <?php echo $this->_('AdminDomains.import.title_tlds', true);?>
-                            <div class="float-right px-2">
-                                <?php
-                                $this->Form->fieldCheckbox('select_all', '1', false, ['class' => 'inline', 'id' => 'select_all']);
-                                ?>
-                            </div>
-                        </h3>
-                    </div>
-                    <div class="pad">
-                        <ul>
-                            <li></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="button_row">
-                    <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/importtlds/';?>" class="btn btn-default float-right" id="restart_button" style="display: none;">
-                        <i class="fas fa-redo-alt"></i> <?php $this->_('AdminDomains.import.field_restart');?>
-                    </a>
-                    <?php
-                    $this->Form->fieldSubmit('save', $this->_('AdminDomains.import.field_import', true), ['class' => 'btn btn-primary float-right', 'id' => 'import_tlds_button']);
-                    ?>
-                </div>
-            </div>
-
-            <?php
-            $this->Form->end();
-            $this->Widget->end();
-            ?>
-        <?php
-        if (!(isset($is_ajax) ? $is_ajax : false)) {
-        ?>
-            </section>
         </div>
-        <?php
-        }
-        ?>
+    </div>
+
+    <!-- TLDs Section -->
+    <div id="module_tlds" style="display: none;">
+        <h6 class="d-flex justify-content-between align-items-center">
+            <?php echo $this->_('AdminDomains.import.title_tlds', true);?>
+            <div>
+                <?php
+                $this->Form->fieldCheckbox('select_all', '1', false, ['id' => 'select_all', 'class' => 'form-check-input']);
+                $this->Form->label($this->_('AdminDomains.import.field_select_all', true), 'select_all', ['class' => 'form-check-label ms-2']);
+                ?>
+            </div>
+        </h6>
+        <div class="tld-import-grid" id="tld_grid">
+            <!-- TLDs will be loaded here via AJAX -->
+            <div class="text-center w-100">
+                <i class="bi bi-spinner fa-spin"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Button Row -->
+    <div class="button_row">
+        <div class="d-flex justify-content-end gap-2">
+            <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/importtlds/');?>" class="btn btn-outline-secondary" id="restart_button" style="display: none;">
+                <i class="bi bi-arrow-clockwise me-2"></i><?php $this->_('AdminDomains.import.field_restart');?>
+            </a>
+            <?php
+            $this->Form->fieldSubmit('save', $this->_('AdminDomains.import.field_import', true), ['class' => 'btn btn-primary', 'id' => 'import_tlds_button']);
+            ?>
+        </div>
+    </div>
+</div>
+
+<?php
+$this->Form->end();
+$this->Widget->end();
+?>
+
+<?php
+if (!(isset($is_ajax) ? $is_ajax : false)) {
+?>
+    </section>
+</div>
+<?php
+}
+?>
 
 <script type="text/javascript">
-    $(document).ready(function() {
+(function() {
+    'use strict';
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
         // Get registrar modules
         loadModules();
 
+        // Setup event listeners
+        setupEventListeners();
+    });
+
+    /**
+     * Setup all event listeners
+     */
+    function setupEventListeners() {
         // Refresh modules
-        $("#refresh_modules").on('click', function() {
-            loadModules();
-        });
+        const refreshBtn = document.getElementById('refresh_modules');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                loadModules();
+            });
+        }
 
         // Select all TLDs
-        $("#select_all").on('change', function() {
-            if ($(this).is(":checked")) {
-                $('#module_tlds input[type=checkbox]:not(:disabled)').prop("checked", true);
-            } else {
-                $('#module_tlds input[type=checkbox]:not(:disabled)').prop("checked", false);
-            }
-        });
+        const selectAll = document.getElementById('select_all');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('#module_tlds input[type="checkbox"]:not(:disabled)');
+                checkboxes.forEach(function(checkbox) {
+                    checkbox.checked = selectAll.checked;
+                });
+            });
+        }
 
         // Force at least one term
-        $("#module_terms input[type=checkbox]").on('change', function() {
-            if ($("input[type=checkbox]:checked").length === 0) {
-                alert('<?php echo $this->_('AdminDomains.import.text_terms_notice', true);?>');
-                $(this).prop("checked", true);
-            }
+        const termCheckboxes = document.querySelectorAll('#module_terms input[type="checkbox"]');
+        termCheckboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                const checkedCount = document.querySelectorAll('#module_terms input[type="checkbox"]:checked').length;
+                if (checkedCount === 0) {
+                    alert('<?php echo $this->_('AdminDomains.import.text_terms_notice', true);?>');
+                    checkbox.checked = true;
+                }
+            });
         });
 
-        // Get module TLDs
-        $("#module_id").on('change', function() {
-            var module_id = $(this).val();
+        // Get module TLDs when module is selected
+        const moduleSelect = document.getElementById('module_id');
+        if (moduleSelect) {
+            moduleSelect.addEventListener('change', function() {
+                const moduleId = this.value;
+                if (moduleId) {
+                    loadModuleTLDs(moduleId);
+                }
+            });
+        }
 
-            $("#import_tlds_button").removeAttr('disabled').show();
-            $("#select_all").removeAttr('disabled').prop("checked", false);
-
-            // Remove all TLDs
-            $('#module_tlds ul li').html('<i class="fas fa-spinner fa-spin"></i>');
-            $('#module_tlds .pad .error_section').remove();
-            $('#module_tlds').show();
-
-            $(this).blestaRequest(
-                "GET",
-                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/getmoduletlds/');?>' + module_id + '/',
-                null,
-                function(response) {
-                    // Show alert message, if any
-                    if (response.hasOwnProperty('message')) {
-                        $('#module_tlds .pad').prepend(response.message);
-                        $("#module_terms input:checkbox").prop('checked', false);
-                    }
-
-                    // Show terms, if supported
-                    if (response.terms) {
-                        $('#module_terms').show();
-                    } else {
-                        $('#module_terms').hide();
-                    }
-
-                    // Add the TLDs to the form
-                    $('#module_tlds ul li').html('');
-                    $.each(response.tlds, function(tld, tld_object){
-                        if (tld == '.') {
-                            return;
-                        }
-
-                        var checkbox = $('<input>', {
-                            "type": 'checkbox',
-                            "name": 'tlds[' + tld + ']',
-                            "id": 'tld_' + tld,
-                            "data-tld": tld,
-                            "value": '1',
-                            "class": 'mb-1'
-                        });
-                        var tld_html = $('<div>', {
-                            class: 'tld-box'
-                        });
-
-                        if (tld_object.disabled) {
-                            checkbox = $('<input>', {
-                                "type": 'checkbox',
-                                "name": 'tlds[' + tld + ']',
-                                "id": 'tld_' + tld,
-                                "data-tld": tld,
-                                "value": '1',
-                                "class": 'mb-1',
-                                "disabled": 'disabled'
-                            });
-                            tld_html = $('<div>', {
-                                class: 'tld-box text-black-50'
-                            });
-                        }
-                        $(checkbox).appendTo(tld_html);
-                        $($('<label>', {
-                            for: 'tld_' + tld,
-                            class: 'inline ml-1'
-                        }).text(tld_object.name)).appendTo(tld_html);
-
-                        $('#module_tlds ul li').append(tld_html);
-                    });
-                },
-                null,
-                {dataType: 'json'}
-            );
-        });
-    });
-
-    function loadModules() {
-        $(this).blestaRequest(
-            "GET",
-            '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/getimportmodules/');?>',
-            null,
-            function(modules) {
-                // Remove all options
-                $('#module_id').empty();
-                $('#module_tlds ul li').empty();
-                $('#module_tlds').hide();
-                $('#module_terms').hide();
-                $("#module_terms input:checkbox").prop('checked', true);
-                $('#module_tlds .pad .error_section').remove();
-
-                // Add "Please Select" option
-                $('#module_id').append($('<option>', {
-                    value: '',
-                    text: '<?php echo addslashes($this->_('AppController.select.please', true));?>'
-                }));
-
-                // Add modules to the select field
-                $.each(modules, function(module_id, module_name){
-                    $('#module_id').append($('<option>', {
-                        value: module_id,
-                        text: module_name
-                    }));
-                });
-            },
-            null,
-            {dataType: 'json'}
-        );
+        // Import TLDs form submission
+        const importForm = document.getElementById('import_tlds_form');
+        if (importForm) {
+            importForm.addEventListener('submit', handleImport);
+        }
     }
 
-    // Import TLDs
-    $("#import_tlds_form").submit(function(event) {
-        event.preventDefault();
+    /**
+     * Load registrar modules
+     */
+    function loadModules() {
+        fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/getimportmodules/');?>', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(modules => {
+            // Remove all options
+            const moduleSelect = document.getElementById('module_id');
+            if (!moduleSelect) return;
 
-        $("#import_tlds_button").attr('disabled','disabled').hide();
-        $("#module_tlds input:checkbox:not(:checked)").each(function() {
-            $(this).parent().remove();
+            moduleSelect.innerHTML = '';
+
+            // Clear TLD grid
+            const tldGrid = document.getElementById('tld_grid');
+            if (tldGrid) {
+                tldGrid.innerHTML = '<div class="text-center w-100"><i class="bi bi-spinner fa-spin"></i></div>';
+            }
+
+            // Hide sections
+            document.getElementById('module_tlds').style.display = 'none';
+            document.getElementById('module_terms').style.display = 'none';
+
+            // Uncheck all terms
+            const termCheckboxes = document.querySelectorAll('#module_terms input[type="checkbox"]');
+            termCheckboxes.forEach(cb => cb.checked = true);
+
+            // Add "Please Select" option
+            const pleaseSelectOption = document.createElement('option');
+            pleaseSelectOption.value = '';
+            pleaseSelectOption.textContent = '<?php echo addslashes($this->_('AppController.select.please', true));?>';
+            moduleSelect.appendChild(pleaseSelectOption);
+
+            // Add modules to the select field
+            for (const moduleId in modules) {
+                const option = document.createElement('option');
+                option.value = moduleId;
+                option.textContent = modules[moduleId];
+                moduleSelect.appendChild(option);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading modules:', error);
         });
+    }
 
-        var total_tlds = $('.tld-box').length;
-        $(".tld-box").each(function(i) {
-            if ($(this).find('input[type="checkbox"]').is(":checked")) {
-                var tld_box = $(this);
+    /**
+     * Load TLDs for selected module
+     */
+    function loadModuleTLDs(moduleId) {
+        // Enable import button and show TLD section
+        const importButton = document.getElementById('import_tlds_button');
+        const selectAll = document.getElementById('select_all');
+        const moduleTlds = document.getElementById('module_tlds');
+        const tldGrid = document.getElementById('tld_grid');
 
-                // Show spinning wheel
-                $(this).addClass("current");
-                $(this).find('input[type="checkbox"]').hide();
+        if (importButton) {
+            importButton.disabled = false;
+            importButton.style.display = 'inline-block';
+        }
 
-                // Disable all other checkboxes, except the current one
-                $('#module_tlds input[type="checkbox"]').attr('disabled','disabled');
-                $(this).find('input[type="checkbox"]').removeAttr('disabled');
+        if (selectAll) {
+            selectAll.disabled = false;
+            selectAll.checked = false;
+        }
 
-                // Import TLD through AJAX
-                $(this).blestaRequest(
-                    "POST",
-                    $('#import_tlds_form').attr('action'),
-                    $('#import_tlds_form').serialize("serialize"),
-                    function(response) {
-                        if (response.hasOwnProperty('message')) {
-                            tld_box.removeClass("current").addClass("success");
-                            if ($(".tld-box.current").length === 0 && $(".tld-box.failed").length === 0) {
-                                $(".message_box").html(response.message);
-                            }
-                        } else {
-                            tld_box.removeClass("current").addClass("failed");
+        // Show loading state
+        if (tldGrid) {
+            tldGrid.innerHTML = '<div class="text-center w-100"><i class="bi bi-spinner fa-spin"></i></div>';
+        }
 
-                            if (response.hasOwnProperty('error')) {
-                                $(".message_box").html(response.error);
-                            }
-                        }
+        if (moduleTlds) {
+            moduleTlds.style.display = 'block';
+        }
 
-                        if (i === (total_tlds - 1)) {
-                            $('#restart_button').show();
-                        }
-                    },
-                    function(error) {
-                        tld_box.removeClass("current").addClass("failed");
+        // Remove any existing error messages
+        const errorSections = moduleTlds.querySelectorAll('.error_section');
+        errorSections.forEach(section => section.remove());
+
+        // Fetch TLDs from server
+        fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/getmoduletlds/');?>' + moduleId + '/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(response => {
+            // Show alert message, if any
+            if (response.message) {
+                const pad = moduleTlds.querySelector('.pad');
+                if (pad) {
+                    pad.insertAdjacentHTML('afterbegin', response.message);
+                }
+                // Uncheck all terms
+                const termCheckboxes = document.querySelectorAll('#module_terms input[type="checkbox"]');
+                termCheckboxes.forEach(cb => cb.checked = false);
+            }
+
+            // Show/hide terms based on module support
+            const moduleTerms = document.getElementById('module_terms');
+            if (moduleTerms) {
+                moduleTerms.style.display = response.terms ? 'block' : 'none';
+            }
+
+            // Build TLD grid
+            if (tldGrid) {
+                tldGrid.innerHTML = '';
+
+                for (const tld in response.tlds) {
+                    if (tld === '.') continue;
+
+                    const tldObject = response.tlds[tld];
+                    const wrapperDiv = document.createElement('div');
+
+                    // Add tld-imported class if TLD is already imported
+                    if (tldObject.disabled) {
+                        wrapperDiv.className = 'tld-imported';
                     }
-                );
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = 'tlds[' + tld + ']';
+                    checkbox.id = 'tld_' + tld;
+                    checkbox.dataset.tld = tld;
+                    checkbox.value = '1';
+                    checkbox.className = '';
+
+                    if (tldObject.disabled) {
+                        checkbox.disabled = true;
+                        checkbox.checked = true;
+                    }
+
+                    const label = document.createElement('label');
+                    label.className = 'tld-import-card';
+                    label.htmlFor = 'tld_' + tld;
+
+                    if (tldObject.disabled) {
+                        label.innerHTML = '<i class="bi bi-check-circle"></i> .' + tld;
+                    } else {
+                        label.textContent = '.' + tld;
+                    }
+
+                    wrapperDiv.appendChild(checkbox);
+                    wrapperDiv.appendChild(label);
+                    tldGrid.appendChild(wrapperDiv);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading TLDs:', error);
+            if (tldGrid) {
+                tldGrid.innerHTML = '<div class="text-center w-100 text-danger">Error loading TLDs</div>';
             }
         });
-    });
+    }
+
+    /**
+     * Handle TLD import
+     */
+    function handleImport(event) {
+        event.preventDefault();
+
+        const importButton = document.getElementById('import_tlds_button');
+        const restartButton = document.getElementById('restart_button');
+        const form = event.target;
+        const tldGrid = document.getElementById('tld_grid');
+        const messageBox = document.querySelector('.message_box');
+
+        // Disable and hide import button
+        if (importButton) {
+            importButton.disabled = true;
+            importButton.style.display = 'none';
+        }
+
+        // Remove unchecked TLDs
+        const tldBoxes = tldGrid.querySelectorAll('.tld-box');
+        const uncheckedBoxes = [];
+
+        tldBoxes.forEach(function(box) {
+            const checkbox = box.querySelector('input[type="checkbox"]');
+            if (checkbox && !checkbox.checked) {
+                uncheckedBoxes.push(box);
+            }
+        });
+
+        uncheckedBoxes.forEach(function(box) {
+            box.remove();
+        });
+
+        // Process each TLD
+        const remainingBoxes = tldGrid.querySelectorAll('.tld-box');
+        const totalTlds = remainingBoxes.length;
+
+        if (totalTlds === 0) {
+            if (restartButton) {
+                restartButton.style.display = 'inline-block';
+            }
+            return;
+        }
+
+        remainingBoxes.forEach(function(tldBox, index) {
+            const checkbox = tldBox.querySelector('input[type="checkbox"]');
+
+            if (checkbox && checkbox.checked) {
+                // Mark as current and hide checkbox
+                tldBox.classList.add('current');
+                checkbox.style.display = 'none';
+
+                // Disable all other checkboxes
+                const allCheckboxes = tldGrid.querySelectorAll('input[type="checkbox"]');
+                allCheckboxes.forEach(cb => cb.disabled = true);
+                checkbox.disabled = false;
+
+                // Prepare form data
+                const formData = new FormData(form);
+                const serializedData = new URLSearchParams(formData).toString();
+
+                // Import TLD through AJAX
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    },
+                    body: serializedData,
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(response => {
+                    tldBox.classList.remove('current');
+
+                    if (response.message) {
+                        tldBox.classList.add('success');
+
+                        // Check if all TLDs are processed
+                        const currentBoxes = tldGrid.querySelectorAll('.tld-box.current');
+                        const failedBoxes = tldGrid.querySelectorAll('.tld-box.failed');
+
+                        if (currentBoxes.length === 0 && failedBoxes.length === 0 && messageBox) {
+                            messageBox.innerHTML = response.message;
+                        }
+                    } else {
+                        tldBox.classList.add('failed');
+                        if (response.error && messageBox) {
+                            messageBox.innerHTML = response.error;
+                        }
+                    }
+
+                    // Show restart button on last TLD
+                    if (index === (totalTlds - 1) && restartButton) {
+                        restartButton.style.display = 'inline-block';
+                    }
+                })
+                .catch(error => {
+                    tldBox.classList.remove('current');
+                    tldBox.classList.add('failed');
+
+                    if (index === (totalTlds - 1) && restartButton) {
+                        restartButton.style.display = 'inline-block';
+                    }
+                });
+            }
+        });
+    }
+})();
 </script>

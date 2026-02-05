@@ -1,133 +1,149 @@
 
-    <div class="title_row first">
-        <h3><?php (print (isset($package->name) ? $this->Html->safe($package->name) : null));?></h3>
-    </div>
-    <div class="pad">
-        <ul>
-            <li>
-                <label><?php $this->_('AdminMain.add_confirmation.field_domain');?></label>
-                <?php echo $this->Html->safe($domain ?? '');?>
-            </li>
-            <li>
-                <label><?php $this->_('AdminMain.add_confirmation.field_years');?></label>
-                <?php echo $this->Html->safe($vars->qty ?? 1);?>
-            </li>
-            <li>
-                <label><?php $this->_('AdminMain.add_confirmation.field_type');?></label>
-                <?php $this->_('AdminMain.add_confirmation.type_' . ($action ?? 'register'));?>
-            </li>
-            <li>
-                <label><?php $this->_('AdminMain.add_confirmation.field_price');?></label>
-                <?php echo $this->CurrencyFormat->format($pricing->price ?? 0, $pricing->currency ?? 'USD');?>
-            </li>
-            <li>
-                <label><?php $this->_('AdminMain.add_confirmation.field_module');?></label>
-                <?php (print (isset($module->name) ? $this->Html->safe($module->name) : null));?>
-            </li>
-            <li>
-                <label><?php $this->_('AdminMain.add_confirmation.field_invoice_method');?></label>
-                <?php $this->_('AdminMain.add_confirmation.field_invoice_method_' . ($vars->invoice_method ?? 'create'), false, ($invoice->id_code ?? null));?>
-            </li>
-            <li>
-                <label><?php $this->_('AdminMain.add_confirmation.field_notify_order');?></label>
-                <?php $this->_('AdminMain.add_confirmation.field_notify_order_' . ($vars->notify_order ?? 'false'));?>
-            </li>
-            <li>
-                <label><?php $this->_('AdminMain.add_confirmation.field_status');?></label>
-                <?php (print (isset($status[$vars->status]) ? $this->Html->safe($status[$vars->status]) : null));?>
-            </li>
-        </ul>
-    </div>
+<h6><?php (print (isset($package->name) ? $this->Html->safe($package->name) : null));?></h6>
+<div class="mb-3">
+    <div class="card bg-light">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-5"><?php $this->_('AdminMain.add_confirmation.field_domain');?></dt>
+                <dd class="col-sm-7"><?php echo $this->Html->safe($domain ?? '');?></dd>
 
-    <table class="table">
-        <tbody>
-            <tr class="heading_row">
-                <td><?php $this->_('AdminMain.add_confirmation.description');?></td>
-                <td><?php $this->_('AdminMain.add_confirmation.qty');?></td>
-                <td><?php $this->_('AdminMain.add_confirmation.price');?></td>
+                <dt class="col-sm-5"><?php $this->_('AdminMain.add_confirmation.field_years');?></dt>
+                <dd class="col-sm-7"><?php echo $this->Html->safe($vars->qty ?? 1);?></dd>
+
+                <dt class="col-sm-5"><?php $this->_('AdminMain.add_confirmation.field_type');?></dt>
+                <dd class="col-sm-7"><?php $this->_('AdminMain.add_confirmation.type_' . ($action ?? 'register'));?></dd>
+
+                <dt class="col-sm-5"><?php $this->_('AdminMain.add_confirmation.field_price');?></dt>
+                <dd class="col-sm-7"><?php echo $this->CurrencyFormat->format($pricing->price ?? 0, $pricing->currency ?? 'USD');?></dd>
+
+                <dt class="col-sm-5"><?php $this->_('AdminMain.add_confirmation.field_module');?></dt>
+                <dd class="col-sm-7"><?php (print (isset($module->name) ? $this->Html->safe($module->name) : null));?></dd>
+
+                <dt class="col-sm-5"><?php $this->_('AdminMain.add_confirmation.field_invoice_method');?></dt>
+                <dd class="col-sm-7"><?php $this->_('AdminMain.add_confirmation.field_invoice_method_' . ($vars->invoice_method ?? 'create'), false, ($invoice->id_code ?? null));?></dd>
+
+                <dt class="col-sm-5"><?php $this->_('AdminMain.add_confirmation.field_notify_order');?></dt>
+                <dd class="col-sm-7"><?php $this->_('AdminMain.add_confirmation.field_notify_order_' . ($vars->notify_order ?? 'false'));?></dd>
+
+                <dt class="col-sm-5"><?php $this->_('AdminMain.add_confirmation.field_status');?></dt>
+                <dd class="col-sm-7"><?php (print (isset($status[$vars->status]) ? $this->Html->safe($status[$vars->status]) : null));?></dd>
+            </dl>
+        </div>
+    </div>
+</div>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th><?php $this->_('AdminMain.add_confirmation.description');?></th>
+            <th><?php $this->_('AdminMain.add_confirmation.qty');?></th>
+            <th><?php $this->_('AdminMain.add_confirmation.price');?></th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        $i = 0;
+        foreach (($items ?? null) as $item) {
+        ?>
+            <tr<?php echo $i % 2 == 1 ? ' class="table-light"' : '';?>>
+                <td><?php (print (isset($item['description']) ? $this->Html->safe($item['description']) : null));?></td>
+                <td><?php echo ($item['qty'] ?? 1);?></td>
+                <td><?php (print (isset($item['price']) ? $this->Html->safe($item['price']) : null));?></td>
             </tr>
-            <?php
-            $i = 0;
-            foreach (($items ?? null) as $item) {
-            ?>
-                <tr<?php echo $i % 2 == 1 ? ' class="odd_row"' : '';?>>
-                    <td><?php (print (isset($item['description']) ? $this->Html->safe($item['description']) : null));?></td>
-                    <td><?php echo ($item['qty'] ?? 1);?></td>
-                    <td><?php (print (isset($item['price']) ? $this->Html->safe($item['price']) : null));?></td>
-                </tr>
-            <?php
-                $i++;
-            }
-            unset($i);
-            ?>
-        </tbody>
-    </table>
+        <?php
+            $i++;
+        }
+        unset($i);
+        ?>
+    </tbody>
+</table>
 
-    <?php
-    $this->Form->create();
+<?php
+$this->Form->create();
 
-    function parseFields($vars, $that, $parent_key = null) {
-        foreach((array) ($vars ?? []) as $key => $value) {
-            $value_key = $parent_key ? ($parent_key . '[' . $key . ']') : $key;
-            if (is_array($value)) {
-                parseFields($value, $that, $value_key);
-            } else {
-                $that->Form->fieldHidden($value_key, $value);
-            }
+function parseFields($vars, $that, $parent_key = null) {
+    foreach((array) ($vars ?? []) as $key => $value) {
+        $value_key = $parent_key ? ($parent_key . '[' . $key . ']') : $key;
+        if (is_array($value)) {
+            parseFields($value, $that, $value_key);
+        } else {
+            $that->Form->fieldHidden($value_key, $value);
         }
     }
-    parseFields($vars, $this);
-    ?>
-        <div class="pad reverse">
-            <div class="date_section">
-                <div class="line">
-                    <?php
-                    $this->Form->label($this->_('AdminMain.add_confirmation.field_coupon_code', true), 'coupon_code');
-                    $this->Form->fieldText('coupon_code', ($vars->coupon_code ?? null), ['id' => 'coupon_code', 'class' => 'medium']);
-
-                    $this->Form->fieldSubmit('submit', $this->_('AdminMain.add_confirmation.field_update_coupon', true), ['class' => 'btn btn-primary btn-xs']);
-                    ?>
-                </div>
+}
+parseFields($vars, $this);
+?>
+    <div class="mb-3">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-8">
+                <?php
+                $this->Form->label($this->_('AdminMain.add_confirmation.field_coupon_code', true), 'coupon_code', ['class' => 'form-label']);
+                $this->Form->fieldText('coupon_code', ($vars->coupon_code ?? null), ['id' => 'coupon_code', 'class' => 'form-control']);
+                ?>
+            </div>
+            <div class="col-md-4">
+                <?php
+                $this->Form->fieldSubmit('submit', $this->_('AdminMain.add_confirmation.field_update_coupon', true), ['class' => 'btn btn-outline-secondary w-100 mt-4']);
+                ?>
             </div>
         </div>
+    </div>
 
-        <div class="sub_total_box">
-            <div class="line">
-                <span><?php $this->_('AdminMain.add_confirmation.subtotal');?></span>
-                <em><?php (print (isset($line_totals['subtotal']) ? $this->Html->safe($line_totals['subtotal']) : null));?></em>
+    <div class="card bg-light">
+        <div class="card-body">
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <span><?php $this->_('AdminMain.add_confirmation.subtotal');?></span>
+                </div>
+                <div class="col-6 text-end">
+                    <?php (print (isset($line_totals['subtotal']) ? $this->Html->safe($line_totals['subtotal']) : null));?>
+                </div>
             </div>
             <?php
             if (($line_totals['discount'] ?? null)) {
             ?>
-            <div class="line">
-                <span><?php $this->_('AdminMain.add_confirmation.discount');?></span>
-                <em><?php (print (isset($line_totals['discount']) ? $this->Html->safe($line_totals['discount']) : null));?></em>
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <span><?php $this->_('AdminMain.add_confirmation.discount');?></span>
+                </div>
+                <div class="col-6 text-end text-success">
+                    <?php (print (isset($line_totals['discount']) ? $this->Html->safe($line_totals['discount']) : null));?>
+                </div>
             </div>
             <?php
             }
             if (($line_totals['tax'] ?? null)) {
                 foreach ($line_totals['tax'] as $description => $tax) {
             ?>
-                <div class="line">
-                    <span><?php (print (isset($description) ? $this->Html->safe($description) : null));?></span>
-                    <em><?php (print (isset($tax) ? $this->Html->safe($tax) : null));?></em>
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <span><?php (print (isset($description) ? $this->Html->safe($description) : null));?></span>
+                    </div>
+                    <div class="col-6 text-end">
+                        <?php (print (isset($tax) ? $this->Html->safe($tax) : null));?>
+                    </div>
                 </div>
             <?php
                 }
             }
             ?>
-            <div class="line total">
-                <span></span>
-                <strong><em><?php (print (isset($line_totals['total_without_exclusive_tax']) ? $this->Html->safe($line_totals['total_without_exclusive_tax']) : null));?></em></strong>
+            <div class="row g-2">
+                <div class="col-6">
+                    <span class="fw-bold"><?php $this->_('AdminMain.add_confirmation.total');?></span>
+                </div>
+                <div class="col-6 text-end">
+                    <strong><?php (print (isset($line_totals['total_without_exclusive_tax']) ? $this->Html->safe($line_totals['total_without_exclusive_tax']) : null));?></strong>
+                </div>
             </div>
         </div>
+    </div>
 
-        <div class="button_row">
-            <?php
-            $this->Form->fieldSubmit('save', $this->_('AdminMain.add_confirmation.field_add', true), ['class' => 'btn btn-primary pull-right']);
-            $this->Form->fieldSubmit('edit', $this->_('AdminMain.add_confirmation.field_edit', true), ['class' => 'btn btn-default pull-right']);
-            ?>
-        </div>
-    <?php
-    $this->Form->end();
-    ?>
+    <div class="button_row">
+        <?php
+        $this->Form->fieldSubmit('save', $this->_('AdminMain.add_confirmation.field_add', true), ['class' => 'btn btn-primary float-end']);
+        $this->Form->fieldSubmit('edit', $this->_('AdminMain.add_confirmation.field_edit', true), ['class' => 'btn btn-outline-secondary float-end me-2']);
+        ?>
+    </div>
+<?php
+$this->Form->end();
+?>

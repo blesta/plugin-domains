@@ -1,167 +1,260 @@
 
-    <?php
-    $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id ?? null) . '/confirmation/', ['id' => 'add_configuration']);
+<?php
+$this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id ?? null) . '/confirmation/', ['id' => 'add_configuration']);
 
-    $this->Form->fieldHidden('domain', $vars->domain ?? '');
-    if (($action ?? 'register') == 'transfer') {
-        $this->Form->fieldHidden('transfer', '1');
-    }
-    if (($action ?? 'register') == 'register') {
-        $this->Form->fieldHidden('register', '1');
-    }
-    ?>
-    <div class="title_row first">
-        <h3><?php echo $this->_('AdminMain.add.title_basic_options', true);?></h3>
-    </div>
-    <div class="pad">
-        <ul>
-            <li>
-                <?php $this->Form->label($this->_('AdminMain.add.field_invoice_method', true));?>
+$this->Form->fieldHidden('domain', $vars->domain ?? '');
+if (($action ?? 'register') == 'transfer') {
+    $this->Form->fieldHidden('transfer', '1');
+}
+if (($action ?? 'register') == 'register') {
+    $this->Form->fieldHidden('register', '1');
+}
+?>
+<h6><?php echo $this->_('AdminMain.add.title_basic_options', true);?></h6>
+<div class="card bg-light mb-3">
+    <div class="card-body">
+        <div class="mb-3">
+            <?php $this->Form->label($this->_('AdminMain.add.field_invoice_method', true), 'invoice_method_create', ['class' => 'form-label']);?>
 
+            <div class="form-check mb-2">
                 <?php
-                $this->Form->fieldRadio('invoice_method', 'create', !isset($vars->invoice_method) || ($vars->invoice_method ?? null) == 'create', ['id' => 'invoice_method_create']);
-                $this->Form->label($this->_('AdminMain.add.field_invoice_method_create', true), 'invoice_method_create', ['class' => 'inline']);
+                $this->Form->fieldRadio('invoice_method', 'create', !isset($vars->invoice_method) || ($vars->invoice_method ?? null) == 'create', ['id' => 'invoice_method_create', 'class' => 'form-check-input']);
+                $this->Form->label($this->_('AdminMain.add.field_invoice_method_create', true), 'invoice_method_create', ['class' => 'form-check-label']);
                 ?>
+            </div>
 
+            <?php
+            if (!empty($invoices)) {
+            ?>
+                <div class="form-check mb-2">
+                    <?php
+                    $this->Form->fieldRadio('invoice_method', 'append', ($vars->invoice_method ?? null) == 'append', ['id' => 'invoice_method_append', 'class' => 'form-check-input']);
+                    $this->Form->label($this->_('AdminMain.add.field_invoice_method_append', true), 'invoice_method_append', ['class' => 'form-check-label']);
+                    ?>
+                </div>
+                <div class="ms-4 mb-2">
+                    <?php $this->Form->fieldSelect('invoice_id', $invoices, ($vars->invoice_id ?? null), ['class' => 'form-select']);?>
+                </div>
+            <?php
+            }
+            ?>
+
+            <div class="form-check">
                 <?php
-                if (!empty($invoices)) {
-                    $this->Form->fieldRadio('invoice_method', 'append', ($vars->invoice_method ?? null) == 'append', ['id' => 'invoice_method_append']);
-                    $this->Form->label($this->_('AdminMain.add.field_invoice_method_append', true), 'invoice_method_append', ['class' => 'inline']);
-                    $this->Form->fieldSelect('invoice_id', $invoices, ($vars->invoice_id ?? null), ['class' => 'inline']);
-                }
+                $this->Form->fieldRadio('invoice_method', 'none', ($vars->invoice_method ?? null) == 'none', ['id' => 'invoice_method_none', 'class' => 'form-check-input']);
+                $this->Form->label($this->_('AdminMain.add.field_invoice_method_dont', true), 'invoice_method_none', ['class' => 'form-check-label']);
                 ?>
+            </div>
+        </div>
 
-                <?php
-                $this->Form->fieldRadio('invoice_method', 'none', ($vars->invoice_method ?? null) == 'none', ['id' => 'invoice_method_none']);
-                $this->Form->label($this->_('AdminMain.add.field_invoice_method_dont', true), 'invoice_method_none', ['class' => 'inline']);
-                ?>
-            </li>
-            <li>
-                <?php $this->Form->label($this->_('AdminMain.add.field_years', true));?>
-                <?php $this->Form->fieldSelect('years', $years ?? [], ($vars->years ?? null), ['id' => 'years']);?>
-                <a class="ml-1" id="refresh_modules" href="#"><i class="fas fa-sync"></i> <?php $this->_('AdminMain.add.text_refresh');?></a>
-                <a class="d-block mt-1" href="<?php echo $this->base_uri . 'packages/edit/' . (isset($package->id) ? $this->Html->safe($package->id) : null) . '/'; ?>" target="_blank" id="package_edit_link">
-                    <i class="fas fa-edit"></i> <?php $this->_('AdminMain.add.edit_package_pricing'); ?>
-                </a>
-            </li>
-            <li>
-                <?php $this->Form->label($this->_('AdminMain.add.field_status', true));?>
-                <?php $this->Form->fieldSelect('status', $status ?? [], ($vars->status ?? null), ['id' => 'status']);?>
-            </li>
-            <li>
-                <?php $this->Form->label($this->_('AdminMain.add.field_module', true));?>
-                <?php $this->Form->fieldSelect('module', $modules ?? [], ($vars->module ?? null), ['id' => 'module']);?>
-            </li>
-            <li>
-                <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module']);?>
-                <?php $this->Form->label($this->_('AdminMain.add.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'inline']);?>
-            </li>
-            <li>
-                <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order']);?>
-                <?php $this->Form->label($this->_('AdminMain.add.field_notify_order', true), 'notify_order', ['class' => 'inline']);?>
-            </li>
-        </ul>
-    </div>
+        <div class="mb-3">
+            <?php $this->Form->label($this->_('AdminMain.add.field_years', true), 'years', ['class' => 'form-label']);?>
+            <div class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <?php $this->Form->fieldSelect('years', $years ?? [], ($vars->years ?? null), ['id' => 'years', 'class' => 'form-select']);?>
+                </div>
+                <div class="col-auto">
+                    <a id="refresh_modules" href="#" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i> <?php $this->_('AdminMain.add.text_refresh');?>
+                    </a>
+                </div>
+            </div>
+            <a class="d-block mt-1 text-primary small" href="<?php echo $this->base_uri . 'packages/edit/' . (isset($package->id) ? $this->Html->safe($package->id) : null) . '/'; ?>" target="_blank" id="package_edit_link">
+                <i class="bi bi-pencil-square"></i> <?php $this->_('AdminMain.add.edit_package_pricing'); ?>
+            </a>
+        </div>
 
-    <div class="title_row">
-        <h3><?php echo $this->_('AdminMain.add.title_registrar_options', true);?></h3>
+        <div class="mb-3">
+            <?php $this->Form->label($this->_('AdminMain.add.field_status', true), 'status', ['class' => 'form-label']);?>
+            <?php $this->Form->fieldSelect('status', $status ?? [], ($vars->status ?? null), ['id' => 'status', 'class' => 'form-select']);?>
+        </div>
+
+        <div class="mb-3">
+            <?php $this->Form->label($this->_('AdminMain.add.field_module', true), 'module', ['class' => 'form-label']);?>
+            <?php $this->Form->fieldSelect('module', $modules ?? [], ($vars->module ?? null), ['id' => 'module', 'class' => 'form-select']);?>
+        </div>
+
+        <div class="form-check mb-2">
+            <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module', 'class' => 'form-check-input']);?>
+            <?php $this->Form->label($this->_('AdminMain.add.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'form-check-label']);?>
+        </div>
+
+        <div class="form-check">
+            <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order', 'class' => 'form-check-input']);?>
+            <?php $this->Form->label($this->_('AdminMain.add.field_notify_order', true), 'notify_order', ['class' => 'form-check-label']);?>
+        </div>
     </div>
-    <div class="pad">
+</div>
+
+<h6><?php echo $this->_('AdminMain.add.title_registrar_options', true);?></h6>
+<div class="card bg-light mb-3">
+    <div class="card-body">
         <div id="module_fields"></div>
     </div>
+</div>
 
-    <div class="button_row">
-        <?php
-        $this->Form->fieldSubmit('submit', $this->_('AdminMain.add.field_submit', true), ['class' => 'btn btn-primary pull-right']);
-        ?>
-    </div>
-    <div class="clearfix"></div>
+<div class="button_row">
     <?php
-    $this->Form->end();
+    $this->Form->fieldSubmit('submit', $this->_('AdminMain.add.field_submit', true), ['class' => 'btn btn-primary float-end']);
     ?>
+</div>
+<?php
+$this->Form->end();
+?>
 
 <script type="text/javascript">
-    $(document).ready(function() {
-        $('#module').on('change', function() {
-            updateModuleFields();
-            updatePricingOptions();
-        });
-        $('#refresh_modules').on('click', function() {
-            updatePricingOptions();
-        });
+(function() {
+    'use strict';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('add_configuration');
+        if (!form) return;
+
+        const moduleSelect = document.getElementById('module');
+        const refreshLink = document.getElementById('refresh_modules');
+        const statusSelect = document.getElementById('status');
+        const useModuleCheckbox = document.getElementById('use_module');
+        const notifyOrderCheckbox = document.getElementById('notify_order');
+
+        // Module change handler
+        if (moduleSelect) {
+            moduleSelect.addEventListener('change', function() {
+                updateModuleFields();
+                updatePricingOptions();
+            });
+        }
+
+        // Refresh button handler
+        if (refreshLink) {
+            refreshLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                updatePricingOptions();
+            });
+        }
+
+        // Status change handler
+        if (statusSelect) {
+            statusSelect.addEventListener('change', function() {
+                updateStatusFields();
+            });
+        }
+
+        // Initialize
         updateModuleFields();
         updatePricingOptions();
-
-        function updateModuleFields() {
-            var module_id = $('#module').val();
-
-            $(this).blestaRequest(
-                "POST",
-                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getmodulefields/');?>' + module_id + '/<?php echo $this->Html->safe($package->id ?? null);?>/',
-                <?php echo json_encode($vars);?>,
-                function(response) {
-                    $('#module_fields').html(response);
-                },
-                null,
-                {dataType: 'json'}
-            );
-        }
-
-        function updatePricingOptions() {
-            var module_id = $('#module').val();
-            $(this).blestaRequest(
-                "POST",
-                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getpricing/');?>' + module_id + '/<?php echo $this->Html->safe($package->id ?? null);?>/',
-                null,
-                function(data) {
-                    // Remove all existing items
-                    $("option", "#years").remove();
-
-                    // Append all new items
-                    $.each($(this).blestaSortObject(data.pricing), function(index, item) {
-                        $("#years").append(new Option(item.value, item.key));
-                    });
-
-                    $("#years option[value*='<?php echo $this->Html->safe($client->settings['default_currency'] ?? null); ?>']").first().prop('selected', 'selected');
-
-                    $("#package_edit_link").attr("href", '<?php echo $this->base_uri . 'packages/edit/'; ?>' + data.package_id + '/')
-                },
-                null,
-                {dataType: 'json'}
-            );
-        }
-
-        $('#status').on('change', function() {
-            updateStatusFields();
-        });
         updateStatusFields();
 
+        /**
+         * Update module fields via AJAX
+         */
+        function updateModuleFields() {
+            const moduleId = moduleSelect ? moduleSelect.value : '';
+
+            const formData = new FormData();
+            formData.append('_csrf_token', form.querySelector('input[name="_csrf_token"]').value);
+
+            // Add all form data
+            const formInputs = form.querySelectorAll('input, select, textarea');
+            formInputs.forEach(input => {
+                if (input.name && input.type !== 'checkbox' || input.checked) {
+                    formData.append(input.name, input.value);
+                }
+            });
+
+            fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getmodulefields/');?>' + moduleId + '/<?php echo $this->Html->safe($package->id ?? null);?>/', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const moduleFields = document.getElementById('module_fields');
+                if (moduleFields && data.content) {
+                    moduleFields.innerHTML = data.content;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading module fields:', error);
+            });
+        }
+
+        /**
+         * Update pricing options via AJAX
+         */
+        function updatePricingOptions() {
+            const moduleId = moduleSelect ? moduleSelect.value : '';
+
+            const formData = new FormData();
+            const csrfToken = form.querySelector('input[name="_csrf_token"]');
+            if (csrfToken) {
+                formData.append('_csrf_token', csrfToken.value);
+            }
+
+            fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getpricing/');?>' + moduleId + '/<?php echo $this->Html->safe($package->id ?? null);?>/', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const yearsSelect = document.getElementById('years');
+                const packageEditLink = document.getElementById('package_edit_link');
+
+                if (yearsSelect && data.pricing) {
+                    // Remove all existing options
+                    yearsSelect.innerHTML = '';
+
+                    // Add new options
+                    for (const [key, value] of Object.entries(data.pricing)) {
+                        const option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = value;
+                        yearsSelect.appendChild(option);
+                    }
+
+                    // Select first option matching currency
+                    const defaultCurrency = '<?php echo $this->Html->safe($client->settings['default_currency'] ?? null); ?>';
+                    const currencyOptions = yearsSelect.querySelectorAll('option[value*="' + defaultCurrency + '"]');
+                    if (currencyOptions.length > 0) {
+                        currencyOptions[0].selected = true;
+                    }
+                }
+
+                if (packageEditLink && data.package_id) {
+                    packageEditLink.href = '<?php echo $this->base_uri . 'packages/edit/'; ?>' + data.package_id + '/';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading pricing:', error);
+            });
+        }
+
+        /**
+         * Update status field states
+         */
         function updateStatusFields() {
-            var status = $('#status').val();
+            const status = statusSelect ? statusSelect.value : '';
 
             if (status !== 'active') {
-                $('#use_module').prop('disabled', true);
-                $('#notify_order').prop('disabled', true);
-
-                if (status == 'pending') {
-                    $('#use_module').prop('checked', true);
-                    $('#notify_order').prop('checked', true);
-                } else {
-                    $('#use_module').prop('checked', false);
-                    $('#notify_order').prop('checked', false);
+                if (useModuleCheckbox) {
+                    useModuleCheckbox.disabled = true;
+                    useModuleCheckbox.checked = (status === 'pending');
+                }
+                if (notifyOrderCheckbox) {
+                    notifyOrderCheckbox.disabled = true;
+                    notifyOrderCheckbox.checked = (status === 'pending');
                 }
             } else {
-                $('#use_module').prop('disabled', false);
-                $('#notify_order').prop('disabled', false);
-
-                if (status == 'active') {
-                    $('#use_module').prop('checked', true);
-                    $('#notify_order').prop('checked', true);
-                } else {
-                    $('#use_module').prop('checked', false);
-                    $('#notify_order').prop('checked', false);
+                if (useModuleCheckbox) {
+                    useModuleCheckbox.disabled = false;
+                    useModuleCheckbox.checked = true;
+                }
+                if (notifyOrderCheckbox) {
+                    notifyOrderCheckbox.disabled = false;
+                    notifyOrderCheckbox.checked = true;
                 }
             }
         }
     });
+})();
 </script>

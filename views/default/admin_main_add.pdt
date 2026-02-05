@@ -1,47 +1,48 @@
 
-    <div id="left_container">
-        <?php
-        $this->Widget->clear();
-        $this->Widget->setStyleSheet($this->view_dir . 'css/styles.css');
-        $this->Widget->create($this->_('AdminMain.add.boxtitle_client', true, ($client->id_value ?? null)));
-        ?>
-        <section class="client_detail_box">
-            <article class="address_box">
-                <p><span><?php echo (isset($client->first_name) ? $this->Html->safe($client->first_name) : null) . ' ' . (isset($client->last_name) ? $this->Html->safe($client->last_name) : null);?></span>
-                    <?php
-                    echo (!empty($client->company) ? (isset($client->company) ? $this->Html->safe($client->company) : null) . '<br />' : '');
-                    echo (!empty($client->address1) ? (isset($client->address1) ? $this->Html->safe($client->address1) : null) . '<br />' : '');
-                    echo (!empty($client->address2) ? (isset($client->address2) ? $this->Html->safe($client->address2) : null) . '<br />' : '');
-                    echo (!empty($client->city) ? (isset($client->city) ? $this->Html->safe($client->city) : null) . (!empty($client->state) ? ', ' . (isset($client->state) ? $this->Html->safe($client->state) : null) : '') : (isset($client->state) ? $this->Html->safe($client->state) : null));
-                    echo ' ' . (isset($client->zip) ? $this->Html->safe($client->zip) : null) . ' ' . (isset($client->country) ? $this->Html->safe($client->country) : null);
-                    ?>
-                    <br /><br />
-                    <a href="mailto:<?php (print (isset($client->email) ? $this->Html->safe($client->email) : null));?>"><?php (print (isset($client->email) ? $this->Html->safe($client->email) : null));?></a>
-                </p>
-
-                <div class="bottom_row">
-                    <a href="<?php echo $this->base_uri . 'clients/view/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/';?>" class="btn btn-default pull-right btn-sm">
-                        <?php $this->_('AdminMain.add.link_viewclient');?>
-                    </a>
+<div id="left_container">
+    <?php
+    $this->Widget->clear();
+    $this->Widget->setStyleSheet($this->view_dir . 'css/domains.css');
+    $this->Widget->create($this->_('AdminMain.add.boxtitle_client', true, ($client->id_value ?? null)));
+    ?>
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title"><?php echo (isset($client->first_name) ? $this->Html->safe($client->first_name) : null) . ' ' . (isset($client->last_name) ? $this->Html->safe($client->last_name) : null);?></h5>
+            <p class="card-text">
+                <?php
+                echo (!empty($client->company) ? '<div>' . (isset($client->company) ? $this->Html->safe($client->company) : null) . '</div>' : '');
+                echo (!empty($client->address1) ? '<div>' . (isset($client->address1) ? $this->Html->safe($client->address1) : null) . '</div>' : '');
+                echo (!empty($client->address2) ? '<div>' . (isset($client->address2) ? $this->Html->safe($client->address2) : null) . '</div>' : '');
+                echo (!empty($client->city) ? '<div>' . (isset($client->city) ? $this->Html->safe($client->city) : null) . (!empty($client->state) ? ', ' . (isset($client->state) ? $this->Html->safe($client->state) : null) : '') : (isset($client->state) ? $this->Html->safe($client->state) : null));
+                echo ' ' . (isset($client->zip) ? $this->Html->safe($client->zip) : null) . ' ' . (isset($client->country) ? $this->Html->safe($client->country) : null) . '</div>';
+                ?>
+                <div class="mt-2">
+                    <a href="mailto:<?php (print (isset($client->email) ? $this->Html->safe($client->email) : null));?>" class="text-primary"><?php (print (isset($client->email) ? $this->Html->safe($client->email) : null));?></a>
                 </div>
-            </article>
-        </section>
-        <?php
-        $this->Widget->end();
-        ?>
-    </div>
-
-    <div id="right_outer">
-        <?php
-        echo ($message ?? null);
-
-        $this->Widget->clear();
-        $this->Widget->create($this->_('AdminMain.add.boxtitle_add', true, ($domain ?? null)));
-        ?>
-        <div class="inner">
-            <?php echo ($form ?? null);?>
+            </p>
+            <div class="text-end">
+                <a href="<?php echo $this->base_uri . 'clients/view/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/';?>" class="btn btn-outline-secondary btn-sm">
+                    <?php $this->_('AdminMain.add.link_viewclient');?>
+                </a>
+            </div>
         </div>
-        <?php
-        $this->Widget->end();
-        ?>
     </div>
+    <?php
+    $this->Widget->end();
+    ?>
+</div>
+
+<div id="right_outer">
+    <?php
+    echo ($message ?? null);
+
+    $this->Widget->clear();
+    $this->Widget->create($this->_('AdminMain.add.boxtitle_add', true, ($domain ?? null)));
+    ?>
+    <div class="inner">
+        <?php echo ($form ?? null);?>
+    </div>
+    <?php
+    $this->Widget->end();
+    ?>
+</div>
