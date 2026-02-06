@@ -442,6 +442,43 @@ class AdminDomains extends DomainsController
     public function whois()
     {
         $whois = Factory::get()->createWhois();
+
+        // Handle AJAX request
+        if ($this->isAjax()) {
+            if (empty($this->post['domain'])) {
+                $this->outputAsJson([
+                    'success' => false,
+                    'message' => Language::_('AdminDomains.whois.error_invalid_domain', true)
+                ]);
+                return false;
+            }
+
+            try {
+                $domain = $this->post['domain'];
+                $text = $whois->lookupDomain($domain)->text;
+                $available = $whois->isDomainAvailable($domain);
+
+                // Parse WHOIS text for structured data
+                $parsed_data = $this->parseWhoisText($text);
+
+                $this->outputAsJson([
+                    'success' => true,
+                    'domain' => $domain,
+                    'available' => $available,
+                    'whois_data' => $parsed_data,
+                    'raw_text' => $text
+                ]);
+            } catch (Exception $e) {
+                $this->outputAsJson([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+
+            return false;
+        }
+
+        // Handle traditional POST (backward compatibility)
         if (!empty($this->post)) {
             try {
                 $domain_info = [
@@ -457,6 +494,60 @@ class AdminDomains extends DomainsController
         }
         $this->set('vars', $this->post);
         $this->set('domain_info', isset($domain_info) ? $domain_info : []);
+    }
+
+    /**
+     * Parse WHOIS text to extract structured data
+     *
+     * @param string $text The raw WHOIS text
+     * @return array Parsed WHOIS data
+     */
+    private function parseWhoisText($text)
+    {
+        $data = [
+            'registrar' => '-',
+            'reg_date' => '-',
+            'exp_date' => '-',
+            'status' => '-',
+            'name_servers' => '-',
+            'dnssec' => '-'
+        ];
+
+        // Parse registrar
+        if (preg_match('/Registrar:\s*(.+)/i', $text, $matches)) {
+            $data['registrar'] = trim($matches[1]);
+        }
+
+        // Parse registration date
+        if (preg_match('/Creation Date:\s*(.+)/i', $text, $matches) ||
+            preg_match('/Created:\s*(.+)/i', $text, $matches)) {
+            $data['reg_date'] = trim($matches[1]);
+        }
+
+        // Parse expiration date
+        if (preg_match('/Registry Expiry Date:\s*(.+)/i', $text, $matches) ||
+            preg_match('/Expiration Date:\s*(.+)/i', $text, $matches) ||
+            preg_match('/Expiry Date:\s*(.+)/i', $text, $matches)) {
+            $data['exp_date'] = trim($matches[1]);
+        }
+
+        // Parse status
+        if (preg_match('/Status:\s*(.+)/i', $text, $matches) ||
+            preg_match('/Domain Status:\s*(.+)/i', $text, $matches)) {
+            $data['status'] = trim($matches[1]);
+        }
+
+        // Parse name servers
+        if (preg_match_all('/Name Server:\s*(.+)/i', $text, $matches)) {
+            $data['name_servers'] = implode(', ', array_map('trim', $matches[1]));
+        }
+
+        // Parse DNSSEC
+        if (preg_match('/DNSSEC:\s*(.+)/i', $text, $matches)) {
+            $data['dnssec'] = trim($matches[1]);
+        }
+
+        return $data;
     }
 
     /**

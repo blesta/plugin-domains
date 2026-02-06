@@ -1,9 +1,3 @@
-/* Domains Plugin - Bootstrap 5 Styles for Paradigm Theme */
-
-/* ============================================================
-   TLD Import Grid (Import TLDs Page)
-   ============================================================ */
-
 /* TLD Import Grid */
 .tld-import-grid {
     display: grid;
@@ -111,12 +105,20 @@ input[type="checkbox"]:checked + .tld-import-card {
 
 .domain-search-input {
     flex: 1;
-    border: none;
-    background: transparent;
+    border: none !important;
+    background: transparent !important;
     color: var(--text-primary);
     font-size: 1rem;
     padding: 0.5rem;
-    outline: none;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.domain-search-input:focus {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 .domain-search-input::placeholder {

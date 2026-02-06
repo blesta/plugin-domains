@@ -1,6 +1,5 @@
 <?php
 if (!(isset($is_ajax) ? $is_ajax : false)) {
-    echo (isset($left_nav) ? $left_nav : null);
 ?>
 <div id="right_outer">
     <?php
@@ -17,7 +16,7 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
 
 <?php
 $this->Widget->clear();
-$this->Widget->setStyleSheet($this->view_dir . '/css/domains.css');
+$this->Widget->setStyleSheet($this->view_dir . 'css/domains.css');
 $this->Widget->create(
     $this->_('AdminDomains.import.boxtitle_import', true),
     ['id' => 'admin_domains_import'],
@@ -102,7 +101,7 @@ $this->Form->create(null, ['id' => 'import_tlds_form']);
     <!-- Button Row -->
     <div class="button_row">
         <div class="d-flex justify-content-end gap-2">
-            <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/importtlds/');?>" class="btn btn-outline-secondary" id="restart_button" style="display: none;">
+            <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/importtlds/';?>" class="btn btn-outline-secondary" id="restart_button" style="display: none;">
                 <i class="bi bi-arrow-clockwise me-2"></i><?php $this->_('AdminDomains.import.field_restart');?>
             </a>
             <?php

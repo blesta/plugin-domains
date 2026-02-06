@@ -44,11 +44,12 @@ class DomainsController extends AppController
         $this->structure->setDefaultView(APPDIR);
         $this->structure->setView(null, $this->orig_structure_view);
 
-        // Set the left nav for all settings pages to affiliate_leftnav
+        // Set the sidebar for all settings pages
         if ($this->portal == 'admin') {
-            $this->set(
-                'left_nav',
-                $this->getLeftNav()
+            Language::loadLang('admin_domains', null, PLUGINDIR . 'domains' . DS . 'language' . DS);
+            $this->structure->set(
+                'side_bar',
+                ['partials/admin_domains_sidebar', $this->view]
             );
 
             // Set the page title language term
@@ -58,17 +59,6 @@ class DomainsController extends AppController
         }
     }
 
-    /**
-     * Get the domains left navigation bar
-     *
-     * @return string The partial view of the domains left navigation bar
-     */
-    protected function getLeftNav()
-    {
-        Language::loadLang('admin_domains', null, PLUGINDIR . 'domains' . DS . 'language' . DS);
-
-        return $this->partial('admin_domains_leftnav', ['current_tab' => $this->controller]);
-    }
 
     /**
      * Gets a list of possible domain actions

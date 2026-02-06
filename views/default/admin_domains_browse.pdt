@@ -5,19 +5,20 @@ if (!(isset($render_section) ? $render_section : null)) {
 }
 
 $links = [
-    ['name' => $this->_('AdminDomains.browse.category_active', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['active']) ? $status_count['active'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'active' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/active/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_pending', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['pending']) ? $status_count['pending'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'pending' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/pending/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_suspended', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['suspended']) ? $status_count['suspended'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'suspended' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/suspended/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_canceled', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['canceled']) ? $status_count['canceled'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'canceled' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/canceled/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_scheduled_cancellation', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['scheduled_cancellation']) ? $status_count['scheduled_cancellation'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'scheduled_cancellation' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/scheduled_cancellation/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_in_review', true) . ' <span class="badge bg-secondary ms-1">' . $this->Html->safe(isset($status_count['in_review']) ? $status_count['in_review'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'in_review' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/in_review/'), 'class' => 'ajax']]
+    ['name' => $this->_('AdminDomains.browse.category_active', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['active']) ? $status_count['active'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'active' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/active/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_pending', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['pending']) ? $status_count['pending'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'pending' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/pending/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_suspended', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['suspended']) ? $status_count['suspended'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'suspended' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/suspended/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_canceled', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['canceled']) ? $status_count['canceled'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'canceled' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/canceled/'), 'class' => 'ajax text-danger']],
+    ['name' => $this->_('AdminDomains.browse.category_scheduled_cancellation', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['scheduled_cancellation']) ? $status_count['scheduled_cancellation'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'scheduled_cancellation' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/scheduled_cancellation/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_in_review', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['in_review']) ? $status_count['in_review'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'in_review' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/in_review/'), 'class' => 'ajax']]
 ];
 
 $this->Widget->clear();
 $this->Widget->setLinks($links);
-
+$this->Widget->setNavStyle('nav-tabs-custom');
 $this->Widget->setFilters(isset($filters) ? $filters : [], $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null)), !empty($filter_vars));
 $this->Widget->setAjaxFiltering();
+$this->Widget->setBodyWrapper(false);
 $this->Widget->create($this->_('AdminDomains.browse.boxtitle_browse', true), ['id' => 'admin_domains_browse'], isset($render_section) ? $render_section : []);
 $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/browse/', ['id' => 'browse_domains', 'class' => 'disable-on-submit']);
 
@@ -139,8 +140,9 @@ if (!empty($domains)) {
     $this->Pagination->build();
 } else {
 ?>
-<div class="alert alert-info">
-    <?php $this->_('AdminDomains.browse.text_none');?>
+<div class="card-body text-center text-muted py-5">
+    <i class="bi bi-globe" style="font-size: 3rem; opacity: 0.3;"></i>
+    <p class="mt-3 mb-0"><?php $this->_('AdminDomains.browse.text_none');?></p>
 </div>
 <?php
 }

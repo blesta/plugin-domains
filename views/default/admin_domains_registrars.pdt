@@ -1,6 +1,5 @@
 <?php
 if (!(isset($is_ajax) ? $is_ajax : false)) {
-    echo (isset($left_nav) ? $left_nav : null);
 ?>
 <div id="right_outer">
     <?php
@@ -25,77 +24,90 @@ $this->Widget->create(
     $num_registrars = count((isset($registrars) ? $registrars : []));
     if ($num_registrars > 0) {
         for ($i = 0; $i < $num_registrars; $i++) {
+            $is_last = ($i == $num_registrars - 1);
     ?>
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="d-flex">
-                <div class="me-3">
-                    <div class="logo">
-                        <span><img src="<?php echo (isset($registrars[$i]->logo) ? $this->Html->safe($registrars[$i]->logo) : null);?>" /></span>
-                    </div>
-                </div>
-                <div class="flex-grow-1">
-                    <h5 class="card-title">
-                        <?php echo (isset($registrars[$i]->name) ? $this->Html->safe($registrars[$i]->name) : null);?>
-                        <small class="text-muted"><?php $this->_('AdminDomains.registrars.text_version', false, $this->Html->safe((isset($registrars[$i]->installed_version) ? $registrars[$i]->installed_version : $registrars[$i]->version)));?></small>
-                    </h5>
-                    <p class="card-text">
-                        <strong><?php $this->_('AdminDomains.registrars.text_author');?></strong>
-                        <?php
-                        foreach ((array)(isset($registrars[$i]->authors) ? $registrars[$i]->authors : []) as $index => $author) {
-                        ?>
-                            <a href="<?php echo (isset($author['url']) ? $this->Html->safe($author['url']) : null);?>" class="text-primary"><?php echo (isset($author['name']) ? $this->Html->safe($author['name']) : null);?></a><?php echo isset($registrars[$i]->authors[$index + 1]) ? ', ' : '';?>
-                        <?php
-                        }
-                        ?>
-                    </p>
-                    <p class="card-text"><?php echo nl2br((isset($registrars[$i]->description) ? $this->Html->safe($registrars[$i]->description, true) : ''))?></p>
-                    <div class="d-flex justify-content-end gap-2">
-                        <?php
-                        if (!(isset($registrars[$i]->installed) ? $registrars[$i]->installed : true)) {
-                        ?>
-                            <?php
-                            $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/installregistrar/' . (isset($registrars[$i]->class) ? $registrars[$i]->class : null) . '/', ['class' => 'd-inline']);
-                            $this->Form->fieldHidden('id', (isset($registrars[$i]->class) ? $registrars[$i]->class : null));
-                            $this->Form->fieldSubmit('save', $this->_('AdminDomains.registrars.btn_install', true), ['class' => 'btn btn-primary']);
-                            $this->Form->end();
-                            ?>
-                        <?php
-                        } else {
-                            $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/uninstallregistrar');
-                            $this->Form->fieldHidden('id', (isset($registrars[$i]->id) ? $registrars[$i]->id : null));
-                            ?>
-                                <a class="btn btn-danger manage" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/uninstallregistrar/' . (isset($registrars[$i]->id) ? $this->Html->safe($registrars[$i]->id, true) : null) . '/';?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.registrars.confirm_uninstall', true));?>"><?php $this->_('AdminDomains.registrars.btn_uninstall');?></a>
-                            <?php
-                            $this->Form->end();
-
-                            if ((isset($registrars[$i]->version) ? $registrars[$i]->version : null) == (isset($registrars[$i]->installed_version) ? $registrars[$i]->installed_version : null)) {
-                            ?>
-                                <a class="btn btn-outline-secondary" href="<?php echo $this->base_uri . 'settings/company/modules/manage/' . (isset($registrars[$i]->id) ? $this->Html->safe($registrars[$i]->id, true) : null) . '/';?>"><?php $this->_('AdminDomains.registrars.btn_manage');?></a>
-                            <?php
-                            } else {
-                            ?>
-                                <?php
-                                $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/upgraderegistrar/' . (isset($registrars[$i]->id) ? $registrars[$i]->id : null) . '/', ['class' => 'd-inline']);
-                                $this->Form->fieldHidden('id', (isset($registrars[$i]->id) ? $registrars[$i]->id : null));
-                                $this->Form->fieldSubmit('save', $this->_('AdminDomains.registrars.btn_upgrade', true), ['class' => 'btn btn-primary']);
-                                $this->Form->end();
-                                ?>
-                            <?php
-                            }
-                        }
-                        ?>
-                    </div>
-                </div>
+    <div class="d-flex align-items-start gap-3 pb-3<?php echo !$is_last ? ' mb-3' : '';?>"<?php echo !$is_last ? ' style="border-bottom: 1px solid var(--border-color);"' : '';?>>
+        <div style="width: 200px; flex-shrink: 0;">
+            <div class="extension-logo extension-logo-single">
+                <?php if (!empty($registrars[$i]->logo)) { ?>
+                <img src="<?php echo $this->Html->safe($registrars[$i]->logo);?>" alt="<?php echo $this->Html->safe($registrars[$i]->name);?>" class="img-fluid">
+                <?php } ?>
             </div>
+        </div>
+        <div class="flex-grow-1">
+            <h6 class="mb-1">
+                <?php echo $this->Html->safe($registrars[$i]->name);?>
+                <span class="text-muted" style="font-weight: normal; font-size: 0.875rem;">
+                    <?php $this->_('AdminDomains.registrars.text_version', false, $this->Html->safe((isset($registrars[$i]->installed_version) ? $registrars[$i]->installed_version : $registrars[$i]->version)));?>
+                </span>
+            </h6>
+            <div class="text-muted small mb-1">
+                <?php $this->_('AdminDomains.registrars.text_author');?>
+                <?php
+                foreach ((array)(isset($registrars[$i]->authors) ? $registrars[$i]->authors : []) as $index => $author) {
+                ?>
+                <a href="<?php echo $this->Html->safe($author['url'] ?? '#');?>" class="text-primary">
+                    <?php echo $this->Html->safe($author['name'] ?? '');?>
+                </a><?php echo isset($registrars[$i]->authors[$index + 1]) ? ', ' : '';?>
+                <?php
+                }
+                ?>
+            </div>
+            <?php if (!empty($registrars[$i]->description)) { ?>
+            <p class="mb-0 text-secondary" style="font-size: 0.875rem;">
+                <?php echo nl2br($this->Html->safe($registrars[$i]->description));?>
+            </p>
+            <?php } ?>
+        </div>
+        <div class="d-flex gap-2" style="flex-shrink: 0;">
+            <?php
+            if (!(isset($registrars[$i]->installed) ? $registrars[$i]->installed : true)) {
+            ?>
+                <?php
+                $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/installregistrar/' . (isset($registrars[$i]->class) ? $registrars[$i]->class : null) . '/', ['class' => 'd-inline']);
+                $this->Form->fieldHidden('id', (isset($registrars[$i]->class) ? $registrars[$i]->class : null));
+                $this->Form->fieldSubmit('save', $this->_('AdminDomains.registrars.btn_install', true), ['class' => 'btn btn-sm btn-primary']);
+                $this->Form->end();
+                ?>
+            <?php
+            } else {
+                if ((isset($registrars[$i]->version) ? $registrars[$i]->version : null) !== (isset($registrars[$i]->installed_version) ? $registrars[$i]->installed_version : null)) {
+                ?>
+                    <?php
+                    $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/upgraderegistrar/' . (isset($registrars[$i]->id) ? $registrars[$i]->id : null) . '/', ['class' => 'd-inline']);
+                    $this->Form->fieldHidden('id', (isset($registrars[$i]->id) ? $registrars[$i]->id : null));
+                    $this->Form->fieldSubmit('save', $this->_('AdminDomains.registrars.btn_upgrade', true), ['class' => 'btn btn-sm btn-warning']);
+                    $this->Form->end();
+                    ?>
+                <?php
+                }
+                ?>
+                <a href="<?php echo $this->base_uri . 'settings/company/modules/manage/' . (isset($registrars[$i]->id) ? $this->Html->safe($registrars[$i]->id, true) : null) . '/';?>" class="btn btn-sm btn-outline-secondary">
+                    <?php $this->_('AdminDomains.registrars.btn_manage');?>
+                </a>
+                <?php
+                $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/uninstallregistrar/', ['class' => 'd-inline']);
+                $this->Form->fieldHidden('id', (isset($registrars[$i]->id) ? $registrars[$i]->id : null));
+                ?>
+                <button type="button" class="btn btn-sm btn-danger modal-confirm-delete"
+                        data-confirm-message="<?php echo $this->Html->safe($this->_('AdminDomains.registrars.confirm_uninstall', true));?>"
+                        data-confirm-title="<?php echo $this->Html->safe($this->_('AdminDomains.registrars.btn_uninstall', true));?>"
+                        data-confirm-button="<?php echo $this->Html->safe($this->_('AdminDomains.registrars.btn_uninstall', true));?>">
+                    <?php $this->_('AdminDomains.registrars.btn_uninstall');?>
+                </button>
+                <?php
+                $this->Form->end();
+            }
+            ?>
         </div>
     </div>
     <?php
         }
     } else {
     ?>
-    <div class="alert alert-info">
-        <?php $this->_('AdminDomains.registrars.text_none');?>
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+        <p class="mt-3 mb-0"><?php $this->_('AdminDomains.registrars.text_none');?></p>
     </div>
     <?php
     }
@@ -112,23 +124,3 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
 <?php
 }
 ?>
-
-<script type="text/javascript">
-(function() {
-    'use strict';
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // Handle confirmation on uninstall action
-        const manageLinks = document.querySelectorAll('#registrars a.manage[rel]');
-        manageLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                const message = this.getAttribute('rel');
-                if (message && !confirm(message)) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-        });
-    });
-})();
-</script>

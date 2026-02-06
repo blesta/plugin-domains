@@ -1,6 +1,6 @@
+
 <?php
 if (!(isset($is_ajax) ? $is_ajax : false)) {
-    echo (isset($left_nav) ? $left_nav : null);
 ?>
 <div id="right_outer">
     <section id="right_container">
@@ -12,273 +12,297 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
 <?php
 }
 ?>
-<?php
-$link_buttons = [
-    [
-        'icon' => 'bi bi-plus',
-        'name' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true),
-        'attributes' => [
-            'title' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true),
-            'href' => '#',
-            'id' => 'add_tld'
-        ]
-    ]
-];
-
-$this->Widget->clear();
-$this->Widget->setStyleSheet($this->view_dir . 'css/domains.css');
-$this->Widget->setLinkButtons($link_buttons);
-$this->Widget->setFilters($filters ?? [], $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/tlds/'), !empty($filter_vars));
-$this->Widget->setAjaxFiltering();
-$this->Widget->create($this->_('AdminDomains.tlds.boxtitle_tld_pricing', true), ['id' => 'admin_domains_tlds'], (isset($render_section) ? $render_section : null));
-?>
-<?php
-if (!empty($duplicate_tlds)) {
-?>
-    <section class="error_section">
-        <article class="alert alert-warning d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
-                <p class="mb-0"><?php $this->_('AdminDomains.!warning.duplicate_tlds_message', false, implode(', ', $duplicate_tlds)); ?></p>
+    <?php
+    // Duplicate TLDs warning
+    if (!empty($duplicate_tlds)) {
+    ?>
+        <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+            <div class="flex-grow-1">
+                <?php $this->_('AdminDomains.!warning.duplicate_tlds_message', false, implode(', ', $duplicate_tlds)); ?>
             </div>
-            <?php
-            $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/fixduplicates/');
-            ?>
+            <div class="ms-auto">
+                <?php $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/fixduplicates/'); ?>
                 <button type="submit" class="btn btn-warning">
                     <?php $this->_('AdminDomains.!button.fix_duplicates'); ?>
                 </button>
-            <?php
-            $this->Form->end();
-            ?>
-        </article>
-    </section>
-<?php
-}
-?>
-<table class="table table-hover">
-    <thead>
-        <tr>
-            <th style="width: 30px;"></th>
-            <th style="width: 40px;">
-                <?php
-                $this->Form->fieldCheckbox('tlds_bulk[all]', 'all', false);
-                ?>
-            </th>
-            <th style="width: 30px;"></th>
-            <th><span><?php $this->_('AdminDomains.tlds.heading_tld');?></span></th>
-            <th>
-                <span><?php $this->_('AdminDomains.tlds.heading_dns_management');?></span>
-                <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="<?php $this->_('AdminDomains.tlds.tooltip_dns_management');?>">
-                    <i class="bi bi-info-circle text-secondary"></i>
-                </button>
-            </th>
-            <th>
-                <span><?php $this->_('AdminDomains.tlds.heading_email_forwarding');?></span>
-                <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="<?php $this->_('AdminDomains.tlds.tooltip_email_forwarding');?>">
-                    <i class="bi bi-info-circle text-secondary"></i>
-                </button>
-            </th>
-            <th>
-                <span><?php $this->_('AdminDomains.tlds.heading_id_protection');?></span>
-                <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="<?php $this->_('AdminDomains.tlds.tooltip_id_protection');?>">
-                    <i class="bi bi-info-circle text-secondary"></i>
-                </button>
-            </th>
-            <th>
-                <span><?php $this->_('AdminDomains.tlds.heading_epp_code');?></span>
-                <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="<?php $this->_('AdminDomains.tlds.tooltip_epp_code');?>">
-                    <i class="bi bi-info-circle text-secondary"></i>
-                </button>
-            </th>
-            <th><span><?php $this->_('AdminDomains.tlds.heading_module');?></span></th>
-            <th><span><?php $this->_('AdminDomains.tlds.heading_options');?></span></th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-        if (!empty($tlds)) {
-            foreach ($tlds as $i => $tld) {
-        ?>
-        <tr<?php echo ($i % 2 == 1) ? ' class="table-light"' : '';?> id="tlds_<?php echo $tld->package_id ?? null;?>" data-package-tld="<?php echo $this->Html->safe($tld->tld);?>">
-            <td class="sortable-drag-handle">
-                <i class="bi bi-grip-vertical"></i>
-                <i class="bi bi-spinner fa-spin" style="display: none;"></i>
-            </td>
-            <td onclick="event.stopPropagation();">
-                <?php
-                $this->Form->fieldCheckbox('tlds_bulk[tlds][]', $this->Html->safe($tld->tld), false);
-                ?>
-            </td>
-            <td><i class="bi <?php echo ($tld->package->status == 'active') ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';?>"></i></td>
-            <td><?php echo $this->Html->safe($tld->tld);?></td>
-            <td class="text-center">
-                <?php
-                $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][dns_management]', '1', ((isset($tld->dns_management) ? $tld->dns_management : '0') == '1'), ['class' => 'quickupdate form-check-input', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_dns_management']);
-                ?>
-            </td>
-            <td class="text-center">
-                <?php
-                $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][email_forwarding]', '1', ((isset($tld->email_forwarding) ? $tld->email_forwarding : '0') == '1'), ['class' => 'quickupdate form-check-input', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_email_forwarding']);
-                ?>
-            </td>
-            <td class="text-center">
-                <?php
-                $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][id_protection]', '1', ((isset($tld->id_protection) ? $tld->id_protection : '0') == '1'), ['class' => 'quickupdate form-check-input', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_id_protection']);
-                ?>
-            </td>
-            <td class="text-center">
-                <?php
-                $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][epp_code]', '1', ((isset($tld->epp_code) ? $tld->epp_code : '0') == '1'), ['class' => 'quickupdate form-check-input', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_epp_code']);
-                ?>
-            </td>
-            <td>
-                <?php
-                $this->Form->fieldSelect('tlds[' . $tld->tld . '][module]', (isset($modules) ? $modules : []), (isset($tld->module->id) ? $tld->module->id : ''), ['class' => 'quickupdate form-select form-select-sm', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_module']);
-                ?>
-            </td>
-            <td>
-                <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/';?>" class="modal btn btn-sm btn-outline-secondary me-1" title="<?php $this->_('AdminDomains.tlds.option_edit');?>">
-                    <i class="bi bi-pencil"></i>
-                </a>
+                <?php $this->Form->end(); ?>
+            </div>
+        </div>
+    <?php
+    }
+    ?>
 
-                <?php
-                if ($tld->package->status !== 'active') {
-                ?>
-                    <?php
-                    $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/enabletld/');
-                    $this->Form->fieldHidden('id', ($tld->package_id ?? null));
-                    ?>
-                    <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/enabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage btn btn-sm btn-outline-success" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true));?>" title="<?php $this->_('AdminDomains.tlds.option_enable');?>">
-                        <i class="bi bi-check-circle"></i>
-                    </a>
-                    <?php
-                    $this->Form->end();
-                    ?>
-                <?php
-                } else {
-                ?>
-                    <?php
-                    $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/disabletld/');
-                    $this->Form->fieldHidden('id', ($tld->package_id ?? null));
-                    ?>
-                    <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/disabletld/' . $this->Html->safe($tld->package_id) . '/';?>" class="manage btn btn-sm btn-outline-danger" rel="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true));?>" title="<?php $this->_('AdminDomains.tlds.option_disable');?>">
-                        <i class="bi bi-x-circle"></i>
-                    </a>
-                    <?php
-                    $this->Form->end();
-                    ?>
-                <?php
-                }
-                ?>
-            </td>
-        </tr>
-        <?php
-            }
-        }
-        ?>
-    </tbody>
+    <div class="card" id="admin_domains_tlds">
+        <div class="card-header">
+            <h5 class="mb-0"><?php $this->_('AdminDomains.tlds.boxtitle_tld_pricing'); ?></h5>
+        </div>
 
-    <tfoot>
-        <tr id="add_tld_row">
-            <td class="sortable-drag-handle"></td>
-            <td onclick="event.stopPropagation();"></td>
-            <td>
-                <a href="#" id="close_add_tld_row"><i class="bi bi-x-lg"></i></a>
-            </td>
-            <td>
-                <?php
-                $this->Form->fieldText('add_tld[tld]', '', ['class' => 'form-control form-control-sm', 'id' => 'add_tld_tld']);
-                ?>
-            </td>
-            <td class="text-center">
-                <?php
-                $this->Form->fieldCheckbox('add_tld[dns_management]', '1', false, ['id' => 'add_tld_dns_management', 'class' => 'form-check-input']);
-                ?>
-            </td>
-            <td class="text-center">
-                <?php
-                $this->Form->fieldCheckbox('add_tld[email_forwarding]', '1', false, ['id' => 'add_tld_email_forwarding', 'class' => 'form-check-input']);
-                ?>
-            </td>
-            <td class="text-center">
-                <?php
-                $this->Form->fieldCheckbox('add_tld[id_protection]', '1', false, ['id' => 'add_tld_id_protection', 'class' => 'form-check-input']);
-                ?>
-            </td>
-            <td class="text-center">
-                <?php
-                $this->Form->fieldCheckbox('add_tld[epp_code]', '1', false, ['id' => 'add_tld_epp_code', 'class' => 'form-check-input']);
-                ?>
-            </td>
-            <td>
-                <?php
-                $this->Form->fieldSelect('add_tld[module]', $modules, null, ['id' => 'add_tld_module', 'class' => 'form-select form-select-sm']);
-                ?>
-            </td>
-            <td>
-                <a class="add_tld btn btn-sm btn-primary" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/tlds/';?>"><?php $this->_('AdminDomains.tlds.option_add');?></a>
-            </td>
-        </tr>
-    </tfoot>
-</table>
+        <div class="card-filter-bar">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <ul class="nav nav-tabs-box border-0 mb-0" role="tablist"></ul>
 
-<div id="tld_action" class="button_row mt-3">
-    <a class="btn btn-primary btn-sm bulk_tld" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/tlds/';?>"><?php $this->_('AdminDomains.tlds.option_submit');?></a>
-    <div class="actions">
-        <div class="update_nameservers">
-            <div class="row g-2 mb-2">
-                <div class="col-auto">
-                    <?php
-                    $this->Form->label($this->_('AdminDomains.browse.action.field_nameservers', true), 'nameservers', ['class' => 'col-form-label']);
-                    $this->Form->fieldText('tlds_bulk[nameservers][0]', ($vars->tlds_bulk['nameservers'][0] ?? ''), ['class' => 'form-control form-control-sm']);
-                    $this->Form->fieldText('tlds_bulk[nameservers][1]', ($vars->tlds_bulk['nameservers'][1] ?? ''), ['class' => 'form-control form-control-sm']);
-                    ?>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#tldFilterCollapse"
+                            aria-expanded="<?php echo !empty($filter_vars) ? 'true' : 'false'; ?>"
+                            title="<?php $this->_('AdminDomains.tlds.text_filter'); ?>">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <button class="btn btn-sm btn-primary" id="add_tld"
+                            title="<?php $this->_('AdminDomains.tlds.categorylink_tldsadd'); ?>">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
                 </div>
             </div>
         </div>
-        <div class="change_status dns_management email_forwarding id_protection epp_code">
-            <div class="row g-2 mb-2">
-                <div class="col-auto">
-                    <?php
-                    $this->Form->label($this->_('AdminDomains.tlds.field_status', true), 'tlds_bulk_status', ['class' => 'col-form-label']);
-                    $this->Form->fieldSelect('tlds_bulk[status]', ($tld_statuses ?? []), null, ['id' => 'tlds_bulk_status', 'class' => 'form-select form-select-sm']);
-                    ?>
-                </div>
-            </div>
-        </div>
-        <div class="tld_sync">
-            <div class="row g-2 mb-2">
-                <div class="col-auto">
-                    <div class="currency_selector d-inline-block">
-                        <?php
-                        $this->Form->label($this->_('AdminDomains.tlds.field_currency', true), 'currency_selector', ['class' => 'col-form-label me-2']);
-                        $this->Form->fieldSelect('currency_selector', ['' => $this->_('AppController.select.please', true)] + ($currencies ?? []), $default_currency ?? 'USD', ['id' => 'currency_selector', 'class' => 'form-select form-select-sm d-inline-block w-auto']);
 
-                        foreach ($currencies ?? [] as $currency) {
-                        ?>
-                            <label id="currency_selector_<?php echo $this->Html->safe($currency);?>" class="border bg-light rounded-pill text-secondary fw-bold d-inline-block py-1 px-2" style="display: none !important">
-                                <?php
-                                $this->Form->fieldCheckbox('tlds_bulk[currencies][]', $currency, null, ['class' => 'form-check-input']);
-                                echo $this->Html->safe($currency);
-                                ?>
-                            </label>
-                        <?php
-                        }
-                        ?>
+        <!-- Collapsible Filter Section -->
+        <div class="collapse <?php echo !empty($filter_vars) ? 'show' : ''; ?>" id="tldFilterCollapse">
+            <div class="card-body border-top filter-section-body">
+                <?php $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/tlds/', ['class' => 'p-3 border rounded filter-section-form', 'id' => 'filter_form']); ?>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="filterTLD" class="form-label"><?php $this->_('AdminDomains.tlds.field_tld'); ?></label>
+                            <?php $this->Form->fieldText('filters[tld]', $filter_vars['tld'] ?? '', ['class' => 'form-control', 'id' => 'filterTLD']); ?>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filterModule" class="form-label"><?php $this->_('AdminDomains.tlds.field_module'); ?></label>
+                            <?php
+                            $module_options = ['' => $this->_('AppController.select.all', true)] + ($modules ?? []);
+                            $this->Form->fieldSelect('filters[module_id]', $module_options, $filter_vars['module_id'] ?? '', ['class' => 'form-select', 'id' => 'filterModule']);
+                            ?>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filterLimit" class="form-label"><?php $this->_('AdminDomains.tlds.field_limit'); ?></label>
+                            <?php $this->Form->fieldText('filters[limit]', $filter_vars['limit'] ?? 50, ['class' => 'form-control', 'id' => 'filterLimit', 'type' => 'number', 'min' => '1', 'max' => '1000']); ?>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button type="button" class="btn btn-secondary" id="clear-filters"><?php $this->_('AdminDomains.tlds.text_clear_filters'); ?></button>
+                                <button type="submit" class="btn btn-primary"><?php $this->_('AdminDomains.tlds.text_apply_filters'); ?></button>
+                            </div>
+                        </div>
                     </div>
-                    <a class="text-sm ms-2" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync';?>" target="_blank"><?php $this->_('AdminDomains.tlds.option_configure_sync');?></a>
+                <?php $this->Form->end(); ?>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="tldPricingTable">
+                <thead>
+                    <tr>
+                        <th style="width: 30px;"></th>
+                        <th style="width: 40px;">
+                            <?php $this->Form->fieldCheckbox('tlds_bulk[all]', 'all', false, ['class' => 'form-check-input', 'id' => 'selectAllTlds']); ?>
+                        </th>
+                        <th style="width: 200px;"><?php $this->_('AdminDomains.tlds.heading_tld'); ?></th>
+                        <th>
+                            <?php $this->_('AdminDomains.tlds.heading_dns_management'); ?>
+                            <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                    data-bs-toggle="popover"
+                                    data-bs-placement="top"
+                                    data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_dns_management', true)); ?>">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </button>
+                        </th>
+                        <th>
+                            <?php $this->_('AdminDomains.tlds.heading_email_forwarding'); ?>
+                            <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                    data-bs-toggle="popover"
+                                    data-bs-placement="top"
+                                    data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_email_forwarding', true)); ?>">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </button>
+                        </th>
+                        <th>
+                            <?php $this->_('AdminDomains.tlds.heading_id_protection'); ?>
+                            <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                    data-bs-toggle="popover"
+                                    data-bs-placement="top"
+                                    data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_id_protection', true)); ?>">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </button>
+                        </th>
+                        <th>
+                            <?php $this->_('AdminDomains.tlds.heading_epp_code'); ?>
+                            <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                    data-bs-toggle="popover"
+                                    data-bs-placement="top"
+                                    data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_epp_code', true)); ?>">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </button>
+                        </th>
+                        <th><?php $this->_('AdminDomains.tlds.heading_module'); ?></th>
+                        <th style="width: 100px;"><?php $this->_('AdminDomains.tlds.heading_options'); ?></th>
+                    </tr>
+                </thead>
+                <tbody id="tldPricingTableBody">
+                    <!-- Add TLD row (hidden by default) -->
+                    <tr id="add_tld_row" style="display: none;">
+                        <td></td>
+                        <td></td>
+                        <td>
+                            <?php $this->Form->fieldText('add_tld[tld]', '', ['class' => 'form-control form-control-sm', 'placeholder' => '.com', 'id' => 'add_tld_tld']); ?>
+                        </td>
+                        <td class="text-center">
+                            <?php $this->Form->fieldCheckbox('add_tld[dns_management]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_dns_management']); ?>
+                        </td>
+                        <td class="text-center">
+                            <?php $this->Form->fieldCheckbox('add_tld[email_forwarding]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_email_forwarding']); ?>
+                        </td>
+                        <td class="text-center">
+                            <?php $this->Form->fieldCheckbox('add_tld[id_protection]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_id_protection']); ?>
+                        </td>
+                        <td class="text-center">
+                            <?php $this->Form->fieldCheckbox('add_tld[epp_code]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_epp_code']); ?>
+                        </td>
+                        <td>
+                            <?php $this->Form->fieldSelect('add_tld[module]', $modules ?? [], null, ['class' => 'form-select form-select-sm', 'id' => 'add_tld_module']); ?>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-success" id="add-tld-submit">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" id="cancel-add-tld">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- TLD rows -->
+                    <?php
+                    if (!empty($tlds)) {
+                        foreach ($tlds as $tld) {
+                    ?>
+                    <tr id="tlds_<?php echo $tld->package_id; ?>" data-package-tld="<?php echo $this->Html->safe($tld->tld); ?>">
+                        <td class="sortable-drag-handle text-center" style="cursor: grab;">
+                            <i class="bi bi-grip-vertical text-muted"></i>
+                        </td>
+                        <td onclick="event.stopPropagation();">
+                            <?php $this->Form->fieldCheckbox('tlds_bulk[tlds][]', $this->Html->safe($tld->tld), false, ['class' => 'form-check-input tld-checkbox']); ?>
+                        </td>
+                        <td>
+                            <i class="bi bi-<?php echo ($tld->package->status == 'active') ? 'check-circle-fill text-success' : 'x-circle-fill text-danger'; ?> me-2"></i>
+                            <?php echo $this->Html->safe($tld->tld); ?>
+                        </td>
+                        <td class="text-center">
+                            <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][dns_management]', '1', ($tld->dns_management == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_dns_management']); ?>
+                        </td>
+                        <td class="text-center">
+                            <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][email_forwarding]', '1', ($tld->email_forwarding == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_email_forwarding']); ?>
+                        </td>
+                        <td class="text-center">
+                            <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][id_protection]', '1', ($tld->id_protection == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_id_protection']); ?>
+                        </td>
+                        <td class="text-center">
+                            <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][epp_code]', '1', ($tld->epp_code == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_epp_code']); ?>
+                        </td>
+                        <td>
+                            <?php $this->Form->fieldSelect('tlds[' . $tld->tld . '][module]', $modules ?? [], $tld->module->id ?? '', ['class' => 'form-select form-select-sm quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_module']); ?>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/'; ?>"
+                                   class="btn btn-sm btn-outline-secondary edit-tld-modal"
+                                   data-tld="<?php echo $this->Html->safe($tld->tld); ?>"
+                                   data-package-id="<?php echo $tld->package_id; ?>"
+                                   title="<?php $this->_('AdminDomains.tlds.option_edit'); ?>">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <?php if ($tld->package->status !== 'active') { ?>
+                                    <button class="btn btn-sm btn-outline-success enable-tld"
+                                            data-package-id="<?php echo $tld->package_id; ?>"
+                                            data-confirm="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true)); ?>"
+                                            title="<?php $this->_('AdminDomains.tlds.option_enable'); ?>">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                <?php } else { ?>
+                                    <button class="btn btn-sm btn-outline-danger disable-tld"
+                                            data-package-id="<?php echo $tld->package_id; ?>"
+                                            data-confirm="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true)); ?>"
+                                            title="<?php $this->_('AdminDomains.tlds.option_disable'); ?>">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                <?php } ?>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php
+                        }
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bulk Actions Bar -->
+        <div class="bulk-actions-bar" id="bulkActionsBar" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="selected-count" id="selectedCount">0 <?php $this->_('AdminDomains.tlds.text_items_selected'); ?></span>
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <?php $this->Form->fieldSelect('tlds_bulk[action]', $tld_actions ?? [], null, ['class' => 'form-select form-select-sm', 'style' => 'width: 180px;', 'id' => 'bulkAction']); ?>
+
+                    <!-- Conditional fields for different actions -->
+                    <div id="changeStatusFields" class="bulk-action-fields d-none">
+                        <?php $this->Form->fieldSelect('tlds_bulk[status]', $tld_statuses ?? [], null, ['class' => 'form-select form-select-sm']); ?>
+                    </div>
+
+                    <div id="dnsManagementFields" class="bulk-action-fields d-none">
+                        <?php $this->Form->fieldSelect('tlds_bulk[dns_management]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                    </div>
+
+                    <div id="emailForwardingFields" class="bulk-action-fields d-none">
+                        <?php $this->Form->fieldSelect('tlds_bulk[email_forwarding]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                    </div>
+
+                    <div id="idProtectionFields" class="bulk-action-fields d-none">
+                        <?php $this->Form->fieldSelect('tlds_bulk[id_protection]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                    </div>
+
+                    <div id="eppCodeFields" class="bulk-action-fields d-none">
+                        <?php $this->Form->fieldSelect('tlds_bulk[epp_code]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                    </div>
+
+                    <div id="nameServersFields" class="bulk-action-fields d-none">
+                        <div class="d-flex gap-2">
+                            <?php
+                            $this->Form->fieldText('tlds_bulk[nameservers][0]', $vars->tlds_bulk['nameservers'][0] ?? '', ['class' => 'form-control form-control-sm', 'placeholder' => $this->_('AdminDomains.browse.action.field_nameservers', true) . ' 1', 'style' => 'width: 140px;']);
+                            $this->Form->fieldText('tlds_bulk[nameservers][1]', $vars->tlds_bulk['nameservers'][1] ?? '', ['class' => 'form-control form-control-sm', 'placeholder' => $this->_('AdminDomains.browse.action.field_nameservers', true) . ' 2', 'style' => 'width: 140px;']);
+                            ?>
+                        </div>
+                    </div>
+
+                    <div id="registrarPriceSyncFields" class="bulk-action-fields d-none">
+                        <div class="d-flex gap-2 align-items-center">
+                            <?php
+                            $currency_options = ['' => $this->_('AppController.select.please', true)] + ($currencies ?? []);
+                            $this->Form->fieldSelect('currency_selector', $currency_options, $default_currency ?? 'USD', ['class' => 'form-select form-select-sm', 'id' => 'currency_selector', 'style' => 'width: 120px;']);
+                            ?>
+                            <div id="selected-currencies" class="d-flex gap-2 flex-wrap">
+                                <?php foreach ($currencies ?? [] as $currency) { ?>
+                                <span id="currency_selector_<?php echo $this->Html->safe($currency); ?>" class="badge bg-light text-secondary border" style="display: none;">
+                                    <?php
+                                    $this->Form->fieldCheckbox('tlds_bulk[currencies][]', $currency, null, ['class' => 'form-check-input form-check-input-sm me-1']);
+                                    echo $this->Html->safe($currency);
+                                    ?>
+                                </span>
+                                <?php } ?>
+                            </div>
+                            <a class="text-sm" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync'; ?>" target="_blank"><?php $this->_('AdminDomains.tlds.option_configure_sync'); ?></a>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-sm btn-primary" id="bulkActionSubmit">
+                        <i class="bi bi-check-lg me-1"></i><?php $this->_('AdminDomains.tlds.option_submit'); ?>
+                    </button>
                 </div>
             </div>
         </div>
-        <?php
-        $this->Form->fieldSelect('tlds_bulk[action]', ($tld_actions ?? []), null, ['id' => 'tlds_bulk_action', 'class' => 'form-select form-select-sm']);
-        ?>
+
+        <?php $this->Pagination->build(); ?>
     </div>
-</div>
-<?php
-$this->Pagination->build();
-$this->Widget->end();
-?>
 <?php
 if (!(isset($is_ajax) ? $is_ajax : false)) {
 ?>
@@ -289,254 +313,407 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
 ?>
 
 <script type="text/javascript">
-(function() {
-    'use strict';
-
     document.addEventListener('DOMContentLoaded', function() {
-        initializePopovers();
-        initializeModals();
-        initializeSortables();
-        initializeQuickUpdates();
-        initializeBulkActions();
-        initializeAddTldRow();
-        initializeCurrencySelector();
-        initializeTooltip();
-    });
+        var baseUri = '<?php echo $this->base_uri; ?>';
+        var csrfToken = '<?php echo $this->Form->getCsrfToken(); ?>';
+        var currentPage = <?php echo $page ?? 1; ?>;
+        var addedTld = '<?php echo $added_tld ?? ''; ?>';
 
-    /**
-     * Initialize Bootstrap popovers
-     */
-    function initializePopovers() {
-        const popoverTriggers = document.querySelectorAll('[data-bs-toggle="popover"]');
-        popoverTriggers.forEach(trigger => {
-            new bootstrap.Popover(trigger);
-        });
-    }
-
-    /**
-     * Initialize modal confirmations
-     */
-    function initializeModals() {
-        const manageLinks = document.querySelectorAll('a.manage[rel]');
-        manageLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                const message = this.getAttribute('rel');
-                if (message && !confirm(message)) {
-                    e.preventDefault();
-                    return false;
-                }
+        // Initialize popovers
+        function initPopovers() {
+            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl);
             });
-        });
-    }
-
-    /**
-     * Initialize sortable functionality
-     */
-    function initializeSortables() {
-        const tbody = document.querySelector('#admin_domains_tlds table.table tbody');
-        if (!tbody) return;
-
-        let draggedRow = null;
-
-        tbody.addEventListener('dragstart', function(e) {
-            const row = e.target.closest('tr[data-package-tld]');
-            if (row) {
-                draggedRow = row;
-                e.target.style.opacity = '0.4';
-            }
-        });
-
-        tbody.addEventListener('dragend', function(e) {
-            if (draggedRow) {
-                e.target.style.opacity = '1';
-                draggedRow = null;
-
-                // Save new order
-                saveTldOrder();
-            }
-        });
-
-        tbody.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            const row = e.target.closest('tr[data-package-tld]');
-            if (row && row !== draggedRow) {
-                const rect = row.getBoundingClientRect();
-                const midY = rect.top + rect.height / 2;
-                if (e.clientY < midY) {
-                    tbody.insertBefore(draggedRow, row);
-                } else {
-                    tbody.insertBefore(draggedRow, row.nextSibling);
-                }
-            }
-        });
-    }
-
-    /**
-     * Save TLD order after sorting
-     */
-    function saveTldOrder() {
-        const tbody = document.querySelector('#admin_domains_tlds table.table tbody');
-        if (!tbody) return;
-
-        const formData = new FormData();
-        const csrfToken = document.querySelector('input[name="_csrf_token"]');
-        if (csrfToken) {
-            formData.append('_csrf_token', csrfToken.value);
         }
+        initPopovers();
 
-        // Get all rows in order
-        const rows = tbody.querySelectorAll('tr[data-package-tld]');
-        rows.forEach((row, index) => {
-            const packageId = row.id.replace('tlds_', '');
-            formData.append('tld[' + index + ']', packageId);
-        });
+        // Initialize Sortable if available
+        function initSortable() {
+            if (typeof Sortable !== 'undefined') {
+                var tbody = document.getElementById('tldPricingTableBody');
+                if (tbody) {
+                    new Sortable(tbody, {
+                        handle: '.sortable-drag-handle',
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        onEnd: function(evt) {
+                            var formData = new FormData();
+                            formData.append('_csrf_token', csrfToken);
 
-        fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/sorttlds/' . ($page ?? 1) . '/');?>', {
-            method: 'POST',
-            body: formData,
-            credentials: 'same-origin'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                console.error('Error saving TLD order:', data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error saving TLD order:', error);
-        });
-    }
+                            var rows = tbody.querySelectorAll('tr[id^="tlds_"]');
+                            rows.forEach(function(row) {
+                                var packageId = row.id.replace('tlds_', '');
+                                formData.append('tlds[]', packageId);
+                            });
 
-    /**
-     * Initialize quick update fields
-     */
-    function initializeQuickUpdates() {
-        const quickFields = document.querySelectorAll('.quickupdate');
-        quickFields.forEach(field => {
-            field.addEventListener('change', function() {
-                const row = this.closest('tr');
-                const tld = row.getAttribute('data-package-tld');
-                const fieldName = this.name.replace('tlds[' + tld + '][', '').replace(']', '');
-
-                // Update via AJAX
-                const formData = new FormData();
-                const csrfToken = document.querySelector('input[name="_csrf_token"]');
-                if (csrfToken) {
-                    formData.append('_csrf_token', csrfToken.value);
+                            blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/sorttlds/' + currentPage + '/',
+                                formData, null, null, {dataType: 'json'});
+                        }
+                    });
                 }
-                formData.append('tld', tld);
-                formData.append('field', fieldName);
-                formData.append('value', this.checked ? '1' : '0');
+            }
+        }
+        initSortable();
 
-                fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/quickupdatetld/');?>', {
-                    method: 'POST',
-                    body: formData,
-                    credentials: 'same-origin'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        console.error('Error updating TLD:', data.error);
-                        // Revert checkbox
-                        this.checked = !this.checked;
+        // Get partial form data
+        function getPartialForm(prefix, includeFilters) {
+            includeFilters = includeFilters === undefined ? true : includeFilters;
+            var formData = new FormData();
+
+            var selector = 'input[name^="' + prefix + '"], select[name^="' + prefix + '"]';
+            document.querySelectorAll(selector).forEach(function(field) {
+                if (field.type === 'checkbox') {
+                    if (field.checked) {
+                        formData.append(field.name, field.value);
                     }
-                })
-                .catch(error => {
-                    console.error('Error updating TLD:', error);
-                    // Revert checkbox
-                    this.checked = !this.checked;
-                });
-            });
-        });
-    }
-
-    /**
-     * Initialize bulk actions
-     */
-    function initializeBulkActions() {
-        const selectAll = document.querySelector('input[name="tlds_bulk[all]"]');
-        const tldCheckboxes = document.querySelectorAll('input[name="tlds_bulk[tlds][]"]');
-
-        if (selectAll) {
-            selectAll.addEventListener('change', function() {
-                tldCheckboxes.forEach(checkbox => {
-                    checkbox.checked = this.checked;
-                });
-            });
-        }
-
-        // Update select all when individual checkboxes change
-        tldCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                if (selectAll) {
-                    const allChecked = Array.from(tldCheckboxes).every(cb => cb.checked);
-                    selectAll.checked = allChecked;
+                } else if (field.type !== 'radio' || field.checked) {
+                    formData.append(field.name, field.value);
                 }
             });
+
+            if (includeFilters && prefix !== 'filters') {
+                document.querySelectorAll('input[name^="filters"], select[name^="filters"]').forEach(function(field) {
+                    formData.append(field.name, field.value);
+                });
+            }
+
+            formData.append('_csrf_token', csrfToken);
+            return formData;
+        }
+
+        // Reload TLDs table
+        function reloadTlds() {
+            document.querySelectorAll('.error_section').forEach(function(el) { el.remove(); });
+
+            blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/' + (currentPage > 1 ? currentPage + '/' : ''),
+                getPartialForm('filters'),
+                function(response) {
+                    if (response.replacer && response.content) {
+                        var targetEl = document.querySelector(response.replacer);
+                        if (targetEl) {
+                            targetEl.innerHTML = response.content;
+                            initPopovers();
+                            initSortable();
+                        }
+                    }
+                },
+                null,
+                {dataType: 'json'}
+            );
+        }
+
+        // Prepend message
+        function prependMessage(message) {
+            var container = document.querySelector('#right_container');
+            if (container) {
+                var tempDiv = document.createElement('div');
+                tempDiv.innerHTML = message;
+                container.insertBefore(tempDiv.firstElementChild, container.firstChild);
+            }
+        }
+
+        // TLD meta modal
+        function setTldMeta(tld) {
+            blestaModal({
+                close: '<?php echo addslashes($this->_('AppController.modal.text_close', true)); ?>',
+                url: baseUri + 'plugin/domains/admin_domains/meta/' + tld.replace(/\./g, '_') + '/',
+                min_width: Math.max((window.innerWidth / 4) * 2, 400),
+                max_width: Math.max((window.innerWidth / 4) * 2, 400)
+            });
+        }
+
+        if (addedTld !== '') {
+            setTldMeta(addedTld);
+        }
+
+        // Select all checkboxes
+        var selectAllCheckbox = document.getElementById('selectAllTlds');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function(e) {
+                document.querySelectorAll('.tld-checkbox').forEach(function(cb) {
+                    cb.checked = e.target.checked;
+                });
+                updateBulkActionsBar();
+            });
+        }
+
+        // Individual checkbox changes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('tld-checkbox')) {
+                updateBulkActionsBar();
+
+                // Uncheck "select all" if any checkbox is unchecked
+                if (!e.target.checked && selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                }
+            }
         });
-    }
 
-    /**
-     * Initialize add TLD row functionality
-     */
-    function initializeAddTldRow() {
-        const addTldButton = document.getElementById('add_tld');
-        const closeAddRowButton = document.getElementById('close_add_tld_row');
-        const addTldRow = document.getElementById('add_tld_row');
+        // Update bulk actions bar
+        function updateBulkActionsBar() {
+            var checked = document.querySelectorAll('.tld-checkbox:checked').length;
+            var bar = document.getElementById('bulkActionsBar');
+            var countEl = document.getElementById('selectedCount');
 
-        if (addTldButton && addTldRow) {
-            addTldRow.style.display = 'none';
+            if (bar) {
+                bar.style.display = checked > 0 ? 'block' : 'none';
+            }
+            if (countEl) {
+                countEl.textContent = checked + ' <?php echo addslashes($this->_('AdminDomains.tlds.text_items_selected', true)); ?>';
+            }
+        }
 
-            addTldButton.addEventListener('click', function(e) {
+        // Quick update checkboxes and selects
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('quickupdate')) {
+                var row = e.target.closest('tr');
+                row.style.opacity = '0.5';
+                row.style.pointerEvents = 'none';
+
+                var tld = row.dataset.packageTld;
+                blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/updatetlds/' + tld.replace(/\./g, '_') + '/',
+                    getPartialForm('tlds'),
+                    function(response) {
+                        reloadTlds();
+                        if (response.message) {
+                            prependMessage(response.message);
+                        }
+
+                        // If module updated, ask to update meta
+                        if (e.target.name.includes('[module]') && response.update_meta && tld !== '') {
+                            setTldMeta(tld);
+                        }
+                    },
+                    null,
+                    {dataType: 'json'}
+                );
+            }
+        });
+
+        // Enable/Disable TLD
+        document.addEventListener('click', function(e) {
+            var button = e.target.closest('.enable-tld, .disable-tld');
+            if (button) {
+                var action = button.classList.contains('enable-tld') ? 'enabletld' : 'disabletld';
+                var packageId = button.dataset.packageId;
+                var confirmMsg = button.dataset.confirm;
+
+                if (confirmMsg && !confirm(confirmMsg)) {
+                    return;
+                }
+
+                var formData = new FormData();
+                formData.append('id', packageId);
+                formData.append('_csrf_token', csrfToken);
+
+                blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/' + action + '/',
+                    formData,
+                    function() { reloadTlds(); },
+                    null,
+                    {dataType: 'json'}
+                );
+            }
+        });
+
+        // Edit TLD modal
+        document.addEventListener('click', function(e) {
+            var link = e.target.closest('.edit-tld-modal');
+            if (link) {
                 e.preventDefault();
-                addTldRow.style.display = 'table-row';
+                blestaModal({
+                    close: '<?php echo addslashes($this->_('AppController.modal.text_close', true)); ?>',
+                    url: link.href,
+                    min_width: Math.max((window.innerWidth / 4) * 3, 400),
+                    max_width: Math.max((window.innerWidth / 4) * 3, 400)
+                });
+            }
+        });
+
+        // Toggle "Add TLD" row
+        function resetAddTldRow() {
+            var row = document.getElementById('add_tld_row');
+            if (row) {
+                row.querySelectorAll('select').forEach(function(el) { el.value = ''; });
+                row.querySelectorAll('input[type="text"]').forEach(function(el) { el.value = ''; });
+                row.querySelectorAll('input[type="checkbox"]').forEach(function(el) { el.checked = false; });
+            }
+        }
+
+        var addTldBtn = document.getElementById('add_tld');
+        if (addTldBtn) {
+            addTldBtn.addEventListener('click', function() {
+                var row = document.getElementById('add_tld_row');
+                if (row) {
+                    var isVisible = row.style.display !== 'none';
+                    if (isVisible) {
+                        row.style.display = 'none';
+                        resetAddTldRow();
+                    } else {
+                        row.style.display = '';
+                    }
+                }
             });
         }
 
-        if (closeAddRowButton && addTldRow) {
-            closeAddRowButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                addTldRow.style.display = 'none';
+        var cancelAddTldBtn = document.getElementById('cancel-add-tld');
+        if (cancelAddTldBtn) {
+            cancelAddTldBtn.addEventListener('click', function() {
+                var row = document.getElementById('add_tld_row');
+                if (row) {
+                    row.style.display = 'none';
+                    resetAddTldRow();
+                }
             });
         }
-    }
 
-    /**
-     * Initialize currency selector
-     */
-    function initializeCurrencySelector() {
-        const currencySelector = document.getElementById('currency_selector');
-        const currencyLabels = document.querySelectorAll('[id^="currency_selector_"]');
+        // Show add row if no TLDs exist
+        var tbody = document.getElementById('tldPricingTableBody');
+        if (tbody && tbody.querySelectorAll('tr[id^="tlds_"]').length < 1) {
+            var addRow = document.getElementById('add_tld_row');
+            if (addRow) {
+                addRow.style.display = '';
+                var cancelBtn = document.getElementById('cancel-add-tld');
+                if (cancelBtn) cancelBtn.style.display = 'none';
+            }
+        }
 
+        // Add new TLD
+        var addTldSubmitBtn = document.getElementById('add-tld-submit');
+        if (addTldSubmitBtn) {
+            addTldSubmitBtn.addEventListener('click', function() {
+                blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/',
+                    getPartialForm('add_tld'),
+                    function(response) {
+                        reloadTlds();
+                        if (response.message) {
+                            prependMessage(response.message);
+                        }
+                    },
+                    null,
+                    {dataType: 'json'}
+                );
+            });
+        }
+
+        // Filter form submission
+        var filterForm = document.getElementById('filter_form');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/',
+                    getPartialForm('filters', false),
+                    function(response) {
+                        if (response.replacer && response.content) {
+                            var targetEl = document.querySelector(response.replacer);
+                            if (targetEl) {
+                                targetEl.innerHTML = response.content;
+                                initPopovers();
+                                initSortable();
+                            }
+                        }
+                    },
+                    null,
+                    {dataType: 'json'}
+                );
+            });
+        }
+
+        // Clear filters
+        var clearFiltersBtn = document.getElementById('clear-filters');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', function() {
+                if (filterForm) {
+                    filterForm.reset();
+                    filterForm.dispatchEvent(new Event('submit'));
+                }
+            });
+        }
+
+        // Bulk action dropdown change
+        var bulkActionSelect = document.getElementById('bulkAction');
+        if (bulkActionSelect) {
+            bulkActionSelect.addEventListener('change', function(e) {
+                document.querySelectorAll('.bulk-action-fields').forEach(function(el) {
+                    el.classList.add('d-none');
+                });
+
+                var fieldMap = {
+                    'change_status': 'changeStatusFields',
+                    'tld_sync': 'registrarPriceSyncFields',
+                    'dns_management': 'dnsManagementFields',
+                    'email_forwarding': 'emailForwardingFields',
+                    'id_protection': 'idProtectionFields',
+                    'epp_code': 'eppCodeFields',
+                    'update_nameservers': 'nameServersFields'
+                };
+
+                if (fieldMap[e.target.value]) {
+                    var fieldEl = document.getElementById(fieldMap[e.target.value]);
+                    if (fieldEl) {
+                        fieldEl.classList.remove('d-none');
+                    }
+                }
+            });
+        }
+
+        // Bulk action submit
+        var bulkActionSubmitBtn = document.getElementById('bulkActionSubmit');
+        if (bulkActionSubmitBtn) {
+            bulkActionSubmitBtn.addEventListener('click', function() {
+                this.disabled = true;
+                blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/',
+                    getPartialForm('tlds_bulk'),
+                    function(response) {
+                        reloadTlds();
+                        if (response.message) {
+                            prependMessage(response.message);
+                        }
+                        bulkActionSubmitBtn.disabled = false;
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    },
+                    null,
+                    {dataType: 'json'}
+                );
+            });
+        }
+
+        // Currency selector for TLD sync
+        var currencySelector = document.getElementById('currency_selector');
         if (currencySelector) {
             currencySelector.addEventListener('change', function() {
-                const selectedCurrency = this.value;
+                var currency = this.value;
+                if (currency) {
+                    // Remove option from dropdown
+                    var option = this.querySelector('option[value="' + currency + '"]');
+                    if (option) option.remove();
 
-                currencyLabels.forEach(label => {
-                    const currency = label.id.replace('currency_selector_', '');
-                    const checkbox = label.querySelector('input[type="checkbox"]');
-
-                    if (currency === selectedCurrency) {
-                        label.style.display = 'inline-block';
+                    // Show currency badge
+                    var badge = document.getElementById('currency_selector_' + currency);
+                    if (badge) {
+                        badge.style.display = '';
+                        var checkbox = badge.querySelector('input[type="checkbox"]');
                         if (checkbox) checkbox.checked = true;
-                    } else {
-                        label.style.display = 'none';
-                        if (checkbox) checkbox.checked = false;
                     }
-                });
+                }
+            });
+
+            // Handle currency badge checkbox changes
+            document.addEventListener('change', function(e) {
+                if (e.target.matches('.bulk-action-fields input[type="checkbox"][name="tlds_bulk[currencies][]"]')) {
+                    if (!e.target.checked) {
+                        var currency = e.target.value;
+                        var badge = e.target.closest('span');
+                        if (badge) badge.style.display = 'none';
+
+                        // Re-add to dropdown
+                        var option = document.createElement('option');
+                        option.value = currency;
+                        option.textContent = currency;
+                        currencySelector.appendChild(option);
+                    }
+                }
             });
         }
-    }
-
-    /**
-     * Initialize tooltips
-     */
-    function initializeTooltip() {
-        // Initialize any Bootstrap tooltips if needed
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-        tooltipTriggerList.forEach(tooltipTrigger => {
-            new bootstrap.Tooltip(tooltipTrigger);
-        });
-    }
-})();
+    });
 </script>

@@ -138,6 +138,57 @@ $lang['AdminDomains.configuration.tooltip_second_reminder_days_before'] = 'Selec
 $lang['AdminDomains.configuration.tooltip_expiration_notice_days_after'] = 'Select the number of days after a domain expires to send the expiration notice email (1-5 per ICANN specs). Use the Email Template link to modify/disable this email.';
 $lang['AdminDomains.configuration.tooltip_spotlight_tlds'] = 'TLDs that will be highlighted on order forms through the Order Plugin.';
 $lang['AdminDomains.configuration.tooltip_renewal_days_before_expiration'] = 'When domains are invoiced, the invoice will be due this number of days prior to the domain\'s expiration date.';
+$lang['AdminDomains.configuration.tooltip_taxable'] = 'Apply configured taxes to domain registration, renewal, and transfer fees.';
+$lang['AdminDomains.configuration.tooltip_sync_price_markup'] = 'Percentage markup applied to domain registration prices.';
+$lang['AdminDomains.configuration.tooltip_sync_renewal_markup'] = 'Percentage markup applied to domain renewal prices.';
+$lang['AdminDomains.configuration.tooltip_sync_transfer_markup'] = 'Percentage markup applied to domain transfer prices.';
+$lang['AdminDomains.configuration.tooltip_enable_rounding'] = 'Round prices to the nearest specified amount.';
+
+// New headings
+$lang['AdminDomains.configuration.heading_spotlight_tlds'] = 'Spotlight TLDs';
+$lang['AdminDomains.configuration.heading_renewal_settings'] = 'Renewal Settings';
+$lang['AdminDomains.configuration.heading_expiration_reminders'] = 'Expiration Reminders';
+$lang['AdminDomains.configuration.heading_import_options'] = 'Import Options';
+$lang['AdminDomains.configuration.heading_configurable_option'] = 'Configurable Option';
+$lang['AdminDomains.configuration.heading_actions'] = 'Actions';
+$lang['AdminDomains.configuration.heading_term'] = 'Term';
+$lang['AdminDomains.configuration.heading_price'] = 'Price';
+$lang['AdminDomains.configuration.heading_renewal_price'] = 'Renewal Price';
+
+// General tab
+$lang['AdminDomains.configuration.text_spotlight_description'] = 'Select up to 8 TLDs to spotlight during domain order.';
+$lang['AdminDomains.configuration.btn_add_spotlight_tlds'] = 'Add Spotlight TLDs';
+
+// Import Packages tab
+$lang['AdminDomains.configuration.tab_import_packages'] = 'Import Packages';
+$lang['AdminDomains.configuration.tab_configurable_options'] = 'Configurable Options';
+$lang['AdminDomains.configuration.text_import_will'] = 'This import will:';
+$lang['AdminDomains.configuration.text_import_bullet_1'] = 'Find all packages assigned to a registrar module (3rd party modules may not identify themselves as registrars and thus may not be recognized)';
+$lang['AdminDomains.configuration.text_import_bullet_2'] = 'For each TLD assigned to the package, create a new TLD Pricing package with the same details in the Domain Manager';
+$lang['AdminDomains.configuration.text_import_bullet_3'] = 'Skip any package/TLD with the same registrar as a previously encountered package/TLD';
+$lang['AdminDomains.configuration.text_import_bullet_4'] = 'Skip any packages with no yearly pricing periods';
+$lang['AdminDomains.configuration.text_import_bullet_5'] = 'Mark the first package/Registrar encountered for each TLD as the primary one, while the other import packages will be used when the registrar is changed on the TLD Pricing page';
+$lang['AdminDomains.configuration.text_import_bullet_6'] = 'Deactivate the old imported packages if they have no services after the import';
+$lang['AdminDomains.configuration.field_migrate_services'] = 'Migrate Services';
+$lang['AdminDomains.configuration.tooltip_migrate_services'] = 'When checked, any services assigned to the cloned packages will be migrated to the newly created packages. This will only apply to services with a yearly pricing period.';
+$lang['AdminDomains.configuration.field_overwrite_tld_packages'] = 'Overwrite TLD Packages';
+$lang['AdminDomains.configuration.tooltip_overwrite_tld_packages'] = 'When checked, current Domain Manager TLD packages will be deleted and replaced by external TLD packages. Domain Manager packages with services assigned to them will be skipped during this process.';
+
+// Configurable Options tab
+$lang['AdminDomains.configuration.option_dns_management'] = 'DNS Management';
+$lang['AdminDomains.configuration.option_email_forwarding'] = 'Email Forwarding';
+$lang['AdminDomains.configuration.option_id_protection'] = 'ID Protection';
+$lang['AdminDomains.configuration.btn_edit'] = 'Edit';
+
+// Modal strings
+$lang['AdminDomains.configuration.modal_select_spotlight_tlds'] = 'Select Spotlight TLDs';
+$lang['AdminDomains.configuration.modal_select_up_to_8'] = 'Choose up to 8 TLDs to feature';
+$lang['AdminDomains.configuration.placeholder_search_tlds'] = 'Search TLDs...';
+$lang['AdminDomains.configuration.modal_edit_configurable_option'] = 'Edit Configurable Option';
+$lang['AdminDomains.configuration.btn_close'] = 'Close';
+$lang['AdminDomains.configuration.btn_done'] = 'Done';
+$lang['AdminDomains.configuration.btn_cancel'] = 'Cancel';
+$lang['AdminDomains.configuration.btn_save_changes'] = 'Save Changes';
 
 $lang['AdminDomains.getroundingoptions.custom'] = 'Custom';
 
@@ -276,6 +327,17 @@ $lang['AdminDomains.whois.available'] = 'Domain Available';
 $lang['AdminDomains.whois.unavailable'] = 'Domain Unavailable';
 $lang['AdminDomains.whois.field_domain'] = 'Domain';
 $lang['AdminDomains.whois.field_submit'] = 'Lookup';
+$lang['AdminDomains.whois.text_description'] = 'Search for domain availability and view WHOIS information';
+$lang['AdminDomains.whois.field_domain_placeholder'] = 'Enter domain name (e.g., example.com)';
+$lang['AdminDomains.whois.heading_whois_info'] = 'WHOIS Information';
+$lang['AdminDomains.whois.text_searching'] = 'Searching for domain availability...';
+$lang['AdminDomains.whois.label_registrar'] = 'Registrar';
+$lang['AdminDomains.whois.label_reg_date'] = 'Registration Date';
+$lang['AdminDomains.whois.label_exp_date'] = 'Expiration Date';
+$lang['AdminDomains.whois.label_status'] = 'Status';
+$lang['AdminDomains.whois.label_name_servers'] = 'Name Servers';
+$lang['AdminDomains.whois.label_dnssec'] = 'DNSSEC';
+$lang['AdminDomains.whois.error_invalid_domain'] = 'Please enter a valid domain name';
 
 
 $lang['AdminDomains.import.boxtitle_import'] = 'Import TLDs';

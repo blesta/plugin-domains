@@ -1,6 +1,5 @@
 <?php
 if (!(isset($is_ajax) ? $is_ajax : false)) {
-    echo (isset($left_nav) ? $left_nav : null);
 ?>
 <div id="right_outer">
     <?php
