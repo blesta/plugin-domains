@@ -51,13 +51,51 @@ class AdminMain extends DomainsController
      */
     public function add()
     {
-        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains']);
+        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Contacts', 'ClientGroups', 'EmailVerifications', 'Invoices']);
 
         // Ensure a valid client was given
         $client_id = ($this->get['client_id'] ?? ($this->get[0] ?? null));
         if (empty($client_id) || !($client = $this->Clients->get($client_id))) {
             $this->redirect($this->base_uri . 'clients/');
         }
+
+        // Load additional client data for sidebar
+        $client->contacts = array_merge(
+            $this->Contacts->getAll($client->id, 'billing'),
+            $this->Contacts->getAll($client->id, 'other')
+        );
+        $client->numbers = $this->Contacts->getNumbers($client->contact_id);
+        $client->note_count = $this->Clients->getNoteListCount($client->id);
+        $client->group = $this->ClientGroups->get($client->client_group_id);
+
+        // Include an international-formatted version of each number
+        foreach ($client->numbers as $number) {
+            $number->international = $this->Contacts->intlNumber($number->number, $client->country, ' ');
+        }
+
+        // Fetch email verification status
+        $email_verification = $this->EmailVerifications->getByContactId($client->contact_id);
+        $client->settings['email_verification_status'] = 'unsent';
+        if (isset($email_verification->verified)) {
+            $client->settings['email_verification_status'] = ($email_verification->verified == 1 ? 'verified' : 'unverified');
+        }
+
+        // Load additional data for sidebar
+        $status = [
+            'active' => Language::_('AdminClients.view.status_active', true),
+            'inactive' => Language::_('AdminClients.view.status_inactive', true),
+            'fraud' => Language::_('AdminClients.view.status_fraud', true)
+        ];
+
+        $number_types = $this->Contacts->getNumberTypes();
+        $number_locations = $this->Contacts->getNumberLocations();
+        $delivery_methods = $this->Invoices->getDeliveryMethods($client->id);
+
+        // Set sidebar variables
+        $this->set('status', $status);
+        $this->set('number_types', $number_types);
+        $this->set('number_locations', $number_locations);
+        $this->set('delivery_methods', $delivery_methods);
 
         // Get the wizard action/step
         $action = ($this->get['action'] ?? ($this->get[1] ?? null));
@@ -537,13 +575,51 @@ class AdminMain extends DomainsController
      */
     public function edit()
     {
-        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains']);
+        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Contacts', 'ClientGroups', 'EmailVerifications', 'Invoices']);
 
         // Ensure a valid client was given
         $client_id = ($this->get['client_id'] ?? ($this->get[0] ?? null));
         if (empty($client_id) || !($client = $this->Clients->get($client_id))) {
             $this->redirect($this->base_uri . 'clients/');
         }
+
+        // Load additional client data for sidebar
+        $client->contacts = array_merge(
+            $this->Contacts->getAll($client->id, 'billing'),
+            $this->Contacts->getAll($client->id, 'other')
+        );
+        $client->numbers = $this->Contacts->getNumbers($client->contact_id);
+        $client->note_count = $this->Clients->getNoteListCount($client->id);
+        $client->group = $this->ClientGroups->get($client->client_group_id);
+
+        // Include an international-formatted version of each number
+        foreach ($client->numbers as $number) {
+            $number->international = $this->Contacts->intlNumber($number->number, $client->country, ' ');
+        }
+
+        // Fetch email verification status
+        $email_verification = $this->EmailVerifications->getByContactId($client->contact_id);
+        $client->settings['email_verification_status'] = 'unsent';
+        if (isset($email_verification->verified)) {
+            $client->settings['email_verification_status'] = ($email_verification->verified == 1 ? 'verified' : 'unverified');
+        }
+
+        // Load additional data for sidebar
+        $status = [
+            'active' => Language::_('AdminClients.view.status_active', true),
+            'inactive' => Language::_('AdminClients.view.status_inactive', true),
+            'fraud' => Language::_('AdminClients.view.status_fraud', true)
+        ];
+
+        $number_types = $this->Contacts->getNumberTypes();
+        $number_locations = $this->Contacts->getNumberLocations();
+        $delivery_methods = $this->Invoices->getDeliveryMethods($client->id);
+
+        // Set sidebar variables
+        $this->set('status', $status);
+        $this->set('number_types', $number_types);
+        $this->set('number_locations', $number_locations);
+        $this->set('delivery_methods', $delivery_methods);
 
         // Ensure a valid service was given
         $service_id = ($this->get['service_id'] ?? ($this->get[1] ?? null));

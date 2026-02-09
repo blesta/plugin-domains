@@ -47,18 +47,24 @@ class DomainsController extends AppController
         // Set the sidebar for all settings pages
         if ($this->portal == 'admin') {
             // Determine if sidebar should be shown
-            // Show sidebar only for AdminDomains controller, excluding browse and index actions
-            $show_sidebar = (
-                $this->controller === 'admin_domains'
-                && !in_array($this->action, ['browse', 'index'])
-            );
+            $show_sidebar = false;
+            $sidebar_partial = null;
 
-            if ($show_sidebar) {
+            // AdminDomains controller: settings sidebar (excluding browse and index)
+            if ($this->controller === 'admin_domains' && !in_array($this->action, ['browse', 'index'])) {
+                $show_sidebar = true;
+                $sidebar_partial = 'partials/admin_domains_sidebar';
+            }
+
+            // AdminMain controller: client sidebar (for add and edit actions)
+            if ($this->controller === 'admin_main' && in_array($this->action, ['add', 'edit'])) {
+                $show_sidebar = true;
+                $sidebar_partial = 'partials/admin_main_sidebar';
+            }
+
+            if ($show_sidebar && $sidebar_partial) {
                 Language::loadLang('admin_domains', null, PLUGINDIR . 'domains' . DS . 'language' . DS);
-                $this->structure->set(
-                    'side_bar',
-                    ['partials/admin_domains_sidebar', $this->view]
-                );
+                $this->structure->set('side_bar', [$sidebar_partial, $this->view]);
             }
 
             // Set the page title language term

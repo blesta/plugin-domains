@@ -1,3 +1,11 @@
+<!-- Delay Suspension Modal -->
+<div class="modal fade" id="delaySuspensionModal" tabindex="-1" aria-labelledby="delaySuspensionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" id="delaySuspensionModalContent">
+            <!-- Content loaded via AJAX -->
+        </div>
+    </div>
+</div>
 
 <?php
 echo ($message ?? null);
@@ -354,6 +362,157 @@ $this->Widget->end();
                 }
             });
         }
+    });
+
+    // Setup client settings toggle
+    var settingsToggle = document.getElementById('clientSettingsToggle');
+    var settingsCollapse = document.getElementById('clientSettingsCollapse');
+    var settingsChevron = document.getElementById('settingsChevron');
+
+    if (settingsToggle && settingsCollapse && settingsChevron) {
+        var clientId = <?php echo json_encode($client->id ?? 0);?>;
+
+        // Load saved state
+        var settingsState = localStorage.getItem('clientSettingsCollapsed_' + clientId);
+        if (settingsState === 'true') {
+            settingsChevron.classList.remove('bi-chevron-down');
+            settingsChevron.classList.add('bi-chevron-up');
+            settingsCollapse.style.display = 'none';
+        } else {
+            settingsCollapse.style.display = 'block';
+        }
+
+        settingsToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            blestaSlideToggle(settingsCollapse, 400, function(isNowOpen) {
+                if (isNowOpen) {
+                    settingsChevron.classList.remove('bi-chevron-up');
+                    settingsChevron.classList.add('bi-chevron-down');
+                    localStorage.setItem('clientSettingsCollapsed_' + clientId, 'false');
+                } else {
+                    settingsChevron.classList.remove('bi-chevron-down');
+                    settingsChevron.classList.add('bi-chevron-up');
+                    localStorage.setItem('clientSettingsCollapsed_' + clientId, 'true');
+                }
+            });
+        });
+    }
+
+    // Setup quick update links (status bar, invoice method, etc.)
+    var quickupdateLinks = document.querySelectorAll('a.quickupdate');
+    quickupdateLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            var url = this.getAttribute('href');
+            var self = this;
+
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.class_name) {
+                    if (self.classList.contains('statusupdate')) {
+                        var statusBar = self.querySelector('.client-status-bar');
+                        if (statusBar) {
+                            statusBar.className = 'client-status-bar ' + data.class_name.replace('status_box ', '').replace(' status_box', '').replace('status_box', '');
+                            var statusText = statusBar.querySelector('.client-status-text');
+                            if (statusText) {
+                                statusText.textContent = data.text + ' <?php echo $this->_('AdminClients.view.status_link', true);?>';
+                            }
+                        }
+                    } else {
+                        var strong = self.querySelector('strong');
+                        if (strong) {
+                            strong.className = data.class_name;
+                            var statusSpan = strong.querySelector('.status');
+                            if (statusSpan) {
+                                statusSpan.textContent = data.text + ' ';
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+
+    // Setup toggle switch quick updates (autodebit, autosuspend, etc.)
+    var quickupdateToggles = document.querySelectorAll('.quickupdate-toggle');
+    quickupdateToggles.forEach(function(toggle) {
+        toggle.addEventListener('change', function(e) {
+            var url = this.getAttribute('data-url');
+            var checkbox = this;
+            var previousState = !checkbox.checked;
+
+            checkbox.disabled = true;
+
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.class_name) {
+                    checkbox.checked = (data.class_name === 'enable');
+
+                    // Handle autosuspend date visibility
+                    if (typeof data.autosuspend_date !== 'undefined') {
+                        var autosuspendDate = document.querySelector('.autosuspend-date');
+                        if (autosuspendDate) {
+                            if (data.class_name === 'enable') {
+                                autosuspendDate.classList.remove('d-none');
+                            } else {
+                                autosuspendDate.classList.add('d-none');
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                checkbox.checked = previousState;
+            })
+            .finally(function() {
+                checkbox.disabled = false;
+            });
+        });
+    });
+
+    // Setup autosuspend date modal
+    var autosuspendDates = document.querySelectorAll('.autosuspend-date');
+    autosuspendDates.forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var url = this.getAttribute('data-url');
+            var modalContent = document.getElementById('delaySuspensionModalContent');
+            var modalElement = document.getElementById('delaySuspensionModal');
+
+            if (!url || !modalContent || !modalElement) return;
+
+            // Load modal content via AJAX
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                modalContent.innerHTML = html;
+
+                // Open modal using Bootstrap's modal
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    var modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                }
+            })
+            .catch(error => console.error('Error loading modal:', error));
+        });
     });
 })();
 </script>
