@@ -49,6 +49,16 @@
             $icon = (isset($nav[$i]['icon']) ? $nav[$i]['icon'] : 'bi-chevron-right');
             $has_children = (isset($nav[$i]['children']) ? $nav[$i]['children'] : false);
             $is_current = substr_compare($uri, $_SERVER['REQUEST_URI'], 0, strlen(rtrim($uri ?? '', '/')), true) === 0;
+
+            // Also check if any children match the current URI
+            if ($has_children) {
+                foreach ($has_children as $child) {
+                    if (isset($child['uri']) && substr_compare($child['uri'], $_SERVER['REQUEST_URI'], 0, strlen(rtrim($child['uri'] ?? '', '/')), true) === 0) {
+                        $is_current = true;
+                        break;
+                    }
+                }
+            }
     ?>
     <div class="settings-group">
         <?php if ($has_children) { ?>

@@ -46,11 +46,20 @@ class DomainsController extends AppController
 
         // Set the sidebar for all settings pages
         if ($this->portal == 'admin') {
-            Language::loadLang('admin_domains', null, PLUGINDIR . 'domains' . DS . 'language' . DS);
-            $this->structure->set(
-                'side_bar',
-                ['partials/admin_domains_sidebar', $this->view]
+            // Determine if sidebar should be shown
+            // Show sidebar only for AdminDomains controller, excluding browse and index actions
+            $show_sidebar = (
+                $this->controller === 'admin_domains'
+                && !in_array($this->action, ['browse', 'index'])
             );
+
+            if ($show_sidebar) {
+                Language::loadLang('admin_domains', null, PLUGINDIR . 'domains' . DS . 'language' . DS);
+                $this->structure->set(
+                    'side_bar',
+                    ['partials/admin_domains_sidebar', $this->view]
+                );
+            }
 
             // Set the page title language term
             $page_title = Loader::toCamelCase($this->controller) . '.'
