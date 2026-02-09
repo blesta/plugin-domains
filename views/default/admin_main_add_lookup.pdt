@@ -1,115 +1,159 @@
+<?php /** @var View $this */ ?>
 
-<?php
-$this->Form->create();
-?>
-<div class="mb-3">
-    <div class="card bg-light">
-        <div class="card-body">
+<div class="card-body">
+    <?php
+    $this->Form->create();
+    ?>
+
+    <!-- Domain Search Section -->
+    <h6 class="form-section-header"><?php $this->_('AdminMain.add.heading_search');?></h6>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12">
             <?php $this->Form->label($this->_('AdminMain.add.field_domain', true), 'domain', ['class' => 'form-label']); ?>
-            <div class="input-group mb-3">
-                <?php $this->Form->fieldText('domain', ($vars->domain ?? null), ['id' => 'domain', 'class' => 'form-control', 'placeholder' => 'example.com']); ?>
-            </div>
-
-            <div class="text-center">
-                <?php
-                if (!empty($spotlight_tlds)) {
-                    foreach ($spotlight_tlds as $spotlight_tld) {
-                        if (array_key_exists($spotlight_tld, ($tlds ?? []))) {
-                            unset($tlds[$spotlight_tld]);
-                ?>
-                <div class="form-check form-check-inline d-inline-block me-3 mb-2 spotlight_tld">
-                    <?php
-                    $this->Form->fieldCheckbox('tlds[]', $spotlight_tld, in_array($spotlight_tld, ($vars->tlds ?? [])), ['id' => 'tld_' . str_replace('.', '_', $spotlight_tld), 'class' => 'form-check-input']);
-                    ?>
-                    <?php $this->Form->label($this->Html->safe($spotlight_tld), 'tld_' . str_replace('.', '_', $spotlight_tld), ['class' => 'form-check-label fw-bold text-primary']); ?>
-                </div>
-                <?php
-                        }
-                    }
-                }
-
-                if (!empty($tlds)) {
-                ?>
-                <hr class="my-3" />
-                    <?php
-                    foreach ($tlds as $tld) {
-                    ?>
-                        <div class="form-check form-check-inline d-inline-block me-3 mb-2">
-                            <?php
-                            $this->Form->fieldCheckbox('tlds[]', $tld, in_array($tld, ($vars->tlds ?? [])), ['id' => 'tld_' . str_replace('.', '_', $tld), 'class' => 'form-check-input']);
-                            ?>
-                            <?php $this->Form->label($this->Html->safe($tld), 'tld_' . str_replace('.', '_', $tld), ['class' => 'form-check-label']); ?>
-                        </div>
-                    <?php
-                    }
-                    ?>
-                <?php
-                }
-                ?>
+            <div class="input-group input-group-lg">
+                <?php $this->Form->fieldText('domain', ($vars->domain ?? null), [
+                    'id' => 'domain',
+                    'class' => 'form-control',
+                    'placeholder' => 'example.com',
+                    'autofocus' => true
+                ]); ?>
+                <button class="btn btn-primary" type="submit" name="lookup" id="btnLookup">
+                    <i class="bi bi-search"></i> <?php $this->_('AdminMain.add.field_lookup');?>
+                </button>
+                <button class="btn btn-secondary" type="submit" name="transfer" id="btnTransfer">
+                    <i class="bi bi-arrow-right-circle"></i> <?php $this->_('AdminMain.add.field_transfer');?>
+                </button>
             </div>
         </div>
     </div>
-</div>
-<div class="d-grid gap-2 d-md-block">
-    <div class="btn-group mx-auto" role="group">
-        <?php
-        $this->Form->fieldSubmit('lookup', $this->_('AdminMain.add.field_lookup', true), ['class' => 'btn btn-success']);
-        $this->Form->fieldSubmit('transfer', $this->_('AdminMain.add.field_transfer', true), ['class' => 'btn btn-outline-secondary']);
-        ?>
+
+    <!-- Spotlight TLDs -->
+    <?php if (!empty($spotlight_tlds)): ?>
+    <div class="mb-4">
+        <label class="form-label"><?php $this->_('AdminMain.add.label_spotlight_tlds');?></label>
+        <div class="d-flex flex-wrap gap-2">
+            <?php
+            foreach ($spotlight_tlds as $spotlight_tld):
+                if (array_key_exists($spotlight_tld, ($tlds ?? []))):
+                    unset($tlds[$spotlight_tld]);
+            ?>
+            <div class="form-check form-check-pill">
+                <?php $this->Form->fieldCheckbox('tlds[]', $spotlight_tld, in_array($spotlight_tld, ($vars->tlds ?? [])), [
+                    'id' => 'tld_' . str_replace('.', '_', $spotlight_tld),
+                    'class' => 'form-check-input'
+                ]); ?>
+                <?php $this->Form->label($this->Html->safe($spotlight_tld), 'tld_' . str_replace('.', '_', $spotlight_tld), [
+                    'class' => 'form-check-label'
+                ]); ?>
+            </div>
+            <?php
+                endif;
+            endforeach;
+            ?>
+        </div>
     </div>
-</div>
-<?php
-$this->Form->end();
-?>
+    <?php endif; ?>
 
-<?php
-if (!empty($lookup)) {
-?>
-<div class="mt-4">
-    <h6><?php echo $this->_('AdminMain.add.title_search_results', true);?></h6>
-    <div class="mb-3">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th><?php echo $this->_('AdminMain.add.heading_domain', true);?></th>
-                    <th><?php echo $this->_('AdminMain.add.heading_status', true);?></th>
-                    <th><?php echo $this->_('AdminMain.add.heading_options', true);?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                $i = 0;
-                foreach ($lookup as $result) {
-                ?>
-                <tr<?php echo ($i % 2 == 1) ? ' class="table-light"' : '';?>>
-                    <td><?php echo $this->Html->safe($result['domain'] ?? '');?></td>
-                    <td>
-                        <span class="badge bg-<?php echo ($result['available'] ?? false) ? 'success' : 'danger';?>"><?php echo $this->_('AdminMain.add.text_domain_' . (($result['available'] ?? false) ? 'available' : 'unavailable'), true);?></span>
-                    </td>
-                    <td>
-                        <?php
-                        $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id ?? null) . '/configuration/');
-                        $this->Form->fieldHidden('domain', $result['domain'] ?? '');
-
-                        $disabled = !($result['available'] ?? false) ? ['disabled' => 'disabled'] : [];
-                        if ($result['transfer'] ?? false) {
-                            $this->Form->fieldSubmit('transfer', $this->_('AdminMain.add.field_transfer', true), array_merge(['class' => 'btn btn-sm btn-outline-secondary'], $disabled));
-                        } else {
-                            $this->Form->fieldSubmit('register', $this->_('AdminMain.add.field_register', true), array_merge(['class' => 'btn btn-sm btn-primary'], $disabled));
-                        }
-
-                        $this->Form->end();
-                        ?>
-                    </td>
-                </tr>
-                <?php
-                    $i++;
-                }
-                ?>
-            </tbody>
-        </table>
+    <!-- More TLDs (Collapsible) -->
+    <?php if (!empty($tlds)): ?>
+    <div class="mb-4">
+        <p class="mb-2">
+            <a class="collapse-trigger" data-bs-toggle="collapse" href="#moreTldsCollapse" role="button" aria-expanded="false">
+                <i class="bi bi-chevron-down"></i>
+                <?php $this->_('AdminMain.add.link_more_tlds');?>
+            </a>
+        </p>
+        <div class="collapse" id="moreTldsCollapse">
+            <div class="collapse-content">
+                <div class="row g-2">
+                    <?php foreach ($tlds as $tld): ?>
+                    <div class="col-md-4 col-lg-3">
+                        <div class="form-check">
+                            <?php $this->Form->fieldCheckbox('tlds[]', $tld, in_array($tld, ($vars->tlds ?? [])), [
+                                'id' => 'tld_' . str_replace('.', '_', $tld),
+                                'class' => 'form-check-input'
+                            ]); ?>
+                            <?php $this->Form->label($this->Html->safe($tld), 'tld_' . str_replace('.', '_', $tld), [
+                                'class' => 'form-check-label'
+                            ]); ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
     </div>
+    <?php endif; ?>
+
+    <?php
+    $this->Form->end();
+    ?>
+
+    <!-- Search Results -->
+    <?php if (!empty($lookup)): ?>
+    <hr>
+    <div class="mt-4">
+        <h6 class="form-section-header"><?php echo $this->_('AdminMain.add.title_search_results', true);?></h6>
+    </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th><?php echo $this->_('AdminMain.add.heading_domain', true);?></th>
+                        <th><?php echo $this->_('AdminMain.add.heading_status', true);?></th>
+                        <th class="text-end"><?php echo $this->_('AdminMain.add.heading_options', true);?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($lookup as $result): ?>
+                    <tr>
+                        <td><?php echo $this->Html->safe($result['domain'] ?? '');?></td>
+                        <td>
+                            <?php if ($result['available'] ?? false): ?>
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    <?php echo $this->_('AdminMain.add.text_domain_available', true);?>
+                                </span>
+                            <?php else: ?>
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    <?php echo $this->_('AdminMain.add.text_domain_unavailable', true);?>
+                                </span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-end">
+                            <?php
+                            $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id ?? null) . '/configuration/');
+                            $this->Form->fieldHidden('domain', $result['domain'] ?? '');
+
+                            if ($result['available'] ?? false):
+                                if ($result['transfer'] ?? false):
+                            ?>
+                                <div class="btn-group btn-group-sm">
+                                    <?php $this->Form->fieldSubmit('register', $this->_('AdminMain.add.field_register', true), ['class' => 'btn btn-primary']); ?>
+                                    <?php $this->Form->fieldSubmit('transfer', $this->_('AdminMain.add.field_transfer', true), ['class' => 'btn btn-outline-secondary']); ?>
+                                </div>
+                            <?php
+                                else:
+                                    $this->Form->fieldSubmit('register', $this->_('AdminMain.add.field_register', true), ['class' => 'btn btn-sm btn-primary']);
+                                endif;
+                            else:
+                            ?>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                                    <?php echo $this->_('AdminMain.add.text_domain_unavailable', true);?>
+                                </button>
+                            <?php
+                            endif;
+
+                            $this->Form->end();
+                            ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
-<?php
-}
-?>

@@ -1,3 +1,5 @@
+<?php /** @var View $this */ ?>
+
 <?php
 echo (isset($message) ? $message : null);
 
@@ -27,6 +29,7 @@ $this->Widget->setBadgeUri($this->base_uri . 'plugin/domains/admin_main/clientdo
 $this->Widget->setFilters((isset($filters) ? $filters : null), $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null)), !empty($filter_vars));
 $this->Widget->setAjaxFiltering();
 $this->Widget->setWidgetButton('arrow');
+$this->Widget->setBodyWrapper(false);
 $this->Widget->create($this->_('AdminMain.index.boxtitle_domains', true), ['id' => 'plugin_domains_admin_main_domains'], ($render_section ?? null));
 $this->Form->create(null, ['class' => 'disable-on-submit']);
 

@@ -57,7 +57,7 @@ class DomainsController extends AppController
             }
 
             // AdminMain controller: client sidebar (for add and edit actions)
-            if ($this->controller === 'admin_main' && in_array($this->action, ['add', 'edit'])) {
+            if ($this->controller === 'admin_main' && in_array($this->action, ['add', 'edit', 'tab'])) {
                 $show_sidebar = true;
                 $sidebar_partial = 'partials/admin_main_sidebar';
             }

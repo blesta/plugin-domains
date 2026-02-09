@@ -1,3 +1,5 @@
+<?php /** @var View $this **/ ?>
+
 <!-- Delay Suspension Modal -->
 <div class="modal fade" id="delaySuspensionModal" tabindex="-1" aria-labelledby="delaySuspensionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -7,31 +9,33 @@
     </div>
 </div>
 
-<div id="right_outer">
-    <?php
-    echo ($message ?? null);
+<?php
+echo ($message ?? null);
 
-    $this->Widget->clear();
-    $this->Widget->create($this->_('AdminMain.add.boxtitle_add', true, ($domain ?? null)));
-    ?>
-    <div class="inner">
-        <?php echo ($form ?? null);?>
-    </div>
-    <?php
-    $this->Widget->end();
-    ?>
-</div>
+$this->Widget->clear();
+$this->Widget->setBodyWrapper(false);
+$this->Widget->create(
+    $this->_('AdminMain.add.boxtitle_add', true, ($domain ?? '')),
+    ['id' => 'domain_add_widget']
+);
+?>
+    <?php echo ($form ?? '');?>
+<?php
+$this->Widget->end();
+?>
 
 <script>
 (function() {
+    'use strict';
+
+    var clientId = <?php echo json_encode($client->id ?? 0);?>;
+
     // Setup client settings toggle
     var settingsToggle = document.getElementById('clientSettingsToggle');
     var settingsCollapse = document.getElementById('clientSettingsCollapse');
     var settingsChevron = document.getElementById('settingsChevron');
 
     if (settingsToggle && settingsCollapse && settingsChevron) {
-        var clientId = <?php echo json_encode($client->id ?? 0);?>;
-
         // Load saved state
         var settingsState = localStorage.getItem('clientSettingsCollapsed_' + clientId);
         if (settingsState === 'true') {

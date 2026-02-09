@@ -1,19 +1,24 @@
+<?php /** @var View $this */ ?>
 
-<?php
-$this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id ?? null) . '/confirmation/', ['id' => 'add_configuration']);
+<div class="card-body">
+    <?php
+    $this->Form->create($this->base_uri . 'plugin/domains/admin_main/add/' . $this->Html->safe($client->id ?? null) . '/confirmation/', ['id' => 'add_configuration']);
 
-$this->Form->fieldHidden('domain', $vars->domain ?? '');
-if (($action ?? 'register') == 'transfer') {
-    $this->Form->fieldHidden('transfer', '1');
-}
-if (($action ?? 'register') == 'register') {
-    $this->Form->fieldHidden('register', '1');
-}
-?>
-<h6><?php echo $this->_('AdminMain.add.title_basic_options', true);?></h6>
-<div class="card bg-light mb-3">
-    <div class="card-body">
-        <div class="mb-3">
+    $this->Form->fieldHidden('domain', $vars->domain ?? '');
+    if (($action ?? 'register') == 'transfer') {
+        $this->Form->fieldHidden('transfer', '1');
+    }
+    if (($action ?? 'register') == 'register') {
+        $this->Form->fieldHidden('register', '1');
+    }
+    ?>
+
+    <!-- Basic Options Section -->
+    <h6 class="form-section-header"><?php echo $this->_('AdminMain.add.title_basic_options', true);?></h6>
+
+    <div class="row g-3 mb-4">
+        <!-- Invoice Method -->
+        <div class="col-12">
             <?php $this->Form->label($this->_('AdminMain.add.field_invoice_method', true), 'invoice_method_create', ['class' => 'form-label']);?>
 
             <div class="form-check mb-2">
@@ -23,9 +28,7 @@ if (($action ?? 'register') == 'register') {
                 ?>
             </div>
 
-            <?php
-            if (!empty($invoices)) {
-            ?>
+            <?php if (!empty($invoices)): ?>
                 <div class="form-check mb-2">
                     <?php
                     $this->Form->fieldRadio('invoice_method', 'append', ($vars->invoice_method ?? null) == 'append', ['id' => 'invoice_method_append', 'class' => 'form-check-input']);
@@ -35,9 +38,7 @@ if (($action ?? 'register') == 'register') {
                 <div class="ms-4 mb-2">
                     <?php $this->Form->fieldSelect('invoice_id', $invoices, ($vars->invoice_id ?? null), ['class' => 'form-select']);?>
                 </div>
-            <?php
-            }
-            ?>
+            <?php endif; ?>
 
             <div class="form-check">
                 <?php
@@ -47,57 +48,64 @@ if (($action ?? 'register') == 'register') {
             </div>
         </div>
 
-        <div class="mb-3">
+        <!-- Years and Pricing -->
+        <div class="col-md-6">
             <?php $this->Form->label($this->_('AdminMain.add.field_years', true), 'years', ['class' => 'form-label']);?>
-            <div class="row g-2 align-items-center">
-                <div class="col-auto">
-                    <?php $this->Form->fieldSelect('years', $years ?? [], ($vars->years ?? null), ['id' => 'years', 'class' => 'form-select']);?>
-                </div>
-                <div class="col-auto">
-                    <a id="refresh_modules" href="#" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-arrow-clockwise"></i> <?php $this->_('AdminMain.add.text_refresh');?>
-                    </a>
-                </div>
+            <div class="input-group">
+                <?php $this->Form->fieldSelect('years', $years ?? [], ($vars->years ?? null), ['id' => 'years', 'class' => 'form-select']);?>
+                <button type="button" id="refresh_modules" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
             </div>
-            <a class="d-block mt-1 text-primary small" href="<?php echo $this->base_uri . 'packages/edit/' . (isset($package->id) ? $this->Html->safe($package->id) : null) . '/'; ?>" target="_blank" id="package_edit_link">
+            <a class="d-block mt-1 small" href="<?php echo $this->base_uri . 'packages/edit/' . (isset($package->id) ? $this->Html->safe($package->id) : null) . '/'; ?>" target="_blank" id="package_edit_link">
                 <i class="bi bi-pencil-square"></i> <?php $this->_('AdminMain.add.edit_package_pricing'); ?>
             </a>
         </div>
 
-        <div class="mb-3">
+        <!-- Status -->
+        <div class="col-md-6">
             <?php $this->Form->label($this->_('AdminMain.add.field_status', true), 'status', ['class' => 'form-label']);?>
             <?php $this->Form->fieldSelect('status', $status ?? [], ($vars->status ?? null), ['id' => 'status', 'class' => 'form-select']);?>
         </div>
 
-        <div class="mb-3">
+        <!-- Module -->
+        <div class="col-12">
             <?php $this->Form->label($this->_('AdminMain.add.field_module', true), 'module', ['class' => 'form-label']);?>
             <?php $this->Form->fieldSelect('module', $modules ?? [], ($vars->module ?? null), ['id' => 'module', 'class' => 'form-select']);?>
         </div>
 
-        <div class="form-check mb-2">
-            <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module', 'class' => 'form-check-input']);?>
-            <?php $this->Form->label($this->_('AdminMain.add.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'form-check-label']);?>
-        </div>
+        <!-- Checkboxes -->
+        <div class="col-12">
+            <div class="form-check mb-2">
+                <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module', 'class' => 'form-check-input']);?>
+                <?php $this->Form->label($this->_('AdminMain.add.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'form-check-label']);?>
+            </div>
 
-        <div class="form-check">
-            <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order', 'class' => 'form-check-input']);?>
-            <?php $this->Form->label($this->_('AdminMain.add.field_notify_order', true), 'notify_order', ['class' => 'form-check-label']);?>
+            <div class="form-check">
+                <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order', 'class' => 'form-check-input']);?>
+                <?php $this->Form->label($this->_('AdminMain.add.field_notify_order', true), 'notify_order', ['class' => 'form-check-label']);?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registrar Options Section -->
+    <h6 class="form-section-header"><?php echo $this->_('AdminMain.add.title_registrar_options', true);?></h6>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div id="module_fields"></div>
         </div>
     </div>
 </div>
 
-<h6><?php echo $this->_('AdminMain.add.title_registrar_options', true);?></h6>
-<div class="card bg-light mb-3">
-    <div class="card-body">
-        <div id="module_fields"></div>
-    </div>
-</div>
-
-<div class="button_row">
+<!-- Submit Button -->
+<?php $this->Widget->footer(); ?>
+<div class="d-flex justify-content-end">
     <?php
-    $this->Form->fieldSubmit('submit', $this->_('AdminMain.add.field_submit', true), ['class' => 'btn btn-primary float-end']);
+    $this->Form->fieldSubmit('submit', $this->_('AdminMain.add.field_submit', true), ['class' => 'btn btn-primary']);
     ?>
 </div>
+
 <?php
 $this->Form->end();
 ?>
@@ -107,14 +115,14 @@ $this->Form->end();
     'use strict';
 
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('add_configuration');
+        var form = document.getElementById('add_configuration');
         if (!form) return;
 
-        const moduleSelect = document.getElementById('module');
-        const refreshLink = document.getElementById('refresh_modules');
-        const statusSelect = document.getElementById('status');
-        const useModuleCheckbox = document.getElementById('use_module');
-        const notifyOrderCheckbox = document.getElementById('notify_order');
+        var moduleSelect = document.getElementById('module');
+        var refreshLink = document.getElementById('refresh_modules');
+        var statusSelect = document.getElementById('status');
+        var useModuleCheckbox = document.getElementById('use_module');
+        var notifyOrderCheckbox = document.getElementById('notify_order');
 
         // Module change handler
         if (moduleSelect) {
@@ -148,15 +156,18 @@ $this->Form->end();
          * Update module fields via AJAX
          */
         function updateModuleFields() {
-            const moduleId = moduleSelect ? moduleSelect.value : '';
+            var moduleId = moduleSelect ? moduleSelect.value : '';
 
-            const formData = new FormData();
-            formData.append('_csrf_token', form.querySelector('input[name="_csrf_token"]').value);
+            var formData = new FormData();
+            var csrfToken = form.querySelector('input[name="_csrf_token"]');
+            if (csrfToken) {
+                formData.append('_csrf_token', csrfToken.value);
+            }
 
             // Add all form data
-            const formInputs = form.querySelectorAll('input, select, textarea');
-            formInputs.forEach(input => {
-                if (input.name && input.type !== 'checkbox' || input.checked) {
+            var formInputs = form.querySelectorAll('input, select, textarea');
+            formInputs.forEach(function(input) {
+                if (input.name && (input.type !== 'checkbox' || input.checked)) {
                     formData.append(input.name, input.value);
                 }
             });
@@ -168,7 +179,7 @@ $this->Form->end();
             })
             .then(response => response.json())
             .then(data => {
-                const moduleFields = document.getElementById('module_fields');
+                var moduleFields = document.getElementById('module_fields');
                 if (moduleFields && data.content) {
                     moduleFields.innerHTML = data.content;
                 }
@@ -182,10 +193,10 @@ $this->Form->end();
          * Update pricing options via AJAX
          */
         function updatePricingOptions() {
-            const moduleId = moduleSelect ? moduleSelect.value : '';
+            var moduleId = moduleSelect ? moduleSelect.value : '';
 
-            const formData = new FormData();
-            const csrfToken = form.querySelector('input[name="_csrf_token"]');
+            var formData = new FormData();
+            var csrfToken = form.querySelector('input[name="_csrf_token"]');
             if (csrfToken) {
                 formData.append('_csrf_token', csrfToken.value);
             }
@@ -197,26 +208,30 @@ $this->Form->end();
             })
             .then(response => response.json())
             .then(data => {
-                const yearsSelect = document.getElementById('years');
-                const packageEditLink = document.getElementById('package_edit_link');
+                var yearsSelect = document.getElementById('years');
+                var packageEditLink = document.getElementById('package_edit_link');
 
                 if (yearsSelect && data.pricing) {
                     // Remove all existing options
                     yearsSelect.innerHTML = '';
 
                     // Add new options
-                    for (const [key, value] of Object.entries(data.pricing)) {
-                        const option = document.createElement('option');
-                        option.value = key;
-                        option.textContent = value;
-                        yearsSelect.appendChild(option);
+                    for (var key in data.pricing) {
+                        if (data.pricing.hasOwnProperty(key)) {
+                            var option = document.createElement('option');
+                            option.value = key;
+                            option.textContent = data.pricing[key];
+                            yearsSelect.appendChild(option);
+                        }
                     }
 
                     // Select first option matching currency
-                    const defaultCurrency = '<?php echo $this->Html->safe($client->settings['default_currency'] ?? null); ?>';
-                    const currencyOptions = yearsSelect.querySelectorAll('option[value*="' + defaultCurrency + '"]');
-                    if (currencyOptions.length > 0) {
-                        currencyOptions[0].selected = true;
+                    var defaultCurrency = '<?php echo $this->Html->safe($client->settings['default_currency'] ?? ''); ?>';
+                    if (defaultCurrency) {
+                        var currencyOptions = yearsSelect.querySelectorAll('option[value*="' + defaultCurrency + '"]');
+                        if (currencyOptions.length > 0) {
+                            currencyOptions[0].selected = true;
+                        }
                     }
                 }
 
@@ -233,7 +248,7 @@ $this->Form->end();
          * Update status field states
          */
         function updateStatusFields() {
-            const status = statusSelect ? statusSelect.value : '';
+            var status = statusSelect ? statusSelect.value : '';
 
             if (status !== 'active') {
                 if (useModuleCheckbox) {

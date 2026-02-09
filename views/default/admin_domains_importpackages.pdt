@@ -1,3 +1,5 @@
+<?php /** @var View $this */ ?>
+
 <?php
 if (!(isset($is_ajax) ? $is_ajax : false)) {
 ?>
