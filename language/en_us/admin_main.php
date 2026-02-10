@@ -213,6 +213,8 @@ $lang['AdminMain.edit.title_domain_information'] = 'Domain Information';
 $lang['AdminMain.edit.title_actions'] = 'Actions';
 $lang['AdminMain.edit.title_basic_options'] = 'Basic Options';
 
+$lang['AdminMain.edit.text_select_action'] = 'Click a button above to display the form to perform an action.';
+
 
 // Get filters
 $lang['AdminMain.getfilters.any'] = 'Any';

@@ -19,60 +19,103 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
 ?>
 <div class="inner">
     <h6 class="form-section-header"><?php $this->_('AdminMain.edit.title_domain_information');?></h6>
-    <div class="card bg-light mb-3">
-        <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-5"><?php $this->_('AdminMain.edit.text_domain');?></dt>
-                <dd class="col-sm-7"><?php (print (isset($service->name) ? $this->Html->safe($service->name) : null));?></dd>
 
-                <dt class="col-sm-5"><?php $this->_('AdminMain.edit.text_registrar');?></dt>
-                <dd class="col-sm-7"><?php (print (isset($module->name) ? $this->Html->safe($module->name) : null));?></dd>
+    <!-- Domain Info Bar -->
+    <div class="service-info-bar mb-3">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <h6 class="mb-1"><?php echo $this->Html->safe($service->name ?? '');?></h6>
+                <div class="text-muted"><?php echo $this->Html->safe($module->name ?? '');?></div>
+            </div>
+            <?php
+            $status_class = 'bg-secondary';
+            if ($service->status == 'active') {
+                $status_class = 'bg-success';
+            } elseif ($service->status == 'suspended') {
+                $status_class = 'bg-warning';
+            } elseif ($service->status == 'canceled') {
+                $status_class = 'bg-danger';
+            } elseif ($service->status == 'pending') {
+                $status_class = 'bg-info';
+            }
+            ?>
+            <span class="badge <?php echo $status_class;?>">
+                <i class="bi bi-circle-fill me-1"></i><?php echo $this->Html->safe($statuses[$service->status] ?? '');?>
+            </span>
+        </div>
+    </div>
 
-                <dt class="col-sm-5"><?php $this->_('AdminMain.edit.text_years');?></dt>
-                <dd class="col-sm-7">
+    <!-- Domain Details -->
+    <div class="service-info-details-container mb-3">
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-calendar3 me-1"></i><?php $this->_('AdminMain.edit.text_years');?>
+                </label>
+                <div class="form-control-plaintext">
                     <?php
                     $period = (($service->package_pricing->term ?? 1) > 1) ? $service->package_pricing->period . 's' : $service->package_pricing->period;
                     $this->_('AdminMain.edit.term_' . $period, false, ($service->package_pricing->term ?? 1));
                     ?>
-                </dd>
-
-                <dt class="col-sm-5"><?php $this->_('AdminMain.edit.text_status');?></dt>
-                <dd class="col-sm-7"><?php echo $this->Html->safe(($statuses[$service->status] ?? null));?></dd>
-
-                <dt class="col-sm-5"><?php $this->_('AdminMain.edit.text_date_added');?></dt>
-                <dd class="col-sm-7"><?php echo (!empty($service->date_added) ? $this->Date->cast($service->date_added) : '');?></dd>
-
-                <dt class="col-sm-5"><?php $this->_('AdminMain.edit.text_registration_date');?></dt>
-                <dd class="col-sm-7"><?php echo (!empty($service->registration_date) ? $this->Date->cast($service->registration_date) : '');?></dd>
-
-                <dt class="col-sm-5"><?php $this->_('AdminMain.edit.text_date_renews');?></dt>
-                <dd class="col-sm-7"><?php echo (!empty($service->date_renews) ? $this->Date->cast($service->date_renews) : $this->_('AdminMain.edit.text_never', true));?></dd>
-
-                <dt class="col-sm-5"><?php $this->_('AdminMain.edit.text_date_expires');?></dt>
-                <dd class="col-sm-7"><?php echo (!empty($service->expiration_date) ? $this->Date->cast($service->expiration_date) : $this->_('AdminMain.edit.text_never', true));?></dd>
-
-                <?php
-                if (!empty($service->date_last_renewed)) {
-                ?>
-                <dt class="col-sm-5"><?php $this->_('AdminMain.edit.text_date_last_renewed');?></dt>
-                <dd class="col-sm-7"><?php echo $this->Date->cast($service->date_last_renewed);?></dd>
-                <?php
-                }
-                if (!empty($service->date_suspended)) {
-                ?>
-                <dt class="col-sm-5"><?php $this->_('AdminMain.edit.text_date_suspended');?></dt>
-                <dd class="col-sm-7"><?php echo $this->Date->cast($service->date_suspended);?></dd>
-                <?php
-                }
-                if (!empty($service->date_canceled)) {
-                ?>
-                <dt class="col-sm-5"><?php $this->_('AdminMain.edit.text_date_canceled');?></dt>
-                <dd class="col-sm-7"><?php echo $this->Date->cast($service->date_canceled);?></dd>
-                <?php
-                }
-                ?>
-            </dl>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-calendar-check me-1"></i><?php $this->_('AdminMain.edit.text_date_added');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo (!empty($service->date_added) ? $this->Date->cast($service->date_added) : '');?></div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-calendar-event me-1"></i><?php $this->_('AdminMain.edit.text_registration_date');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo (!empty($service->registration_date) ? $this->Date->cast($service->registration_date) : '');?></div>
+            </div>
         </div>
+
+        <div class="row g-3 mb-0">
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-arrow-repeat me-1"></i><?php $this->_('AdminMain.edit.text_date_renews');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo (!empty($service->date_renews) ? $this->Date->cast($service->date_renews) : $this->_('AdminMain.edit.text_never', true));?></div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-calendar-x me-1"></i><?php $this->_('AdminMain.edit.text_date_expires');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo (!empty($service->expiration_date) ? $this->Date->cast($service->expiration_date) : $this->_('AdminMain.edit.text_never', true));?></div>
+            </div>
+            <?php if (!empty($service->date_last_renewed)) { ?>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-arrow-clockwise me-1"></i><?php $this->_('AdminMain.edit.text_date_last_renewed');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo $this->Date->cast($service->date_last_renewed);?></div>
+            </div>
+            <?php } ?>
+        </div>
+
+        <?php if (!empty($service->date_suspended) || !empty($service->date_canceled)) { ?>
+        <div class="row g-3 mb-0 mt-3">
+            <?php if (!empty($service->date_suspended)) { ?>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-pause-circle me-1"></i><?php $this->_('AdminMain.edit.text_date_suspended');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo $this->Date->cast($service->date_suspended);?></div>
+            </div>
+            <?php } ?>
+            <?php if (!empty($service->date_canceled)) { ?>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-x-circle me-1"></i><?php $this->_('AdminMain.edit.text_date_canceled');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo $this->Date->cast($service->date_canceled);?></div>
+            </div>
+            <?php } ?>
+        </div>
+        <?php } ?>
     </div>
 
     <?php
@@ -80,97 +123,161 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
         $this->Form->create(null, ['id' => 'action_domain']);
     ?>
         <h6 class="form-section-header"><?php $this->_('AdminMain.edit.title_actions');?></h6>
-        <div class="card bg-light mb-3">
-            <div class="card-body">
-                <div class="mb-3">
-                    <?php
-                    $this->Form->label($this->_('AdminMain.edit.field_action', true), 'action', ['class' => 'form-label']);
-                    $this->Form->fieldSelect('action', ($actions ?? null), ($vars->action ?? null), ['id' => 'action', 'class' => 'form-select']);
-                    ?>
-                </div>
 
-                <div class="domain_renewal mb-3" style="display: none;">
+        <!-- Action Button Group -->
+        <?php
+        $this->Form->fieldHidden('action', ($vars->action ?? null), ['id' => 'action_value']);
+        ?>
+        <div class="btn-group action-button-group mb-3 flex-wrap" role="group" aria-label="Domain actions">
+            <?php
+            if (isset($actions) && is_array($actions)) {
+                foreach ($actions as $action_key => $action_label) {
+                    if ($action_key === '') continue; // Skip empty option
+
+                    // Map action keys to icons
+                    $icon_map = [
+                        'domain_renewal' => 'arrow-repeat',
+                        'change_registrar' => 'box-arrow-right',
+                        'change_auto_renewal' => 'toggles',
+                        'change_expiration_date' => 'calendar-x',
+                        'change_registration_date' => 'calendar-event',
+                        'update_nameservers' => 'hdd-network',
+                        'push_to_client' => 'person-up',
+                        'set_price_override' => 'cash-coin',
+                        'remove_price_override' => 'x-circle',
+                        'unparent' => 'diagram-2'
+                    ];
+                    $icon = $icon_map[$action_key] ?? 'gear';
+
+                    // Actions that don't need forms (submit directly)
+                    $direct_actions = ['set_price_override', 'remove_price_override', 'unparent'];
+                    $is_direct = in_array($action_key, $direct_actions);
+
+                    if ($is_direct) {
+                        // Direct submit button
+            ?>
+            <button type="submit" name="action" value="<?php echo $this->Html->safe($action_key);?>" class="btn btn-outline-secondary">
+                <i class="bi bi-<?php echo $icon;?> me-2"></i><?php echo $this->Html->safe($action_label);?>
+            </button>
+            <?php
+                    } else {
+                        // Button that shows form
+            ?>
+            <button type="button" class="btn btn-outline-secondary" data-action="<?php echo $this->Html->safe($action_key);?>">
+                <i class="bi bi-<?php echo $icon;?> me-2"></i><?php echo $this->Html->safe($action_label);?>
+            </button>
+            <?php
+                    } // end if/else
+                } // end foreach
+            }
+            ?>
+        </div>
+
+        <!-- Expandable Form Container -->
+        <div class="action-form-container mb-3">
+            <!-- Empty State -->
+            <div class="action-empty-state" id="action-empty">
+                <div class="text-center py-5">
+                    <i class="bi bi-hand-index" style="font-size: 3rem; color: var(--text-secondary);"></i>
+                    <p class="text-muted mt-3 mb-0"><?php $this->_('AdminMain.edit.text_select_action');?></p>
+                </div>
+            </div>
+
+            <!-- Domain Renewal Form -->
+            <div class="action-form domain_renewal" style="display: none;">
+                <div class="mb-3">
                     <?php
                     $this->Form->label($this->_('AdminMain.edit.field_years', true), 'years', ['class' => 'form-label']);
                     $this->Form->fieldText('years', ($vars->years ?? 1), ['class' => 'form-control', 'id' => 'years']);
                     ?>
                 </div>
+            </div>
 
-                <div class="change_registrar mb-3" style="display: none;">
+            <!-- Change Registrar Form -->
+            <div class="action-form change_registrar" style="display: none;">
+                <div class="mb-3">
                     <?php
                     $this->Form->label($this->_('AdminMain.edit.field_module', true), 'module_id', ['class' => 'form-label']);
                     $this->Form->fieldSelect('module_id', $modules ?? [], $vars->module ?? null, ['id' => 'module_id', 'class' => 'form-select']);
                     ?>
                 </div>
+            </div>
 
-                <div class="change_auto_renewal mb-3" style="display: none;">
+            <!-- Change Auto Renewal Form -->
+            <div class="action-form change_auto_renewal" style="display: none;">
+                <div class="mb-3">
                     <?php
                     $this->Form->label($this->_('AdminMain.edit.field_auto_renewal', true), 'auto_renewal', ['class' => 'form-label']);
                     $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], $vars->auto_renewal ?? null, ['class' => 'form-select']);
                     ?>
                 </div>
+            </div>
 
-                <div class="change_expiration_date mb-3" style="display: none;">
+            <!-- Change Expiration Date Form -->
+            <div class="action-form change_expiration_date" style="display: none;">
+                <div class="mb-3">
                     <?php
                     $this->Form->label($this->_('AdminMain.edit.field_expiration_date', true), 'expiration_date', ['class' => 'form-label']);
                     $this->Form->fieldText('expiration_date', $this->Date->cast($vars->expiration_date ?? $service->expiration_date, 'Y-m-d'), ['class' => 'form-control date', 'id' => 'expiration_date']);
                     ?>
                 </div>
+            </div>
 
-                <div class="change_registration_date mb-3" style="display: none;">
+            <!-- Change Registration Date Form -->
+            <div class="action-form change_registration_date" style="display: none;">
+                <div class="mb-3">
                     <?php
                     $this->Form->label($this->_('AdminMain.edit.field_registration_date', true), 'registration_date', ['class' => 'form-label']);
                     $this->Form->fieldText('registration_date', $this->Date->cast($vars->registration_date ?? $service->registration_date, 'Y-m-d'), ['class' => 'form-control date', 'id' => 'registration_date']);
                     ?>
                 </div>
+            </div>
 
-                <div class="update_nameservers mb-3" style="display: none;">
-                    <div class="row g-2">
-                        <div class="col-12">
-                            <?php $this->Form->label($this->_('AdminMain.edit.heading_nameservers', true), 'nameservers_1', ['class' => 'form-label fw-bold']);?>
-                        </div>
-                        <div class="col-md-6">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_ns1', true), 'nameservers_1', ['class' => 'form-label text-muted small']);
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[0] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_1']);
-                            ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_ns2', true), 'nameservers_2', ['class' => 'form-label text-muted small']);
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[1] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_2']);
-                            ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_ns3', true), 'nameservers_3', ['class' => 'form-label text-muted small']);
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[2] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_3']);
-                            ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_ns4', true), 'nameservers_4', ['class' => 'form-label text-muted small']);
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[3] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_4']);
-                            ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_ns5', true), 'nameservers_5', ['class' => 'form-label text-muted small']);
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[4] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_5']);
-                            ?>
-                        </div>
+            <!-- Update Nameservers Form -->
+            <div class="action-form update_nameservers" style="display: none;">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.edit.field_ns1', true), 'nameservers_1', ['class' => 'form-label text-muted small']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[0] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_1']);
+                        ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.edit.field_ns2', true), 'nameservers_2', ['class' => 'form-label text-muted small']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[1] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_2']);
+                        ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.edit.field_ns3', true), 'nameservers_3', ['class' => 'form-label text-muted small']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[2] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_3']);
+                        ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.edit.field_ns4', true), 'nameservers_4', ['class' => 'form-label text-muted small']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[3] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_4']);
+                        ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.edit.field_ns5', true), 'nameservers_5', ['class' => 'form-label text-muted small']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[4] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_5']);
+                        ?>
                     </div>
                 </div>
+            </div>
 
-                <div class="push_to_client mb-3" style="display: none;">
-                    <div class="position-relative">
-                        <?php
-                        $this->Form->label($this->_('AdminMain.edit.field_client', true), 'client', ['class' => 'form-label']);
-                        $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control', 'id' => 'client', 'autocomplete' => 'off']);
-                        $this->Form->fieldHidden('client_id', ($vars->client_id ?? null), ['id' => 'client_id']);
-                        ?>
-                        <div id="client_autocomplete_results" class="autocomplete-results position-absolute bg-body border rounded shadow-sm" style="display: none; z-index: 1050; width: 100%; max-height: 200px; overflow-y: auto;"></div>
-                    </div>
+            <!-- Push to Client Form -->
+            <div class="action-form push_to_client" style="display: none;">
+                <div class="position-relative">
+                    <?php
+                    $this->Form->label($this->_('AdminMain.edit.field_client', true), 'client', ['class' => 'form-label']);
+                    $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control', 'id' => 'client', 'autocomplete' => 'off']);
+                    $this->Form->fieldHidden('client_id', ($vars->client_id ?? null), ['id' => 'client_id']);
+                    ?>
+                    <div id="client_autocomplete_results" class="autocomplete-results position-absolute bg-body border rounded shadow-sm" style="display: none; z-index: 1050; width: 100%; max-height: 200px; overflow-y: auto;"></div>
                 </div>
             </div>
         </div>
@@ -191,50 +298,49 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
     $this->Form->create(null, ['id' => 'edit_domain']);
     ?>
         <h6 class="form-section-header"><?php echo $this->_('AdminMain.edit.title_basic_options', true);?></h6>
-        <div class="card bg-light mb-3">
-            <div class="card-body">
+
+        <?php
+        if ($service->status == 'pending') {
+            $this->Form->fieldHidden('status', 'active');
+        }
+        ?>
+
+        <?php
+        if ($service->status == 'pending') {
+        ?>
+            <div class="mb-3">
                 <?php
-                if ($service->status == 'pending') {
-                    $this->Form->fieldHidden('status', 'active');
-                }
+                $this->Form->label($this->_('AdminMain.edit.field_module', true), 'module', ['class' => 'form-label d-flex align-items-center']);
+                $this->Form->fieldSelect('module', $modules ?? [], ($vars->module ?? null), ['id' => 'module', 'class' => 'form-select']);
                 ?>
-
-                <?php
-                if ($service->status == 'pending') {
-                ?>
-                    <div class="mb-3">
-                        <?php $this->Form->label($this->_('AdminMain.edit.field_module', true), 'module', ['class' => 'form-label']);?>
-                        <?php $this->Form->fieldSelect('module', $modules ?? [], ($vars->module ?? null), ['id' => 'module', 'class' => 'form-select']);?>
-                    </div>
-
-                    <div class="form-check mb-3">
-                        <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order', 'class' => 'form-check-input']);?>
-                        <?php $this->Form->label($this->_('AdminMain.edit.field_notify_order', true), 'notify_order', ['class' => 'form-check-label']);?>
-                    </div>
-                <?php
-                }
-                ?>
-
-                <div class="mb-3">
-                    <div id="module_fields">
-                        <?php
-                        if ($service->status == 'pending') {
-                            $this->Form->fieldHidden('domain', $domain ?? $vars->domain ?? '');
-                            $this->Form->fieldHidden('service_id', $service->id ?? '');
-                            $this->Form->fieldHidden('module_row', $vars->module_row ?? '');
-                        } else {
-                            $this->Form->fieldHidden('module', $module->id ?? null, ['id' => 'module']);
-                            echo $fields ?? '';
-                        }
-                        ?>
-                    </div>
-                </div>
-
-                <div class="form-check">
-                    <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module', 'class' => 'form-check-input']);?>
-                    <?php $this->Form->label($this->_('AdminMain.edit.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'form-check-label']);?>
-                </div>
             </div>
+
+            <div class="form-check mb-3">
+                <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order', 'class' => 'form-check-input']);?>
+                <?php $this->Form->label($this->_('AdminMain.edit.field_notify_order', true), 'notify_order', ['class' => 'form-check-label']);?>
+            </div>
+        <?php
+        }
+        ?>
+
+        <div class="mb-3">
+            <div id="module_fields">
+                <?php
+                if ($service->status == 'pending') {
+                    $this->Form->fieldHidden('domain', $domain ?? $vars->domain ?? '');
+                    $this->Form->fieldHidden('service_id', $service->id ?? '');
+                    $this->Form->fieldHidden('module_row', $vars->module_row ?? '');
+                } else {
+                    $this->Form->fieldHidden('module', $module->id ?? null, ['id' => 'module']);
+                    echo $fields ?? '';
+                }
+                ?>
+            </div>
+        </div>
+
+        <div class="form-check mb-3">
+            <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module', 'class' => 'form-check-input']);?>
+            <?php $this->Form->label($this->_('AdminMain.edit.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'form-check-label']);?>
         </div>
 
         <div class="d-flex justify-content-end gap-2">
@@ -297,35 +403,66 @@ $this->Widget->end();
             });
         }
 
-        // Service action change handler
-        const actionSelect = document.getElementById('action');
-        if (actionSelect && actionDomainForm) {
-            actionSelect.addEventListener('change', function() {
-                serviceActionChange();
-            });
+        // Service action button group handler
+        const actionButtons = document.querySelectorAll('.action-button-group .btn');
+        const actionValueInput = document.getElementById('action_value');
+        const actionEmpty = document.getElementById('action-empty');
 
-            // Initialize
-            serviceActionChange();
+        if (actionButtons.length > 0 && actionDomainForm) {
+            actionButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const action = this.getAttribute('data-action');
+
+                    // Update active state
+                    actionButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Update hidden input
+                    if (actionValueInput) {
+                        actionValueInput.value = action;
+                    }
+
+                    // Show selected form
+                    serviceActionChange(action);
+                });
+            });
         }
 
         /**
          * Show/hide action sections based on selection
          */
-        function serviceActionChange() {
+        function serviceActionChange(action) {
+            if (!actionDomainForm) return;
+
             // Hide all action sections
-            const sections = actionDomainForm.querySelectorAll('.domain_renewal, .change_auto_renewal, .change_expiration_date, .change_registration_date, .change_registrar, .update_nameservers, .push_to_client');
+            const sections = actionDomainForm.querySelectorAll('.action-form');
             sections.forEach(section => {
                 section.style.display = 'none';
             });
 
+            // Hide empty state
+            if (actionEmpty) {
+                actionEmpty.style.display = 'none';
+            }
+
             // Show selected action section
-            const action = actionSelect ? actionSelect.value : '';
-            if (action !== '') {
-                const selectedSection = actionDomainForm.querySelector('.' + action);
+            if (action && action !== '') {
+                const selectedSection = actionDomainForm.querySelector('.action-form.' + action);
                 if (selectedSection) {
                     selectedSection.style.display = 'block';
                 }
+            } else {
+                // Show empty state if no action selected
+                if (actionEmpty) {
+                    actionEmpty.style.display = 'block';
+                }
             }
+        }
+
+        // Initialize - show empty state
+        if (actionEmpty) {
+            actionEmpty.style.display = 'block';
         }
 
         // Client autocomplete - Vanilla JS implementation
@@ -557,19 +694,3 @@ $this->Widget->end();
     });
 })();
 </script>
-
-<style>
-.autocomplete-results {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
-}
-.autocomplete-results .list-group-item {
-    cursor: pointer;
-    padding: 0.5rem 0.75rem;
-    border: none;
-}
-.autocomplete-results .list-group-item:hover {
-    background-color: var(--bg-secondary);
-}
-</style>

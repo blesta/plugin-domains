@@ -588,7 +588,9 @@ class AdminDomains extends DomainsController
                 'domains_automatic_sync',
                 'domains_sync_frequency',
                 'domains_renewal_days_before_expiration',
-                'domains_override_price'
+                'domains_override_price',
+                'migrate_services',
+                'overwrite_tld_packages'
             ];
             if (!isset($this->post['domains_spotlight_tlds'])) {
                 $this->post['domains_spotlight_tlds'] = [];
@@ -604,6 +606,12 @@ class AdminDomains extends DomainsController
             }
             if (!isset($this->post['domains_override_price'])) {
                 $this->post['domains_override_price'] = '0';
+            }
+            if (!isset($this->post['migrate_services'])) {
+                $this->post['migrate_services'] = '0';
+            }
+            if (!isset($this->post['overwrite_tld_packages'])) {
+                $this->post['overwrite_tld_packages'] = '0';
             }
             $this->post['domains_spotlight_tlds'] = json_encode($this->post['domains_spotlight_tlds']);
             $this->DomainsTlds->updateDomainsCompanySettings($company_id, $this->post);
