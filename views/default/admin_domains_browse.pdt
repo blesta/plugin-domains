@@ -104,7 +104,9 @@ if (!empty($domains)) {
                 $show_parent = (($status ?? null) != 'canceled') && !empty($domain->parent_service_id);
                 if ($show_parent) {
                 ?>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . ($domain->client_id ?? null) . '/' . ($domain->parent_service_id ?? null) . '/');?>" class="btn btn-sm btn-outline-secondary me-1"><?php $this->_('AdminDomains.browse.option_parent');?></a>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . ($domain->client_id ?? null) . '/' . ($domain->parent_service_id ?? null) . '/');?>" class="btn btn-sm btn-outline-secondary me-1" title="<?php $this->_('AdminDomains.browse.option_parent');?>">
+                    <i class="bi bi-arrow-up-right-circle"></i>
+                </a>
                 <?php
                 }
 
@@ -112,7 +114,9 @@ if (!empty($domains)) {
                 $show_manage = ($status ?? null) != 'canceled';
                 if ($show_manage) {
                 ?>
-                <a class="btn btn-sm btn-primary manage" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/edit/' . (isset($domain->client_id) ? $domain->client_id : null) . '/' . (isset($domain->id) ? $domain->id : null) . '/');?>"><?php $this->_('AdminDomains.browse.option_manage');?></a>
+                <a class="btn btn-sm btn-outline-secondary manage" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/edit/' . (isset($domain->client_id) ? $domain->client_id : null) . '/' . (isset($domain->id) ? $domain->id : null) . '/');?>" title="<?php $this->_('AdminDomains.browse.option_manage');?>">
+                    <i class="bi bi-pencil"></i>
+                </a>
                 <?php
                 }
 
@@ -120,8 +124,8 @@ if (!empty($domains)) {
                 if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
                     echo ($show_manage ? ' ' : '');
                 ?>
-                <a class="btn btn-sm btn-danger manage ms-1 submit" href="#" data-client-id="<?php echo $this->Html->safe((isset($domain->client_id) ? $domain->client_id : null));?>" data-service-id="<?php echo $this->Html->safe((isset($domain->id) ? $domain->id : null));?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.browse.confirm_delete', true));?>">
-                    <?php $this->_('AdminDomains.browse.option_delete');?>
+                <a class="btn btn-sm btn-outline-danger manage ms-1 submit" href="#" data-client-id="<?php echo $this->Html->safe((isset($domain->client_id) ? $domain->client_id : null));?>" data-service-id="<?php echo $this->Html->safe((isset($domain->id) ? $domain->id : null));?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.browse.confirm_delete', true));?>" title="<?php $this->_('AdminDomains.browse.option_delete');?>">
+                    <i class="bi bi-trash"></i>
                 </a>
                 <?php
                 }

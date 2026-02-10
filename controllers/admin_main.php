@@ -769,12 +769,6 @@ class AdminMain extends DomainsController
 
         $fields = (new Html($fields))->generate();
 
-        $this->Javascript->setFile('date.min.js');
-        $this->Javascript->setFile('jquery.datePicker.min.js');
-        $this->Javascript->setInline(
-            'Date.firstDayOfWeek=' . ($company_settings['calendar_begins'] == 'sunday' ? 0 : 1) . ';'
-        );
-
         return $this->clientProfileView(
             'admin_main_edit',
             compact(
@@ -1295,6 +1289,11 @@ class AdminMain extends DomainsController
         $this->set('client_account', $this->Clients->getDebitAccount($client->id));
         $this->set('is_ajax', $this->isAjax());
 
+        // Set override variables
+        foreach ($vars as $key => $value) {
+            $this->set($key, $value);
+        }
+
         // Fetch default admin layout
         $layout = 'default';
         $admin_view_dir = $this->Companies->getSetting(Configure::get('Blesta.company_id'), 'admin_view_dir');
@@ -1307,18 +1306,7 @@ class AdminMain extends DomainsController
             $this->controller = $view;
             $this->action = null;
 
-            foreach ($vars as $key => $value) {
-                $this->set($key, $value);
-            }
-
             return $this->renderAjaxWidgetIfAsync();
-        } else {
-            // Set view path to app directory
-            $this->view->view_path = APPDIR;
-            $this->view->default_view_path = APPDIR;
-            $this->view->view_dir = str_replace(ROOTWEBDIR, DS, VIEWDIR . $this->portal . DS . $layout) . DS;
-
-            $this->render('admin_clients_view', VIEWDIR . $this->portal . DS . $layout);
         }
     }
 

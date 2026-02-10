@@ -39,7 +39,7 @@
 }
 
 /* Selected state (blue outline) */
-input[type="checkbox"]:checked + .tld-import-card {
+input[type="checkbox"]:checked+.tld-import-card {
     border-color: var(--accent-color);
     background-color: var(--bg-tertiary);
     box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
@@ -57,7 +57,7 @@ input[type="checkbox"]:checked + .tld-import-card {
 }
 
 /* Keep green when selected AND imported */
-.tld-imported input[type="checkbox"]:checked + .tld-import-card {
+.tld-imported input[type="checkbox"]:checked+.tld-import-card {
     border-color: var(--success-color);
     background-color: rgba(25, 135, 84, 0.15);
     box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.15);
@@ -352,6 +352,7 @@ input[type="checkbox"]:checked + .tld-import-card {
    ============================================================ */
 
 @media (max-width: 768px) {
+
     /* Slots Grid - 2 columns on mobile */
     .spotlight-slots-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -414,7 +415,7 @@ input[type="checkbox"]:checked + .tld-import-card {
     color: var(--bs-body-color, #212529);
 }
 
-.form-check-pill .form-check-input:checked + .form-check-label {
+.form-check-pill .form-check-input:checked+.form-check-label {
     background-color: var(--bs-primary, #0d6efd);
     border-color: var(--bs-primary, #0d6efd);
     color: #fff;
