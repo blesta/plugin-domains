@@ -31,10 +31,10 @@
 
             <dt class="col-sm-4"><?php $this->_('AdminMain.add_confirmation.field_notify_order');?></dt>
             <dd class="col-sm-8">
-                <?php if (($vars->notify_order ?? 'false') === 'true'): ?>
+                <?php if (($vars->notify_order ?? 'false') === 'true') : ?>
                     <i class="bi bi-check-circle text-success"></i>
                     <?php $this->_('AdminMain.add_confirmation.field_notify_order_true');?>
-                <?php else: ?>
+                <?php else : ?>
                     <i class="bi bi-x-circle text-danger"></i>
                     <?php $this->_('AdminMain.add_confirmation.field_notify_order_false');?>
                 <?php endif; ?>
@@ -59,14 +59,14 @@
             </thead>
             <tbody>
                 <?php
-                foreach (($items ?? []) as $item):
-                ?>
+                foreach (($items ?? []) as $item) :
+                    ?>
                 <tr>
                     <td><?php (print (isset($item['description']) ? $this->Html->safe($item['description']) : null));?></td>
                     <td class="text-center"><?php echo ($item['qty'] ?? 1);?></td>
                     <td class="text-end"><?php (print (isset($item['price']) ? $this->Html->safe($item['price']) : null));?></td>
                 </tr>
-                <?php
+                    <?php
                 endforeach;
                 ?>
             </tbody>
@@ -76,8 +76,9 @@
     <?php
     $this->Form->create();
 
-    function parseFields($vars, $that, $parent_key = null) {
-        foreach((array) ($vars ?? []) as $key => $value) {
+    function parseFields($vars, $that, $parent_key = null)
+    {
+        foreach ((array) ($vars ?? []) as $key => $value) {
             $value_key = $parent_key ? ($parent_key . '[' . $key . ']') : $key;
             if (is_array($value)) {
                 parseFields($value, $that, $value_key);
@@ -115,7 +116,7 @@
             <span><?php (print (isset($line_totals['subtotal']) ? $this->Html->safe($line_totals['subtotal']) : null));?></span>
         </div>
 
-        <?php if (($line_totals['discount'] ?? null)): ?>
+        <?php if (($line_totals['discount'] ?? null)) : ?>
         <div class="d-flex justify-content-between mb-2">
             <span><?php $this->_('AdminMain.add_confirmation.discount');?></span>
             <span class="text-success">
@@ -126,14 +127,14 @@
         <?php endif; ?>
 
         <?php
-        if (($line_totals['tax'] ?? null)):
-            foreach ($line_totals['tax'] as $description => $tax):
-        ?>
+        if (($line_totals['tax'] ?? null)) :
+            foreach ($line_totals['tax'] as $description => $tax) :
+                ?>
         <div class="d-flex justify-content-between mb-2">
             <span><?php (print (isset($description) ? $this->Html->safe($description) : null));?></span>
             <span><?php (print (isset($tax) ? $this->Html->safe($tax) : null));?></span>
         </div>
-        <?php
+                <?php
             endforeach;
         endif;
         ?>

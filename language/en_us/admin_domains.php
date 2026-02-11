@@ -210,6 +210,16 @@ $lang['AdminDomains.importpackages.tooltip_overwrite_packages'] = 'When checked,
 $lang['AdminDomains.importpackages.title_imported_packages'] = 'Imported TLDs';
 $lang['AdminDomains.importpackages.text_collecting_list_tlds'] = 'Collecting a list of TLDs to import...';
 $lang['AdminDomains.importpackages.field_submit'] = 'Import Packages';
+$lang['AdminDomains.importpackages.alert_title'] = 'This import will:';
+$lang['AdminDomains.importpackages.alert_point1'] = 'Find all packages assigned to a registrar module (3rd party modules may not identify themselves as registrars and thus may not be recognized)';
+$lang['AdminDomains.importpackages.alert_point2'] = 'For each TLD assigned to the package, create a new TLD Pricing package with the same details in the Domain Manager';
+$lang['AdminDomains.importpackages.alert_point3'] = 'Skip any package/TLD with the same registrar as a previously encountered package/TLD';
+$lang['AdminDomains.importpackages.alert_point4'] = 'Skip any packages with no yearly pricing periods';
+$lang['AdminDomains.importpackages.alert_point5'] = 'Mark the first package/Registrar encountered for each TLD as the primary one, while the other import packages will be used when the registrar is changed on the TLD Pricing page';
+$lang['AdminDomains.importpackages.alert_point6'] = 'Deactivate the old imported packages if they have no services after the import';
+$lang['AdminDomains.importpackages.section_import_options'] = 'Import Options';
+$lang['AdminDomains.importpackages.text_no_tlds_available'] = 'No TLDs available to import';
+$lang['AdminDomains.importpackages.field_refresh'] = 'Refresh';
 
 
 $lang['AdminDomains.configurableoptions.page_title'] = 'Domains > Configuration';

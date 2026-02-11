@@ -1,10 +1,10 @@
 <?php /** @var View $this */ ?>
 
 <?php
-echo (isset($message) ? $message : null);
+echo ($message ?? null);
 
 $this->Widget->clear();
-$this->Widget->create($this->_('AdminDomains.meta.boxtitle_meta_tld', true, $tld->tld), ['id' => 'meta_tld' . str_replace('.', '_', $tld->tld)], (isset($render_section) ? $render_section : null));
+$this->Widget->create($this->_('AdminDomains.meta.boxtitle_meta_tld', true, $tld->tld), ['id' => 'meta_tld' . str_replace('.', '_', $tld->tld)], ($render_section ?? null));
 
 $this->Form->create(null, ['id' => 'meta_tld']);
 ?>
@@ -26,37 +26,37 @@ $this->Form->create(null, ['id' => 'meta_tld']);
     <div class="modal_page" id="page_meta" style="display: none;">
         <?php
         if (!empty($package_fields['fields'])) {
-        ?>
+            ?>
         <h5><?php $this->_('AdminDomains.meta.heading_module_options');?></h5>
         <div class="mb-3">
             <?php
             $this->Form->label($package_fields['group_name'], 'module_group', ['class' => 'form-label']);
-            $this->Form->fieldSelect('module_group', ['select' => $this->_('AppController.select.please', true)] + ['' => $this->_('AdminDomains.meta.field_modulegroup_any', true)] + (isset($package_fields['groups']) ? $package_fields['groups'] : []), (isset($package->module_group) ? $package->module_group : ''), ['id' => 'module_group', 'class' => 'form-select']);
+            $this->Form->fieldSelect('module_group', ['select' => $this->_('AppController.select.please', true)] + ['' => $this->_('AdminDomains.meta.field_modulegroup_any', true)] + ($package_fields['groups'] ?? []), ($package->module_group ?? ''), ['id' => 'module_group', 'class' => 'form-select']);
             ?>
 
             <?php
             if (!empty($package_fields['rows'])) {
-            ?>
+                ?>
                 <div class="mt-3">
                     <?php
                     $this->Form->label($package_fields['row_name'], 'module_row', ['class' => 'form-label']);
-                    $this->Form->fieldSelect('module_row', $package_fields['rows'], (isset($package->module_row) ? $package->module_row : 0), ['id' => 'module_row', 'class' => 'form-select']);
+                    $this->Form->fieldSelect('module_row', $package_fields['rows'], ($package->module_row ?? 0), ['id' => 'module_row', 'class' => 'form-select']);
                     ?>
                 </div>
-            <?php
+                <?php
             } else {
-                $this->Form->fieldHidden('module_row', (isset($package->module_row) ? $package->module_row : 0), ['id' => 'module_row']);
+                $this->Form->fieldHidden('module_row', ($package->module_row ?? 0), ['id' => 'module_row']);
             }
 
             // Show module fields
             if (isset($package_fields['input_html']) && ($module_field_html = $package_fields['input_html']->generate(null, $package_fields_view))) {
-            ?>
+                ?>
                 <div class="mt-3">
                     <?php
                     echo $module_field_html;
                     ?>
                 </div>
-            <?php
+                <?php
             }
             ?>
         </div>
@@ -69,9 +69,9 @@ $this->Form->create(null, ['id' => 'meta_tld']);
                 <i class="bi bi-check-lg me-2"></i><?php $this->_('AdminDomains.meta.field_finish');?>
             </a>
         </div>
-        <?php
+            <?php
         } else {
-        ?>
+            ?>
         <div class="text-center p-4">
             <div class="text-muted fs-1"><i class="bi bi-emoji-smile"></i></div>
             <h5 class="text-muted mt-3"><?php $this->_('AdminDomains.meta.heading_update_no_required');?></h5>
@@ -82,7 +82,7 @@ $this->Form->create(null, ['id' => 'meta_tld']);
                 <i class="bi bi-check-lg me-2"></i><?php $this->_('AdminDomains.meta.field_finish');?>
             </a>
         </div>
-        <?php
+            <?php
         }
         ?>
     </div>

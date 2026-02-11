@@ -1,25 +1,16 @@
 <?php /** @var View $this */ ?>
 
 <?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-?>
-<div id="right_outer">
-    <?php
-    if (!(isset($render_section) ? $render_section : null)) {
-        echo (isset($message) ? $message : null);
-    }
-    ?>
-    <section id="right_container">
-<?php
+if (!($render_section ?? null)) {
+    echo ($message ?? null);
 }
-?>
-<?php
+
 $this->Widget->clear();
 $this->Widget->setStyleSheet($this->view_dir . 'css/domains.css');
 $this->Widget->setTabs($tabs ?? []);
-$this->Widget->create($this->_('AdminDomains.configurableoptions.boxtitle', true), ['id' => 'admin_domains_configurableoptions'], (isset($render_section) ? $render_section : null));
+$this->Widget->setBodyWrapper(false);
+$this->Widget->create($this->_('AdminDomains.configurableoptions.boxtitle', true), ['id' => 'admin_domains_configurableoptions'], ($render_section ?? null));
 ?>
-<div class="inner">
     <table class="table table-hover">
         <thead>
             <tr>
@@ -31,30 +22,67 @@ $this->Widget->create($this->_('AdminDomains.configurableoptions.boxtitle', true
             <?php
             if (!empty($configurable_options)) {
                 foreach ($configurable_options as $i => $configurable_option) {
-            ?>
-            <tr<?php echo ($i % 2 == 1) ? ' class="table-light"' : '';?>>
+                    ?>
+            <tr>
                 <td><?php echo $this->Html->safe($configurable_option->label);?></td>
                 <td>
-                    <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/configurableoptionspricing/' . $this->Html->safe($configurable_option->id) . '/';?>" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-pencil me-1"></i><?php $this->_('AdminDomains.configurableoptions.option_edit');?>
+                    <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/configurableoptionspricing/' . $this->Html->safe($configurable_option->id) . '/';?>" class="btn btn-sm btn-outline-secondary configurable-option-pricing-modal">
+                        <i class="bi bi-pencil"></i>
                     </a>
                 </td>
             </tr>
-            <?php
+                    <?php
                 }
             }
             ?>
         </tbody>
     </table>
-</div>
 <?php
 $this->Widget->end();
 ?>
-<?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-?>
-    </section>
+
+<!-- Configurable Option Pricing Modal -->
+<div class="modal fade" id="configurableOptionPricingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <!-- Content loaded via AJAX -->
+        </div>
+    </div>
 </div>
-<?php
-}
-?>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        var modalEl = document.getElementById('configurableOptionPricingModal');
+        var modal = new bootstrap.Modal(modalEl);
+        var modalContent = modalEl.querySelector('.modal-content');
+
+        // Handle clicks on configurable option pricing links
+        document.querySelectorAll('.configurable-option-pricing-modal').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Show loading spinner
+                modalContent.innerHTML = '<div class="modal-body"><div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div></div>';
+
+                // Show modal
+                modal.show();
+
+                // Load content via AJAX
+                fetch(link.href, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(function(response) {
+                        return response.text();
+                    })
+                    .then(function(html) {
+                        modalContent.innerHTML = html;
+                    })
+                    .catch(function() {
+                        modalContent.innerHTML = '<div class="modal-body"><div class="alert alert-danger">Failed to load content. Please try again.</div></div>';
+                    });
+            });
+        });
+    });
+</script>

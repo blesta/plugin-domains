@@ -1,225 +1,584 @@
 <?php /** @var View $this */ ?>
 
 <?php
-if (!($is_ajax ?? false)) {
-?>
-<div id="right_outer">
-    <?php
-    if (!($render_section ?? null)) {
-        echo ($message ?? null);
-    }
-    ?>
-    <section id="right_container">
-<?php
+if (!($render_section ?? null)) {
+    echo ($message ?? null);
 }
 
-    $this->Widget->clear();
-    $this->Widget->setTabs($tabs ?? []);
-    $this->Widget->create($this->_('AdminDomains.configuration.boxtitle', true), ['id' => 'admin_domains_configuration'], ($render_section ?? null));
+$this->Widget->clear();
+$this->Widget->setTabs($tabs ?? []);
+$this->Widget->setBodyWrapper(false);
+$this->Widget->setStyleSheet($this->view_dir . 'css/domains.css');
+$this->Widget->create($this->_('AdminDomains.configuration.boxtitle', true), ['id' => 'admin_domains_configuration'], ($render_section ?? null));
 
-    $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submit']);
-    ?>
+$this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submit']);
+?>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="tab_general" role="tabpanel">
+            <div class="card-body">
+                <!-- Spotlight TLDs Section -->
+                <h6 class="form-section-header"><?php $this->_('AdminDomains.configuration.field_spotlight_tlds'); ?></h6>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <p class="text-muted small mb-0">
+                                <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_spotlight_tlds');?></div></span>
+                                <?php $this->_('AdminDomains.configuration.tooltip_spotlight_tlds'); ?>
+                            </p>
+                        </div>
+                        <span class="badge bg-secondary" id="spotlight-slot-counter">
+                            <?php
+                            $filled_slots = 0;
+                            if (isset($vars['domains_spotlight_tlds']) && is_array($vars['domains_spotlight_tlds'])) {
+                                $filled_slots = count(array_filter($vars['domains_spotlight_tlds'], function($v) { return $v === '1'; }));
+                            }
+                            echo $filled_slots;
+                            ?> of 8 slots filled
+                        </span>
+                    </div>
 
-    <div class="inner">
-        <div class="tab" id="tab_general">
-            <div class="pad">
-                <ul>
-                    <li>
-                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_spotlight_tlds', true), 'spotlight_tlds', ['class' => 'inline']); ?>
-                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_spotlight_tlds');?></div></span><br/>
+                    <!-- 8-Slot Grid -->
+                    <div class="spotlight-slots-grid" id="spotlight-slots-grid">
                         <?php
-                        foreach (($tlds ?? []) as $tld) {
-                            $this->Form->fieldCheckbox('domains_spotlight_tlds[' . $tld->tld . ']', '1', ($vars['domains_spotlight_tlds'][$tld->tld] ?? null) === '1', ['id' => 'spotlight_tld_' . $tld->tld, 'class' => 'inline']);
-                            $this->Form->label($tld->tld, 'spotlight_tld_' . $tld->tld, ['class' => 'inline']);
+                        $selected_tlds = [];
+                        if (isset($vars['domains_spotlight_tlds']) && is_array($vars['domains_spotlight_tlds'])) {
+                            foreach ($vars['domains_spotlight_tlds'] as $tld => $value) {
+                                if ($value === '1') {
+                                    $selected_tlds[] = $tld;
+                                }
+                            }
+                        }
+
+                        // Render filled slots
+                        for ($i = 0; $i < 8; $i++) {
+                            if (isset($selected_tlds[$i])) {
+                                $tld = $selected_tlds[$i];
+                                echo '<div class="spotlight-slot filled" data-tld="' . $this->Html->safe($tld) . '">';
+                                echo '<button type="button" class="slot-remove" title="Remove">×</button>';
+                                echo '<i class="bi bi-star-fill"></i>';
+                                echo '<span class="slot-tld">.' . $this->Html->safe($tld) . '</span>';
+                                // Hidden input to preserve selection
+                                $this->Form->fieldHidden('domains_spotlight_tlds[' . $tld . ']', '1', ['class' => 'spotlight-tld-input']);
+                                echo '</div>';
+                            } else {
+                                echo '<div class="spotlight-slot empty">';
+                                echo '<i class="bi bi-plus-lg"></i>';
+                                echo '</div>';
+                            }
                         }
                         ?>
-                    </li>
-                    <li>
-                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_renewal_days_before_expiration', true), 'renewal_days_before_expiration', ['class' => 'inline']); ?>
-                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_renewal_days_before_expiration');?></div></span>
-                        <?php $this->Form->fieldSelect('domains_renewal_days_before_expiration', ($renewal_days ?? null), ($vars['domains_renewal_days_before_expiration'] ?? null), ['id' => 'renewal_days_before_expiration', 'class' => 'block']); ?>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div class="tab" id="tab_notifications">
-            <div class="pad">
-                <ul>
-                    <li>
-                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_first_reminder_days_before', true), 'first_reminder_days_before', ['class' => 'inline']); ?>
-                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_first_reminder_days_before');?></div></span>
-                        <?php $this->Form->fieldSelect('domains_first_reminder_days_before', ($first_reminder_days ?? null), ($vars['domains_first_reminder_days_before'] ?? null), ['id' => 'first_reminder_days_before', 'class' => 'block']); ?>
-                    </li>
-                    <li>
-                        <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($first_reminder_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
-                    </li>
-                    <li>
-                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_second_reminder_days_before', true), 'second_reminder_days_before', ['class' => 'inline']); ?>
-                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_second_reminder_days_before');?></div></span>
-                        <?php $this->Form->fieldSelect('domains_second_reminder_days_before', ($second_reminder_days ?? null), ($vars['domains_second_reminder_days_before'] ?? null), ['id' => 'second_reminder_days_before', 'class' => 'block']); ?>
-                    </li>
-                    <li>
-                        <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($second_reminder_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
-                    </li>
-                    <li>
-                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_expiration_notice_days_after', true), 'expiration_notice_days_after', ['class' => 'inline']); ?>
-                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_expiration_notice_days_after');?></div></span>
-                        <?php $this->Form->fieldSelect('domains_expiration_notice_days_after', ($expiration_notice_days ?? null), ($vars['domains_expiration_notice_days_after'] ?? null), ['id' => 'expiration_notice_days_after', 'class' => 'block']); ?>
-                    </li>
-                    <li>
-                        <h4><i class="fas fa-envelope-open-text"></i> <span><a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($expiration_notice_template->id ?? null)?>"><?php echo $this->_('AdminDomains.configuration.link_template'); ?></a></span></h4>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div class="tab" id="tab_advanced">
-            <div class="title_row first"><h3><?php $this->_('AdminDomains.configuration.heading_taxes');?></h3></div>
-            <div class="pad">
-                <ul>
-                    <li>
-                        <?php
-                        $this->Form->fieldCheckbox('domains_taxable', '1', (($vars['domains_taxable'] ?? 0) == 1), ['id' => 'taxable']);
-                        $this->Form->label($this->_('AdminDomains.configuration.field_taxable', true), 'taxable', ['class' => 'inline']);
-                        ?>
-                    </li>
-                </ul>
-            </div>
+                    </div>
 
-            <div class="title_row"><h3><?php $this->_('AdminDomains.configuration.heading_package_options');?></h3></div>
-            <div class="pad">
-                <ul>
-                    <li>
-                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_dns_management_option_group', true), 'dns_management_option_group', ['class' => 'inline']); ?>
-                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_dns_management_option_group');?></div></span>
-                        <?php $this->Form->fieldSelect('domains_dns_management_option_group', ($package_option_groups ?? null), (isset($vars['domains_dns_management_option_group']) ? $vars['domains_dns_management_option_group'] : null), ['id' => 'dns_management_option_group', 'class' => 'block']); ?>
-                    </li>
-                    <li>
-                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_email_forwarding_option_group', true), 'email_forwarding_option_group', ['class' => 'inline']); ?>
-                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_email_forwarding_option_group');?></div></span>
-                        <?php $this->Form->fieldSelect('domains_email_forwarding_option_group', ($package_option_groups ?? null), (isset($vars['domains_email_forwarding_option_group']) ? $vars['domains_email_forwarding_option_group'] : null), ['id' => 'email_forwarding_option_group', 'class' => 'block']); ?>
-                    </li>
-                    <li>
-                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_id_protection_option_group', true), 'id_protection_option_group', ['class' => 'inline']); ?>
-                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_id_protection_option_group');?></div></span>
-                        <?php $this->Form->fieldSelect('domains_id_protection_option_group', ($package_option_groups ?? null), (isset($vars['domains_id_protection_option_group']) ? $vars['domains_id_protection_option_group'] : null), ['id' => 'id_protection_option_group', 'class' => 'block']); ?>
-                    </li>
-                    <li>
-                        <?php
-                        $this->Form->fieldCheckbox('domains_override_price', '1', (($vars['domains_override_price'] ?? 0) == 1), ['id' => 'override_price']);
-                        $this->Form->label($this->_('AdminDomains.configuration.field_override_price', true), 'override_price', ['class' => 'inline']);
-                        ?>
-                        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminDomains.configuration.tooltip_override_price');?></div></span>
-                    </li>
-                </ul>
+                    <!-- Add Button -->
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-outline-primary" id="add-spotlight-btn" data-bs-toggle="modal" data-bs-target="#spotlight-tld-modal">
+                            <i class="bi bi-plus-lg me-2"></i><?php $this->_('AdminDomains.configuration.btn_add_spotlight_tlds'); ?>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Renewal Settings Section -->
+                <h6 class="form-section-header"><?php $this->_('AdminDomains.configuration.heading_renewal_settings'); ?></h6>
+                <div class="mb-3">
+                    <label for="renewal_days_before_expiration" class="form-label fw-semibold">
+                        <?php $this->_('AdminDomains.configuration.field_renewal_days_before_expiration'); ?>
+                    </label>
+                    <?php $this->Form->fieldSelect('domains_renewal_days_before_expiration', ($renewal_days ?? null), ($vars['domains_renewal_days_before_expiration'] ?? null), ['id' => 'renewal_days_before_expiration', 'class' => 'form-select', 'style' => 'max-width: 250px;']); ?>
+                    <small class="form-text text-muted">
+                        <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_renewal_days_before_expiration');?></div></span>
+                        <?php $this->_('AdminDomains.configuration.tooltip_renewal_days_before_expiration'); ?>
+                    </small>
+                </div>
             </div>
         </div>
-        <div class="tab" id="tab_tld_sync">
-            <div class="title_row first"><h3><?php $this->_('AdminDomains.configuration.heading_markup');?></h3></div>
-            <div class="pad">
-                <ul>
-                    <li>
-                        <?php
-                        $this->Form->label($this->_('AdminDomains.configuration.field_sync_price_markup', true), 'sync_price_markup');
-                        $this->Form->fieldText('domains_sync_price_markup', ($vars['domains_sync_price_markup'] ?? null), ['id' => 'sync_price_markup']);
-                        ?>
-                    </li>
-                    <li>
-                        <?php
-                        $this->Form->label($this->_('AdminDomains.configuration.field_sync_renewal_markup', true), 'sync_renewal_markup');
-                        $this->Form->fieldText('domains_sync_renewal_markup', ($vars['domains_sync_renewal_markup'] ?? null), ['id' => 'sync_renewal_markup']);
-                        ?>
-                    </li>
-                    <li>
-                        <?php
-                        $this->Form->label($this->_('AdminDomains.configuration.field_sync_transfer_markup', true), 'sync_transfer_markup');
-                        $this->Form->fieldText('domains_sync_transfer_markup', ($vars['domains_sync_transfer_markup'] ?? null), ['id' => 'sync_transfer_markup']);
-                        ?>
-                    </li>
-                    <li>
-                        <?php
-                        $this->Form->fieldCheckbox('domains_enable_rounding', '1', ((isset($vars['domains_enable_rounding']) ? $vars['domains_enable_rounding'] : 0) == 1), ['id' => 'enable_rounding']);
-                        $this->Form->label($this->_('AdminDomains.configuration.field_enable_rounding', true), 'enable_rounding', ['class' => 'inline']);
-                        ?>
-                    </li>
-                    <li class="markup_rounding_div">
-                        <?php
-                        $this->Form->label($this->_('AdminDomains.configuration.field_markup_rounding', true), 'markup_rounding');
-                        $this->Form->fieldSelect('domains_markup_rounding', $rounding_options, ($vars['domains_markup_rounding'] ?? null), ['id' => 'markup_rounding']);
-                        ?>
-                    </li>
-                </ul>
-            </div>
+        <div class="tab-pane fade" id="tab_notifications" role="tabpanel">
+            <div class="card-body">
+                <!-- Expiration Reminders Section -->
+                <h6 class="form-section-header"><?php $this->_('AdminDomains.configuration.heading_expiration_reminders'); ?></h6>
 
-            <div class="title_row"><h3><?php $this->_('AdminDomains.configuration.heading_automation');?></h3></div>
-            <div class="pad">
-                <ul>
-                    <li>
+                <!-- 1st Expiration Reminder -->
+                <div class="mb-4">
+                    <label for="first_reminder_days_before" class="form-label fw-semibold">
+                        <?php $this->_('AdminDomains.configuration.field_first_reminder_days_before'); ?>
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <?php $this->Form->fieldSelect('domains_first_reminder_days_before', ($first_reminder_days ?? null), ($vars['domains_first_reminder_days_before'] ?? null), ['id' => 'first_reminder_days_before', 'class' => 'form-select', 'style' => 'max-width: 250px;']); ?>
+                        <a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($first_reminder_template->id ?? null)?>" class="btn btn-sm btn-outline-secondary" title="<?php echo $this->_('AdminDomains.configuration.link_template', true); ?>">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                    </div>
+                    <small class="form-text text-muted">
+                        <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_first_reminder_days_before');?></div></span>
+                        <?php $this->_('AdminDomains.configuration.tooltip_first_reminder_days_before'); ?>
+                    </small>
+                </div>
+
+                <!-- 2nd Expiration Reminder -->
+                <div class="mb-4">
+                    <label for="second_reminder_days_before" class="form-label fw-semibold">
+                        <?php $this->_('AdminDomains.configuration.field_second_reminder_days_before'); ?>
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <?php $this->Form->fieldSelect('domains_second_reminder_days_before', ($second_reminder_days ?? null), ($vars['domains_second_reminder_days_before'] ?? null), ['id' => 'second_reminder_days_before', 'class' => 'form-select', 'style' => 'max-width: 250px;']); ?>
+                        <a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($second_reminder_template->id ?? null)?>" class="btn btn-sm btn-outline-secondary" title="<?php echo $this->_('AdminDomains.configuration.link_template', true); ?>">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                    </div>
+                    <small class="form-text text-muted">
+                        <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_second_reminder_days_before');?></div></span>
+                        <?php $this->_('AdminDomains.configuration.tooltip_second_reminder_days_before'); ?>
+                    </small>
+                </div>
+
+                <!-- Expiration Notice -->
+                <div class="mb-3">
+                    <label for="expiration_notice_days_after" class="form-label fw-semibold">
+                        <?php $this->_('AdminDomains.configuration.field_expiration_notice_days_after'); ?>
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <?php $this->Form->fieldSelect('domains_expiration_notice_days_after', ($expiration_notice_days ?? null), ($vars['domains_expiration_notice_days_after'] ?? null), ['id' => 'expiration_notice_days_after', 'class' => 'form-select', 'style' => 'max-width: 250px;']); ?>
+                        <a href="<?php echo $this->base_uri . 'settings/company/emails/edittemplate/' . ($expiration_notice_template->id ?? null)?>" class="btn btn-sm btn-outline-secondary" title="<?php echo $this->_('AdminDomains.configuration.link_template', true); ?>">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                    </div>
+                    <small class="form-text text-muted">
+                        <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_expiration_notice_days_after');?></div></span>
+                        <?php $this->_('AdminDomains.configuration.tooltip_expiration_notice_days_after'); ?>
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="tab_advanced" role="tabpanel">
+            <div class="card-body">
+                <!-- Taxes Section -->
+                <h6 class="form-section-header"><?php $this->_('AdminDomains.configuration.heading_taxes');?></h6>
+                <div class="mb-4">
+                    <div class="form-check">
                         <?php
-                        $this->Form->fieldCheckbox('domains_automatic_sync', '1', ((isset($vars['domains_automatic_sync']) ? $vars['domains_automatic_sync'] : 0) == 1), ['id' => 'automatic_sync']);
-                        $this->Form->label($this->_('AdminDomains.configuration.field_automatic_sync', true), 'automatic_sync', ['class' => 'inline']);
+                        $this->Form->fieldCheckbox('domains_taxable', '1', (($vars['domains_taxable'] ?? 0) == 1), ['id' => 'taxable', 'class' => 'form-check-input']);
+                        $this->Form->label($this->_('AdminDomains.configuration.field_taxable', true), 'taxable', ['class' => 'form-check-label']);
                         ?>
-                    </li>
-                    <li class="domains_sync_frequency">
-                        <?php $this->Form->label($this->_('AdminDomains.configuration.field_sync_frequency', true), 'sync_frequency'); ?>
-                        <?php $this->Form->fieldSelect('domains_sync_frequency', ($sync_days ?? null), (isset($vars['domains_sync_frequency']) ? $vars['domains_sync_frequency'] : null), ['id' => 'sync_frequency', 'class' => 'block']); ?>
-                    </li>
-                    <li>
-                        <h4><a id="manual_sync_title" href="#" class="show_content"><i class="fas fa-chevron-down"></i> <?php $this->_('AdminDomains.configuration.text_manual_sync_title');?></a></h4>
-                        <div id="manual_sync" class="pad_top hidden">
-                            <?php $this->_('AdminDomains.configuration.text_manual_sync');?>
+                    </div>
+                    <small class="form-text text-muted">
+                        <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_taxable');?></div></span>
+                        <?php $this->_('AdminDomains.configuration.tooltip_taxable'); ?>
+                    </small>
+                </div>
+
+                <!-- Package Options Section -->
+                <h6 class="form-section-header"><?php $this->_('AdminDomains.configuration.heading_package_options');?></h6>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="dns_management_option_group" class="form-label">
+                            <?php $this->_('AdminDomains.configuration.field_dns_management_option_group'); ?>
+                            <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                    data-bs-toggle="popover"
+                                    data-bs-placement="top"
+                                    data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.configuration.tooltip_dns_management_option_group', true)); ?>">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </button>
+                        </label>
+                        <?php $this->Form->fieldSelect('domains_dns_management_option_group', ($package_option_groups ?? null), ($vars['domains_dns_management_option_group'] ?? null), ['id' => 'dns_management_option_group', 'class' => 'form-select']); ?>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="email_forwarding_option_group" class="form-label">
+                            <?php $this->_('AdminDomains.configuration.field_email_forwarding_option_group'); ?>
+                            <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                    data-bs-toggle="popover"
+                                    data-bs-placement="top"
+                                    data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.configuration.tooltip_email_forwarding_option_group', true)); ?>">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </button>
+                        </label>
+                        <?php $this->Form->fieldSelect('domains_email_forwarding_option_group', ($package_option_groups ?? null), ($vars['domains_email_forwarding_option_group'] ?? null), ['id' => 'email_forwarding_option_group', 'class' => 'form-select']); ?>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="id_protection_option_group" class="form-label">
+                            <?php $this->_('AdminDomains.configuration.field_id_protection_option_group'); ?>
+                            <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                    data-bs-toggle="popover"
+                                    data-bs-placement="top"
+                                    data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.configuration.tooltip_id_protection_option_group', true)); ?>">
+                                <i class="bi bi-info-circle text-secondary"></i>
+                            </button>
+                        </label>
+                        <?php $this->Form->fieldSelect('domains_id_protection_option_group', ($package_option_groups ?? null), ($vars['domains_id_protection_option_group'] ?? null), ['id' => 'id_protection_option_group', 'class' => 'form-select']); ?>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mt-4 pt-3">
+                            <div class="form-check">
+                                <?php
+                                $this->Form->fieldCheckbox('domains_override_price', '1', (($vars['domains_override_price'] ?? 0) == 1), ['id' => 'override_price', 'class' => 'form-check-input']);
+                                $this->Form->label($this->_('AdminDomains.configuration.field_override_price', true), 'override_price', ['class' => 'form-check-label']);
+                                ?>
+                                <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                        data-bs-toggle="popover"
+                                        data-bs-placement="top"
+                                        data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.configuration.tooltip_override_price', true)); ?>">
+                                    <i class="bi bi-info-circle text-secondary"></i>
+                                </button>
+                            </div>
                         </div>
-                    </li>
-                </ul>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="button_row">
-            <button class="btn btn-primary pull-right">
-                <i class="fa fa-edit"></i> <?php $this->_('AdminDomains.configuration.field_submit');?>
-            </button>
+        <div class="tab-pane fade" id="tab_tld_sync" role="tabpanel">
+            <div class="card-body">
+                <!-- Markup Section -->
+                <h6 class="form-section-header"><?php $this->_('AdminDomains.configuration.heading_markup');?></h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label for="sync_price_markup" class="form-label">
+                            <?php $this->_('AdminDomains.configuration.field_sync_price_markup'); ?>
+                        </label>
+                        <?php $this->Form->fieldText('domains_sync_price_markup', ($vars['domains_sync_price_markup'] ?? null), ['id' => 'sync_price_markup', 'class' => 'form-control', 'placeholder' => '0.00', 'step' => '0.01', 'min' => '0']); ?>
+                        <small class="form-text text-muted">
+                            <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_sync_price_markup');?></div></span>
+                            <?php $this->_('AdminDomains.configuration.tooltip_sync_price_markup'); ?>
+                        </small>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="sync_renewal_markup" class="form-label">
+                            <?php $this->_('AdminDomains.configuration.field_sync_renewal_markup'); ?>
+                        </label>
+                        <?php $this->Form->fieldText('domains_sync_renewal_markup', ($vars['domains_sync_renewal_markup'] ?? null), ['id' => 'sync_renewal_markup', 'class' => 'form-control', 'placeholder' => '0.00', 'step' => '0.01', 'min' => '0']); ?>
+                        <small class="form-text text-muted">
+                            <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_sync_renewal_markup');?></div></span>
+                            <?php $this->_('AdminDomains.configuration.tooltip_sync_renewal_markup'); ?>
+                        </small>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="sync_transfer_markup" class="form-label">
+                            <?php $this->_('AdminDomains.configuration.field_sync_transfer_markup'); ?>
+                        </label>
+                        <?php $this->Form->fieldText('domains_sync_transfer_markup', ($vars['domains_sync_transfer_markup'] ?? null), ['id' => 'sync_transfer_markup', 'class' => 'form-control', 'placeholder' => '0.00', 'step' => '0.01', 'min' => '0']); ?>
+                        <small class="form-text text-muted">
+                            <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_sync_transfer_markup');?></div></span>
+                            <?php $this->_('AdminDomains.configuration.tooltip_sync_transfer_markup'); ?>
+                        </small>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            <?php
+                            $this->Form->fieldCheckbox('domains_enable_rounding', '1', (($vars['domains_enable_rounding'] ?? 0) == 1), ['id' => 'enable_rounding', 'class' => 'form-check-input']);
+                            $this->Form->label($this->_('AdminDomains.configuration.field_enable_rounding', true), 'enable_rounding', ['class' => 'form-check-label']);
+                            ?>
+                        </div>
+                        <small class="form-text text-muted">
+                            <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_enable_rounding');?></div></span>
+                            <?php $this->_('AdminDomains.configuration.tooltip_enable_rounding'); ?>
+                        </small>
+                    </div>
+
+                    <div class="col-md-4 markup_rounding_div">
+                        <label for="markup_rounding" class="form-label">
+                            <?php $this->_('AdminDomains.configuration.field_markup_rounding'); ?>
+                        </label>
+                        <?php $this->Form->fieldSelect('domains_markup_rounding', ($rounding_options ?? null), ($vars['domains_markup_rounding'] ?? null), ['id' => 'markup_rounding', 'class' => 'form-select']); ?>
+                    </div>
+                </div>
+
+                <!-- Automation Section -->
+                <h6 class="form-section-header"><?php $this->_('AdminDomains.configuration.heading_automation');?></h6>
+                <div class="mb-4">
+                    <div class="form-check mb-3">
+                        <?php
+                        $this->Form->fieldCheckbox('domains_automatic_sync', '1', (($vars['domains_automatic_sync'] ?? 0) == 1), ['id' => 'automatic_sync', 'class' => 'form-check-input']);
+                        $this->Form->label($this->_('AdminDomains.configuration.field_automatic_sync', true), 'automatic_sync', ['class' => 'form-check-label']);
+                        ?>
+                    </div>
+
+                    <div class="domains_sync_frequency">
+                        <div class="mb-3" style="max-width: 300px;">
+                            <label for="sync_frequency" class="form-label">
+                                <?php $this->_('AdminDomains.configuration.field_sync_frequency'); ?>
+                            </label>
+                            <?php $this->Form->fieldSelect('domains_sync_frequency', ($sync_days ?? null), ($vars['domains_sync_frequency'] ?? null), ['id' => 'sync_frequency', 'class' => 'form-select']); ?>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info d-flex align-items-start">
+                        <i class="bi bi-info-circle me-3 mt-1"></i>
+                        <div>
+                            <?php $this->_('AdminDomains.configuration.text_manual_sync'); ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <?php
-    $this->Form->end();
-    $this->Widget->end();
-    ?>
+
+    <?php $this->Widget->footer(); ?>
+    <div class="d-flex justify-content-end gap-2">
+        <?php
+        $this->Form->fieldSubmit('submit', $this->_('AdminDomains.configuration.field_submit', true), ['class' => 'btn btn-primary']);
+        ?>
+    </div>
 <?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
+$this->Form->end();
 ?>
-    </section>
+
+<!-- Spotlight TLD Selection Modal -->
+<div class="modal fade" id="spotlight-tld-modal" tabindex="-1" aria-labelledby="spotlight-tld-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="spotlight-tld-modal-label"><?php $this->_('AdminDomains.configuration.modal_select_spotlight_tlds'); ?></h5>
+                    <small class="text-muted"><?php $this->_('AdminDomains.configuration.modal_select_up_to_8'); ?></small>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-secondary" id="modal-slot-counter">0 of 8 selected</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- Search Input -->
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="tld-search-input" placeholder="<?php echo $this->_('AdminDomains.configuration.placeholder_search_tlds', true); ?>">
+                </div>
+
+                <!-- TLD Selection Grid -->
+                <div class="tld-selection-grid" id="tld-selection-grid">
+                    <?php
+                    foreach (($tlds ?? []) as $tld) {
+                        $is_selected = isset($vars['domains_spotlight_tlds'][$tld->tld]) && $vars['domains_spotlight_tlds'][$tld->tld] === '1';
+                        $selected_class = $is_selected ? 'selected' : '';
+                        echo '<div class="tld-selection-item ' . $selected_class . '" data-tld="' . $this->Html->safe($tld->tld) . '">';
+                        if ($is_selected) {
+                            echo '<i class="bi bi-star-fill"></i>';
+                        }
+                        echo '.' . $this->Html->safe($tld->tld);
+                        echo '</div>';
+                    }
+                    ?>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php $this->_('AdminDomains.configuration.btn_close'); ?></button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal"><?php $this->_('AdminDomains.configuration.btn_done'); ?></button>
+            </div>
+        </div>
+    </div>
 </div>
+
 <?php
-}
+$this->Widget->end();
 ?>
+
 <script type="text/javascript">
-    $(document).ready(function() {
-        $('#html').blestaBindWysiwygEditor({language: '<?php echo substr(Configure::get('Blesta.language'), 0, 2); ?>'});
+(function() {
+    'use strict';
 
-        // Set tabs
-        $('.tabs_content .tab').hide();
-        $('.tabs_content #tab_<?php echo ($tab ?? 'general');?>').show();
-        $('.tab_slider ul li').on('click', function() {
-            var tab = $(this).find('a').attr('class');
+    var selectedTlds = [];
+    var maxSlots = 8;
 
-            $('.tab_slider ul li').removeClass('current');
-            $(this).addClass('current');
-            $('.tabs_content .tab').hide();
-            $('.tabs_content .tab#tab_' + tab).show();
+    function init() {
+        // Bootstrap 5 tabs are automatically initialized by the data-bs-toggle attribute
+        // No manual initialization needed - tabs will work natively
+
+        // Activate the current tab if not already active
+        var currentTab = document.querySelector('a[href="#tab_<?php echo ($tab ?? 'general');?>"]');
+        if (currentTab && !currentTab.classList.contains('active')) {
+            var tab = new bootstrap.Tab(currentTab);
+            tab.show();
+        }
+
+        // Initialize Bootstrap 5 popovers
+        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+        popoverTriggerList.forEach(function(popoverTriggerEl) {
+            new bootstrap.Popover(popoverTriggerEl);
         });
 
-        checkboxToggle('#enable_rounding', '.markup_rounding_div');
-        checkboxToggle('#automatic_sync', '.domains_sync_frequency');
+        // Initialize spotlight TLDs functionality
+        initSpotlightTlds();
 
-        $(this).blestaBindToggleEvent('#manual_sync_title', '#manual_sync');
-    });
+        // Checkbox toggle for rounding options
+        checkboxToggle('enable_rounding', 'markup_rounding_div');
 
-    function checkboxToggle(checkbox_selector, section_selector) {
-        $(checkbox_selector).change(function () {
-            if ($(this).is(':checked')) {
-                $(section_selector).show();
-            } else {
-                $(section_selector).hide();
+        // Checkbox toggle for sync frequency
+        checkboxToggle('automatic_sync', 'domains_sync_frequency');
+    }
+
+    function initSpotlightTlds() {
+        // Load currently selected TLDs
+        var filledSlots = document.querySelectorAll('.spotlight-slot.filled');
+        filledSlots.forEach(function(slot) {
+            var tld = slot.getAttribute('data-tld');
+            if (tld && selectedTlds.indexOf(tld) === -1) {
+                selectedTlds.push(tld);
             }
         });
-        $(checkbox_selector).change();
+
+        // Handle empty slot clicks - open modal
+        var slotsGrid = document.getElementById('spotlight-slots-grid');
+        if (slotsGrid) {
+            slotsGrid.addEventListener('click', function(e) {
+                var emptySlot = e.target.closest('.spotlight-slot.empty');
+                if (emptySlot) {
+                    var modal = new bootstrap.Modal(document.getElementById('spotlight-tld-modal'));
+                    modal.show();
+                }
+
+                // Handle remove button clicks
+                var removeBtn = e.target.closest('.slot-remove');
+                if (removeBtn) {
+                    e.preventDefault();
+                    var slot = removeBtn.closest('.spotlight-slot');
+                    var tld = slot.getAttribute('data-tld');
+                    removeTld(tld);
+                }
+            });
+        }
+
+        // Handle TLD selection in modal
+        var tldGrid = document.getElementById('tld-selection-grid');
+        if (tldGrid) {
+            tldGrid.addEventListener('click', function(e) {
+                var tldItem = e.target.closest('.tld-selection-item');
+                if (tldItem) {
+                    var tld = tldItem.getAttribute('data-tld');
+                    if (tldItem.classList.contains('selected')) {
+                        // Deselect
+                        removeTld(tld);
+                        tldItem.classList.remove('selected');
+                        var icon = tldItem.querySelector('i');
+                        if (icon) icon.remove();
+                    } else {
+                        // Select
+                        if (selectedTlds.length < maxSlots) {
+                            addTld(tld);
+                            tldItem.classList.add('selected');
+                            var icon = document.createElement('i');
+                            icon.className = 'bi bi-star-fill';
+                            tldItem.insertBefore(icon, tldItem.firstChild);
+                        }
+                    }
+                    updateModalCounter();
+                }
+            });
+        }
+
+        // Handle TLD search
+        var searchInput = document.getElementById('tld-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                var query = this.value.toLowerCase();
+                var items = document.querySelectorAll('.tld-selection-item');
+                items.forEach(function(item) {
+                    var tld = item.getAttribute('data-tld');
+                    if (tld.toLowerCase().indexOf(query) !== -1) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Update modal counter when modal opens
+        var modal = document.getElementById('spotlight-tld-modal');
+        if (modal) {
+            modal.addEventListener('show.bs.modal', function() {
+                updateModalCounter();
+            });
+        }
+
+        updateSlotCounter();
     }
+
+    function addTld(tld) {
+        if (selectedTlds.indexOf(tld) === -1 && selectedTlds.length < maxSlots) {
+            selectedTlds.push(tld);
+            renderSlots();
+            updateSlotCounter();
+        }
+    }
+
+    function removeTld(tld) {
+        var index = selectedTlds.indexOf(tld);
+        if (index !== -1) {
+            selectedTlds.splice(index, 1);
+            renderSlots();
+            updateSlotCounter();
+
+            // Update modal selection state
+            var modalItem = document.querySelector('#tld-selection-grid .tld-selection-item[data-tld="' + tld + '"]');
+            if (modalItem) {
+                modalItem.classList.remove('selected');
+                var icon = modalItem.querySelector('i');
+                if (icon) icon.remove();
+            }
+        }
+    }
+
+    function renderSlots() {
+        var grid = document.getElementById('spotlight-slots-grid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+
+        // Render filled slots
+        for (var i = 0; i < maxSlots; i++) {
+            var slot = document.createElement('div');
+
+            if (i < selectedTlds.length) {
+                var tld = selectedTlds[i];
+                slot.className = 'spotlight-slot filled';
+                slot.setAttribute('data-tld', tld);
+                slot.innerHTML = '<button type="button" class="slot-remove" title="Remove">×</button>' +
+                                '<i class="bi bi-star-fill"></i>' +
+                                '<span class="slot-tld">.' + tld + '</span>' +
+                                '<input type="hidden" name="domains_spotlight_tlds[' + tld + ']" value="1" class="spotlight-tld-input">';
+            } else {
+                slot.className = 'spotlight-slot empty';
+                slot.innerHTML = '<i class="bi bi-plus-lg"></i>';
+            }
+
+            grid.appendChild(slot);
+        }
+    }
+
+    function updateSlotCounter() {
+        var counter = document.getElementById('spotlight-slot-counter');
+        if (counter) {
+            counter.textContent = selectedTlds.length + ' of ' + maxSlots + ' slots filled';
+        }
+    }
+
+    function updateModalCounter() {
+        var counter = document.getElementById('modal-slot-counter');
+        if (counter) {
+            counter.textContent = selectedTlds.length + ' of ' + maxSlots + ' selected';
+        }
+    }
+
+    function checkboxToggle(checkboxId, sectionClass) {
+        var checkbox = document.getElementById(checkboxId);
+        var section = document.querySelector('.' + sectionClass);
+
+        if (checkbox && section) {
+            function updateVisibility() {
+                section.style.display = checkbox.checked ? 'block' : 'none';
+            }
+
+            checkbox.addEventListener('change', updateVisibility);
+            updateVisibility();
+        }
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
 </script>

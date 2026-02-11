@@ -1,16 +1,16 @@
 <?php /** @var View $this */ ?>
 
 <?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-?>
+if (!($is_ajax ?? false)) {
+    ?>
 <div id="right_outer">
     <?php
-    if (!(isset($render_section) ? $render_section : null)) {
-        echo (isset($message) ? $message : null);
+    if (!($render_section ?? null)) {
+        echo ($message ?? null);
     }
     ?>
     <section id="right_container">
-<?php
+    <?php
 }
 ?>
 
@@ -20,7 +20,7 @@ $this->Widget->setStyleSheet($this->view_dir . 'css/domains.css');
 $this->Widget->create(
     $this->_('AdminDomains.whois.boxtitle_whois', true),
     ['id' => 'admin_domains_whois'],
-    (isset($render_section) ? $render_section : null)
+    ($render_section ?? null)
 );
 ?>
 
@@ -34,7 +34,7 @@ $this->Widget->create(
     <div class="domain-search-input-group mb-4">
         <i class="bi bi-search domain-search-icon"></i>
         <?php
-        $this->Form->fieldText('domain', isset($vars['domain']) ? $vars['domain'] : null, [
+        $this->Form->fieldText('domain', $vars['domain'] ?? null, [
             'id' => 'domain',
             'class' => 'domain-search-input border-0',
             'placeholder' => $this->_('AdminDomains.whois.field_domain_placeholder', true)
@@ -110,10 +110,10 @@ $this->Widget->end();
 <script src="<?php echo $this->Html->safe($this->view_dir . 'js/domain-whois.js');?>"></script>
 
 <?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-?>
+if (!($is_ajax ?? false)) {
+    ?>
     </section>
 </div>
-<?php
+    <?php
 }
 ?>

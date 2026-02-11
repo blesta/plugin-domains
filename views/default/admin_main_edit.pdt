@@ -121,7 +121,8 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
     <?php
     if ($service->status == 'active' || $service->status == 'suspended') {
         $this->Form->create(null, ['id' => 'action_domain']);
-    ?>
+        ?>
+        <hr>
         <h6 class="form-section-header"><?php $this->_('AdminMain.edit.title_actions');?></h6>
 
         <!-- Action Button Group -->
@@ -132,7 +133,9 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
             <?php
             if (isset($actions) && is_array($actions)) {
                 foreach ($actions as $action_key => $action_label) {
-                    if ($action_key === '') continue; // Skip empty option
+                    if ($action_key === '') {
+                        continue; // Skip empty option
+                    }
 
                     // Map action keys to icons
                     $icon_map = [
@@ -149,25 +152,13 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
                     ];
                     $icon = $icon_map[$action_key] ?? 'gear';
 
-                    // Actions that don't need forms (submit directly)
+                    // Actions that don't need forms (no configuration required)
                     $direct_actions = ['set_price_override', 'remove_price_override', 'unparent'];
-                    $is_direct = in_array($action_key, $direct_actions);
-
-                    if ($is_direct) {
-                        // Direct submit button
-            ?>
-            <button type="submit" name="action" value="<?php echo $this->Html->safe($action_key);?>" class="btn btn-outline-secondary">
+                    ?>
+            <button type="button" class="btn btn-outline-secondary" data-action="<?php echo $this->Html->safe($action_key);?>" <?php echo in_array($action_key, $direct_actions) ? 'data-direct="true"' : '';?>>
                 <i class="bi bi-<?php echo $icon;?> me-2"></i><?php echo $this->Html->safe($action_label);?>
             </button>
-            <?php
-                    } else {
-                        // Button that shows form
-            ?>
-            <button type="button" class="btn btn-outline-secondary" data-action="<?php echo $this->Html->safe($action_key);?>">
-                <i class="bi bi-<?php echo $icon;?> me-2"></i><?php echo $this->Html->safe($action_label);?>
-            </button>
-            <?php
-                    } // end if/else
+                    <?php
                 } // end foreach
             }
             ?>
@@ -175,11 +166,19 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
 
         <!-- Expandable Form Container -->
         <div class="action-form-container mb-3">
-            <!-- Empty State -->
+            <!-- Empty State - No Action Selected -->
             <div class="action-empty-state" id="action-empty">
                 <div class="text-center py-5">
                     <i class="bi bi-hand-index" style="font-size: 3rem; color: var(--text-secondary);"></i>
                     <p class="text-muted mt-3 mb-0"><?php $this->_('AdminMain.edit.text_select_action');?></p>
+                </div>
+            </div>
+
+            <!-- Empty State - Direct Action (No Fields) -->
+            <div class="action-empty-state" id="action-no-fields" style="display: none;">
+                <div class="text-center py-4">
+                    <i class="bi bi-info-circle" style="font-size: 3rem; color: var(--accent-color, #0d6efd);"></i>
+                    <p class="text-muted mt-3 mb-0"><?php $this->_('AdminMain.edit.text_no_fields');?></p>
                 </div>
             </div>
 
@@ -289,7 +288,7 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
             $this->Form->fieldSubmit('submit', $this->_('AdminMain.edit.field_submit', true), ['class' => 'btn btn-primary']);
             ?>
         </div>
-    <?php
+        <?php
         $this->Form->end();
     }
     ?>
@@ -297,6 +296,7 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
     <?php
     $this->Form->create(null, ['id' => 'edit_domain']);
     ?>
+        <hr>
         <h6 class="form-section-header"><?php echo $this->_('AdminMain.edit.title_basic_options', true);?></h6>
 
         <?php
@@ -307,7 +307,7 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
 
         <?php
         if ($service->status == 'pending') {
-        ?>
+            ?>
             <div class="mb-3">
                 <?php
                 $this->Form->label($this->_('AdminMain.edit.field_module', true), 'module', ['class' => 'form-label d-flex align-items-center']);
@@ -319,7 +319,7 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
                 <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order', 'class' => 'form-check-input']);?>
                 <?php $this->Form->label($this->_('AdminMain.edit.field_notify_order', true), 'notify_order', ['class' => 'form-check-label']);?>
             </div>
-        <?php
+            <?php
         }
         ?>
 
@@ -407,12 +407,14 @@ $this->Widget->end();
         const actionButtons = document.querySelectorAll('.action-button-group .btn');
         const actionValueInput = document.getElementById('action_value');
         const actionEmpty = document.getElementById('action-empty');
+        const actionNoFields = document.getElementById('action-no-fields');
 
         if (actionButtons.length > 0 && actionDomainForm) {
             actionButtons.forEach(button => {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
                     const action = this.getAttribute('data-action');
+                    const isDirect = this.getAttribute('data-direct') === 'true';
 
                     // Update active state
                     actionButtons.forEach(btn => btn.classList.remove('active'));
@@ -423,8 +425,8 @@ $this->Widget->end();
                         actionValueInput.value = action;
                     }
 
-                    // Show selected form
-                    serviceActionChange(action);
+                    // Show selected form or no-fields message
+                    serviceActionChange(action, isDirect);
                 });
             });
         }
@@ -432,28 +434,37 @@ $this->Widget->end();
         /**
          * Show/hide action sections based on selection
          */
-        function serviceActionChange(action) {
+        function serviceActionChange(action, isDirect) {
             if (!actionDomainForm) return;
 
-            // Hide all action sections
+            // Hide all action sections and empty states
             const sections = actionDomainForm.querySelectorAll('.action-form');
             sections.forEach(section => {
                 section.style.display = 'none';
             });
 
-            // Hide empty state
             if (actionEmpty) {
                 actionEmpty.style.display = 'none';
             }
+            if (actionNoFields) {
+                actionNoFields.style.display = 'none';
+            }
 
-            // Show selected action section
             if (action && action !== '') {
-                const selectedSection = actionDomainForm.querySelector('.action-form.' + action);
-                if (selectedSection) {
-                    selectedSection.style.display = 'block';
+                if (isDirect) {
+                    // Show "no fields required" message for direct actions
+                    if (actionNoFields) {
+                        actionNoFields.style.display = 'block';
+                    }
+                } else {
+                    // Show form for actions with fields
+                    const selectedSection = actionDomainForm.querySelector('.action-form.' + action);
+                    if (selectedSection) {
+                        selectedSection.style.display = 'block';
+                    }
                 }
             } else {
-                // Show empty state if no action selected
+                // Show "select action" empty state
                 if (actionEmpty) {
                     actionEmpty.style.display = 'block';
                 }

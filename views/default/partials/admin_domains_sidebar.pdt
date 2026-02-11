@@ -42,12 +42,12 @@
         ]
     ];
 
-    if ((isset($nav) ? $nav : false) && ($num_nav = count($nav)) > 0) {
+    if (($nav ?? false) && ($num_nav = count($nav)) > 0) {
         for ($i = 0; $i < $num_nav; $i++) {
             $name = (isset($nav[$i]['name']) ? $this->Html->safe($nav[$i]['name']) : null);
-            $uri = (isset($nav[$i]['uri']) ? $nav[$i]['uri'] : null);
-            $icon = (isset($nav[$i]['icon']) ? $nav[$i]['icon'] : 'bi-chevron-right');
-            $has_children = (isset($nav[$i]['children']) ? $nav[$i]['children'] : false);
+            $uri = ($nav[$i]['uri'] ?? null);
+            $icon = ($nav[$i]['icon'] ?? 'bi-chevron-right');
+            $has_children = ($nav[$i]['children'] ?? false);
             $is_current = substr_compare($uri, $_SERVER['REQUEST_URI'], 0, strlen(rtrim($uri ?? '', '/')), true) === 0;
 
             // Also check if any children match the current URI
@@ -59,9 +59,9 @@
                     }
                 }
             }
-    ?>
+            ?>
     <div class="settings-group">
-        <?php if ($has_children) { ?>
+            <?php if ($has_children) { ?>
             <a class="settings-group-header <?php echo $is_current ? '' : 'collapsed'; ?>"
                data-bs-toggle="collapse"
                href="#settingsGroup<?php echo $i; ?>"
@@ -78,24 +78,24 @@
                 $num_children = count($sub_nav);
                 for ($j = 0; $j < $num_children; $j++) {
                     $sub_name = (isset($sub_nav[$j]['name']) ? $this->Html->safe($sub_nav[$j]['name']) : null);
-                    $sub_uri = (isset($sub_nav[$j]['uri']) ? $sub_nav[$j]['uri'] : null);
+                    $sub_uri = ($sub_nav[$j]['uri'] ?? null);
                     $sub_is_current = substr_compare($sub_uri, $_SERVER['REQUEST_URI'], 0, strlen(rtrim($sub_uri ?? '', '/')), true) === 0;
-                ?>
+                    ?>
                     <a href="<?php echo $this->Html->safe($sub_uri); ?>" class="settings-nav-item<?php echo $sub_is_current ? ' active' : ''; ?>">
                         <?php echo $sub_name; ?>
                     </a>
-                <?php
+                    <?php
                 }
                 ?>
             </div>
-        <?php } else { ?>
+            <?php } else { ?>
             <a href="<?php echo $this->Html->safe($uri); ?>" class="settings-group-header<?php echo $is_current ? ' active' : ''; ?>">
                 <i class="<?php echo $this->Html->safe($icon); ?>"></i>
                 <span><?php echo $name; ?></span>
             </a>
-        <?php } ?>
+            <?php } ?>
     </div>
-    <?php
+            <?php
         }
     }
     ?>

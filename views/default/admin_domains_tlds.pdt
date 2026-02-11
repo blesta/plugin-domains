@@ -1,22 +1,22 @@
 <?php /** @var View $this */ ?>
 
 <?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-?>
+if (!($is_ajax ?? false)) {
+    ?>
 <div id="right_outer">
     <section id="right_container">
     <?php
-    if (!(isset($render_section) ? $render_section : null)) {
-        echo (isset($message) ? $message : null);
+    if (!($render_section ?? null)) {
+        echo ($message ?? null);
     }
     ?>
-<?php
+    <?php
 }
 ?>
     <?php
     // Duplicate TLDs warning
     if (!empty($duplicate_tlds)) {
-    ?>
+        ?>
         <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
             <div class="flex-grow-1">
@@ -30,7 +30,7 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                 <?php $this->Form->end(); ?>
             </div>
         </div>
-    <?php
+        <?php
     }
     ?>
 
@@ -176,16 +176,16 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                     <?php
                     if (!empty($tlds)) {
                         foreach ($tlds as $tld) {
-                    ?>
+                            ?>
                     <tr id="tlds_<?php echo $tld->package_id; ?>" data-package-tld="<?php echo $this->Html->safe($tld->tld); ?>">
-                        <td class="sortable-drag-handle text-center" style="cursor: grab;">
-                            <i class="bi bi-grip-vertical text-muted"></i>
+                        <td class="sortable-drag-handle">
+                            <i class="bi bi-grip-vertical"></i>
                         </td>
                         <td onclick="event.stopPropagation();">
                             <?php $this->Form->fieldCheckbox('tlds_bulk[tlds][]', $this->Html->safe($tld->tld), false, ['class' => 'form-check-input tld-checkbox']); ?>
                         </td>
                         <td>
-                            <i class="bi bi-<?php echo ($tld->package->status == 'active') ? 'check-circle-fill text-success' : 'x-circle-fill text-danger'; ?> me-2"></i>
+                            <i class="bi bi-<?php echo ($tld->package->status == 'active') ? 'check-circle text-success' : 'x-circle text-danger' ?> me-2"></i>
                             <?php echo $this->Html->safe($tld->tld); ?>
                         </td>
                         <td class="text-center">
@@ -230,7 +230,7 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                             </div>
                         </td>
                     </tr>
-                    <?php
+                            <?php
                         }
                     }
                     ?>
@@ -305,11 +305,11 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
         <?php $this->Pagination->build(); ?>
     </div>
 <?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-?>
+if (!($is_ajax ?? false)) {
+    ?>
     </section>
 </div>
-<?php
+    <?php
 }
 ?>
 
@@ -396,6 +396,7 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                             targetEl.innerHTML = response.content;
                             initPopovers();
                             initSortable();
+                            initEditTldModal(); // Re-initialize modal bindings after content reload
                         }
                     }
                 },
@@ -517,19 +518,24 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
             }
         });
 
-        // Edit TLD modal
-        document.addEventListener('click', function(e) {
-            var link = e.target.closest('.edit-tld-modal');
-            if (link) {
-                e.preventDefault();
-                blestaModal({
+        // Edit TLD modal - Initialize after page load and after AJAX reloads
+        function initEditTldModal() {
+            var editLinks = document.querySelectorAll('.edit-tld-modal');
+            editLinks.forEach(function(link) {
+                // Remove existing listener to prevent duplicates
+                var newLink = link.cloneNode(true);
+                link.parentNode.replaceChild(newLink, link);
+
+                // Initialize blestaModal on the new element
+                blestaModal(newLink, {
                     close: '<?php echo addslashes($this->_('AppController.modal.text_close', true)); ?>',
-                    url: link.href,
-                    min_width: Math.max((window.innerWidth / 4) * 3, 400),
-                    max_width: Math.max((window.innerWidth / 4) * 3, 400)
+                    url: newLink.href
                 });
-            }
-        });
+            });
+        }
+
+        // Initialize on page load
+        initEditTldModal();
 
         // Toggle "Add TLD" row
         function resetAddTldRow() {

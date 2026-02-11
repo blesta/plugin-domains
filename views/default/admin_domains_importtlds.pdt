@@ -1,28 +1,16 @@
 <?php /** @var View $this */ ?>
 
 <?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-?>
-<div id="right_outer">
-    <?php
-    if (!(isset($render_section) ? $render_section : null)) {
-        echo (isset($message) ? $message : null);
-    }
-    ?>
-    <section id="right_container">
-<?php
+if (!($render_section ?? null)) {
+    echo ($message ?? null);
 }
-?>
 
-<div class="message_box"></div>
-
-<?php
 $this->Widget->clear();
 $this->Widget->setStyleSheet($this->view_dir . 'css/domains.css');
 $this->Widget->create(
     $this->_('AdminDomains.import.boxtitle_import', true),
     ['id' => 'admin_domains_import'],
-    (isset($render_section) ? $render_section : null)
+    ($render_section ?? null)
 );
 
 $this->Form->create(null, ['id' => 'import_tlds_form']);
@@ -66,7 +54,7 @@ $this->Form->create(null, ['id' => 'import_tlds_form']);
         <div class="row g-3 mb-4">
             <?php
             for ($i = 1; $i <= 10; $i++) {
-            ?>
+                ?>
                 <div class="col-6 col-md-4 col-lg-3">
                     <div class="form-check">
                         <?php
@@ -75,7 +63,7 @@ $this->Form->create(null, ['id' => 'import_tlds_form']);
                         ?>
                     </div>
                 </div>
-            <?php
+                <?php
             }
             ?>
         </div>
@@ -116,15 +104,6 @@ $this->Form->create(null, ['id' => 'import_tlds_form']);
 <?php
 $this->Form->end();
 $this->Widget->end();
-?>
-
-<?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-?>
-    </section>
-</div>
-<?php
-}
 ?>
 
 <script type="text/javascript">

@@ -1,51 +1,51 @@
 <?php /** @var View $this */ ?>
 
 <?php
-if (!(isset($render_section) ? $render_section : null)) {
-    echo (isset($message) ? $message : null);
+if (!($render_section ?? null)) {
+    echo ($message ?? null);
 }
 
 $links = [
-    ['name' => $this->_('AdminDomains.browse.category_active', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['active']) ? $status_count['active'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'active' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/active/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_pending', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['pending']) ? $status_count['pending'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'pending' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/pending/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_suspended', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['suspended']) ? $status_count['suspended'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'suspended' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/suspended/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_canceled', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['canceled']) ? $status_count['canceled'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'canceled' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/canceled/'), 'class' => 'ajax text-danger']],
-    ['name' => $this->_('AdminDomains.browse.category_scheduled_cancellation', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['scheduled_cancellation']) ? $status_count['scheduled_cancellation'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'scheduled_cancellation' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/scheduled_cancellation/'), 'class' => 'ajax']],
-    ['name' => $this->_('AdminDomains.browse.category_in_review', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe(isset($status_count['in_review']) ? $status_count['in_review'] : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'in_review' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/in_review/'), 'class' => 'ajax']]
+    ['name' => $this->_('AdminDomains.browse.category_active', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe($status_count['active'] ?? null) . '</span>', 'current' => (($status ?? null) == 'active' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/active/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_pending', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe($status_count['pending'] ?? null) . '</span>', 'current' => (($status ?? null) == 'pending' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/pending/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_suspended', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe($status_count['suspended'] ?? null) . '</span>', 'current' => (($status ?? null) == 'suspended' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/suspended/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_canceled', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe($status_count['canceled'] ?? null) . '</span>', 'current' => (($status ?? null) == 'canceled' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/canceled/'), 'class' => 'ajax text-danger']],
+    ['name' => $this->_('AdminDomains.browse.category_scheduled_cancellation', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe($status_count['scheduled_cancellation'] ?? null) . '</span>', 'current' => (($status ?? null) == 'scheduled_cancellation' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/scheduled_cancellation/'), 'class' => 'ajax']],
+    ['name' => $this->_('AdminDomains.browse.category_in_review', true) . ' <span class="badge bg-secondary ms-2">' . $this->Html->safe($status_count['in_review'] ?? null) . '</span>', 'current' => (($status ?? null) == 'in_review' ? true : false), 'attributes' => ['href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/in_review/'), 'class' => 'ajax']]
 ];
 
 $this->Widget->clear();
 $this->Widget->setLinks($links);
 $this->Widget->setNavStyle('nav-tabs-custom');
-$this->Widget->setFilters(isset($filters) ? $filters : [], $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null)), !empty($filter_vars));
+$this->Widget->setFilters($filters ?? [], $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null)), !empty($filter_vars));
 $this->Widget->setAjaxFiltering();
 $this->Widget->setBodyWrapper(false);
-$this->Widget->create($this->_('AdminDomains.browse.boxtitle_browse', true), ['id' => 'admin_domains_browse'], isset($render_section) ? $render_section : []);
+$this->Widget->create($this->_('AdminDomains.browse.boxtitle_browse', true), ['id' => 'admin_domains_browse'], $render_section ?? []);
 $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/browse/', ['id' => 'browse_domains', 'class' => 'disable-on-submit']);
 
 if (!empty($domains)) {
-?>
+    ?>
 <table class="table table-hover">
     <thead>
         <tr>
             <th style="width: 30px;"></th>
             <?php
             if (!in_array($this->Html->ifSet($status), ['in_review', 'canceled'])) {
-            ?>
+                ?>
             <th style="width: 40px;"><?php $this->Form->fieldCheckbox('service_ids[]', 'all', (($vars->service_ids[0] ?? '') == 'all'), ['class' => 'actions form-check-input']);?></th>
-            <?php
+                <?php
             }
             ?>
-            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=name&order=' . ($sort == 'name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'name' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_domain');?></a></span></th>
-            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=client_first_name&order=' . ($sort == 'client_first_name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'client_first_name' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_client');?></a></span></th>
-            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=registrar&order=' . ($sort == 'registrar' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'registrar' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_registrar');?></a></span></th>
-            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=renewal_price&order=' . ($sort == 'renewal_price' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'renewal_price' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_price');?></a></span></th>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=name&order=' . ($sort == 'name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'name' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_domain');?></a></span></th>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=client_first_name&order=' . ($sort == 'client_first_name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'client_first_name' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_client');?></a></span></th>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=registrar&order=' . ($sort == 'registrar' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'registrar' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_registrar');?></a></span></th>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=renewal_price&order=' . ($sort == 'renewal_price' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'renewal_price' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_price');?></a></span></th>
             <th><span><?php $this->_('AdminDomains.browse.heading_registration');?></span></th>
-            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=date_added&order=' . ($sort == 'date_added' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_added' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_added');?></a></span></th>
-            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=date_renews&order=' . ($sort == 'date_renews' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_renews' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_renewal');?></a></span></th>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=date_added&order=' . ($sort == 'date_added' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_added' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_added');?></a></span></th>
+            <th><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=date_renews&order=' . ($sort == 'date_renews' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_renews' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_renewal');?></a></span></th>
             <th><span><?php $this->_('AdminDomains.browse.heading_expiration');?></span></th>
             <th>
-                <span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/?sort=date_canceled&order=' . ($sort == 'date_canceled' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_canceled' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_renew');?></a></span>
+                <span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=date_canceled&order=' . ($sort == 'date_canceled' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_canceled' ? ' ' . $order : '');?>"><?php $this->_('AdminDomains.browse.heading_renew');?></a></span>
                 <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="<?php $this->_('AdminDomains.browse.tooltip_renew');?>">
                     <i class="bi bi-info-circle text-secondary"></i>
                 </button>
@@ -56,29 +56,29 @@ if (!empty($domains)) {
     <tbody>
         <?php
         foreach ($domains as $domain) {
-        ?>
+            ?>
         <tr>
             <td class="text-center">
                 <?php
                 if ($domain->found != '1') {
-                ?>
+                    ?>
                     <button type="button" class="btn btn-link btn-sm p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="<?php $this->_('AdminDomains.browse.tooltip_transferred');?>">
                         <i class="bi bi-exclamation-triangle-fill text-warning"></i>
                     </button>
-                <?php
+                    <?php
                 }
                 ?>
             </td>
             <?php
             if (!in_array($this->Html->ifSet($status), ['in_review', 'canceled'])) {
-            ?>
+                ?>
             <td>
-                <?php $this->Form->fieldCheckbox('service_ids[]', (isset($domain->id) ? $domain->id : null), in_array((isset($domain->id) ? $domain->id : null), (isset($vars->service_ids) ? $vars->service_ids : [])), ['class' => 'actions form-check-input']);?>
+                <?php $this->Form->fieldCheckbox('service_ids[]', ($domain->id ?? null), in_array(($domain->id ?? null), ($vars->service_ids ?? [])), ['class' => 'actions form-check-input']);?>
             </td>
-            <?php
+                <?php
             }
             ?>
-            <td><?php echo $this->Html->safe(isset($domain->name) ? $domain->name : '');?></td>
+            <td><?php echo $this->Html->safe($domain->name ?? '');?></td>
             <td>
                 <a href="<?php echo $this->base_uri . 'clients/view/' . $domain->client_id;?>" class="text-primary">
                     <?php echo $this->Html->safe(
@@ -88,7 +88,7 @@ if (!empty($domains)) {
                     );?>
                 </a>
             </td>
-            <td><?php echo $this->Html->safe(isset($domain->registrar) ? $domain->registrar : '');?></td>
+            <td><?php echo $this->Html->safe($domain->registrar ?? '');?></td>
             <td <?php echo (!is_null($domain->override_price) ? 'class="text-warning fw-bold"' : ''); ?>><?php echo isset($domain->renewal_price) ? $this->CurrencyFormat->format($domain->renewal_price, $domain->package_pricing->currency) : '';?></td>
             <td><?php echo isset($domain->registration_date) ? $this->Date->cast($domain->registration_date) : '';?></td>
             <td><?php echo isset($domain->date_added) ? $this->Date->cast($domain->date_added) : '';?></td>
@@ -97,59 +97,59 @@ if (!empty($domains)) {
             <td><?php echo isset($domain->date_canceled) ? $this->_('AdminDomains.browse.text_off') : $this->_('AdminDomains.browse.text_on');?></td>
             <?php
             if (in_array(($status ?? null), ['active', 'pending', 'suspended', 'canceled', 'in_review'])) {
-            ?>
+                ?>
             <td>
                 <?php
                 // Show parent, if the domain belongs to a parent service
                 $show_parent = (($status ?? null) != 'canceled') && !empty($domain->parent_service_id);
                 if ($show_parent) {
-                ?>
+                    ?>
                 <a href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . ($domain->client_id ?? null) . '/' . ($domain->parent_service_id ?? null) . '/');?>" class="btn btn-sm btn-outline-secondary me-1" title="<?php $this->_('AdminDomains.browse.option_parent');?>">
                     <i class="bi bi-arrow-up-right-circle"></i>
                 </a>
-                <?php
+                    <?php
                 }
 
                 // Cannot manage a canceled service
                 $show_manage = ($status ?? null) != 'canceled';
                 if ($show_manage) {
-                ?>
-                <a class="btn btn-sm btn-outline-secondary manage" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/edit/' . (isset($domain->client_id) ? $domain->client_id : null) . '/' . (isset($domain->id) ? $domain->id : null) . '/');?>" title="<?php $this->_('AdminDomains.browse.option_manage');?>">
+                    ?>
+                <a class="btn btn-sm btn-outline-secondary manage" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/edit/' . ($domain->client_id ?? null) . '/' . ($domain->id ?? null) . '/');?>" title="<?php $this->_('AdminDomains.browse.option_manage');?>">
                     <i class="bi bi-pencil"></i>
                 </a>
-                <?php
+                    <?php
                 }
 
                 // Delete pending services
                 if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
                     echo ($show_manage ? ' ' : '');
-                ?>
-                <a class="btn btn-sm btn-outline-danger manage ms-1 submit" href="#" data-client-id="<?php echo $this->Html->safe((isset($domain->client_id) ? $domain->client_id : null));?>" data-service-id="<?php echo $this->Html->safe((isset($domain->id) ? $domain->id : null));?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.browse.confirm_delete', true));?>" title="<?php $this->_('AdminDomains.browse.option_delete');?>">
+                    ?>
+                <a class="btn btn-sm btn-outline-danger manage ms-1 submit" href="#" data-client-id="<?php echo $this->Html->safe(($domain->client_id ?? null));?>" data-service-id="<?php echo $this->Html->safe(($domain->id ?? null));?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.browse.confirm_delete', true));?>" title="<?php $this->_('AdminDomains.browse.option_delete');?>">
                     <i class="bi bi-trash"></i>
                 </a>
-                <?php
+                    <?php
                 }
                 ?>
             </td>
-            <?php
+                <?php
             }
             ?>
         </tr>
-        <?php
+            <?php
         }
         ?>
     </tbody>
 </table>
-<?php
+    <?php
     // Set pagination
     $this->Pagination->build();
 } else {
-?>
+    ?>
 <div class="card-body text-center text-muted py-5">
     <i class="bi bi-globe" style="font-size: 3rem; opacity: 0.3;"></i>
     <p class="mt-3 mb-0"><?php $this->_('AdminDomains.browse.text_none');?></p>
 </div>
-<?php
+    <?php
 }
 ?>
 <div id="domain_actions" class="button_row mt-3" style="display: none;">
@@ -159,7 +159,7 @@ if (!empty($domains)) {
     <div class="actions">
         <div id="change_auto_renewal" class="action_section" style="display: none;">
             <?php
-            $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], isset($vars->action) ? $vars->action : null, ['class' => 'form-select']);
+            $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], $vars->action ?? null, ['class' => 'form-select']);
             ?>
         </div>
         <div id="change_expiration_date" class="action_section" style="display: none;">
@@ -226,18 +226,18 @@ if (!empty($domains)) {
             </div>
         </div>
         <?php
-        $this->Form->fieldSelect('action', ['' => $this->_('AppController.select.please', true)] + (isset($actions) ? $actions : []), isset($vars->action) ? $vars->action : null, ['id' => 'domain_action', 'class' => 'form-select']);
+        $this->Form->fieldSelect('action', ['' => $this->_('AppController.select.please', true)] + ($actions ?? []), $vars->action ?? null, ['id' => 'domain_action', 'class' => 'form-select']);
         ?>
     </div>
 </div>
 <?php
 $this->Form->end();
 // Delete pending services
-if (in_array((isset($status) ? $status : null), ['pending', 'canceled', 'in_review'])) {
+if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
     $this->Form->create($this->base_uri . 'clients/deleteservice/', ['id' => 'delete_service']);
     $this->Form->fieldHidden('client_id', '', ['id' => 'delete_service_client_id']);
     $this->Form->fieldHidden('id', '', ['id' => 'delete_service_service_id']);
-    $this->Form->fieldHidden('redirect_uri', $this->base_uri . 'plugin/domains/admin_domains/browse/' . (isset($status) ? $status : null) . '/');
+    $this->Form->fieldHidden('redirect_uri', $this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/');
     $this->Form->end();
 }
 $this->Widget->end();

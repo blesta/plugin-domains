@@ -1,13 +1,13 @@
 <?php /** @var View $this */ ?>
 
 <?php
-echo (isset($message) ? $message : null);
+echo ($message ?? null);
 
 $links = [
-    ['name' => $this->_('AdminMain.index.category_active', true) . ' <span class="badge bg-secondary ms-2">' . (isset($status_count['active']) ? $this->Html->safe($status_count['active']) : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'active' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/active/', 'class' => 'ajax']],
-    ['name' => $this->_('AdminMain.index.category_pending', true) . ' <span class="badge bg-secondary ms-2">' . (isset($status_count['pending']) ? $this->Html->safe($status_count['pending']) : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'pending' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/pending/', 'class' => 'ajax']],
-    ['name' => $this->_('AdminMain.index.category_suspended', true) . ' <span class="badge bg-secondary ms-2">' . (isset($status_count['suspended']) ? $this->Html->safe($status_count['suspended']) : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'suspended' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/suspended/', 'class' => 'ajax']],
-    ['name' => $this->_('AdminMain.index.category_canceled', true) . ' <span class="badge bg-secondary ms-2">' . (isset($status_count['canceled']) ? $this->Html->safe($status_count['canceled']) : null) . '</span>', 'current' => ((isset($status) ? $status : null) == 'canceled' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/canceled/', 'class' => 'ajax text-danger']],
+    ['name' => $this->_('AdminMain.index.category_active', true) . ' <span class="badge bg-secondary ms-2">' . (isset($status_count['active']) ? $this->Html->safe($status_count['active']) : null) . '</span>', 'current' => (($status ?? null) == 'active' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/active/', 'class' => 'ajax']],
+    ['name' => $this->_('AdminMain.index.category_pending', true) . ' <span class="badge bg-secondary ms-2">' . (isset($status_count['pending']) ? $this->Html->safe($status_count['pending']) : null) . '</span>', 'current' => (($status ?? null) == 'pending' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/pending/', 'class' => 'ajax']],
+    ['name' => $this->_('AdminMain.index.category_suspended', true) . ' <span class="badge bg-secondary ms-2">' . (isset($status_count['suspended']) ? $this->Html->safe($status_count['suspended']) : null) . '</span>', 'current' => (($status ?? null) == 'suspended' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/suspended/', 'class' => 'ajax']],
+    ['name' => $this->_('AdminMain.index.category_canceled', true) . ' <span class="badge bg-secondary ms-2">' . (isset($status_count['canceled']) ? $this->Html->safe($status_count['canceled']) : null) . '</span>', 'current' => (($status ?? null) == 'canceled' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/canceled/', 'class' => 'ajax text-danger']],
 ];
 $link_buttons = [
     [
@@ -26,29 +26,29 @@ $this->Widget->setLinks($links);
 $this->Widget->setNavStyle('nav-tabs-custom');
 $this->Widget->setLinkButtons($link_buttons);
 $this->Widget->setBadgeUri($this->base_uri . 'plugin/domains/admin_main/clientdomainscount/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null));
-$this->Widget->setFilters((isset($filters) ? $filters : null), $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null)), !empty($filter_vars));
+$this->Widget->setFilters(($filters ?? null), $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null)), !empty($filter_vars));
 $this->Widget->setAjaxFiltering();
 $this->Widget->setWidgetButton('arrow');
 $this->Widget->setBodyWrapper(false);
 $this->Widget->create($this->_('AdminMain.index.boxtitle_domains', true), ['id' => 'plugin_domains_admin_main_domains'], ($render_section ?? null));
 $this->Form->create(null, ['class' => 'disable-on-submit']);
 
-if ((isset($domains) ? $domains : false) && ($num_domains = count($domains)) > 0) {
-?>
+if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
+    ?>
 <table class="table table-hover">
     <thead>
         <tr>
             <th style="width: 30px;"></th>
             <?php
-            if (!in_array((isset($status) ? $status : null), ['in_review', 'canceled'])) {
-            ?>
-            <th style="width: 40px;"><?php $this->Form->fieldCheckbox('service_ids[]', 'all', ((isset($vars->service_ids[0]) ? $vars->service_ids[0] : null) == 'all'), ['class' => 'actions form-check-input']);?></th>
-            <?php
+            if (!in_array(($status ?? null), ['in_review', 'canceled'])) {
+                ?>
+            <th style="width: 40px;"><?php $this->Form->fieldCheckbox('service_ids[]', 'all', (($vars->service_ids[0] ?? null) == 'all'), ['class' => 'actions form-check-input']);?></th>
+                <?php
             }
-            if (in_array((isset($status) ? $status : null), ['active', 'suspended'])) {
-            ?>
+            if (in_array(($status ?? null), ['active', 'suspended'])) {
+                ?>
             <th style="width: 30px;"></th>
-            <?php
+                <?php
             }
             ?>
             <th><?php $this->_('AdminMain.index.heading_domain');?></th>
@@ -70,22 +70,22 @@ if ((isset($domains) ? $domains : false) && ($num_domains = count($domains)) > 0
             </th>
             <th><?php $this->_('AdminMain.index.heading_dateexpires');?></th>
             <?php
-            if ((isset($status) ? $status : null) == 'suspended') {
-            ?>
+            if (($status ?? null) == 'suspended') {
+                ?>
             <th>
                 <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=date_suspended&order=' . ($sort == 'date_suspended' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_suspended' ? ' ' . $order : '');?>">
                     <?php $this->_('AdminMain.index.heading_datesuspended');?>
                 </a>
             </th>
-            <?php
-            } elseif ((isset($status) ? $status : null) == 'canceled') {
-            ?>
+                <?php
+            } elseif (($status ?? null) == 'canceled') {
+                ?>
             <th>
                 <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=date_canceled&order=' . ($sort == 'date_canceled' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_canceled' ? ' ' . $order : '');?>">
                     <?php $this->_('AdminMain.index.heading_datecanceled');?>
                 </a>
             </th>
-            <?php
+                <?php
             }
             ?>
             <th><?php $this->_('AdminMain.index.heading_options');?></th>
@@ -95,32 +95,32 @@ if ((isset($domains) ? $domains : false) && ($num_domains = count($domains)) > 0
         <?php
         // List all services
         for ($i = 0; $i < $num_domains; $i++) {
-        ?>
+            ?>
         <tr<?php echo ($i % 2 == 1) ? ' class="table-light"' : '';?> class="domain_info">
             <td class="text-center">
                 <?php
                 if ($domains[$i]->found != '1') {
-                ?>
+                    ?>
                     <button type="button" class="btn btn-link btn-sm p-0" data-bs-toggle="tooltip" data-bs-placement="top" title="<?php $this->_('AdminMain.index.tooltip_transferred');?>">
                         <i class="bi bi-exclamation-triangle-fill text-warning"></i>
                     </button>
-                <?php
+                    <?php
                 }
                 ?>
             </td>
             <?php
-            if (!in_array((isset($status) ? $status : null), ['in_review', 'canceled'])) {
-            ?>
+            if (!in_array(($status ?? null), ['in_review', 'canceled'])) {
+                ?>
             <td>
-                <?php $this->Form->fieldCheckbox('service_ids[]', (isset($domains[$i]->id) ? $domains[$i]->id : null), in_array((isset($domains[$i]->id) ? $domains[$i]->id : null), (isset($vars->service_ids) ? $vars->service_ids : [])), ['class' => 'actions form-check-input']);?>
+                <?php $this->Form->fieldCheckbox('service_ids[]', ($domains[$i]->id ?? null), in_array(($domains[$i]->id ?? null), ($vars->service_ids ?? [])), ['class' => 'actions form-check-input']);?>
             </td>
-            <?php
+                <?php
             }
-            if (in_array((isset($status) ? $status : null), ['active', 'suspended'])) {
+            if (in_array(($status ?? null), ['active', 'suspended'])) {
                 $icon = empty($domains[$i]->date_canceled) ? 'bi-check-circle' : 'bi-calendar-x';
-            ?>
+                ?>
             <td class="text-center"><i class="bi <?php (print (isset($icon) ? $this->Html->safe($icon) : null));?>"></i></td>
-            <?php
+                <?php
             }
             ?>
             <td><?php (print (isset($domains[$i]->name) ? $this->Html->safe($domains[$i]->name) : null));?></td>
@@ -136,21 +136,21 @@ if ((isset($domains) ? $domains : false) && ($num_domains = count($domains)) > 0
                 }
                 ?>
             </td>
-            <td><?php echo $this->Html->safe(isset($domains[$i]->registrar) ? $domains[$i]->registrar : '');?></td>
+            <td><?php echo $this->Html->safe($domains[$i]->registrar ?? '');?></td>
             <td class="registration_date position-relative">
                 <?php echo isset($domains[$i]->registration_date) ? $this->Date->cast($domains[$i]->registration_date) : '';?>
             </td>
             <td><?php echo (empty($domains[$i]->date_renews) ? $this->_('AdminMain.index.text_never', true) : $this->Date->cast((isset($domains[$i]->date_renews) ? $this->Html->safe($domains[$i]->date_renews) : null)));?></td>
             <td><?php echo isset($domains[$i]->expiration_date) ? $this->Date->cast($domains[$i]->expiration_date) : '';?></td>
             <?php
-            if ((isset($status) ? $status : null) == 'suspended') {
-            ?>
+            if (($status ?? null) == 'suspended') {
+                ?>
             <td><?php echo (empty($domains[$i]->date_suspended) ? $this->_('AdminMain.index.text_never', true) : $this->Date->cast((isset($domains[$i]->date_suspended) ? $this->Html->safe($domains[$i]->date_suspended) : null)));?></td>
-            <?php
-            } elseif ((isset($status) ? $status : null) == 'canceled') {
-            ?>
+                <?php
+            } elseif (($status ?? null) == 'canceled') {
+                ?>
             <td><?php echo (empty($domains[$i]->date_canceled) ? $this->_('AdminMain.index.text_never', true) : $this->Date->cast((isset($domains[$i]->date_canceled) ? $this->Html->safe($domains[$i]->date_canceled) : null)));?></td>
-            <?php
+                <?php
             }
             ?>
             <td>
@@ -158,49 +158,49 @@ if ((isset($domains) ? $domains : false) && ($num_domains = count($domains)) > 0
                 // Show parent, if the domain belongs to another package
                 $show_parent = (($status ?? null) != 'canceled') && !empty($domains[$i]->parent_service_id);
                 if ($show_parent) {
-                ?>
+                    ?>
                 <a href="<?php echo $this->Html->safe($this->base_uri . 'clients/editservice/' . ($client->id ?? null) . '/' . ($domains[$i]->parent_service_id ?? null) . '/');?>" class="btn btn-sm btn-outline-secondary me-1" title="<?php $this->_('AdminMain.index.option_parent');?>">
                     <i class="bi bi-arrow-up-right-circle"></i>
                 </a>
-                <?php
+                    <?php
                 }
 
                 // Cannot manage a canceled service
                 $show_manage = ($status ?? null) != 'canceled';
                 if ($show_manage) {
-                ?>
+                    ?>
                 <a href="<?php echo $this->base_uri . 'plugin/domains/admin_main/edit/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null) . '/';?>" class="btn btn-sm btn-outline-secondary manage" title="<?php $this->_('AdminMain.index.option_manage');?>">
                     <i class="bi bi-pencil"></i>
                 </a>
-                <?php
+                    <?php
                 }
 
                 if (in_array(($status ?? null), ['pending', 'canceled'])) {
                     echo ($show_manage ? ' ' : '');
-                ?>
+                    ?>
                 <a href="<?php echo $this->base_uri . 'clients/deleteservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null) . '/';?>" class="btn btn-sm btn-outline-danger manage" data-service-id="<?php (print (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null));?>" rel="<?php echo $this->Html->safe($this->_('AdminMain.index.confirm_delete', true));?>" title="<?php $this->_('AdminMain.index.option_delete');?>">
                     <i class="bi bi-trash"></i>
                 </a>
-                <?php
+                    <?php
                 }
                 ?>
             </td>
         </tr>
-        <?php
+            <?php
         }
         ?>
     </tbody>
 </table>
-<?php
+    <?php
     // Set pagination
     $this->Pagination->build();
 } else {
-?>
+    ?>
 <div class="card-body text-center text-muted py-5">
     <i class="bi bi-globe" style="font-size: 3rem; opacity: 0.3;"></i>
     <p class="mt-3 mb-0"><?php $this->_('AdminMain.index.no_results');?></p>
 </div>
-<?php
+    <?php
 }
 ?>
 <div id="domain_actions" class="button_row mt-3" style="display: none;">
@@ -210,7 +210,7 @@ if ((isset($domains) ? $domains : false) && ($num_domains = count($domains)) > 0
     <div class="actions">
         <div id="domain_change_auto_renewal" class="action_section mb-3">
             <?php
-            $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], isset($vars->action) ? $vars->action : null, ['class' => 'form-select']);
+            $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], $vars->action ?? null, ['class' => 'form-select']);
             ?>
         </div>
         <div id="domain_change_expiration_date" class="action_section mb-3">
@@ -277,7 +277,7 @@ if ((isset($domains) ? $domains : false) && ($num_domains = count($domains)) > 0
             </div>
         </div>
         <?php
-        $this->Form->fieldSelect('action', ['' => $this->_('AppController.select.please', true)] + (isset($actions) ? $actions : []), isset($vars->action) ? $vars->action : null, ['id' => 'domain_action', 'class' => 'form-select']);
+        $this->Form->fieldSelect('action', ['' => $this->_('AppController.select.please', true)] + ($actions ?? []), $vars->action ?? null, ['id' => 'domain_action', 'class' => 'form-select']);
         ?>
     </div>
 </div>

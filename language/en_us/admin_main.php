@@ -214,6 +214,7 @@ $lang['AdminMain.edit.title_actions'] = 'Actions';
 $lang['AdminMain.edit.title_basic_options'] = 'Basic Options';
 
 $lang['AdminMain.edit.text_select_action'] = 'Click a button above to display the form to perform an action.';
+$lang['AdminMain.edit.text_no_fields'] = 'This action does not require any additional options. Click Submit to proceed.';
 
 
 // Get filters

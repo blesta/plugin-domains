@@ -1,98 +1,97 @@
 <?php /** @var View $this */ ?>
 
 <?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-?>
-<div id="right_outer">
-    <?php
-    if (!(isset($render_section) ? $render_section : null)) {
-        echo (isset($message) ? $message : null);
-    }
-    ?>
-    <section id="right_container">
-<?php
+if (!($render_section ?? null)) {
+    echo ($message ?? null);
 }
-?>
-<?php
+
+$this->Form->create($this->base_uri . 'plugin/domains/admin_domains/importpackages/import/', ['id' => 'importpackages', 'class' => 'disable-on-submit']);
+
 $this->Widget->clear();
 $this->Widget->setStyleSheet($this->view_dir . 'css/domains.css');
 $this->Widget->setTabs($tabs ?? []);
-$this->Widget->create($this->_('AdminDomains.importpackages.boxtitle', true), ['id' => 'admin_domains_importpackages'], (isset($render_section) ? $render_section : null));
-
-$this->Form->create($this->base_uri . 'plugin/domains/admin_domains/importpackages/import/', ['id' => 'importpackages', 'class' => 'disable-on-submit']);
+$this->Widget->create($this->_('AdminDomains.importpackages.boxtitle', true), ['id' => 'admin_domains_importpackages'], ($render_section ?? null));
 ?>
-
-<div class="inner">
-    <p><?php $this->_('AdminDomains.importpackages.description');?></p>
-    <div class="pad">
-        <div class="mb-3">
-            <div class="form-check">
-                <?php
-                $this->Form->fieldCheckbox('migrate_services', '1', (isset($vars['migrate_services']) ? $vars['migrate_services'] : '1') === '1', ['id' => 'migrate_services', 'class' => 'form-check-input']);
-                $this->Form->label($this->_('AdminDomains.importpackages.field_migrate_services', true), 'migrate_services', ['class' => 'form-check-label']);
-                ?>
-                <button type="button" class="btn btn-link btn-sm p-0 ms-2" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="<?php $this->_('AdminDomains.importpackages.tooltip_migrate_services');?>">
-                    <i class="bi bi-info-circle text-secondary"></i>
-                </button>
-            </div>
-        </div>
-        <div class="mb-3">
-            <div class="form-check">
-                <?php
-                $this->Form->fieldCheckbox('overwrite_packages', '1', (isset($vars['overwrite_packages']) ? $vars['overwrite_packages'] : null) === '1', ['id' => 'overwrite_packages', 'class' => 'form-check-input']);
-                $this->Form->label($this->_('AdminDomains.importpackages.field_overwrite_packages', true), 'overwrite_packages', ['class' => 'form-check-label']);
-                ?>
-                <button type="button" class="btn btn-link btn-sm p-0 ms-2" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="<?php $this->_('AdminDomains.importpackages.tooltip_overwrite_packages');?>">
-                    <i class="bi bi-info-circle text-secondary"></i>
-                </button>
-            </div>
+    <!-- Info Alert -->
+    <div class="alert alert-info d-flex align-items-start mb-4">
+        <i class="bi bi-info-circle me-3 mt-1"></i>
+        <div>
+            <strong><?php $this->_('AdminDomains.importpackages.alert_title');?></strong>
+            <ul class="mb-0 mt-2">
+                <li><?php $this->_('AdminDomains.importpackages.alert_point1');?></li>
+                <li><?php $this->_('AdminDomains.importpackages.alert_point2');?></li>
+                <li><?php $this->_('AdminDomains.importpackages.alert_point3');?></li>
+                <li><?php $this->_('AdminDomains.importpackages.alert_point4');?></li>
+                <li><?php $this->_('AdminDomains.importpackages.alert_point5');?></li>
+                <li><?php $this->_('AdminDomains.importpackages.alert_point6');?></li>
+            </ul>
         </div>
     </div>
 
+    <!-- Import Options -->
+    <h6 class="form-section-header"><?php $this->_('AdminDomains.importpackages.section_import_options');?></h6>
+    <div class="mb-3">
+        <div class="form-check mb-3">
+            <?php
+            $this->Form->fieldCheckbox('migrate_services', '1', ($vars['migrate_services'] ?? '1') === '1', ['id' => 'migrate_services', 'class' => 'form-check-input']);
+            ?>
+            <label class="form-check-label" for="migrate_services">
+                <?php $this->_('AdminDomains.importpackages.field_migrate_services');?>
+                <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.importpackages.tooltip_migrate_services', true));?>">
+                    <i class="bi bi-info-circle text-secondary"></i>
+                </button>
+            </label>
+        </div>
+        <div class="form-check">
+            <?php
+            $this->Form->fieldCheckbox('overwrite_packages', '1', ($vars['overwrite_packages'] ?? null) === '1', ['id' => 'overwrite_packages', 'class' => 'form-check-input']);
+            ?>
+            <label class="form-check-label" for="overwrite_packages">
+                <?php $this->_('AdminDomains.importpackages.field_overwrite_packages');?>
+                <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.importpackages.tooltip_overwrite_packages', true));?>">
+                    <i class="bi bi-info-circle text-secondary"></i>
+                </button>
+            </label>
+        </div>
+    </div>
+
+    <!-- Import Progress -->
     <div id="imported_packages" style="display: none;">
-        <h6><?php echo $this->_('AdminDomains.importpackages.title_imported_packages', true);?></h6>
-        <div class="pad">
-            <div id="tld_boxes_container">
-                <div class="d-flex align-items-center">
-                    <div class="spinner-border text-primary me-2" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <span><?php echo $this->_('AdminDomains.importpackages.text_collecting_list_tlds', true);?></span>
-                </div>
+        <h6 class="form-section-header"><?php $this->_('AdminDomains.importpackages.title_imported_packages');?></h6>
+        <div id="tld_boxes_container" class="mb-3">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-hourglass-split text-primary me-2"></i>
+                <span><?php $this->_('AdminDomains.importpackages.text_collecting_list_tlds');?></span>
             </div>
         </div>
     </div>
 
-    <div class="button_row">
+    <?php $this->Widget->footer(); ?>
+    <div class="d-flex justify-content-end gap-2">
         <?php
         $this->Form->fieldSubmit('save', $this->_('AdminDomains.importpackages.field_submit', true), ['class' => 'btn btn-primary']);
         ?>
     </div>
-</div>
 <?php
-$this->Form->end();
 $this->Widget->end();
-?>
-<?php
-if (!(isset($is_ajax) ? $is_ajax : false)) {
-?>
-    </section>
-</div>
-<?php
-}
+$this->Form->end();
 ?>
 
 <script type="text/javascript">
 (function() {
     'use strict';
 
+    // Language definitions
+    var lang_no_tlds_available = '<?php echo addslashes($this->_('AdminDomains.importpackages.text_no_tlds_available', true)); ?>';
+    var lang_refresh = '<?php echo addslashes($this->_('AdminDomains.importpackages.field_refresh', true)); ?>';
+
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('importpackages');
+        var form = document.getElementById('importpackages');
         if (!form) return;
 
         // Initialize popovers
-        const popoverTriggers = form.querySelectorAll('[data-bs-toggle="popover"]');
-        popoverTriggers.forEach(trigger => {
+        var popoverTriggers = form.querySelectorAll('[data-bs-toggle="popover"]');
+        popoverTriggers.forEach(function(trigger) {
             new bootstrap.Popover(trigger);
         });
 
@@ -100,19 +99,21 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
         form.addEventListener('submit', function(event) {
             event.preventDefault();
 
-            const formData = new FormData(form);
-            const data = new URLSearchParams(formData).toString();
+            var formData = new FormData(form);
+            var data = new URLSearchParams(formData).toString();
 
-            // Remove save button and disable form
-            const inputs = form.querySelectorAll('input:not([type="hidden"])');
-            inputs.forEach(input => input.disabled = true);
+            // Disable form inputs and submit button
+            var inputs = form.querySelectorAll('input:not([type="hidden"])');
+            inputs.forEach(function(input) {
+                input.disabled = true;
+            });
 
-            const submitBtn = form.querySelector('input[name="save"]');
+            var submitBtn = form.querySelector('input[name="save"]');
             if (submitBtn) {
-                submitBtn.remove();
+                submitBtn.disabled = true;
             }
 
-            const importedPackages = document.getElementById('imported_packages');
+            var importedPackages = document.getElementById('imported_packages');
             if (importedPackages) {
                 importedPackages.style.display = 'block';
             }
@@ -122,38 +123,66 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: data,
                 credentials: 'same-origin'
             })
-            .then(response => response.json())
-            .then(tlds => {
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(tlds) {
                 // Build TLD boxes
-                const container = document.querySelector('#tld_boxes_container');
+                var container = document.querySelector('#tld_boxes_container');
                 if (!container) return;
 
-                container.innerHTML = '<div class="d-flex flex-wrap gap-2" id="tld_boxes_wrapper"></div>';
-                const wrapper = document.getElementById('tld_boxes_wrapper');
+                // Filter out empty entries
+                var validTlds = tlds.filter(function(tld) {
+                    return tld && tld !== '.';
+                });
 
-                tlds.forEach(tld => {
-                    if (tld === '.') return;
+                // Check if we have any TLDs to import
+                if (validTlds.length === 0) {
+                    container.innerHTML = '<div class="text-center py-4"><i class="bi bi-info-circle text-muted me-2" style="font-size: 1.5rem;"></i><span class="text-muted">' + lang_no_tlds_available + '</span></div>';
 
+                    // Replace submit button with refresh button
+                    var submitBtn = form.querySelector('input[name="save"]');
+                    if (submitBtn) {
+                        var refreshBtn = document.createElement('a');
+                        refreshBtn.href = window.location.href;
+                        refreshBtn.className = 'btn btn-primary';
+                        refreshBtn.textContent = lang_refresh;
+                        submitBtn.parentNode.replaceChild(refreshBtn, submitBtn);
+                    }
+
+                    return;
+                }
+
+                container.innerHTML = '<div class="tld-import-grid" id="tld_boxes_wrapper"></div>';
+                var wrapper = document.getElementById('tld_boxes_wrapper');
+
+                validTlds.forEach(function(tld) {
                     // Format TLD id
-                    const tldId = tld.replace(/\./g, '_');
+                    var tldId = tld.replace(/\./g, '_');
 
                     // Build HTML
-                    const tldBox = document.createElement('div');
-                    tldBox.className = 'tld-box bg-warning';
+                    var tldBox = document.createElement('div');
+                    tldBox.className = 'tld-box current';
                     tldBox.id = 'package' + tldId;
-                    tldBox.textContent = tld;
+
+                    var tldCard = document.createElement('div');
+                    tldCard.className = 'tld-import-card';
+                    tldCard.textContent = tld;
+
+                    tldBox.appendChild(tldCard);
                     wrapper.appendChild(tldBox);
                 });
 
                 // Start importing
                 importPackages(data);
             })
-            .catch(error => {
+            .catch(function(error) {
                 console.error('Error fetching TLD list:', error);
             });
         });
@@ -167,45 +196,48 @@ if (!(isset($is_ajax) ? $is_ajax : false)) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: data,
                 credentials: 'same-origin'
             })
-            .then(response => response.json())
-            .then(response => {
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(response) {
                 if (response.hasOwnProperty('message')) {
                     // Mark all as success
-                    const tldBoxes = document.querySelectorAll('#imported_packages .tld-box');
-                    tldBoxes.forEach(box => {
+                    var tldBoxes = document.querySelectorAll('#imported_packages .tld-box');
+                    tldBoxes.forEach(function(box) {
                         box.classList.remove('current');
                         box.classList.add('success');
                     });
 
                     // Show message
-                    const rightOuter = document.getElementById('right_outer');
+                    var rightOuter = document.getElementById('right_outer');
                     if (rightOuter && response.message) {
                         rightOuter.insertAdjacentHTML('afterbegin', response.message);
                     }
                 } else {
                     // Mark failed ones
-                    const tldBoxes = document.querySelectorAll('#imported_packages .tld-box:not(.success)');
-                    tldBoxes.forEach(box => {
+                    var tldBoxes = document.querySelectorAll('#imported_packages .tld-box:not(.success)');
+                    tldBoxes.forEach(function(box) {
                         box.classList.remove('current');
                         box.classList.add('failed');
                     });
 
                     // Show error
-                    const rightOuter = document.getElementById('right_outer');
+                    var rightOuter = document.getElementById('right_outer');
                     if (rightOuter && response.error) {
                         rightOuter.insertAdjacentHTML('afterbegin', response.error);
                     }
                 }
             })
-            .catch(error => {
+            .catch(function(error) {
                 // Mark all non-current as failed
-                const tldBoxes = document.querySelectorAll('#imported_packages .tld-box:not(.current):not(.success)');
-                tldBoxes.forEach(box => {
+                var tldBoxes = document.querySelectorAll('#imported_packages .tld-box:not(.current):not(.success)');
+                tldBoxes.forEach(function(box) {
                     box.classList.remove('current');
                     box.classList.remove('success');
                     box.classList.add('failed');

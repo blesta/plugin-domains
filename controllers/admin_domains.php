@@ -1534,13 +1534,13 @@ class AdminDomains extends DomainsController
      */
     private function configurationTabs($tab = 'general', $ajax = true)
     {
-        return [
+        $tabs = [
             [
                 'name' => Language::_('AdminDomains.configuration.tab_general', true),
                 'current' => (($tab ?? 'general') == 'general'),
                 'attributes' => [
                     'class' => 'general',
-                    'href' => $ajax ? '#' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=general'),
+                    'href' => $ajax ? '#tab_general' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=general'),
                     'id' => 'general_tab'
                 ]
             ],
@@ -1549,7 +1549,7 @@ class AdminDomains extends DomainsController
                 'current' => (($tab ?? 'general') == 'notifications'),
                 'attributes' => [
                     'class' => 'notifications',
-                    'href' => $ajax ? '#' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=notifications'),
+                    'href' => $ajax ? '#tab_notifications' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=notifications'),
                     'id' => 'notifications_tab'
                 ]
             ],
@@ -1558,7 +1558,7 @@ class AdminDomains extends DomainsController
                 'current' => (($tab ?? 'general') == 'advanced'),
                 'attributes' => [
                     'class' => 'advanced',
-                    'href' => $ajax ? '#' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=advanced'),
+                    'href' => $ajax ? '#tab_advanced' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=advanced'),
                     'id' => 'advanced_tab'
                 ]
             ],
@@ -1567,7 +1567,7 @@ class AdminDomains extends DomainsController
                 'current' => (($tab ?? 'general') == 'tld_sync'),
                 'attributes' => [
                     'class' => 'tld_sync',
-                    'href' => $ajax ? '#' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync'),
+                    'href' => $ajax ? '#tab_tld_sync' : $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync'),
                     'id' => 'tld_sync_tab'
                 ]
             ],
@@ -1590,6 +1590,16 @@ class AdminDomains extends DomainsController
                 ]
             ]
         ];
+
+        // Add Bootstrap 5 tab attributes to internal tabs (when using AJAX)
+        if ($ajax) {
+            for ($i = 0; $i < 4; $i++) {
+                $tabs[$i]['attributes']['data-bs-toggle'] = 'tab';
+                $tabs[$i]['attributes']['role'] = 'tab';
+            }
+        }
+
+        return $tabs;
     }
 
     /**
