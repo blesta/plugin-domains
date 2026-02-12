@@ -22,7 +22,6 @@ $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submi
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
                             <p class="text-muted small mb-0">
-                                <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_spotlight_tlds');?></div></span>
                                 <?php $this->_('AdminDomains.configuration.tooltip_spotlight_tlds'); ?>
                             </p>
                         </div>
@@ -53,10 +52,12 @@ $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submi
                         for ($i = 0; $i < 8; $i++) {
                             if (isset($selected_tlds[$i])) {
                                 $tld = $selected_tlds[$i];
+                                // Strip leading dot if present to avoid double dots
+                                $tld_display = ltrim($tld, '.');
                                 echo '<div class="spotlight-slot filled" data-tld="' . $this->Html->safe($tld) . '">';
                                 echo '<button type="button" class="slot-remove" title="Remove">×</button>';
                                 echo '<i class="bi bi-star-fill"></i>';
-                                echo '<span class="slot-tld">.' . $this->Html->safe($tld) . '</span>';
+                                echo '<span class="slot-tld">.' . $this->Html->safe($tld_display) . '</span>';
                                 // Hidden input to preserve selection
                                 $this->Form->fieldHidden('domains_spotlight_tlds[' . $tld . ']', '1', ['class' => 'spotlight-tld-input']);
                                 echo '</div>';
@@ -85,7 +86,6 @@ $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submi
                     </label>
                     <?php $this->Form->fieldSelect('domains_renewal_days_before_expiration', ($renewal_days ?? null), ($vars['domains_renewal_days_before_expiration'] ?? null), ['id' => 'renewal_days_before_expiration', 'class' => 'form-select', 'style' => 'max-width: 250px;']); ?>
                     <small class="form-text text-muted">
-                        <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_renewal_days_before_expiration');?></div></span>
                         <?php $this->_('AdminDomains.configuration.tooltip_renewal_days_before_expiration'); ?>
                     </small>
                 </div>
@@ -351,11 +351,13 @@ $this->Form->end();
                     foreach (($tlds ?? []) as $tld) {
                         $is_selected = isset($vars['domains_spotlight_tlds'][$tld->tld]) && $vars['domains_spotlight_tlds'][$tld->tld] === '1';
                         $selected_class = $is_selected ? 'selected' : '';
+                        // Strip leading dot if present to avoid double dots
+                        $tld_display = ltrim($tld->tld, '.');
                         echo '<div class="tld-selection-item ' . $selected_class . '" data-tld="' . $this->Html->safe($tld->tld) . '">';
                         if ($is_selected) {
                             echo '<i class="bi bi-star-fill"></i>';
                         }
-                        echo '.' . $this->Html->safe($tld->tld);
+                        echo '.' . $this->Html->safe($tld_display);
                         echo '</div>';
                     }
                     ?>
@@ -525,11 +527,13 @@ $this->Widget->end();
 
             if (i < selectedTlds.length) {
                 var tld = selectedTlds[i];
+                // Strip leading dot if present to avoid double dots
+                var tld_display = tld.replace(/^\.+/, '');
                 slot.className = 'spotlight-slot filled';
                 slot.setAttribute('data-tld', tld);
                 slot.innerHTML = '<button type="button" class="slot-remove" title="Remove">×</button>' +
                                 '<i class="bi bi-star-fill"></i>' +
-                                '<span class="slot-tld">.' + tld + '</span>' +
+                                '<span class="slot-tld">.' + tld_display + '</span>' +
                                 '<input type="hidden" name="domains_spotlight_tlds[' + tld + ']" value="1" class="spotlight-tld-input">';
             } else {
                 slot.className = 'spotlight-slot empty';

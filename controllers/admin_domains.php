@@ -1574,7 +1574,7 @@ class AdminDomains extends DomainsController
                 'name' => Language::_('AdminDomains.configuration.tab_importpackages', true),
                 'current' => (($tab ?? 'general') == 'importpackages'),
                 'attributes' => [
-                    'class' => 'importpackages ajax',
+                    'class' => 'importpackages',
                     'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/'),
                     'id' => 'importpackages_tab'
                 ]
@@ -1583,7 +1583,7 @@ class AdminDomains extends DomainsController
                 'name' => Language::_('AdminDomains.configuration.tab_configurableoptions', true),
                 'current' => (($tab ?? 'general') == 'configurableoptions'),
                 'attributes' => [
-                    'class' => 'configurableoptions ajax',
+                    'class' => 'configurableoptions',
                     'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/'),
                     'id' => 'configurableoptions_tab'
                 ]
