@@ -313,6 +313,15 @@ if (!($is_ajax ?? false)) {
 }
 ?>
 
+<!-- TLD Pricing Modal -->
+<div class="modal fade" id="editTldPricingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <!-- Content loaded via AJAX -->
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {
         var baseUri = '<?php echo $this->base_uri; ?>';
@@ -518,24 +527,181 @@ if (!($is_ajax ?? false)) {
             }
         });
 
-        // Edit TLD modal - Initialize after page load and after AJAX reloads
-        function initEditTldModal() {
-            var editLinks = document.querySelectorAll('.edit-tld-modal');
-            editLinks.forEach(function(link) {
-                // Remove existing listener to prevent duplicates
-                var newLink = link.cloneNode(true);
-                link.parentNode.replaceChild(newLink, link);
+        // Initialize pricing modal functionality
+        function initializePricingModal() {
+            var form = editTldModalContent.querySelector('form');
+            if (!form) return;
 
-                // Initialize blestaModal on the new element
-                blestaModal(newLink, {
-                    close: '<?php echo addslashes($this->_('AppController.modal.text_close', true)); ?>',
-                    url: newLink.href
+            // Initialize WYSIWYG editors
+            var wysiwygTextareas = form.querySelectorAll('.wysiwyg');
+            wysiwygTextareas.forEach(function(textarea) {
+                if (typeof blestaBindWysiwygEditor === 'function') {
+                    blestaBindWysiwygEditor('#' + textarea.id, {
+                        language: '<?php echo substr(Configure::get("Blesta.language"), 0, 2);?>'
+                    });
+                }
+            });
+
+            // Sync Register, Renew and Transfer prices
+            var priceInputs = form.querySelectorAll('input.pricing-price');
+            priceInputs.forEach(function(input) {
+                input.addEventListener('change', function() {
+                    var row = this.closest('tr');
+                    if (!row) return;
+
+                    var renewInput = row.querySelector('input.pricing-renew');
+                    if (renewInput && parseFloat(renewInput.value) === 0) {
+                        renewInput.value = this.value;
+                    }
+
+                    var transferInput = row.querySelector('input.pricing-transfer');
+                    if (transferInput && parseFloat(transferInput.value) === 0) {
+                        transferInput.value = this.value;
+                    }
                 });
             });
+
+            // Disable/enable transfer price based on checkbox
+            function updateTransferPriceState() {
+                var transferCheckboxes = form.querySelectorAll('input.pricing-transfer-enable');
+                transferCheckboxes.forEach(function(checkbox) {
+                    var transferInput = checkbox.parentElement.querySelector('input.pricing-transfer');
+                    if (transferInput) {
+                        transferInput.disabled = !checkbox.checked;
+                    }
+                });
+            }
+
+            // Disable/enable pricing rows based on main checkbox
+            function updatePricingRowsState() {
+                var enableCheckboxes = form.querySelectorAll('input.pricing-enable');
+                enableCheckboxes.forEach(function(checkbox) {
+                    var row = checkbox.closest('tr');
+                    if (!row) return;
+
+                    var inputs = row.querySelectorAll('input[type="number"], input.pricing-transfer-enable');
+                    inputs.forEach(function(input) {
+                        input.disabled = !checkbox.checked;
+                    });
+
+                    checkbox.disabled = false;
+                });
+
+                updateTransferPriceState();
+            }
+
+            // Initialize pricing state
+            updatePricingRowsState();
+
+            // Listen to pricing enable checkbox changes
+            var enableCheckboxes = form.querySelectorAll('input.pricing-enable');
+            enableCheckboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', updatePricingRowsState);
+            });
+
+            // Listen to transfer enable checkbox changes
+            var transferCheckboxes = form.querySelectorAll('input.pricing-transfer-enable');
+            transferCheckboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', updateTransferPriceState);
+            });
+
+            // Handle form submission
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                if (typeof jQuery !== 'undefined' && typeof jQuery.fn.blestaRequest === 'function') {
+                    jQuery(this).blestaRequest(
+                        'POST',
+                        form.getAttribute('action'),
+                        jQuery(form).serialize(),
+                        function(response) {
+                            if (response.message) {
+                                var messageContainer = document.querySelector('#body_container .gap_row #right_outer');
+                                if (messageContainer) {
+                                    messageContainer.querySelectorAll('.error_section').forEach(function(el) { el.remove(); });
+                                    messageContainer.insertAdjacentHTML('afterbegin', response.message);
+                                }
+                            }
+
+                            // Close modal
+                            if (editTldModal) {
+                                editTldModal.hide();
+                            }
+                        },
+                        null,
+                        {dataType: 'json'}
+                    );
+                }
+            });
+
+            // Load sample email functionality
+            var loadSampleButton = form.querySelector('.load_sample_email');
+            if (loadSampleButton) {
+                loadSampleButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Sample email loading would need template data passed from server
+                    // Simplified for now - can be enhanced if needed
+                });
+            }
         }
 
-        // Initialize on page load
-        initEditTldModal();
+        // Edit TLD modal - Bootstrap 5 modal with AJAX loading
+        var editTldModalEl = document.getElementById('editTldPricingModal');
+        var editTldModal = null;
+        var editTldModalContent = null;
+
+        if (editTldModalEl) {
+            editTldModal = new bootstrap.Modal(editTldModalEl);
+            editTldModalContent = editTldModalEl.querySelector('.modal-content');
+        }
+
+        // Handle clicks on edit TLD pricing links using event delegation
+        document.addEventListener('click', function(e) {
+            var link = e.target.closest('.edit-tld-modal');
+            if (link && editTldModal && editTldModalContent) {
+                e.preventDefault();
+
+                // Show loading spinner
+                editTldModalContent.innerHTML = '<div class="modal-body"><div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div></div>';
+
+                // Show modal
+                editTldModal.show();
+
+                // Load content via AJAX
+                fetch(link.href, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(function(response) {
+                    return response.text();
+                })
+                .then(function(html) {
+                    // Remove script tags from HTML to avoid execution issues
+                    var tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    var scripts = tempDiv.querySelectorAll('script');
+                    scripts.forEach(function(script) {
+                        script.remove();
+                    });
+                    editTldModalContent.innerHTML = tempDiv.innerHTML;
+
+                    // Initialize modal functionality after content is loaded
+                    setTimeout(function() {
+                        initializePricingModal();
+                    }, 150);
+
+                    // Reload TLDs table when modal closes after successful update
+                    editTldModalEl.addEventListener('hidden.bs.modal', function onHidden() {
+                        reloadTlds();
+                        editTldModalEl.removeEventListener('hidden.bs.modal', onHidden);
+                    });
+                })
+                .catch(function() {
+                    editTldModalContent.innerHTML = '<div class="modal-body"><div class="alert alert-danger">Failed to load content. Please try again.</div></div>';
+                });
+            }
+        });
 
         // Toggle "Add TLD" row
         function resetAddTldRow() {

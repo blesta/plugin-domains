@@ -1,525 +1,350 @@
         <?php
-        echo (isset($message) ? $message : null);
-
         $id = '_' . md5($tld->tld ?? uniqid());
-        $tabs = [
-            [
-                'name' => $this->_('AdminDomains.pricing.tab_pricing', true),
-                'current' => true,
-                'attributes' => [
-                    'class' => 'pricing',
-                    'href' => '#'
-                ]
-            ],
-            [
-                'name' => $this->_('AdminDomains.pricing.tab_nameservers', true),
-                'current' => false,
-                'attributes' => [
-                    'class' => 'nameservers',
-                    'href' => '#'
-                ]
-            ],
-            [
-                'name' => $this->_('AdminDomains.pricing.tab_welcome_email', true),
-                'current' => false,
-                'attributes' => [
-                    'class' => 'welcome_email',
-                    'href' => '#'
-                ]
-            ],
-            [
-                'name' => $this->_('AdminDomains.pricing.tab_advanced', true),
-                'current' => false,
-                'attributes' => [
-                    'class' => 'advanced',
-                    'href' => '#'
-                ]
-            ]
-        ];
-
-        $this->Widget->clear();
-        $this->Widget->setTabs($tabs);
-        $this->Widget->create($this->_('AdminDomains.pricing.boxtitle_edit_tld', true, ($tld->tld ?? null)), ['id' => 'edit_tld' . $id], ($render_section ?? null));
-
-        $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
         ?>
 
-        <div class="inner">
-            <div class="main_tab" id="tab_pricing">
-                <div class="tab_content">
-                    <ul class="tabs">
-                        <?php
-                        foreach ((isset($currencies) ? $currencies : []) as $currency) {
-                        ?>
-                        <li<?php echo ($currency->code == (isset($default_currency) ? $default_currency : '')) ? ' class="current"' : '';?>>
-                            <a href="#"><?php echo $this->Html->safe($currency->code);?></a>
-                        </li>
-                        <?php
-                        }
-                        ?>
-                    </ul>
-                    <div class="inner_content">
-                        <?php
-                        foreach (($currencies ?? []) as $currency) {
-                        ?>
-                            <div>
-                                <?php
-                                if ($currency->automatic_currency_conversion) {
-                                ?>
-                                    <section class="error_section">
-                                        <article class="error_box alert">
-                                            <div class="icon-line fa-2x">
-                                                <i class="fas fa-exclamation-triangle fa-fw"></i>
-                                                <p class="p-0 pl-2"><?php $this->_('AdminDomains.!warning.automatic_currency_conversion', false, $default_currency);?></p>
-                                            </div>
-                                        </article>
-                                    </section>
-                                <?php
-                                }
-                                ?>
-                                <table class="table option_table">
-                                    <thead>
-                                        <tr class="heading_row">
-                                            <td class="icon center"></td>
-                                            <td><span><?php $this->_('AdminDomains.pricing.heading_term');?></span></td>
-                                            <td><span><?php $this->_('AdminDomains.pricing.heading_register_price');?></span></td>
-                                            <td><span><?php $this->_('AdminDomains.pricing.heading_renew_price');?></span></td>
-                                            <td class="last"><span><?php $this->_('AdminDomains.pricing.heading_transfer_price');?></span></td>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php
-                                        $r = 0;
-                                        for ($i = 1; $i <= 10; $i++) {
-                                            foreach ($package->pricing ?? [] as $package_pricing) {
-                                                if ($package_pricing->currency == $currency->code && $package_pricing->term == $i) {
-                                        ?>
-                                            <tr<?php echo ($r % 2 == 1) ? ' class="odd_row"' : '';?> id="tlds_<?php echo ($tld->package_id ?? null);?>">
-                                                <td class="icon center">
-                                                    <?php
-                                                    $this->Form->fieldCheckbox('pricing[' . $package_pricing->term . '][' . $currency->code . '][enabled]', '1', ($package_pricing->enabled ?? false));
-                                                    ?>
-                                                </td>
-                                                <td><?php echo $package_pricing->term; ?> <?php echo $package_pricing->period; ?></td>
-                                                <td>
-                                                    <?php
-                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price]', $this->CurrencyFormat->format(($package_pricing->price ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'stretch']);
-                                                    ?>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_renews]', $this->CurrencyFormat->format(($package_pricing->price_renews ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'stretch']);
-                                                    ?>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                    $disabled = [];
-                                                    if (!($package_pricing->enabled_transfer ?? false)) {
-                                                        $disabled = ['disabled' => 'disabled'];
-                                                    }
+<div class="modal-header">
+    <h5 class="modal-title"><?php $this->_('AdminDomains.pricing.boxtitle_edit_tld', false, ($tld->tld ?? null)); ?></h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<?php echo $this->Html->safe($this->_('AppController.modal.text_close', true)); ?>"></button>
+</div>
 
-                                                    $this->Form->fieldCheckbox('pricing[' . $package_pricing->term . '][' . $currency->code . '][enabled_transfer]', '1', ($package_pricing->enabled_transfer ?? false), ['class' => 'd-inline-block']);
-                                                    $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_transfer]', $this->CurrencyFormat->format(($package_pricing->price_transfer ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), array_merge(['class' => 'w-75 d-inline-block'], $disabled));
-                                                    ?>
-                                                </td>
-                                            </tr>
+<div class="modal-body">
+<?php
+$this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
+?>
+
+<!-- Main Tab Navigation -->
+<ul class="nav nav-tabs-connected" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pricing-tab<?php echo $this->Html->safe($id); ?>" data-bs-toggle="tab"
+                data-bs-target="#tab_pricing<?php echo $this->Html->safe($id); ?>" type="button" role="tab"
+                aria-controls="tab_pricing<?php echo $this->Html->safe($id); ?>" aria-selected="true">
+            <?php $this->_('AdminDomains.pricing.tab_pricing'); ?>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="nameservers-tab<?php echo $this->Html->safe($id); ?>" data-bs-toggle="tab"
+                data-bs-target="#tab_nameservers<?php echo $this->Html->safe($id); ?>" type="button" role="tab"
+                aria-controls="tab_nameservers<?php echo $this->Html->safe($id); ?>" aria-selected="false">
+            <?php $this->_('AdminDomains.pricing.tab_nameservers'); ?>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="welcome_email-tab<?php echo $this->Html->safe($id); ?>" data-bs-toggle="tab"
+                data-bs-target="#tab_welcome_email<?php echo $this->Html->safe($id); ?>" type="button" role="tab"
+                aria-controls="tab_welcome_email<?php echo $this->Html->safe($id); ?>" aria-selected="false">
+            <?php $this->_('AdminDomains.pricing.tab_welcome_email'); ?>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="advanced-tab<?php echo $this->Html->safe($id); ?>" data-bs-toggle="tab"
+                data-bs-target="#tab_advanced<?php echo $this->Html->safe($id); ?>" type="button" role="tab"
+                aria-controls="tab_advanced<?php echo $this->Html->safe($id); ?>" aria-selected="false">
+            <?php $this->_('AdminDomains.pricing.tab_advanced'); ?>
+        </button>
+    </li>
+</ul>
+
+<!-- Main Tab Content -->
+<div class="tab-content tab-content-connected rounded-top-0">
+    <div class="tab-pane fade show active" id="tab_pricing<?php echo $this->Html->safe($id); ?>" role="tabpanel"
+         aria-labelledby="pricing-tab<?php echo $this->Html->safe($id); ?>">
+
+        <!-- Currency Tabs (Nested) -->
+        <ul class="nav nav-tabs-connected mb-0" role="tablist">
+            <?php foreach (($currencies ?? []) as $currency) { ?>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link<?php echo ($currency->code == ($default_currency ?? '')) ? ' active' : '';?>"
+                        id="pricing-<?php echo $this->Html->safe(strtolower($currency->code) . $id); ?>-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#pricing-<?php echo $this->Html->safe(strtolower($currency->code) . $id); ?>"
+                        type="button" role="tab"
+                        aria-controls="pricing-<?php echo $this->Html->safe(strtolower($currency->code) . $id); ?>"
+                        aria-selected="<?php echo ($currency->code == ($default_currency ?? '')) ? 'true' : 'false';?>">
+                    <?php echo $this->Html->safe($currency->code);?>
+                </button>
+            </li>
+            <?php } ?>
+        </ul>
+
+        <!-- Currency Tab Content -->
+        <div class="tab-content tab-content-connected rounded-0 border-bottom-0 p-0">
+            <?php foreach (($currencies ?? []) as $currency) { ?>
+            <div class="tab-pane fade<?php echo ($currency->code == ($default_currency ?? '')) ? ' show active' : '';?>"
+                 id="pricing-<?php echo $this->Html->safe(strtolower($currency->code) . $id); ?>"
+                 role="tabpanel"
+                 aria-labelledby="pricing-<?php echo $this->Html->safe(strtolower($currency->code) . $id); ?>-tab">
+                <div>
+                    <?php if ($currency->automatic_currency_conversion) { ?>
+                    <div class="alert alert-warning d-flex align-items-center rounded-0 mb-0" role="alert">
+                        <i class="fas fa-exclamation-triangle fa-fw me-2"></i>
+                        <div><?php $this->_('AdminDomains.!warning.automatic_currency_conversion', false, $default_currency);?></div>
+                    </div>
+                    <?php } ?>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;"></th>
+                                    <th style="width: 120px;"><?php $this->_('AdminDomains.pricing.heading_term');?></th>
+                                    <th><?php $this->_('AdminDomains.pricing.heading_register_price');?></th>
+                                    <th><?php $this->_('AdminDomains.pricing.heading_renew_price');?></th>
+                                    <th><?php $this->_('AdminDomains.pricing.heading_transfer_price');?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                for ($i = 1; $i <= 10; $i++) {
+                                    foreach ($package->pricing ?? [] as $package_pricing) {
+                                        if ($package_pricing->currency == $currency->code && $package_pricing->term == $i) {
+                                ?>
+                                <tr>
+                                    <td class="text-center">
                                         <?php
-                                                    $r++;
-                                                }
-                                            }
+                                        $this->Form->fieldCheckbox('pricing[' . $package_pricing->term . '][' . $currency->code . '][enabled]', '1', ($package_pricing->enabled ?? false), ['class' => 'form-check-input pricing-enable']);
+                                        ?>
+                                    </td>
+                                    <td><?php echo $package_pricing->term; ?> <?php echo $package_pricing->period; ?></td>
+                                    <td>
+                                        <?php
+                                        $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price]', $this->CurrencyFormat->format(($package_pricing->price ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'form-control pricing-price', 'type' => 'number', 'step' => '0.01', 'min' => '0']);
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_renews]', $this->CurrencyFormat->format(($package_pricing->price_renews ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'form-control pricing-renew', 'type' => 'number', 'step' => '0.01', 'min' => '0']);
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $disabled = [];
+                                        if (!($package_pricing->enabled_transfer ?? false)) {
+                                            $disabled = ['disabled' => 'disabled'];
                                         }
+
+                                        $this->Form->fieldCheckbox('pricing[' . $package_pricing->term . '][' . $currency->code . '][enabled_transfer]', '1', ($package_pricing->enabled_transfer ?? false), ['class' => 'form-check-input d-inline-block me-2 pricing-transfer-enable']);
+                                        $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_transfer]', $this->CurrencyFormat->format(($package_pricing->price_transfer ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), array_merge(['class' => 'form-control w-75 d-inline-block pricing-transfer', 'type' => 'number', 'step' => '0.01', 'min' => '0'], $disabled));
                                         ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php
-                        }
-                        ?>
-                    </div>
-                    <?php
-                    if (!empty($has_multiple_packages)) {
-                    ?>
-                        <section class="error_section">
-                            <article class="error_box alert">
-                                <div class="icon-line fa-2x">
-                                    <i class="fas fa-info-circle fa-fw"></i>
-                                    <p class="p-0 pl-2"><?php $this->_('AdminDomains.pricing.text_multiple_packages_info');?></p>
-                                </div>
-                            </article>
-                        </section>
-
-                        <div class="pad pt-2">
-                            <?php
-                            $this->Form->fieldCheckbox('update_all_packages', '1', false, ['id' => 'update_all_packages']);
-                            $this->Form->label($this->_('AdminDomains.pricing.field_update_all_packages', true), 'update_all_packages', ['class' => 'inline']);
-                            ?>
-                        </div>
-                    <?php
-                    }
-                    ?>
-                </div>
-            </div>
-
-            <div class="main_tab" id="tab_nameservers">
-                <div class="title_row first"><h3><?php $this->_('AdminDomains.pricing.heading_nameservers');?></h3></div>
-                <div class="pad">
-                    <ul>
-                        <?php
-                        for ($i = 1; $i <= 4; $i++) {
-                        ?>
-                        <li>
-                            <?php
-                            $this->Form->label($this->_('AdminDomains.pricing.field_nameserver', true, $i), 'ns' . $i);
-                            $this->Form->fieldText('meta[ns][]', isset($package->meta->ns[$i - 1]) ? $package->meta->ns[$i - 1] : '', ['id' => 'ns' . $i, 'class' => 'block']);
-                            ?>
-                        </li>
-                        <?php
-                        }
-                        ?>
-                        <li>
-                            <?php
-                            $this->Form->label($this->_('AdminDomains.pricing.field_nameserver_scope', true), 'nameserver_scope');
-                            $this->Form->fieldSelect('nameserver_scope', ($update_scopes ?? []), null, ['id' => 'nameserver_scope']);
-                            ?>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="main_tab" id="tab_advanced">
-                <?php
-                if (!empty($package_fields['fields'])) {
-                ?>
-                <div class="title_row first"><h3><?php $this->_('AdminDomains.pricing.heading_module_options');?></h3></div>
-                <div class="pad">
-                    <ul>
-                        <li>
-                            <?php
-                            $this->Form->label($package_fields['group_name'], 'module_group');
-                            $this->Form->fieldSelect('module_group', ['select' => $this->_('AppController.select.please', true)] + ['' => $this->_('AdminDomains.pricing.field_modulegroup_any', true)] + (isset($package_fields['groups']) ? $package_fields['groups'] : []), (isset($package->module_group) ? $package->module_group : ''), ['id' => 'module_group']);
-                            ?>
-                        </li>
-
-                        <?php
-                        if (!empty($package_fields['rows'])) {
-                            ?>
-                            <li class="module_row_field">
+                                    </td>
+                                </tr>
                                 <?php
-                                $this->Form->label($package_fields['row_name'], 'module_row');
-                                $this->Form->fieldSelect('module_row', $package_fields['rows'], (isset($package->module_row) ? $package->module_row : 0), ['id' => 'module_row']);
-                                ?>
-                            </li>
-                            <?php
-                        } else {
-                            $this->Form->fieldHidden('module_row', (isset($package->module_row) ? $package->module_row : 0), ['id' => 'module_row']);
-                        }
-
-                        // Show module fields
-                        if (isset($package_fields['input_html']) && ($module_field_html = $package_fields['input_html']->generate(null, $package_fields_view))) {
-                            ?>
-                            <li>
-                                <?php
-                                echo $module_field_html;
-                                ?>
-                            </li>
-                            <?php
-                        }
-                        ?>
-                    </ul>
-                </div>
-                <?php
-                }
-                ?>
-
-                <div class="title_row<?php echo (empty($package_fields['fields']) ? ' first' : '');?>"><h3><?php $this->_('AdminDomains.pricing.heading_advanced_options');?></h3></div>
-                <div class="pad">
-                    <p><?php $this->_('AdminDomains.pricing.text_advanced_options');?></p>
-                    <a href="<?php echo $this->base_uri . 'packages/edit/' . $this->Html->safe($package->id) . '/';?>" class="btn btn-default"><?php $this->_('AdminDomains.pricing.field_edit_package');?></a>
-                </div>
-            </div>
-
-            <div class="main_tab" id="tab_welcome_email">
-                <div class="title_row first"><h3><?php $this->_('AdminDomains.pricing.heading_welcome_email');?></h3></div>
-                <div class="pad">
-                    <div class="links_row" style="">
-                        <a class="btn btn-default pull-right btn-sm load_sample_email" href="#"><span><?php $this->_('AdminDomains.pricing.field_load_sample_email');?></span></a>
-                    </div>
-
-                    <?php
-                    if (!empty($package_fields['tags'])) {
-                    ?>
-                    <ul>
-                        <li>
-                            <label for=""><?php $this->_('AdminDomains.pricing.text_tags');?></label>
-                            <div class="accent_box">
-                                <?php echo $this->Html->safe($package_fields['tags']);?>
-                            </div>
-                        </li>
-                    </ul>
-                    <?php
-                    }
-                    ?>
-
-                    <div id="email_content" class="tab_content inverse">
-                        <ul class="tabs">
-                            <?php
-                            foreach ((isset($languages) ? $languages : []) as $lang) {
-                                ?>
-                                <li<?php echo ($this->Html->ifSet($lang->code) == Configure::get('Blesta.language') ? ' class="current"' : '');?>>
-                                    <a href="#"><?php $this->Html->_($lang->name);?></a>
-                                </li>
-                                <?php
-                            }
-                            ?>
-                        </ul>
-                        <div class="inner_content">
-                            <?php
-                            foreach ($languages as $i => $lang) {
-                                $found = false;
-                                foreach ((isset($package->email_content) ? (array) $package->email_content : []) as $email_data) {
-                                    if ((isset($email_data->lang) ? $email_data->lang : '') == $lang->code) {
-                                        $found = true;
-                                        break;
+                                        }
                                     }
                                 }
-                            ?>
-                                <div>
-                                    <?php
-                                    $this->Form->fieldHidden('email_content[' . $i . '][lang]', (isset($lang->code) ? $lang->code : ''));
-                                    ?>
-                                    <div id="email_content_<?php echo isset($lang->code) ? $lang->code : '';?>" class="tab_content">
-                                        <ul class="tabs">
-                                            <li class="current">
-                                                <a href="#"><?php $this->Form->label($this->_('AdminDomains.pricing.field_description_html', true));?></a>
-                                            </li>
-                                            <li>
-                                                <a href="#"><?php $this->Form->label($this->_('AdminDomains.pricing.field_description_text', true));?></a>
-                                            </li>
-                                        </ul>
-                                        <div class="inner_content">
-                                            <div class="email_content_html"><?php $this->Form->fieldTextarea('email_content[' . $i . '][html]', $found ? (isset($email_data->html) ? $email_data->html : '') : null, ['class' => 'wysiwyg']);?></div>
-                                            <div class="email_content_text"><?php $this->Form->fieldTextarea('email_content[' . $i . '][text]', $found ? (isset($email_data->text) ? $email_data->text : '') : null);?></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php
-                            }
-                            ?>
-                        </div>
-                        <div class="pt-2 float-right">
-                            <?php
-                            $this->Form->label($this->_('AdminDomains.pricing.field_update_scope', true), 'update_scope', ['class' => 'inline']);
-                            $this->Form->fieldSelect('update_scope', ($update_scopes ?? []), ($vars['update_scope'] ?? null), ['id' => 'update_scope', 'class' => 'inline']);
-                            ?>
-                        </div>
+                                ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
+            <?php } ?>
+        </div>
 
-            <div class="button_row">
-                <?php
-                $this->Form->fieldSubmit('save', $this->_('AdminDomains.pricing.field_update', true), ['class' => 'btn btn-primary float-right']);
-                ?>
-                <a href="#" class="btn btn-default close float-right"><?php $this->_('AdminDomains.pricing.field_cancel');?></a>
-            </div>
+        <?php if (!empty($has_multiple_packages)) { ?>
+        <div class="alert alert-info d-flex align-items-center mt-3 mb-3" role="alert">
+            <i class="fas fa-info-circle fa-fw me-2"></i>
+            <div><?php $this->_('AdminDomains.pricing.text_multiple_packages_info');?></div>
+        </div>
+
+        <div class="form-check">
+            <?php
+            $this->Form->fieldCheckbox('update_all_packages', '1', false, ['id' => 'update_all_packages' . $this->Html->safe($id), 'class' => 'form-check-input']);
+            $this->Form->label($this->_('AdminDomains.pricing.field_update_all_packages', true), 'update_all_packages' . $this->Html->safe($id), ['class' => 'form-check-label']);
+            ?>
+        </div>
+        <?php } ?>
+    </div>
+
+    <div class="tab-pane fade" id="tab_nameservers<?php echo $this->Html->safe($id); ?>" role="tabpanel"
+         aria-labelledby="nameservers-tab<?php echo $this->Html->safe($id); ?>">
+        <h6 class="form-section-header"><?php $this->_('AdminDomains.pricing.heading_nameservers');?></h6>
+
+        <?php for ($i = 1; $i <= 4; $i++) { ?>
+        <div class="mb-3">
+            <?php
+            $this->Form->label($this->_('AdminDomains.pricing.field_nameserver', true, $i), 'ns' . $i . $this->Html->safe($id), ['class' => 'form-label']);
+            $this->Form->fieldText('meta[ns][]', isset($package->meta->ns[$i - 1]) ? $package->meta->ns[$i - 1] : '', ['id' => 'ns' . $i . $this->Html->safe($id), 'class' => 'form-control']);
+            ?>
+        </div>
+        <?php } ?>
+
+        <div class="mb-3">
+            <?php
+            $this->Form->label($this->_('AdminDomains.pricing.field_nameserver_scope', true), 'nameserver_scope' . $this->Html->safe($id), ['class' => 'form-label']);
+            $this->Form->fieldSelect('nameserver_scope', ($update_scopes ?? []), null, ['id' => 'nameserver_scope' . $this->Html->safe($id), 'class' => 'form-select']);
+            ?>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="tab_advanced<?php echo $this->Html->safe($id); ?>" role="tabpanel"
+         aria-labelledby="advanced-tab<?php echo $this->Html->safe($id); ?>">
+        <?php if (!empty($package_fields['fields'])) { ?>
+        <h6 class="form-section-header"><?php $this->_('AdminDomains.pricing.heading_module_options');?></h6>
+
+        <div class="mb-3">
+            <?php
+            $this->Form->label($package_fields['group_name'], 'module_group' . $this->Html->safe($id), ['class' => 'form-label']);
+            $this->Form->fieldSelect('module_group', ['select' => $this->_('AppController.select.please', true)] + ['' => $this->_('AdminDomains.pricing.field_modulegroup_any', true)] + (isset($package_fields['groups']) ? $package_fields['groups'] : []), (isset($package->module_group) ? $package->module_group : ''), ['id' => 'module_group' . $this->Html->safe($id), 'class' => 'form-select']);
+            ?>
+        </div>
+
+        <?php
+        if (!empty($package_fields['rows'])) {
+        ?>
+        <div class="mb-3 module_row_field">
+            <?php
+            $this->Form->label($package_fields['row_name'], 'module_row' . $this->Html->safe($id), ['class' => 'form-label']);
+            $this->Form->fieldSelect('module_row', $package_fields['rows'], (isset($package->module_row) ? $package->module_row : 0), ['id' => 'module_row' . $this->Html->safe($id), 'class' => 'form-select']);
+            ?>
         </div>
         <?php
-        $this->Form->end();
-        $this->Widget->end();
-        ?>
-
-<script type="text/javascript">
-    $(document).ready(function() {
-        // Set tabs
-        function hideAllTabs() {
-            $('#edit_tld<?php echo $this->Html->safe($id);?> .main_tab').hide();
-            $('#edit_tld<?php echo $this->Html->safe($id);?> .tabs_nav').hide();
-        }
-
-        hideAllTabs();
-        $('#edit_tld<?php echo $this->Html->safe($id);?> .main_tab').first().show();
-        $('#edit_tld<?php echo $this->Html->safe($id);?> .tab_slider ul li').on('click', function() {
-            var tab = $(this).find('a').attr('class');
-
-            $('.tab_slider ul li').removeClass('current');
-            $(this).addClass('current');
-
-            hideAllTabs();
-            $('#edit_tld<?php echo $this->Html->safe($id);?> .main_tab#tab_' + tab).show();
-        });
-
-        // Set secondary tabs
-        $('div.tab_content').blestaTabbedContent();
-
-        // Set welcome email editor
-        $('.wysiwyg').blestaBindWysiwygEditor({language: '<?php echo substr(Configure::get('Blesta.language'), 0, 2);?>'});
-
-        // Close modal
-        $('#edit_tld<?php echo $this->Html->safe($id);?> .btn.close').on('click', function() {
-            $(this).closest('.qtip').find('.qtip-close').click();
-        });
-
-        // Sync Register, Renew and Transfer price
-        $('.table input[name*="[price]"]').change(function() {
-            if ($(this).parent().parent().find('input[name*="[price_renews]"]').val() == 0) {
-                $(this).parent().parent().find('input[name*="[price_renews]"]').val($(this).val());
-            }
-
-            if ($(this).parent().parent().find('input[name*="[price_transfer]"]').val() == 0) {
-                $(this).parent().parent().find('input[name*="[price_transfer]"]').val($(this).val());
-            }
-        });
-
-        // Disable transfer price
-        function disableTransfer() {
-            $('.table td input[name*="enabled_transfer"]').each(function () {
-                if ($(this).is(":checked")) {
-                    $(this).parent().find('input[type="text"]').prop('disabled', false);
-                } else {
-                    $(this).parent().find('input[type="text"]').prop('disabled', true);
-                }
-            });
-        }
-
-        disableTransfer();
-        $('.table td input[name*="enabled_transfer"]').change(function() {
-            disableTransfer();
-        });
-
-        // Disable pricing rows
-        function disablePricings() {
-            $('.table .icon input[name*="enabled"]').each(function () {
-                if ($(this).is(":checked")) {
-                    $(this).parent().parent().find('input[type="text"]').prop('disabled', false);
-                    $(this).parent().parent().find('input[type="checkbox"]').prop('disabled', false);
-                } else {
-                    $(this).parent().parent().find('input[type="text"]').prop('disabled', true);
-                    $(this).parent().parent().find('input[type="checkbox"]').prop('disabled', true);
-                }
-
-                $('.table .icon input[name*="enabled"]').prop('disabled', false);
-            });
-
-            disableTransfer();
-        }
-
-        disablePricings();
-        $('.table .icon input[name*="enabled"]').change(function() {
-            disablePricings();
-        });
-
-        // Move configurable options from right to left
-        $(document).on('click', '#edit_tld<?php echo $this->Html->safe($id);?> .move_left', function() {
-            $('#edit_tld<?php echo $this->Html->safe($id);?> .available_option_groups option:selected').appendTo(
-                $('#edit_tld<?php echo $this->Html->safe($id);?> .assigned_option_groups')
-            );
-            return false;
-        });
-
-        // Move configurable options from left to right
-        $(document).on('click', '#edit_tld<?php echo $this->Html->safe($id);?> .move_right', function() {
-            $('#edit_tld<?php echo $this->Html->safe($id);?> .assigned_option_groups option:selected').appendTo(
-                $('#edit_tld<?php echo $this->Html->safe($id);?> .available_option_groups')
-            );
-            return false;
-        });
-
-        // Update TLD
-        $('#edit_tld_form<?php echo $this->Html->safe($id);?>').on('submit', function(event) {
-            event.preventDefault();
-
-            $('#edit_tld<?php echo $this->Html->safe($id);?> .assigned_option_groups option').prop('selected', true);
-
-            $(this).blestaRequest(
-                "POST",
-                $('#edit_tld_form<?php echo $this->Html->safe($id);?>').attr('action'),
-                $('#edit_tld_form<?php echo $this->Html->safe($id);?>').serialize("serialize"),
-                function(response) {
-                    // Show messages
-                    if (response.hasOwnProperty('message')) {
-                        var parent = $('#edit_tld<?php echo $this->Html->safe($id);?>').parents().find('#body_container .gap_row #right_outer');
-
-                        parent.find('.error_section').remove();
-                        parent.prepend(response.message);
-                    }
-
-                    // Update pricing table
-                    $(this).blestaRequest(
-                        "GET",
-                        '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/pricing/' . $tld->package_id . '/');?>',
-                        null,
-                        function(response) {
-                            $('#<?php echo $this->Html->safe('edit_tld' . str_replace('.', '_', $tld->tld));?>').parent().html(response);
-                        }
-                    );
-
-                    // Update TLD row
-                    $(this).blestaRequest(
-                        "GET",
-                        '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/tlds/');?>',
-                        null,
-                        function(tlds) {
-                            var parent = $('body').find('#body_container .gap_row');
-
-                            $(tlds.content).find('#tlds_<?php echo $this->Html->safe($tld->package_id);?>').find('td').each(function() {
-                                var field = $(this).find('input, select');
-
-                                if (field.length > 0) {
-                                    var field_type = field.attr('type');
-
-                                    if (field_type !== "hidden") {
-                                        if (field_type == "checkbox") {
-                                            if (field.is(':checked')) {
-                                                $(tlds.replacer).find('input[name="' + field.attr('name') + '"]').prop("checked", true);
-                                            } else {
-                                                $(tlds.replacer).find('input[name="' + field.attr('name') + '"]').prop("checked", false);
-                                            }
-                                        } else {
-                                            $(tlds.replacer).find('input[name="' + field.attr('name') + '"]').val(field.val()).trigger('change');
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                    );
-                    $('#edit_tld<?php echo $this->Html->safe($id);?>').closest('.qtip').find('.qtip-close').click();
-                },
-                null,
-                {dataType: 'json'}
-            );
-        });
-
-        // Set the module email template as the email content
-        var templates = <?php echo json_encode($package_fields['template'], JSON_PRETTY_PRINT);?>;
-
-        if (typeof templates == 'undefined' || templates === null || templates.length == 0) {
-            $('.load_sample_email').parent().hide();
         } else {
-            $('.load_sample_email').parent().show();
+            $this->Form->fieldHidden('module_row', (isset($package->module_row) ? $package->module_row : 0), ['id' => 'module_row' . $this->Html->safe($id)]);
         }
 
-        $('.load_sample_email').on('click', function() {
-            if (confirm('<?php echo addslashes($this->_('AdminDomains.pricing.text_confirm_load_email', true));?>')) {
+        // Show module fields
+        if (isset($package_fields['input_html']) && ($module_field_html = $package_fields['input_html']->generate(null, $package_fields_view))) {
+        ?>
+        <div class="mb-3">
+            <?php echo $module_field_html; ?>
+        </div>
+        <?php
+        }
+        ?>
+        <?php } ?>
+
+        <h6 class="form-section-header"><?php $this->_('AdminDomains.pricing.heading_advanced_options');?></h6>
+        <p class="text-muted"><?php $this->_('AdminDomains.pricing.text_advanced_options');?></p>
+        <a href="<?php echo $this->base_uri . 'packages/edit/' . $this->Html->safe($package->id) . '/';?>" class="btn btn-light"><?php $this->_('AdminDomains.pricing.field_edit_package');?></a>
+    </div>
+
+    <div class="tab-pane fade" id="tab_welcome_email<?php echo $this->Html->safe($id); ?>" role="tabpanel"
+         aria-labelledby="welcome_email-tab<?php echo $this->Html->safe($id); ?>">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="form-section-header mb-0"><?php $this->_('AdminDomains.pricing.heading_welcome_email');?></h6>
+            <button type="button" class="btn btn-sm btn-light load_sample_email" data-form-id="<?php echo $this->Html->safe($id); ?>">
+                <?php $this->_('AdminDomains.pricing.field_load_sample_email');?>
+            </button>
+        </div>
+
+        <?php if (!empty($package_fields['tags'])) { ?>
+        <div class="alert alert-info mb-3">
+            <h6 class="alert-heading mb-2"><i class="bi bi-tags me-2"></i><?php $this->_('AdminDomains.pricing.text_tags');?></h6>
+            <div class="d-flex flex-wrap gap-2">
                 <?php
-                foreach ((isset($languages) ? $languages : []) as $i => $lang) {
-                ?>
-                    $('#edit_tld<?php echo $this->Html->safe($id);?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> textarea').each(function() {
-                        $(this).val('');
-                    });
-
-                    $('#edit_tld<?php echo $this->Html->safe($id);?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_html textarea').val(templates.<?php echo $lang->code;?>.html);
-                    $('#edit_tld<?php echo $this->Html->safe($id);?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_text textarea').val(templates.<?php echo $lang->code;?>.text);
-
-                    var ck_editor = document.querySelector('#edit_tld<?php echo $this->Html->safe($id);?> #email_content_<?php echo isset($lang->code) ? $lang->code : '';?> .email_content_html .ck-editor__editable');
-                    var ck_editor_instance = ck_editor.ckeditorInstance;
-
-                    ck_editor_instance.setData(templates.<?php echo $lang->code;?>.html);
-                <?php
+                $tags_array = explode(' ', $package_fields['tags']);
+                for ($i = 0, $num_tags = count($tags_array); $i < $num_tags; $i++) {
+                    ?>
+                    <code><?php echo ($tags_array[$i] ?? null) ? $this->Html->safe($tags_array[$i]) : null; ?></code>
+                    <?php
                 }
                 ?>
-            }
+            </div>
+        </div>
+        <?php } ?>
 
-            return false;
-        });
-    });
-</script>
+        <!-- Language Tabs (Outer) -->
+        <ul class="nav nav-tabs-connected" role="tablist">
+            <?php foreach (($languages ?? []) as $lang) { ?>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link<?php echo ($this->Html->ifSet($lang->code) == Configure::get('Blesta.language') ? ' active' : '');?>"
+                        id="email-<?php echo $this->Html->safe($lang->code . $id); ?>-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#email-<?php echo $this->Html->safe($lang->code . $id); ?>"
+                        type="button" role="tab"
+                        aria-controls="email-<?php echo $this->Html->safe($lang->code . $id); ?>"
+                        aria-selected="<?php echo ($this->Html->ifSet($lang->code) == Configure::get('Blesta.language') ? 'true' : 'false');?>">
+                    <?php $this->Html->_($lang->name);?>
+                </button>
+            </li>
+            <?php } ?>
+        </ul>
+
+        <!-- Language Tab Content -->
+        <div class="tab-content tab-content-connected rounded-top-0">
+            <?php
+            foreach ($languages as $i => $lang) {
+                $found = false;
+                foreach ((isset($package->email_content) ? (array) $package->email_content : []) as $email_data) {
+                    if ((isset($email_data->lang) ? $email_data->lang : '') == $lang->code) {
+                        $found = true;
+                        break;
+                    }
+                }
+            ?>
+            <div class="tab-pane fade<?php echo ($this->Html->ifSet($lang->code) == Configure::get('Blesta.language') ? ' show active' : '');?>"
+                 id="email-<?php echo $this->Html->safe($lang->code . $id); ?>"
+                 role="tabpanel"
+                 aria-labelledby="email-<?php echo $this->Html->safe($lang->code . $id); ?>-tab">
+                <?php $this->Form->fieldHidden('email_content[' . $i . '][lang]', (isset($lang->code) ? $lang->code : '')); ?>
+
+                <!-- HTML/Text Tabs (Inner) -->
+                <ul class="nav nav-tabs-connected" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active"
+                                id="html-<?php echo $this->Html->safe($lang->code . $id); ?>-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#html-<?php echo $this->Html->safe($lang->code . $id); ?>"
+                                type="button" role="tab"
+                                aria-controls="html-<?php echo $this->Html->safe($lang->code . $id); ?>"
+                                aria-selected="true">
+                            <?php $this->_('AdminDomains.pricing.field_description_html');?>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link"
+                                id="text-<?php echo $this->Html->safe($lang->code . $id); ?>-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#text-<?php echo $this->Html->safe($lang->code . $id); ?>"
+                                type="button" role="tab"
+                                aria-controls="text-<?php echo $this->Html->safe($lang->code . $id); ?>"
+                                aria-selected="false">
+                            <?php $this->_('AdminDomains.pricing.field_description_text');?>
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- HTML/Text Tab Content -->
+                <div class="tab-content tab-content-connected rounded-top-0">
+                    <div class="tab-pane fade show active"
+                         id="html-<?php echo $this->Html->safe($lang->code . $id); ?>"
+                         role="tabpanel"
+                         aria-labelledby="html-<?php echo $this->Html->safe($lang->code . $id); ?>-tab">
+                        <?php $this->Form->fieldTextarea('email_content[' . $i . '][html]', $found ? (isset($email_data->html) ? $email_data->html : '') : null, ['class' => 'wysiwyg', 'id' => 'wysiwyg_' . $lang->code . $this->Html->safe($id)]);?>
+                    </div>
+                    <div class="tab-pane fade"
+                         id="text-<?php echo $this->Html->safe($lang->code . $id); ?>"
+                         role="tabpanel"
+                         aria-labelledby="text-<?php echo $this->Html->safe($lang->code . $id); ?>-tab">
+                        <?php $this->Form->fieldTextarea('email_content[' . $i . '][text]', $found ? (isset($email_data->text) ? $email_data->text : '') : null, ['class' => 'form-control', 'rows' => 15, 'id' => 'text_' . $lang->code . $this->Html->safe($id)]);?>
+                    </div>
+                </div>
+            </div>
+            <?php } ?>
+        </div>
+
+        <div class="d-flex justify-content-end align-items-center mt-3">
+            <?php
+            $this->Form->label($this->_('AdminDomains.pricing.field_update_scope', true), 'update_scope' . $this->Html->safe($id), ['class' => 'form-label me-2 mb-0']);
+            $this->Form->fieldSelect('update_scope', ($update_scopes ?? []), ($vars['update_scope'] ?? null), ['id' => 'update_scope' . $this->Html->safe($id), 'class' => 'form-select w-auto']);
+            ?>
+        </div>
+    </div>
+</div>
+
+
+<?php
+$this->Form->end();
+?>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <?php $this->_('AdminDomains.pricing.field_cancel');?>
+    </button>
+    <button type="submit" form="edit_tld_form<?php echo $this->Html->safe($id);?>" class="btn btn-primary">
+        <?php $this->_('AdminDomains.pricing.field_update');?>
+    </button>
+</div>
+
+<!-- Modal functionality is handled by parent page (admin_domains_tlds.pdt) -->

@@ -15,8 +15,6 @@ $this->Widget->create(
 
 $this->Form->create(null, ['id' => 'import_tlds_form']);
 ?>
-
-<div class="inner">
     <!-- Warning Alert -->
     <div class="alert alert-warning d-flex align-items-center justify-content-between" role="alert">
         <div class="d-flex align-items-start">
@@ -30,9 +28,11 @@ $this->Form->create(null, ['id' => 'import_tlds_form']);
         </a>
     </div>
 
+    <hr>
+
     <!-- Module Section -->
-    <h6><?php echo $this->_('AdminDomains.import.title_module', true);?></h6>
-    <div class="mb-4">
+    <h6 class="form-section-header"><?php echo $this->_('AdminDomains.import.title_module', true);?></h6>
+    <div class="mb-3">
         <div class="d-flex align-items-center gap-2 mb-3">
             <?php
             $this->Form->fieldSelect('module_id', [], $vars['module_id'] ?? '', ['id' => 'module_id', 'class' => 'form-select', 'style' => 'width: 200px;']);
@@ -50,8 +50,8 @@ $this->Form->create(null, ['id' => 'import_tlds_form']);
 
     <!-- Terms Section -->
     <div id="module_terms" style="display: none;">
-        <h6><?php echo $this->_('AdminDomains.import.title_terms', true);?></h6>
-        <div class="row g-3 mb-4">
+        <h6 class="form-section-header"><?php echo $this->_('AdminDomains.import.title_terms', true);?></h6>
+        <div class="row g-3 mb-3">
             <?php
             for ($i = 1; $i <= 10; $i++) {
                 ?>
@@ -71,15 +71,7 @@ $this->Form->create(null, ['id' => 'import_tlds_form']);
 
     <!-- TLDs Section -->
     <div id="module_tlds" style="display: none;">
-        <h6 class="d-flex justify-content-between align-items-center">
-            <?php echo $this->_('AdminDomains.import.title_tlds', true);?>
-            <div>
-                <?php
-                $this->Form->fieldCheckbox('select_all', '1', false, ['id' => 'select_all', 'class' => 'form-check-input']);
-                $this->Form->label($this->_('AdminDomains.import.field_select_all', true), 'select_all', ['class' => 'form-check-label ms-2']);
-                ?>
-            </div>
-        </h6>
+        <h6 class="form-section-header"><?php echo $this->_('AdminDomains.import.title_tlds', true);?></h6>
         <div class="tld-import-grid" id="tld_grid">
             <!-- TLDs will be loaded here via AJAX -->
             <div class="text-center w-100">
@@ -88,19 +80,12 @@ $this->Form->create(null, ['id' => 'import_tlds_form']);
         </div>
     </div>
 
-    <!-- Button Row -->
-    <div class="button_row">
-        <div class="d-flex justify-content-end gap-2">
-            <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/importtlds/';?>" class="btn btn-outline-secondary" id="restart_button" style="display: none;">
-                <i class="bi bi-arrow-clockwise me-2"></i><?php $this->_('AdminDomains.import.field_restart');?>
-            </a>
-            <?php
-            $this->Form->fieldSubmit('save', $this->_('AdminDomains.import.field_import', true), ['class' => 'btn btn-primary', 'id' => 'import_tlds_button']);
-            ?>
-        </div>
+    <?php $this->Widget->footer(); ?>
+    <div class="d-flex justify-content-end gap-2">
+        <?php
+        $this->Form->fieldSubmit('save', $this->_('AdminDomains.import.field_import', true), ['class' => 'btn btn-primary', 'id' => 'import_tlds_button', 'disabled' => 'disabled']);
+        ?>
     </div>
-</div>
-
 <?php
 $this->Form->end();
 $this->Widget->end();
@@ -128,20 +113,19 @@ $this->Widget->end();
         if (refreshBtn) {
             refreshBtn.addEventListener('click', function(e) {
                 e.preventDefault();
+
+                // Disable import button
+                const importButton = document.getElementById('import_tlds_button');
+                if (importButton) {
+                    importButton.disabled = true;
+                }
+
                 loadModules();
             });
         }
 
-        // Select all TLDs
-        const selectAll = document.getElementById('select_all');
-        if (selectAll) {
-            selectAll.addEventListener('change', function() {
-                const checkboxes = document.querySelectorAll('#module_tlds input[type="checkbox"]:not(:disabled)');
-                checkboxes.forEach(function(checkbox) {
-                    checkbox.checked = selectAll.checked;
-                });
-            });
-        }
+        // Select all TLDs - removed from UI to match mockup
+        // Functionality kept in case needed in future
 
         // Force at least one term
         const termCheckboxes = document.querySelectorAll('#module_terms input[type="checkbox"]');
@@ -162,6 +146,21 @@ $this->Widget->end();
                 const moduleId = this.value;
                 if (moduleId) {
                     loadModuleTLDs(moduleId);
+                } else {
+                    // Reset when no module is selected
+                    const importButton = document.getElementById('import_tlds_button');
+                    const moduleTlds = document.getElementById('module_tlds');
+                    const moduleTerms = document.getElementById('module_terms');
+
+                    if (importButton) {
+                        importButton.disabled = true;
+                    }
+                    if (moduleTlds) {
+                        moduleTlds.style.display = 'none';
+                    }
+                    if (moduleTerms) {
+                        moduleTerms.style.display = 'none';
+                    }
                 }
             });
         }
@@ -233,18 +232,11 @@ $this->Widget->end();
     function loadModuleTLDs(moduleId) {
         // Enable import button and show TLD section
         const importButton = document.getElementById('import_tlds_button');
-        const selectAll = document.getElementById('select_all');
         const moduleTlds = document.getElementById('module_tlds');
         const tldGrid = document.getElementById('tld_grid');
 
         if (importButton) {
             importButton.disabled = false;
-            importButton.style.display = 'inline-block';
-        }
-
-        if (selectAll) {
-            selectAll.disabled = false;
-            selectAll.checked = false;
         }
 
         // Show loading state
@@ -297,13 +289,14 @@ $this->Widget->end();
                     if (tld === '.') continue;
 
                     const tldObject = response.tlds[tld];
+
+                    // Skip already imported TLDs
+                    if (tldObject.disabled) {
+                        continue;
+                    }
+
                     const wrapperDiv = document.createElement('div');
                     wrapperDiv.className = 'tld-box';
-
-                    // Add tld-imported class if TLD is already imported
-                    if (tldObject.disabled) {
-                        wrapperDiv.classList.add('tld-imported');
-                    }
 
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
@@ -313,23 +306,13 @@ $this->Widget->end();
                     checkbox.value = '1';
                     checkbox.className = '';
 
-                    if (tldObject.disabled) {
-                        checkbox.disabled = true;
-                        checkbox.checked = true;
-                    }
-
                     const label = document.createElement('label');
                     label.className = 'tld-import-card';
                     label.htmlFor = 'tld_' + tld;
 
                     // Strip leading dot if present to avoid double dots
                     var tld_display = tld.replace(/^\.+/, '');
-
-                    if (tldObject.disabled) {
-                        label.innerHTML = '<i class="bi bi-check-circle"></i> .' + tld_display;
-                    } else {
-                        label.textContent = '.' + tld_display;
-                    }
+                    label.textContent = '.' + tld_display;
 
                     wrapperDiv.appendChild(checkbox);
                     wrapperDiv.appendChild(label);
@@ -352,15 +335,13 @@ $this->Widget->end();
         event.preventDefault();
 
         const importButton = document.getElementById('import_tlds_button');
-        const restartButton = document.getElementById('restart_button');
         const form = event.target;
         const tldGrid = document.getElementById('tld_grid');
         const messageBox = document.querySelector('.message_box');
 
-        // Disable and hide import button
+        // Disable import button during import
         if (importButton) {
             importButton.disabled = true;
-            importButton.style.display = 'none';
         }
 
         // Remove unchecked TLDs
@@ -383,9 +364,6 @@ $this->Widget->end();
         const totalTlds = remainingBoxes.length;
 
         if (totalTlds === 0) {
-            if (restartButton) {
-                restartButton.style.display = 'inline-block';
-            }
             return;
         }
 
@@ -446,23 +424,41 @@ $this->Widget->end();
                         }
                     } else {
                         tldBox.classList.add('failed');
+                        tldBox.classList.add('tld-imported');
+
+                        // Add X icon to label
+                        var label = tldBox.querySelector('label');
+                        if (label) {
+                            var tld = checkbox.dataset.tld;
+                            var tld_display = tld.replace(/^\.+/, '');
+                            label.innerHTML = '<i class="bi bi-x-circle"></i> .' + tld_display;
+                        }
+
+                        // Disable the checkbox
+                        checkbox.disabled = true;
+                        checkbox.checked = false;
+
                         if (response.error && messageBox) {
                             messageBox.innerHTML = response.error;
                         }
-                    }
-
-                    // Show restart button on last TLD
-                    if (index === (totalTlds - 1) && restartButton) {
-                        restartButton.style.display = 'inline-block';
                     }
                 })
                 .catch(error => {
                     tldBox.classList.remove('current');
                     tldBox.classList.add('failed');
+                    tldBox.classList.add('tld-imported');
 
-                    if (index === (totalTlds - 1) && restartButton) {
-                        restartButton.style.display = 'inline-block';
+                    // Add X icon to label
+                    var label = tldBox.querySelector('label');
+                    if (label) {
+                        var tld = checkbox.dataset.tld;
+                        var tld_display = tld.replace(/^\.+/, '');
+                        label.innerHTML = '<i class="bi bi-x-circle"></i> .' + tld_display;
                     }
+
+                    // Disable the checkbox
+                    checkbox.disabled = true;
+                    checkbox.checked = false;
                 });
             }
         });

@@ -70,6 +70,36 @@ input[type="checkbox"]:checked+.tld-import-card {
     font-size: 1rem;
 }
 
+/* Failed TLD import state (red outline with X icon) */
+.tld-imported.failed .tld-import-card {
+    border-color: var(--danger-color);
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.tld-imported.failed .tld-import-card:hover {
+    background-color: rgba(220, 53, 69, 0.15);
+    border-color: var(--danger-color);
+}
+
+/* Keep red when selected AND failed */
+.tld-imported.failed input[type="checkbox"]:checked+.tld-import-card {
+    border-color: var(--danger-color);
+    background-color: rgba(220, 53, 69, 0.15);
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+}
+
+/* X icon for failed TLDs */
+.tld-imported.failed .tld-import-card .bi-x-circle {
+    margin-right: 0.25rem;
+    color: var(--danger-color);
+    font-size: 1rem;
+}
+
+/* Hide success icon on failed imports */
+.tld-imported.failed .tld-import-card .bi-check-circle {
+    display: none;
+}
+
 /* ============================================================
    Domain Lookup / WHOIS Page Styles
    ============================================================ */
