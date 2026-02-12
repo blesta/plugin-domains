@@ -14,7 +14,7 @@ $this->Widget->create($this->_('AdminDomains.configuration.boxtitle', true), ['i
 $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submit']);
 ?>
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="tab_general" role="tabpanel">
+        <div class="tab-pane fade<?php echo ($tab ?? 'general') === 'general' ? ' show active' : ''; ?>" id="tab_general" role="tabpanel">
             <div class="card-body">
                 <!-- Spotlight TLDs Section -->
                 <h6 class="form-section-header"><?php $this->_('AdminDomains.configuration.field_spotlight_tlds'); ?></h6>
@@ -91,7 +91,7 @@ $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submi
                 </div>
             </div>
         </div>
-        <div class="tab-pane fade" id="tab_notifications" role="tabpanel">
+        <div class="tab-pane fade<?php echo ($tab ?? 'general') === 'notifications' ? ' show active' : ''; ?>" id="tab_notifications" role="tabpanel">
             <div class="card-body">
                 <!-- Expiration Reminders Section -->
                 <h6 class="form-section-header"><?php $this->_('AdminDomains.configuration.heading_expiration_reminders'); ?></h6>
@@ -148,7 +148,7 @@ $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submi
                 </div>
             </div>
         </div>
-        <div class="tab-pane fade" id="tab_advanced" role="tabpanel">
+        <div class="tab-pane fade<?php echo ($tab ?? 'general') === 'advanced' ? ' show active' : ''; ?>" id="tab_advanced" role="tabpanel">
             <div class="card-body">
                 <!-- Taxes Section -->
                 <h6 class="form-section-header"><?php $this->_('AdminDomains.configuration.heading_taxes');?></h6>
@@ -226,7 +226,7 @@ $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submi
                 </div>
             </div>
         </div>
-        <div class="tab-pane fade" id="tab_tld_sync" role="tabpanel">
+        <div class="tab-pane fade<?php echo ($tab ?? 'general') === 'tld_sync' ? ' show active' : ''; ?>" id="tab_tld_sync" role="tabpanel">
             <div class="card-body">
                 <!-- Markup Section -->
                 <h6 class="form-section-header"><?php $this->_('AdminDomains.configuration.heading_markup');?></h6>
@@ -382,14 +382,8 @@ $this->Widget->end();
 
     function init() {
         // Bootstrap 5 tabs are automatically initialized by the data-bs-toggle attribute
-        // No manual initialization needed - tabs will work natively
-
-        // Activate the current tab if not already active
-        var currentTab = document.querySelector('a[href="#tab_<?php echo ($tab ?? 'general');?>"]');
-        if (currentTab && !currentTab.classList.contains('active')) {
-            var tab = new bootstrap.Tab(currentTab);
-            tab.show();
-        }
+        // The correct tab is already active via server-side rendering (show active classes)
+        // No manual tab activation needed
 
         // Initialize Bootstrap 5 popovers
         var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));

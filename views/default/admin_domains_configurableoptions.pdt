@@ -56,9 +56,10 @@ $this->Widget->end();
         var modal = new bootstrap.Modal(modalEl);
         var modalContent = modalEl.querySelector('.modal-content');
 
-        // Handle clicks on configurable option pricing links
-        document.querySelectorAll('.configurable-option-pricing-modal').forEach(function(link) {
-            link.addEventListener('click', function(e) {
+        // Handle clicks on configurable option pricing links using event delegation
+        document.addEventListener('click', function(e) {
+            var link = e.target.closest('.configurable-option-pricing-modal');
+            if (link) {
                 e.preventDefault();
 
                 // Show loading spinner
@@ -82,7 +83,7 @@ $this->Widget->end();
                     .catch(function() {
                         modalContent.innerHTML = '<div class="modal-body"><div class="alert alert-danger">Failed to load content. Please try again.</div></div>';
                     });
-            });
+            }
         });
     });
 </script>

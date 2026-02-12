@@ -175,12 +175,6 @@ class AdminDomains extends DomainsController
         $this->set('order', $order);
         $this->set('negate_order', ($order == 'asc' ? 'desc' : 'asc'));
 
-        $this->Javascript->setFile('date.min.js');
-        $this->Javascript->setFile('jquery.datePicker.min.js');
-        $this->Javascript->setInline(
-            'Date.firstDayOfWeek=' . ($company_settings['calendar_begins'] == 'sunday' ? 0 : 1) . ';'
-        );
-
         // Overwrite default pagination settings
         $settings = array_merge(
             Configure::get('Blesta.pagination'),
@@ -677,6 +671,8 @@ class AdminDomains extends DomainsController
         $this->set('first_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_1'));
         $this->set('second_reminder_template', $this->EmailGroups->getByAction('Domains.domain_renewal_2'));
         $this->set('expiration_notice_template', $this->EmailGroups->getByAction('Domains.domain_expiration'));
+
+        return $this->renderAjaxWidgetIfAsync($this->isAjax());
     }
 
     /**
@@ -925,6 +921,8 @@ class AdminDomains extends DomainsController
         );
         $this->set('tabs', $this->configurationTabs('importpackages', false));
         $this->set('vars', ($vars ?? []));
+
+        return $this->renderAjaxWidgetIfAsync($this->isAjax());
     }
 
     /**
@@ -935,9 +933,8 @@ class AdminDomains extends DomainsController
      *  - [tld => [module_id => package_id]]
      * @param array $company_settings A list of company settings ([key => value])
      *  false to keep the existing TLD packages and prevent the new ones from being created
-     *
      */
-    function getPackageImportTlds($overwrite_packages, $existing_tld_packages, $company_settings)
+    public function getPackageImportTlds($overwrite_packages, $existing_tld_packages, $company_settings)
     {
         // Get company ID
         $company_id = Configure::get('Blesta.company_id');
@@ -1274,6 +1271,8 @@ class AdminDomains extends DomainsController
 
         $this->set('tabs', $this->configurationTabs('configurableoptions', false));
         $this->set('configurable_options', $configurable_options);
+
+        return $this->renderAjaxWidgetIfAsync($this->isAjax());
     }
 
     /**
@@ -1575,7 +1574,7 @@ class AdminDomains extends DomainsController
                 'name' => Language::_('AdminDomains.configuration.tab_importpackages', true),
                 'current' => (($tab ?? 'general') == 'importpackages'),
                 'attributes' => [
-                    'class' => 'importpackages',
+                    'class' => 'importpackages ajax',
                     'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/'),
                     'id' => 'importpackages_tab'
                 ]
@@ -1584,7 +1583,7 @@ class AdminDomains extends DomainsController
                 'name' => Language::_('AdminDomains.configuration.tab_configurableoptions', true),
                 'current' => (($tab ?? 'general') == 'configurableoptions'),
                 'attributes' => [
-                    'class' => 'configurableoptions',
+                    'class' => 'configurableoptions ajax',
                     'href' => $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/'),
                     'id' => 'configurableoptions_tab'
                 ]
