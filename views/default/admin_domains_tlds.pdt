@@ -1,317 +1,281 @@
 <?php /** @var View $this */ ?>
 
 <?php
-if (!($is_ajax ?? false)) {
-    ?>
-<div id="right_outer">
-    <section id="right_container">
-    <?php
-    if (!($render_section ?? null)) {
-        echo ($message ?? null);
-    }
-    ?>
-    <?php
-}
+// Duplicate TLDs warning
+if (!($render_section ?? null) && !empty($duplicate_tlds)) {
 ?>
-    <?php
-    // Duplicate TLDs warning
-    if (!empty($duplicate_tlds)) {
-        ?>
-        <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
-            <div class="flex-grow-1">
-                <?php $this->_('AdminDomains.!warning.duplicate_tlds_message', false, implode(', ', $duplicate_tlds)); ?>
-            </div>
-            <div class="ms-auto">
-                <?php $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/fixduplicates/'); ?>
-                <button type="submit" class="btn btn-warning">
-                    <?php $this->_('AdminDomains.!button.fix_duplicates'); ?>
-                </button>
-                <?php $this->Form->end(); ?>
-            </div>
+    <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+        <div class="flex-grow-1">
+            <?php $this->_('AdminDomains.!warning.duplicate_tlds_message', false, implode(', ', $duplicate_tlds)); ?>
         </div>
-        <?php
-    }
-    ?>
-
-    <div class="card" id="admin_domains_tlds">
-        <div class="card-header">
-            <h5 class="mb-0"><?php $this->_('AdminDomains.tlds.boxtitle_tld_pricing'); ?></h5>
+        <div class="ms-auto">
+            <?php $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/fixduplicates/'); ?>
+            <button type="submit" class="btn btn-warning">
+                <?php $this->_('AdminDomains.!button.fix_duplicates'); ?>
+            </button>
+            <?php $this->Form->end(); ?>
         </div>
-
-        <div class="card-filter-bar">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <ul class="nav nav-tabs-box border-0 mb-0" role="tablist"></ul>
-
-                <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-secondary"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#tldFilterCollapse"
-                            aria-expanded="<?php echo !empty($filter_vars) ? 'true' : 'false'; ?>"
-                            title="<?php $this->_('AdminDomains.tlds.text_filter'); ?>">
-                        <i class="bi bi-funnel"></i>
-                    </button>
-                    <button class="btn btn-sm btn-primary" id="add_tld"
-                            title="<?php $this->_('AdminDomains.tlds.categorylink_tldsadd'); ?>">
-                        <i class="bi bi-plus-lg"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Collapsible Filter Section -->
-        <div class="collapse <?php echo !empty($filter_vars) ? 'show' : ''; ?>" id="tldFilterCollapse">
-            <div class="card-body border-top filter-section-body">
-                <?php $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/tlds/', ['class' => 'p-3 border rounded filter-section-form', 'id' => 'filter_form']); ?>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label for="filterTLD" class="form-label"><?php $this->_('AdminDomains.tlds.field_tld'); ?></label>
-                            <?php $this->Form->fieldText('filters[tld]', $filter_vars['tld'] ?? '', ['class' => 'form-control', 'id' => 'filterTLD']); ?>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="filterModule" class="form-label"><?php $this->_('AdminDomains.tlds.field_module'); ?></label>
-                            <?php
-                            $module_options = ['' => $this->_('AppController.select.all', true)] + ($modules ?? []);
-                            $this->Form->fieldSelect('filters[module_id]', $module_options, $filter_vars['module_id'] ?? '', ['class' => 'form-select', 'id' => 'filterModule']);
-                            ?>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="filterLimit" class="form-label"><?php $this->_('AdminDomains.tlds.field_limit'); ?></label>
-                            <?php $this->Form->fieldText('filters[limit]', $filter_vars['limit'] ?? 50, ['class' => 'form-control', 'id' => 'filterLimit', 'type' => 'number', 'min' => '1', 'max' => '1000']); ?>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="d-flex gap-2 justify-content-end">
-                                <button type="button" class="btn btn-secondary" id="clear-filters"><?php $this->_('AdminDomains.tlds.text_clear_filters'); ?></button>
-                                <button type="submit" class="btn btn-primary"><?php $this->_('AdminDomains.tlds.text_apply_filters'); ?></button>
-                            </div>
-                        </div>
-                    </div>
-                <?php $this->Form->end(); ?>
-            </div>
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-hover mb-0" id="tldPricingTable">
-                <thead>
-                    <tr>
-                        <th style="width: 30px;"></th>
-                        <th style="width: 40px;">
-                            <?php $this->Form->fieldCheckbox('tlds_bulk[all]', 'all', false, ['class' => 'form-check-input', 'id' => 'selectAllTlds']); ?>
-                        </th>
-                        <th style="width: 200px;"><?php $this->_('AdminDomains.tlds.heading_tld'); ?></th>
-                        <th>
-                            <?php $this->_('AdminDomains.tlds.heading_dns_management'); ?>
-                            <button type="button" class="btn btn-link btn-sm p-0 ms-1"
-                                    data-bs-toggle="popover"
-                                    data-bs-placement="top"
-                                    data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_dns_management', true)); ?>">
-                                <i class="bi bi-info-circle text-secondary"></i>
-                            </button>
-                        </th>
-                        <th>
-                            <?php $this->_('AdminDomains.tlds.heading_email_forwarding'); ?>
-                            <button type="button" class="btn btn-link btn-sm p-0 ms-1"
-                                    data-bs-toggle="popover"
-                                    data-bs-placement="top"
-                                    data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_email_forwarding', true)); ?>">
-                                <i class="bi bi-info-circle text-secondary"></i>
-                            </button>
-                        </th>
-                        <th>
-                            <?php $this->_('AdminDomains.tlds.heading_id_protection'); ?>
-                            <button type="button" class="btn btn-link btn-sm p-0 ms-1"
-                                    data-bs-toggle="popover"
-                                    data-bs-placement="top"
-                                    data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_id_protection', true)); ?>">
-                                <i class="bi bi-info-circle text-secondary"></i>
-                            </button>
-                        </th>
-                        <th>
-                            <?php $this->_('AdminDomains.tlds.heading_epp_code'); ?>
-                            <button type="button" class="btn btn-link btn-sm p-0 ms-1"
-                                    data-bs-toggle="popover"
-                                    data-bs-placement="top"
-                                    data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_epp_code', true)); ?>">
-                                <i class="bi bi-info-circle text-secondary"></i>
-                            </button>
-                        </th>
-                        <th><?php $this->_('AdminDomains.tlds.heading_module'); ?></th>
-                        <th style="width: 100px;"><?php $this->_('AdminDomains.tlds.heading_options'); ?></th>
-                    </tr>
-                </thead>
-                <tbody id="tldPricingTableBody">
-                    <!-- Add TLD row (hidden by default) -->
-                    <tr id="add_tld_row" style="display: none;">
-                        <td></td>
-                        <td></td>
-                        <td>
-                            <?php $this->Form->fieldText('add_tld[tld]', '', ['class' => 'form-control form-control-sm', 'placeholder' => '.com', 'id' => 'add_tld_tld']); ?>
-                        </td>
-                        <td class="text-center">
-                            <?php $this->Form->fieldCheckbox('add_tld[dns_management]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_dns_management']); ?>
-                        </td>
-                        <td class="text-center">
-                            <?php $this->Form->fieldCheckbox('add_tld[email_forwarding]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_email_forwarding']); ?>
-                        </td>
-                        <td class="text-center">
-                            <?php $this->Form->fieldCheckbox('add_tld[id_protection]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_id_protection']); ?>
-                        </td>
-                        <td class="text-center">
-                            <?php $this->Form->fieldCheckbox('add_tld[epp_code]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_epp_code']); ?>
-                        </td>
-                        <td>
-                            <?php $this->Form->fieldSelect('add_tld[module]', $modules ?? [], null, ['class' => 'form-select form-select-sm', 'id' => 'add_tld_module']); ?>
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-success" id="add-tld-submit">
-                                <i class="bi bi-check-lg"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-secondary" id="cancel-add-tld">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- TLD rows -->
-                    <?php
-                    if (!empty($tlds)) {
-                        foreach ($tlds as $tld) {
-                            ?>
-                    <tr id="tlds_<?php echo $tld->package_id; ?>" data-package-tld="<?php echo $this->Html->safe($tld->tld); ?>">
-                        <td class="sortable-drag-handle">
-                            <i class="bi bi-grip-vertical"></i>
-                        </td>
-                        <td onclick="event.stopPropagation();">
-                            <?php $this->Form->fieldCheckbox('tlds_bulk[tlds][]', $this->Html->safe($tld->tld), false, ['class' => 'form-check-input tld-checkbox']); ?>
-                        </td>
-                        <td>
-                            <i class="bi bi-<?php echo ($tld->package->status == 'active') ? 'check-circle text-success' : 'x-circle text-danger' ?> me-2"></i>
-                            <?php echo $this->Html->safe($tld->tld); ?>
-                        </td>
-                        <td class="text-center">
-                            <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][dns_management]', '1', ($tld->dns_management == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_dns_management']); ?>
-                        </td>
-                        <td class="text-center">
-                            <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][email_forwarding]', '1', ($tld->email_forwarding == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_email_forwarding']); ?>
-                        </td>
-                        <td class="text-center">
-                            <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][id_protection]', '1', ($tld->id_protection == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_id_protection']); ?>
-                        </td>
-                        <td class="text-center">
-                            <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][epp_code]', '1', ($tld->epp_code == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_epp_code']); ?>
-                        </td>
-                        <td>
-                            <?php $this->Form->fieldSelect('tlds[' . $tld->tld . '][module]', $modules ?? [], $tld->module->id ?? '', ['class' => 'form-select form-select-sm quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_module']); ?>
-                        </td>
-                        <td>
-                            <div class="d-flex gap-1">
-                                <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/'; ?>"
-                                   class="btn btn-sm btn-outline-secondary edit-tld-modal"
-                                   data-tld="<?php echo $this->Html->safe($tld->tld); ?>"
-                                   data-package-id="<?php echo $tld->package_id; ?>"
-                                   title="<?php $this->_('AdminDomains.tlds.option_edit'); ?>">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <?php if ($tld->package->status !== 'active') { ?>
-                                    <button class="btn btn-sm btn-outline-success enable-tld"
-                                            data-package-id="<?php echo $tld->package_id; ?>"
-                                            data-confirm="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true)); ?>"
-                                            title="<?php $this->_('AdminDomains.tlds.option_enable'); ?>">
-                                        <i class="bi bi-check-circle"></i>
-                                    </button>
-                                <?php } else { ?>
-                                    <button class="btn btn-sm btn-outline-danger disable-tld"
-                                            data-package-id="<?php echo $tld->package_id; ?>"
-                                            data-confirm="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true)); ?>"
-                                            title="<?php $this->_('AdminDomains.tlds.option_disable'); ?>">
-                                        <i class="bi bi-x-circle"></i>
-                                    </button>
-                                <?php } ?>
-                            </div>
-                        </td>
-                    </tr>
-                            <?php
-                        }
-                    }
-                    ?>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Bulk Actions Bar -->
-        <div class="bulk-actions-bar" id="bulkActionsBar" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <span class="selected-count" id="selectedCount">0 <?php $this->_('AdminDomains.tlds.text_items_selected'); ?></span>
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <?php $this->Form->fieldSelect('tlds_bulk[action]', $tld_actions ?? [], null, ['class' => 'form-select form-select-sm', 'style' => 'width: 180px;', 'id' => 'bulkAction']); ?>
-
-                    <!-- Conditional fields for different actions -->
-                    <div id="changeStatusFields" class="bulk-action-fields d-none">
-                        <?php $this->Form->fieldSelect('tlds_bulk[status]', $tld_statuses ?? [], null, ['class' => 'form-select form-select-sm']); ?>
-                    </div>
-
-                    <div id="dnsManagementFields" class="bulk-action-fields d-none">
-                        <?php $this->Form->fieldSelect('tlds_bulk[dns_management]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
-                    </div>
-
-                    <div id="emailForwardingFields" class="bulk-action-fields d-none">
-                        <?php $this->Form->fieldSelect('tlds_bulk[email_forwarding]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
-                    </div>
-
-                    <div id="idProtectionFields" class="bulk-action-fields d-none">
-                        <?php $this->Form->fieldSelect('tlds_bulk[id_protection]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
-                    </div>
-
-                    <div id="eppCodeFields" class="bulk-action-fields d-none">
-                        <?php $this->Form->fieldSelect('tlds_bulk[epp_code]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
-                    </div>
-
-                    <div id="nameServersFields" class="bulk-action-fields d-none">
-                        <div class="d-flex gap-2">
-                            <?php
-                            $this->Form->fieldText('tlds_bulk[nameservers][0]', $vars->tlds_bulk['nameservers'][0] ?? '', ['class' => 'form-control form-control-sm', 'placeholder' => $this->_('AdminDomains.browse.action.field_nameservers', true) . ' 1', 'style' => 'width: 140px;']);
-                            $this->Form->fieldText('tlds_bulk[nameservers][1]', $vars->tlds_bulk['nameservers'][1] ?? '', ['class' => 'form-control form-control-sm', 'placeholder' => $this->_('AdminDomains.browse.action.field_nameservers', true) . ' 2', 'style' => 'width: 140px;']);
-                            ?>
-                        </div>
-                    </div>
-
-                    <div id="registrarPriceSyncFields" class="bulk-action-fields d-none">
-                        <div class="d-flex gap-2 align-items-center">
-                            <?php
-                            $currency_options = ['' => $this->_('AppController.select.please', true)] + ($currencies ?? []);
-                            $this->Form->fieldSelect('currency_selector', $currency_options, $default_currency ?? 'USD', ['class' => 'form-select form-select-sm', 'id' => 'currency_selector', 'style' => 'width: 120px;']);
-                            ?>
-                            <div id="selected-currencies" class="d-flex gap-2 flex-wrap">
-                                <?php foreach ($currencies ?? [] as $currency) { ?>
-                                <span id="currency_selector_<?php echo $this->Html->safe($currency); ?>" class="badge bg-light text-secondary border" style="display: none;">
-                                    <?php
-                                    $this->Form->fieldCheckbox('tlds_bulk[currencies][]', $currency, null, ['class' => 'form-check-input form-check-input-sm me-1']);
-                                    echo $this->Html->safe($currency);
-                                    ?>
-                                </span>
-                                <?php } ?>
-                            </div>
-                            <a class="text-sm" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync'; ?>" target="_blank"><?php $this->_('AdminDomains.tlds.option_configure_sync'); ?></a>
-                        </div>
-                    </div>
-
-                    <button class="btn btn-sm btn-primary" id="bulkActionSubmit">
-                        <i class="bi bi-check-lg me-1"></i><?php $this->_('AdminDomains.tlds.option_submit'); ?>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <?php $this->Pagination->build(); ?>
     </div>
 <?php
-if (!($is_ajax ?? false)) {
-    ?>
-    </section>
-</div>
-    <?php
 }
 ?>
+
+<?php
+if (!($render_section ?? null)) {
+    echo ($message ?? null);
+}
+
+// Configure link buttons for the widget
+$link_buttons = [
+    [
+        'name' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true),
+        'icon' => 'bi bi-plus-lg',
+        'attributes' => [
+            'id' => 'add_tld',
+            'href' => '#',
+            'class' => 'btn btn-primary btn-sm',
+            'title' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true)
+        ]
+    ]
+];
+
+// Clear and configure widget
+$this->Widget->clear();
+$this->Widget->setStyleSheet($this->view_dir . 'css/domains.css');
+$this->Widget->setFilters($filters ?? [], $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/tlds/'), !empty($filter_vars));
+$this->Widget->setAjaxFiltering();
+$this->Widget->setBodyWrapper(false);
+$this->Widget->setLinkButtons($link_buttons);
+
+// Create widget
+$this->Widget->create(
+    $this->_('AdminDomains.tlds.boxtitle_tld_pricing', true),
+    ['id' => 'admin_domains_tlds'],
+    ($render_section ?? null)
+);
+?>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="tldPricingTable">
+            <thead>
+                <tr>
+                    <th style="width: 30px;"></th>
+                    <th style="width: 40px;">
+                        <?php $this->Form->fieldCheckbox('tlds_bulk[all]', 'all', false, ['class' => 'form-check-input', 'id' => 'selectAllTlds']); ?>
+                    </th>
+                    <th style="width: 200px;"><?php $this->_('AdminDomains.tlds.heading_tld'); ?></th>
+                    <th>
+                        <?php $this->_('AdminDomains.tlds.heading_dns_management'); ?>
+                        <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                data-bs-toggle="popover"
+                                data-bs-placement="top"
+                                data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_dns_management', true)); ?>">
+                            <i class="bi bi-info-circle text-secondary"></i>
+                        </button>
+                    </th>
+                    <th>
+                        <?php $this->_('AdminDomains.tlds.heading_email_forwarding'); ?>
+                        <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                data-bs-toggle="popover"
+                                data-bs-placement="top"
+                                data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_email_forwarding', true)); ?>">
+                            <i class="bi bi-info-circle text-secondary"></i>
+                        </button>
+                    </th>
+                    <th>
+                        <?php $this->_('AdminDomains.tlds.heading_id_protection'); ?>
+                        <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                data-bs-toggle="popover"
+                                data-bs-placement="top"
+                                data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_id_protection', true)); ?>">
+                            <i class="bi bi-info-circle text-secondary"></i>
+                        </button>
+                    </th>
+                    <th>
+                        <?php $this->_('AdminDomains.tlds.heading_epp_code'); ?>
+                        <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                                data-bs-toggle="popover"
+                                data-bs-placement="top"
+                                data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_epp_code', true)); ?>">
+                            <i class="bi bi-info-circle text-secondary"></i>
+                        </button>
+                    </th>
+                    <th><?php $this->_('AdminDomains.tlds.heading_module'); ?></th>
+                    <th style="width: 100px;"><?php $this->_('AdminDomains.tlds.heading_options'); ?></th>
+                </tr>
+            </thead>
+            <tbody id="tldPricingTableBody">
+                <!-- Add TLD row (hidden by default) -->
+                <tr id="add_tld_row" style="display: none;">
+                    <td></td>
+                    <td></td>
+                    <td>
+                        <?php $this->Form->fieldText('add_tld[tld]', '', ['class' => 'form-control form-control-sm', 'placeholder' => '.com', 'id' => 'add_tld_tld']); ?>
+                    </td>
+                    <td class="text-center">
+                        <?php $this->Form->fieldCheckbox('add_tld[dns_management]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_dns_management']); ?>
+                    </td>
+                    <td class="text-center">
+                        <?php $this->Form->fieldCheckbox('add_tld[email_forwarding]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_email_forwarding']); ?>
+                    </td>
+                    <td class="text-center">
+                        <?php $this->Form->fieldCheckbox('add_tld[id_protection]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_id_protection']); ?>
+                    </td>
+                    <td class="text-center">
+                        <?php $this->Form->fieldCheckbox('add_tld[epp_code]', '1', false, ['class' => 'form-check-input', 'id' => 'add_tld_epp_code']); ?>
+                    </td>
+                    <td>
+                        <?php $this->Form->fieldSelect('add_tld[module]', $modules ?? [], null, ['class' => 'form-select form-select-sm', 'id' => 'add_tld_module']); ?>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-success" id="add-tld-submit">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary" id="cancel-add-tld">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- TLD rows -->
+                <?php
+                if (!empty($tlds)) {
+                    foreach ($tlds as $tld) {
+                        ?>
+                <tr id="tlds_<?php echo $tld->package_id; ?>" data-package-tld="<?php echo $this->Html->safe($tld->tld); ?>">
+                    <td class="sortable-drag-handle">
+                        <i class="bi bi-grip-vertical"></i>
+                    </td>
+                    <td onclick="event.stopPropagation();">
+                        <?php $this->Form->fieldCheckbox('tlds_bulk[tlds][]', $this->Html->safe($tld->tld), false, ['class' => 'form-check-input tld-checkbox']); ?>
+                    </td>
+                    <td>
+                        <i class="bi bi-<?php echo ($tld->package->status == 'active') ? 'check-circle text-success' : 'x-circle text-danger' ?> me-2"></i>
+                        <?php echo $this->Html->safe($tld->tld); ?>
+                    </td>
+                    <td class="text-center">
+                        <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][dns_management]', '1', ($tld->dns_management == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_dns_management']); ?>
+                    </td>
+                    <td class="text-center">
+                        <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][email_forwarding]', '1', ($tld->email_forwarding == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_email_forwarding']); ?>
+                    </td>
+                    <td class="text-center">
+                        <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][id_protection]', '1', ($tld->id_protection == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_id_protection']); ?>
+                    </td>
+                    <td class="text-center">
+                        <?php $this->Form->fieldCheckbox('tlds[' . $tld->tld . '][epp_code]', '1', ($tld->epp_code == '1'), ['class' => 'form-check-input quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_epp_code']); ?>
+                    </td>
+                    <td>
+                        <?php $this->Form->fieldSelect('tlds[' . $tld->tld . '][module]', $modules ?? [], $tld->module->id ?? '', ['class' => 'form-select form-select-sm quickupdate', 'id' => 'tlds' . str_replace('.', '_', $tld->tld) . '_module']); ?>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/pricing/' . $this->Html->safe($tld->package_id) . '/'; ?>"
+                               class="btn btn-sm btn-outline-secondary edit-tld-modal"
+                               data-tld="<?php echo $this->Html->safe($tld->tld); ?>"
+                               data-package-id="<?php echo $tld->package_id; ?>"
+                               title="<?php $this->_('AdminDomains.tlds.option_edit'); ?>">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <?php if ($tld->package->status !== 'active') { ?>
+                                <button class="btn btn-sm btn-outline-success enable-tld"
+                                        data-package-id="<?php echo $tld->package_id; ?>"
+                                        data-confirm="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true)); ?>"
+                                        title="<?php $this->_('AdminDomains.tlds.option_enable'); ?>">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                            <?php } else { ?>
+                                <button class="btn btn-sm btn-outline-danger disable-tld"
+                                        data-package-id="<?php echo $tld->package_id; ?>"
+                                        data-confirm="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true)); ?>"
+                                        title="<?php $this->_('AdminDomains.tlds.option_disable'); ?>">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            <?php } ?>
+                        </div>
+                    </td>
+                </tr>
+                        <?php
+                    }
+                }
+                ?>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions-bar" id="bulkActionsBar" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="selected-count" id="selectedCount">0 <?php $this->_('AdminDomains.tlds.text_items_selected'); ?></span>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <?php $this->Form->fieldSelect('tlds_bulk[action]', $tld_actions ?? [], null, ['class' => 'form-select form-select-sm', 'style' => 'width: 180px;', 'id' => 'bulkAction']); ?>
+
+                <!-- Conditional fields for different actions -->
+                <div id="changeStatusFields" class="bulk-action-fields d-none">
+                    <?php $this->Form->fieldSelect('tlds_bulk[status]', $tld_statuses ?? [], null, ['class' => 'form-select form-select-sm']); ?>
+                </div>
+
+                <div id="dnsManagementFields" class="bulk-action-fields d-none">
+                    <?php $this->Form->fieldSelect('tlds_bulk[dns_management]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                </div>
+
+                <div id="emailForwardingFields" class="bulk-action-fields d-none">
+                    <?php $this->Form->fieldSelect('tlds_bulk[email_forwarding]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                </div>
+
+                <div id="idProtectionFields" class="bulk-action-fields d-none">
+                    <?php $this->Form->fieldSelect('tlds_bulk[id_protection]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                </div>
+
+                <div id="eppCodeFields" class="bulk-action-fields d-none">
+                    <?php $this->Form->fieldSelect('tlds_bulk[epp_code]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                </div>
+
+                <div id="nameServersFields" class="bulk-action-fields d-none">
+                    <div class="d-flex gap-2">
+                        <?php
+                        $this->Form->fieldText('tlds_bulk[nameservers][0]', $vars->tlds_bulk['nameservers'][0] ?? '', ['class' => 'form-control form-control-sm', 'placeholder' => $this->_('AdminDomains.browse.action.field_nameservers', true) . ' 1', 'style' => 'width: 140px;']);
+                        $this->Form->fieldText('tlds_bulk[nameservers][1]', $vars->tlds_bulk['nameservers'][1] ?? '', ['class' => 'form-control form-control-sm', 'placeholder' => $this->_('AdminDomains.browse.action.field_nameservers', true) . ' 2', 'style' => 'width: 140px;']);
+                        ?>
+                    </div>
+                </div>
+
+                <div id="registrarPriceSyncFields" class="bulk-action-fields d-none">
+                    <div class="d-flex gap-2 align-items-center">
+                        <?php
+                        $currency_options = ['' => $this->_('AppController.select.please', true)] + ($currencies ?? []);
+                        $this->Form->fieldSelect('currency_selector', $currency_options, $default_currency ?? 'USD', ['class' => 'form-select form-select-sm', 'id' => 'currency_selector', 'style' => 'width: 120px;']);
+                        ?>
+                        <div id="selected-currencies" class="d-flex gap-2 flex-wrap">
+                            <?php foreach ($currencies ?? [] as $currency) { ?>
+                            <span id="currency_selector_<?php echo $this->Html->safe($currency); ?>" class="badge bg-light text-secondary border" style="display: none;">
+                                <?php
+                                $this->Form->fieldCheckbox('tlds_bulk[currencies][]', $currency, null, ['class' => 'form-check-input form-check-input-sm me-1']);
+                                echo $this->Html->safe($currency);
+                                ?>
+                            </span>
+                            <?php } ?>
+                        </div>
+                        <a class="text-sm" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync'; ?>" target="_blank"><?php $this->_('AdminDomains.tlds.option_configure_sync'); ?></a>
+                    </div>
+                </div>
+
+                <button class="btn btn-sm btn-primary" id="bulkActionSubmit">
+                    <i class="bi bi-check-lg me-1"></i><?php $this->_('AdminDomains.tlds.option_submit'); ?>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <?php
+    if (isset($this->Pagination) && $this->Pagination->hasPages()) {
+        $this->Widget->footer();
+        $this->Pagination->build();
+    }
+
+    // Close widget
+    $this->Widget->end();
+    ?>
 
 <!-- TLD Pricing Modal -->
 <div class="modal fade" id="editTldPricingModal" tabindex="-1" aria-hidden="true">
@@ -623,9 +587,10 @@ if (!($is_ajax ?? false)) {
                                 }
                             }
 
-                            // Close modal
+                            // Close modal and reload TLDs table after successful update
                             if (editTldModal) {
                                 editTldModal.hide();
+                                reloadTlds();
                             }
                         },
                         null,
@@ -690,12 +655,6 @@ if (!($is_ajax ?? false)) {
                     setTimeout(function() {
                         initializePricingModal();
                     }, 150);
-
-                    // Reload TLDs table when modal closes after successful update
-                    editTldModalEl.addEventListener('hidden.bs.modal', function onHidden() {
-                        reloadTlds();
-                        editTldModalEl.removeEventListener('hidden.bs.modal', onHidden);
-                    });
                 })
                 .catch(function() {
                     editTldModalContent.innerHTML = '<div class="modal-body"><div class="alert alert-danger">Failed to load content. Please try again.</div></div>';

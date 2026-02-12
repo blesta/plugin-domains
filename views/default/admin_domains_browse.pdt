@@ -20,7 +20,7 @@ $this->Widget->setNavStyle('nav-tabs-custom');
 $this->Widget->setFilters($filters ?? [], $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null)), !empty($filter_vars));
 $this->Widget->setAjaxFiltering();
 $this->Widget->setBodyWrapper(false);
-$this->Widget->create($this->_('AdminDomains.browse.boxtitle_browse', true), ['id' => 'admin_domains_browse'], $render_section ?? []);
+$this->Widget->create($this->_('AdminDomains.browse.boxtitle_browse', true), ['id' => 'admin_domains_browse'], ($render_section ?? null));
 $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/browse/', ['id' => 'browse_domains', 'class' => 'disable-on-submit']);
 
 if (!empty($domains)) {

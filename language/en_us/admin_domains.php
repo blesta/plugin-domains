@@ -316,6 +316,10 @@ $lang['AdminDomains.pricing.field_cancel'] = 'Cancel';
 $lang['AdminDomains.pricing.field_update'] = 'Update';
 $lang['AdminDomains.pricing.text_multiple_packages_info'] = 'There are other packages for this TLD that may have different pricing. Enable the option below when updating pricing if they should be updated with this pricing.';
 $lang['AdminDomains.pricing.field_update_all_packages'] = 'Update pricing for all packages that match this TLD';
+$lang['AdminDomains.pricing.text_tags_description'] = 'Use the following tags in your email template:';
+$lang['AdminDomains.pricing.field_email_body'] = 'Email Body';
+$lang['AdminDomains.pricing.placeholder_email_template'] = 'Enter your welcome email template...';
+$lang['AdminDomains.pricing.text_edit_package_description'] = 'Edit the core package, to define Client Limits, Configurable Options, Available Quantity, Plugin Integrations, Descriptions and more.';
 
 
 $lang['AdminDomains.meta.boxtitle_meta_tld'] = 'Update Package Meta for TLD %1$s'; // %1$s is the TLD
