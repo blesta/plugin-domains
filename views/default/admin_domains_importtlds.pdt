@@ -181,7 +181,8 @@ $this->Widget->end();
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             credentials: 'same-origin'
         })
@@ -264,7 +265,8 @@ $this->Widget->end();
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             credentials: 'same-origin'
         })
@@ -296,10 +298,11 @@ $this->Widget->end();
 
                     const tldObject = response.tlds[tld];
                     const wrapperDiv = document.createElement('div');
+                    wrapperDiv.className = 'tld-box';
 
                     // Add tld-imported class if TLD is already imported
                     if (tldObject.disabled) {
-                        wrapperDiv.className = 'tld-imported';
+                        wrapperDiv.classList.add('tld-imported');
                     }
 
                     const checkbox = document.createElement('input');
@@ -319,10 +322,13 @@ $this->Widget->end();
                     label.className = 'tld-import-card';
                     label.htmlFor = 'tld_' + tld;
 
+                    // Strip leading dot if present to avoid double dots
+                    var tld_display = tld.replace(/^\.+/, '');
+
                     if (tldObject.disabled) {
-                        label.innerHTML = '<i class="bi bi-check-circle"></i> .' + tld;
+                        label.innerHTML = '<i class="bi bi-check-circle"></i> .' + tld_display;
                     } else {
-                        label.textContent = '.' + tld;
+                        label.textContent = '.' + tld_display;
                     }
 
                     wrapperDiv.appendChild(checkbox);
@@ -405,7 +411,8 @@ $this->Widget->end();
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: serializedData,
                     credentials: 'same-origin'
@@ -416,6 +423,19 @@ $this->Widget->end();
 
                     if (response.message) {
                         tldBox.classList.add('success');
+                        tldBox.classList.add('tld-imported');
+
+                        // Add check circle icon to label
+                        var label = tldBox.querySelector('label');
+                        if (label) {
+                            var tld = checkbox.dataset.tld;
+                            var tld_display = tld.replace(/^\.+/, '');
+                            label.innerHTML = '<i class="bi bi-check-circle"></i> .' + tld_display;
+                        }
+
+                        // Disable the checkbox
+                        checkbox.disabled = true;
+                        checkbox.checked = true;
 
                         // Check if all TLDs are processed
                         const currentBoxes = tldGrid.querySelectorAll('.tld-box.current');

@@ -344,6 +344,9 @@ class AdminDomains extends DomainsController
 
             return false;
         }
+
+        // Render the view for initial page load
+        $this->set('vars', $this->post);
     }
 
     /**
