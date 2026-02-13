@@ -664,3 +664,11 @@ tr:hover .sortable-drag-handle {
 .sortable-ghost {
     opacity: 0.4;
 }
+
+/* Small form control to match form-select-sm sizing */
+.form-control-sm {
+    min-height: calc(1.5em + .5rem + calc(var(--bs-border-width) * 2));
+    padding: .25rem .5rem !important;
+    font-size: .875rem !important;
+    border-radius: var(--bs-border-radius-sm) !important;
+}

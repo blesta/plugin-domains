@@ -44,7 +44,6 @@ $link_buttons = [
 $this->Widget->clear();
 $this->Widget->setStyleSheet($this->view_dir . 'css/domains.css');
 $this->Widget->setFilters($filters ?? [], $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/tlds/'), !empty($filter_vars));
-$this->Widget->setAjaxFiltering();
 $this->Widget->setBodyWrapper(false);
 $this->Widget->setLinkButtons($link_buttons);
 
@@ -64,7 +63,7 @@ $this->Widget->create(
                         <?php $this->Form->fieldCheckbox('tlds_bulk[all]', 'all', false, ['class' => 'form-check-input', 'id' => 'selectAllTlds']); ?>
                     </th>
                     <th style="width: 200px;"><?php $this->_('AdminDomains.tlds.heading_tld'); ?></th>
-                    <th>
+                    <th class="text-center">
                         <?php $this->_('AdminDomains.tlds.heading_dns_management'); ?>
                         <button type="button" class="btn btn-link btn-sm p-0 ms-1"
                                 data-bs-toggle="popover"
@@ -73,7 +72,7 @@ $this->Widget->create(
                             <i class="bi bi-info-circle text-secondary"></i>
                         </button>
                     </th>
-                    <th>
+                    <th class="text-center">
                         <?php $this->_('AdminDomains.tlds.heading_email_forwarding'); ?>
                         <button type="button" class="btn btn-link btn-sm p-0 ms-1"
                                 data-bs-toggle="popover"
@@ -82,7 +81,7 @@ $this->Widget->create(
                             <i class="bi bi-info-circle text-secondary"></i>
                         </button>
                     </th>
-                    <th>
+                    <th class="text-center">
                         <?php $this->_('AdminDomains.tlds.heading_id_protection'); ?>
                         <button type="button" class="btn btn-link btn-sm p-0 ms-1"
                                 data-bs-toggle="popover"
@@ -91,7 +90,7 @@ $this->Widget->create(
                             <i class="bi bi-info-circle text-secondary"></i>
                         </button>
                     </th>
-                    <th>
+                    <th class="text-center">
                         <?php $this->_('AdminDomains.tlds.heading_epp_code'); ?>
                         <button type="button" class="btn btn-link btn-sm p-0 ms-1"
                                 data-bs-toggle="popover"
@@ -220,19 +219,19 @@ $this->Widget->create(
                 </div>
 
                 <div id="dnsManagementFields" class="bulk-action-fields d-none">
-                    <?php $this->Form->fieldSelect('tlds_bulk[dns_management]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                    <?php $this->Form->fieldSelect('tlds_bulk[dns_management]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm']); ?>
                 </div>
 
                 <div id="emailForwardingFields" class="bulk-action-fields d-none">
-                    <?php $this->Form->fieldSelect('tlds_bulk[email_forwarding]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                    <?php $this->Form->fieldSelect('tlds_bulk[email_forwarding]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm']); ?>
                 </div>
 
                 <div id="idProtectionFields" class="bulk-action-fields d-none">
-                    <?php $this->Form->fieldSelect('tlds_bulk[id_protection]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                    <?php $this->Form->fieldSelect('tlds_bulk[id_protection]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm']); ?>
                 </div>
 
                 <div id="eppCodeFields" class="bulk-action-fields d-none">
-                    <?php $this->Form->fieldSelect('tlds_bulk[epp_code]', ['1' => $this->_('AppController.select.yes', true), '0' => $this->_('AppController.select.no', true)], null, ['class' => 'form-select form-select-sm']); ?>
+                    <?php $this->Form->fieldSelect('tlds_bulk[epp_code]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm']); ?>
                 </div>
 
                 <div id="nameServersFields" class="bulk-action-fields d-none">
@@ -264,7 +263,7 @@ $this->Widget->create(
                     </div>
                 </div>
 
-                <button class="btn btn-sm btn-primary" id="bulkActionSubmit">
+                <button class="btn btn-sm btn-light" id="bulkActionSubmit">
                     <i class="bi bi-check-lg me-1"></i><?php $this->_('AdminDomains.tlds.option_submit'); ?>
                 </button>
             </div>
@@ -364,34 +363,22 @@ $this->Widget->create(
         function reloadTlds() {
             var mainContent = document.querySelector('.main-content');
             if (mainContent) {
-                mainContent.querySelectorAll('.alert, .error_section, .message_section').forEach(function(el) { el.remove(); });
+                mainContent.querySelectorAll('.alert').forEach(function(el) { el.remove(); });
             }
 
-            // Determine filter visibility state by checking if .filter-section-body is displayed
-            var filterSection = document.querySelector('.filter-section-body');
-            var showFilters = filterSection && filterSection.offsetParent !== null;
-            var showFiltersParam = showFilters ? 'true' : 'false';
-
-            blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/' + (currentPage > 1 ? currentPage + '/' : '') + '?show_filters=' + showFiltersParam,
-                {},
+            blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/' + (currentPage > 1 ? currentPage + '/' : ''),
+                getPartialForm('filters'),
                 function(response) {
                     if (response.replacer && response.content) {
                         var targetEl = document.querySelector(response.replacer);
                         if (targetEl) {
                             targetEl.innerHTML = response.content;
-                            initPopovers();
-                            initSortable();
-                            initEditTldModal(); // Re-initialize modal bindings after content reload
-
-                            // Reset select all checkbox state after filter reload
-                            var selectAllCheckbox = document.getElementById('selectAllTlds');
-                            if (selectAllCheckbox) {
-                                selectAllCheckbox.checked = false;
-                            }
-
-                            // Reset bulk actions bar visibility
-                            updateBulkActionsBar();
                         }
+                    }
+
+                    // Show message, if any
+                    if (response.message) {
+                        prependMessage(response.message);
                     }
                 },
                 null,
@@ -434,15 +421,23 @@ $this->Widget->create(
             setTldMeta(addedTld);
         }
 
-        // Select all checkboxes
-        var selectAllCheckbox = document.getElementById('selectAllTlds');
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', function(e) {
-                document.querySelectorAll('.tld-checkbox').forEach(function(cb) {
-                    cb.checked = e.target.checked;
-                });
-                updateBulkActionsBar();
+        // Select all handler function (reusable)
+        function handleSelectAll(e) {
+            document.querySelectorAll('.tld-checkbox').forEach(function(cb) {
+                cb.checked = e.target.checked;
             });
+            updateBulkActionsBar();
+        }
+
+        // Initialize select all checkbox
+        function initSelectAllCheckbox() {
+            var selectAllCheckbox = document.getElementById('selectAllTlds');
+            if (selectAllCheckbox) {
+                // Remove old listener if exists (prevents duplicates)
+                selectAllCheckbox.removeEventListener('change', handleSelectAll);
+                // Add fresh listener
+                selectAllCheckbox.addEventListener('change', handleSelectAll);
+            }
         }
 
         // Individual checkbox changes
@@ -451,11 +446,15 @@ $this->Widget->create(
                 updateBulkActionsBar();
 
                 // Uncheck "select all" if any checkbox is unchecked
+                var selectAllCheckbox = document.getElementById('selectAllTlds');
                 if (!e.target.checked && selectAllCheckbox) {
                     selectAllCheckbox.checked = false;
                 }
             }
         });
+
+        // Initialize select all on page load
+        initSelectAllCheckbox();
 
         // Update bulk actions bar
         function updateBulkActionsBar() {
@@ -498,7 +497,7 @@ $this->Widget->create(
                             }
                         }
 
-                        // Show message (success or error)
+                        // Show message, if any
                         if (response.message) {
                             prependMessage(response.message);
                         }
@@ -604,14 +603,16 @@ $this->Widget->create(
                     form.getAttribute('action'),
                     formData,
                     function(response) {
-                        if (response.message) {
-                            prependMessage(response.message);
-                        }
-
                         // Close modal and reload TLDs table after successful update
                         if (editTldModal) {
                             editTldModal.hide();
+
                             reloadTlds();
+
+                            // Show message, if any
+                            if (response.message) {
+                                prependMessage(response.message);
+                            }
                         }
                     },
                     function(response) {
@@ -743,6 +744,8 @@ $this->Widget->create(
                     getPartialForm('add_tld'),
                     function(response) {
                         reloadTlds();
+
+                        // Show message, if any
                         if (response.message) {
                             prependMessage(response.message);
                         }
@@ -828,31 +831,15 @@ $this->Widget->create(
             bulkActionSubmitBtn.addEventListener('click', function() {
                 this.disabled = true;
 
-                // Remember filter state before reload
-                var filterToggle = document.querySelector('.widget_filters_toggle');
-                var filterExpanded = filterToggle ? filterToggle.getAttribute('aria-expanded') === 'true' : false;
-
                 blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/',
                     getPartialForm('tlds_bulk'),
                     function(response) {
                         reloadTlds();
+
+                        // Show message, if any
                         if (response.message) {
                             prependMessage(response.message);
                         }
-                        bulkActionSubmitBtn.disabled = false;
-
-                        // Restore filter state after reload (with slight delay for DOM update)
-                        setTimeout(function() {
-                            var filterToggleAfter = document.querySelector('.widget_filters_toggle');
-                            if (filterToggleAfter) {
-                                var currentExpanded = filterToggleAfter.getAttribute('aria-expanded') === 'true';
-                                if (filterExpanded !== currentExpanded) {
-                                    filterToggleAfter.click();
-                                }
-                            }
-                        }, 200);
-
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
                     },
                     null,
                     {dataType: 'json'}

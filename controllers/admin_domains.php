@@ -2707,7 +2707,7 @@ class AdminDomains extends DomainsController
         $limit->attach(
             $fields->fieldNumber(
                 'filters[limit]',
-                $vars['limit'] ?? $this->tlds_per_page,
+                $vars['limit'] ?? null,
                 1,
                 null,
                 null,
