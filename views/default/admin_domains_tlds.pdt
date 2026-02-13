@@ -30,7 +30,7 @@ if (!($render_section ?? null)) {
 $link_buttons = [
     [
         'name' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true),
-        'icon' => 'bi bi-plus-lg',
+        'icon' => 'bi bi-plus-lg me-1',
         'attributes' => [
             'id' => 'add_tld',
             'href' => '#',
@@ -290,414 +290,525 @@ $this->Widget->create(
 </div>
 
 <script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        var baseUri = '<?php echo $this->base_uri; ?>';
-        var csrfToken = '<?php echo $this->Form->getCsrfToken(); ?>';
-        var currentPage = <?php echo $page ?? 1; ?>;
-        var addedTld = '<?php echo $added_tld ?? ''; ?>';
+(function() {
+    'use strict';
 
-        // Initialize popovers
-        function initPopovers() {
-            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-            popoverTriggerList.map(function (popoverTriggerEl) {
-                return new bootstrap.Popover(popoverTriggerEl);
+    // Configuration & State
+    var config = {
+        baseUri: '<?php echo $this->base_uri; ?>',
+        csrfToken: '<?php echo $this->Form->getCsrfToken(); ?>',
+        currentPage: <?php echo $page ?? 1; ?>,
+        addedTld: '<?php echo $added_tld ?? ''; ?>'
+    };
+
+    // Collect form data by field name prefix
+    function getPartialForm(prefix, includeFilters) {
+        var formData = new FormData();
+        var selector = 'input[name^="' + prefix + '"], select[name^="' + prefix + '"]';
+
+        document.querySelectorAll(selector).forEach(function(field) {
+            if (field.type === 'checkbox' && !field.checked) return;
+            if (field.type === 'radio' && !field.checked) return;
+            formData.append(field.name, field.value);
+        });
+
+        // Include filter fields if requested
+        if (includeFilters !== false && prefix !== 'filters') {
+            document.querySelectorAll('input[name^="filters"], select[name^="filters"]').forEach(function(field) {
+                formData.append(field.name, field.value);
             });
         }
-        initPopovers();
 
-        // Initialize Sortable if available
-        function initSortable() {
-            if (typeof Sortable !== 'undefined') {
-                var tbody = document.getElementById('tldPricingTableBody');
-                if (tbody) {
-                    new Sortable(tbody, {
-                        handle: '.sortable-drag-handle',
-                        animation: 150,
-                        ghostClass: 'sortable-ghost',
-                        onEnd: function(evt) {
-                            var formData = new FormData();
-                            formData.append('_csrf_token', csrfToken);
+        formData.append('_csrf_token', config.csrfToken);
+        return formData;
+    }
 
-                            var rows = tbody.querySelectorAll('tr[id^="tlds_"]');
-                            rows.forEach(function(row) {
-                                var packageId = row.id.replace('tlds_', '');
-                                formData.append('tlds[]', packageId);
-                            });
+    // Show message at top of page
+    function showMessage(message) {
+        if (!message) return;
 
-                            blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/sorttlds/' + currentPage + '/',
-                                formData, null, null, {dataType: 'json'});
-                        }
-                    });
-                }
-            }
+        var container = document.querySelector('.main-content');
+        if (!container) return;
+
+        // Remove old messages
+        container.querySelectorAll('.alert, .error_section, .message_section').forEach(function(el) {
+            el.remove();
+        });
+
+        // Add new message
+        var tempDiv = document.createElement('div');
+        tempDiv.innerHTML = message;
+        if (tempDiv.firstElementChild) {
+            container.insertBefore(tempDiv.firstElementChild, container.firstChild);
         }
-        initSortable();
+    }
 
-        // Get partial form data
-        function getPartialForm(prefix, includeFilters) {
-            includeFilters = includeFilters === undefined ? true : includeFilters;
-            var formData = new FormData();
+    // Replace element event listeners by cloning
+    function replaceElement(element) {
+        if (!element) return null;
+        var newElement = element.cloneNode(true);
+        element.parentNode.replaceChild(newElement, element);
+        return newElement;
+    }
 
-            var selector = 'input[name^="' + prefix + '"], select[name^="' + prefix + '"]';
-            document.querySelectorAll(selector).forEach(function(field) {
-                if (field.type === 'checkbox') {
-                    if (field.checked) {
-                        formData.append(field.name, field.value);
-                    }
-                } else if (field.type !== 'radio' || field.checked) {
-                    formData.append(field.name, field.value);
-                }
-            });
+    // Bootstrap Components
+    function initPopovers() {
+        var triggers = document.querySelectorAll('[data-bs-toggle="popover"]');
+        triggers.forEach(function(trigger) {
+            new bootstrap.Popover(trigger);
+        });
+    }
 
-            if (includeFilters && prefix !== 'filters') {
-                document.querySelectorAll('input[name^="filters"], select[name^="filters"]').forEach(function(field) {
-                    formData.append(field.name, field.value);
+    function initSortable() {
+        if (typeof Sortable === 'undefined') return;
+
+        var tbody = document.getElementById('tldPricingTableBody');
+        if (!tbody) return;
+
+        new Sortable(tbody, {
+            handle: '.sortable-drag-handle',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function() {
+                var formData = new FormData();
+                formData.append('_csrf_token', config.csrfToken);
+
+                tbody.querySelectorAll('tr[id^="tlds_"]').forEach(function(row) {
+                    formData.append('tlds[]', row.id.replace('tlds_', ''));
                 });
-            }
 
-            formData.append('_csrf_token', csrfToken);
-            return formData;
+                blestaRequest('POST', config.baseUri + 'plugin/domains/admin_domains/sorttlds/' + config.currentPage + '/',
+                    formData, null, null, {dataType: 'json'});
+            }
+        });
+    }
+
+    // TLD Table Management
+    function reloadTlds() {
+        // Remove old alerts
+        var mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.querySelectorAll('.alert').forEach(function(el) { el.remove(); });
         }
 
-        // Reload TLDs table
-        function reloadTlds() {
-            var mainContent = document.querySelector('.main-content');
-            if (mainContent) {
-                mainContent.querySelectorAll('.alert').forEach(function(el) { el.remove(); });
+        var url = config.baseUri + 'plugin/domains/admin_domains/tlds/';
+        if (config.currentPage > 1) url += config.currentPage + '/';
+
+        blestaRequest('POST', url, getPartialForm('filters'),
+            function(response) {
+                if (response.replacer && response.content) {
+                    var target = document.querySelector(response.replacer);
+                    if (target) {
+                        target.innerHTML = response.content;
+                        initDynamicElements();
+                    }
+                }
+                showMessage(response.message);
+            },
+            null,
+            {dataType: 'json'}
+        );
+    }
+
+    function resetAddTldRow() {
+        var row = document.getElementById('add_tld_row');
+        if (!row) return;
+
+        row.querySelectorAll('select, input[type="text"]').forEach(function(el) { el.value = ''; });
+        row.querySelectorAll('input[type="checkbox"]').forEach(function(el) { el.checked = false; });
+    }
+
+    // Bulk Actions
+    function updateBulkActionsBar() {
+        var checkedCount = document.querySelectorAll('.tld-checkbox:checked').length;
+        var bar = document.getElementById('bulkActionsBar');
+        var countEl = document.getElementById('selectedCount');
+
+        if (bar) bar.style.display = checkedCount > 0 ? 'block' : 'none';
+        if (countEl) {
+            countEl.textContent = checkedCount + ' <?php echo addslashes($this->_('AdminDomains.tlds.text_items_selected', true)); ?>';
+        }
+    }
+
+    function initBulkActions() {
+        var bulkSelect = replaceElement(document.getElementById('bulkAction'));
+        if (!bulkSelect) return;
+
+        var fieldMap = {
+            'change_status': 'changeStatusFields',
+            'tld_sync': 'registrarPriceSyncFields',
+            'dns_management': 'dnsManagementFields',
+            'email_forwarding': 'emailForwardingFields',
+            'id_protection': 'idProtectionFields',
+            'epp_code': 'eppCodeFields',
+            'update_nameservers': 'nameServersFields'
+        };
+
+        bulkSelect.addEventListener('change', function() {
+            // Hide all conditional fields
+            document.querySelectorAll('.bulk-action-fields').forEach(function(el) {
+                el.classList.add('d-none');
+            });
+
+            // Show selected field
+            var fieldId = fieldMap[this.value];
+            if (fieldId) {
+                var field = document.getElementById(fieldId);
+                if (field) field.classList.remove('d-none');
             }
+        });
 
-            blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/' + (currentPage > 1 ? currentPage + '/' : ''),
-                getPartialForm('filters'),
+        // Trigger initial state
+        if (bulkSelect.value) {
+            bulkSelect.dispatchEvent(new Event('change'));
+        }
+    }
+
+    function initBulkSubmit() {
+        var submitBtn = replaceElement(document.getElementById('bulkActionSubmit'));
+        if (!submitBtn) return;
+
+        submitBtn.addEventListener('click', function() {
+            this.disabled = true;
+
+            blestaRequest('POST', config.baseUri + 'plugin/domains/admin_domains/tlds/',
+                getPartialForm('tlds_bulk'),
                 function(response) {
-                    if (response.replacer && response.content) {
-                        var targetEl = document.querySelector(response.replacer);
-                        if (targetEl) {
-                            targetEl.innerHTML = response.content;
-                            // Re-initialize after content replacement
-                            initializeEventListeners();
-                        }
-                    }
-
-                    // Show message, if any
-                    if (response.message) {
-                        prependMessage(response.message);
-                    }
+                    reloadTlds();
+                    showMessage(response.message);
                 },
                 null,
                 {dataType: 'json'}
             );
-        }
+        });
+    }
 
-        // Prepend message
-        function prependMessage(message) {
-            var container = document.querySelector('.main-content');
-            if (container && message) {
-                // Remove existing message if any
-                var existingMessage = container.querySelector('.alert, .error_section, .message_section');
-                if (existingMessage) {
-                    existingMessage.remove();
-                }
+    // Currency Selector
+    function initCurrencySelector() {
+        var selector = replaceElement(document.getElementById('currency_selector'));
+        if (!selector) return;
 
-                // Insert new message at the top
-                var tempDiv = document.createElement('div');
-                tempDiv.innerHTML = message;
+        selector.addEventListener('change', function() {
+            var currency = this.value;
+            if (!currency) return;
 
-                // Only insert if we have a valid element
-                if (tempDiv.firstElementChild) {
-                    container.insertBefore(tempDiv.firstElementChild, container.firstChild);
-                }
+            // Remove from dropdown
+            var option = this.querySelector('option[value="' + currency + '"]');
+            if (option) option.remove();
+
+            // Show badge
+            var badge = document.getElementById('currency_selector_' + currency);
+            if (badge) {
+                badge.style.display = '';
+                var checkbox = badge.querySelector('input[type="checkbox"]');
+                if (checkbox) checkbox.checked = true;
             }
-        }
+        });
+    }
 
-        // TLD meta modal
-        function setTldMeta(tld) {
-            blestaModal({
-                close: '<?php echo addslashes($this->_('AppController.modal.text_close', true)); ?>',
-                url: baseUri + 'plugin/domains/admin_domains/meta/' + tld.replace(/\./g, '_') + '/',
-                min_width: Math.max((window.innerWidth / 4) * 2, 400),
-                max_width: Math.max((window.innerWidth / 4) * 2, 400)
+    // Add TLD Row
+    function initAddTldButtons() {
+        // Toggle button
+        var toggleBtn = replaceElement(document.getElementById('add_tld'));
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                var row = document.getElementById('add_tld_row');
+                if (!row) return;
+
+                var isVisible = row.style.display !== 'none';
+                row.style.display = isVisible ? 'none' : '';
+                if (isVisible) resetAddTldRow();
             });
         }
 
-        if (addedTld !== '') {
-            setTldMeta(addedTld);
-        }
-
-        // Select all handler function (reusable)
-        function handleSelectAll(e) {
-            document.querySelectorAll('.tld-checkbox').forEach(function(cb) {
-                cb.checked = e.target.checked;
+        // Cancel button
+        var cancelBtn = replaceElement(document.getElementById('cancel-add-tld'));
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                var row = document.getElementById('add_tld_row');
+                if (row) {
+                    row.style.display = 'none';
+                    resetAddTldRow();
+                }
             });
-            updateBulkActionsBar();
         }
 
-        // Initialize select all checkbox
-        function initSelectAllCheckbox() {
-            var selectAllCheckbox = document.getElementById('selectAllTlds');
-            if (selectAllCheckbox) {
-                // Remove old listener if exists (prevents duplicates)
-                selectAllCheckbox.removeEventListener('change', handleSelectAll);
-                // Add fresh listener
-                selectAllCheckbox.addEventListener('change', handleSelectAll);
+        // Submit button
+        var submitBtn = replaceElement(document.getElementById('add-tld-submit'));
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function() {
+                blestaRequest('POST', config.baseUri + 'plugin/domains/admin_domains/tlds/',
+                    getPartialForm('add_tld'),
+                    function(response) {
+                        reloadTlds();
+                        showMessage(response.message);
+                    },
+                    null,
+                    {dataType: 'json'}
+                );
+            });
+        }
+    }
+
+    // Select All Checkbox
+    function initSelectAll() {
+        var selectAll = document.getElementById('selectAllTlds');
+        if (!selectAll) return;
+
+        // Remove old listener
+        selectAll.removeEventListener('change', handleSelectAll);
+        selectAll.addEventListener('change', handleSelectAll);
+    }
+
+    function handleSelectAll(e) {
+        document.querySelectorAll('.tld-checkbox').forEach(function(cb) {
+            cb.checked = e.target.checked;
+        });
+        updateBulkActionsBar();
+    }
+
+    // Pricing Modal
+    function initPricingModal() {
+        var modal = document.getElementById('editTldPricingModal');
+        if (!modal) return;
+
+        var modalContent = modal.querySelector('.modal-content');
+        var modalInstance = new bootstrap.Modal(modal);
+
+        // Handle edit links (event delegation)
+        document.addEventListener('click', function(e) {
+            var link = e.target.closest('.edit-tld-modal');
+            if (!link || !modalContent) return;
+
+            e.preventDefault();
+
+            // Show loading
+            modalContent.innerHTML = '<div class="modal-body"><div class="text-center py-5">' +
+                '<div class="spinner-border text-primary" role="status">' +
+                '<span class="visually-hidden">Loading...</span></div></div></div>';
+            modalInstance.show();
+
+            // Load content
+            fetch(link.href, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                .then(function(res) { return res.text(); })
+                .then(function(html) {
+                    var temp = document.createElement('div');
+                    temp.innerHTML = html;
+                    temp.querySelectorAll('script').forEach(function(s) { s.remove(); });
+                    modalContent.innerHTML = temp.innerHTML;
+
+                    setTimeout(function() { setupPricingForm(modalContent, modalInstance); }, 150);
+                })
+                .catch(function() {
+                    modalContent.innerHTML = '<div class="modal-body"><div class="alert alert-danger">' +
+                        'Failed to load content. Please try again.</div></div>';
+                });
+        });
+    }
+
+    function setupPricingForm(container, modalInstance) {
+        var form = container.querySelector('form');
+        if (!form) return;
+
+        // Initialize WYSIWYG editors
+        form.querySelectorAll('.wysiwyg').forEach(function(textarea) {
+            if (typeof blestaBindWysiwygEditor === 'function') {
+                blestaBindWysiwygEditor('#' + textarea.id, {
+                    language: '<?php echo substr(Configure::get('Blesta.language'), 0, 2);?>'
+                });
             }
+        });
+
+        // Sync prices
+        form.querySelectorAll('input.pricing-price').forEach(function(input) {
+            input.addEventListener('change', function() {
+                var row = this.closest('tr');
+                if (!row) return;
+
+                var renew = row.querySelector('input.pricing-renew');
+                var transfer = row.querySelector('input.pricing-transfer');
+
+                if (renew && parseFloat(renew.value) === 0) renew.value = this.value;
+                if (transfer && parseFloat(transfer.value) === 0) transfer.value = this.value;
+            });
+        });
+
+        // Toggle transfer price state
+        function updateTransferState() {
+            form.querySelectorAll('input.pricing-transfer-enable').forEach(function(cb) {
+                var input = cb.parentElement.querySelector('input.pricing-transfer');
+                if (input) input.disabled = !cb.checked;
+            });
         }
 
-        // Individual checkbox changes
+        // Toggle pricing row state
+        function updateRowState() {
+            form.querySelectorAll('input.pricing-enable').forEach(function(cb) {
+                var row = cb.closest('tr');
+                if (!row) return;
+
+                row.querySelectorAll('input[type="number"], input.pricing-transfer-enable').forEach(function(input) {
+                    input.disabled = !cb.checked;
+                });
+                cb.disabled = false;
+            });
+            updateTransferState();
+        }
+
+        updateRowState();
+        form.querySelectorAll('input.pricing-enable').forEach(function(cb) {
+            cb.addEventListener('change', updateRowState);
+        });
+        form.querySelectorAll('input.pricing-transfer-enable').forEach(function(cb) {
+            cb.addEventListener('change', updateTransferState);
+        });
+
+        // Handle form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            blestaRequest('POST', form.getAttribute('action'), new FormData(form),
+                function(response) {
+                    modalInstance.hide();
+                    reloadTlds();
+                    showMessage(response.message);
+                },
+                function(response) {
+                    showMessage(response.message);
+                },
+                {dataType: 'json'}
+            );
+        });
+    }
+
+    // Event Delegation
+    function setupGlobalEvents() {
+        // Individual TLD checkboxes
         document.addEventListener('change', function(e) {
             if (e.target.classList.contains('tld-checkbox')) {
                 updateBulkActionsBar();
 
-                // Uncheck "select all" if any checkbox is unchecked
-                var selectAllCheckbox = document.getElementById('selectAllTlds');
-                if (!e.target.checked && selectAllCheckbox) {
-                    selectAllCheckbox.checked = false;
+                // Uncheck "select all" if any unchecked
+                if (!e.target.checked) {
+                    var selectAll = document.getElementById('selectAllTlds');
+                    if (selectAll) selectAll.checked = false;
                 }
             }
-        });
 
-        // Update bulk actions bar
-        function updateBulkActionsBar() {
-            var checked = document.querySelectorAll('.tld-checkbox:checked').length;
-            var bar = document.getElementById('bulkActionsBar');
-            var countEl = document.getElementById('selectedCount');
-
-            if (bar) {
-                bar.style.display = checked > 0 ? 'block' : 'none';
-            }
-            if (countEl) {
-                countEl.textContent = checked + ' <?php echo addslashes($this->_('AdminDomains.tlds.text_items_selected', true)); ?>';
-            }
-        }
-
-        // Quick update checkboxes and selects
-        document.addEventListener('change', function(e) {
+            // Quick update fields
             if (e.target.classList.contains('quickupdate')) {
-                e.stopPropagation(); // Prevent event bubbling to filter toggle
+                e.stopPropagation();
 
                 var row = e.target.closest('tr');
-                var originalOpacity = row.style.opacity;
-                var originalPointerEvents = row.style.pointerEvents;
+                var tld = row.dataset.packageTld;
                 row.style.opacity = '0.5';
                 row.style.pointerEvents = 'none';
 
-                var tld = row.dataset.packageTld;
-                blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/updatetlds/' + tld.replace(/\./g, '_') + '/',
+                blestaRequest('POST', config.baseUri + 'plugin/domains/admin_domains/updatetlds/' + tld.replace(/\./g, '_') + '/',
                     getPartialForm('tlds'),
                     function(response) {
-                        // Restore row state
-                        row.style.opacity = originalOpacity;
-                        row.style.pointerEvents = originalPointerEvents;
+                        row.style.opacity = '';
+                        row.style.pointerEvents = '';
 
-                        // Check if response indicates an error
-                        if (response.status === 'error') {
-                            // Handle error: uncheck and disable field
-                            if (e.target.type === 'checkbox') {
-                                e.target.checked = false;
-                            }
+                        if (response.status === 'error' && e.target.type === 'checkbox') {
+                            e.target.checked = false;
                         }
 
-                        // Show message, if any
-                        if (response.message) {
-                            prependMessage(response.message);
-                        }
+                        showMessage(response.message);
 
-                        // If module updated successfully, ask to update meta
-                        if (response.status === 'success' && e.target.name.includes('[module]') && response.update_meta && tld !== '') {
-                            setTldMeta(tld);
+                        if (response.status === 'success' && e.target.name.includes('[module]') && response.update_meta && tld) {
+                            openTldMeta(tld);
                         }
                     },
                     null,
                     {dataType: 'json'}
                 );
             }
-        });
 
-        // Initialize pricing modal functionality
-        function initializePricingModal() {
-            var form = editTldModalContent.querySelector('form');
-            if (!form) return;
+            // Currency badge checkboxes
+            if (e.target.matches('.bulk-action-fields input[type="checkbox"][name="tlds_bulk[currencies][]"]')) {
+                if (!e.target.checked) {
+                    var badge = e.target.closest('span');
+                    if (badge) badge.style.display = 'none';
 
-            // Initialize WYSIWYG editors
-            var wysiwygTextareas = form.querySelectorAll('.wysiwyg');
-            wysiwygTextareas.forEach(function(textarea) {
-                if (typeof blestaBindWysiwygEditor === 'function') {
-                    blestaBindWysiwygEditor('#' + textarea.id, {
-                        language: '<?php echo substr(Configure::get('Blesta.language'), 0, 2);?>'
-                    });
+                    var selector = document.getElementById('currency_selector');
+                    if (selector) {
+                        var option = document.createElement('option');
+                        option.value = e.target.value;
+                        option.textContent = e.target.value;
+                        selector.appendChild(option);
+                    }
                 }
-            });
-
-            // Sync Register, Renew and Transfer prices
-            var priceInputs = form.querySelectorAll('input.pricing-price');
-            priceInputs.forEach(function(input) {
-                input.addEventListener('change', function() {
-                    var row = this.closest('tr');
-                    if (!row) return;
-
-                    var renewInput = row.querySelector('input.pricing-renew');
-                    if (renewInput && parseFloat(renewInput.value) === 0) {
-                        renewInput.value = this.value;
-                    }
-
-                    var transferInput = row.querySelector('input.pricing-transfer');
-                    if (transferInput && parseFloat(transferInput.value) === 0) {
-                        transferInput.value = this.value;
-                    }
-                });
-            });
-
-            // Disable/enable transfer price based on checkbox
-            function updateTransferPriceState() {
-                var transferCheckboxes = form.querySelectorAll('input.pricing-transfer-enable');
-                transferCheckboxes.forEach(function(checkbox) {
-                    var transferInput = checkbox.parentElement.querySelector('input.pricing-transfer');
-                    if (transferInput) {
-                        transferInput.disabled = !checkbox.checked;
-                    }
-                });
-            }
-
-            // Disable/enable pricing rows based on main checkbox
-            function updatePricingRowsState() {
-                var enableCheckboxes = form.querySelectorAll('input.pricing-enable');
-                enableCheckboxes.forEach(function(checkbox) {
-                    var row = checkbox.closest('tr');
-                    if (!row) return;
-
-                    var inputs = row.querySelectorAll('input[type="number"], input.pricing-transfer-enable');
-                    inputs.forEach(function(input) {
-                        input.disabled = !checkbox.checked;
-                    });
-
-                    checkbox.disabled = false;
-                });
-
-                updateTransferPriceState();
-            }
-
-            // Initialize pricing state
-            updatePricingRowsState();
-
-            // Listen to pricing enable checkbox changes
-            var enableCheckboxes = form.querySelectorAll('input.pricing-enable');
-            enableCheckboxes.forEach(function(checkbox) {
-                checkbox.addEventListener('change', updatePricingRowsState);
-            });
-
-            // Listen to transfer enable checkbox changes
-            var transferCheckboxes = form.querySelectorAll('input.pricing-transfer-enable');
-            transferCheckboxes.forEach(function(checkbox) {
-                checkbox.addEventListener('change', updateTransferPriceState);
-            });
-
-            // Handle form submission
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-
-                // Use vanilla JS blestaRequest (Paradigm theme)
-                var formData = new FormData(form);
-
-                blestaRequest(
-                    'POST',
-                    form.getAttribute('action'),
-                    formData,
-                    function(response) {
-                        // Close modal and reload TLDs table after successful update
-                        if (editTldModal) {
-                            editTldModal.hide();
-
-                            reloadTlds();
-
-                            // Show message, if any
-                            if (response.message) {
-                                prependMessage(response.message);
-                            }
-                        }
-                    },
-                    function(response) {
-                        // Error handler
-                        if (response && response.message) {
-                            prependMessage(response.message);
-                        }
-                    },
-                    {dataType: 'json'}
-                );
-            });
-
-            // Load sample email functionality
-            var loadSampleButton = form.querySelector('.load_sample_email');
-            if (loadSampleButton) {
-                loadSampleButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    // Sample email loading would need template data passed from server
-                    // Simplified for now - can be enhanced if needed
-                });
-            }
-        }
-
-        // Edit TLD modal - Bootstrap 5 modal with AJAX loading
-        var editTldModalEl = document.getElementById('editTldPricingModal');
-        var editTldModal = null;
-        var editTldModalContent = null;
-
-        if (editTldModalEl) {
-            editTldModal = new bootstrap.Modal(editTldModalEl);
-            editTldModalContent = editTldModalEl.querySelector('.modal-content');
-        }
-
-        // Handle clicks on edit TLD pricing links using event delegation
-        document.addEventListener('click', function(e) {
-            var link = e.target.closest('.edit-tld-modal');
-            if (link && editTldModal && editTldModalContent) {
-                e.preventDefault();
-
-                // Show loading spinner
-                editTldModalContent.innerHTML = '<div class="modal-body"><div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div></div>';
-
-                // Show modal
-                editTldModal.show();
-
-                // Load content via AJAX
-                fetch(link.href, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(function(response) {
-                    return response.text();
-                })
-                .then(function(html) {
-                    // Remove script tags from HTML to avoid execution issues
-                    var tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = html;
-                    var scripts = tempDiv.querySelectorAll('script');
-                    scripts.forEach(function(script) {
-                        script.remove();
-                    });
-                    editTldModalContent.innerHTML = tempDiv.innerHTML;
-
-                    // Initialize modal functionality after content is loaded
-                    setTimeout(function() {
-                        initializePricingModal();
-                    }, 150);
-                })
-                .catch(function() {
-                    editTldModalContent.innerHTML = '<div class="modal-body"><div class="alert alert-danger">Failed to load content. Please try again.</div></div>';
-                });
             }
         });
+    }
 
-        // Toggle "Add TLD" row
-        function resetAddTldRow() {
-            var row = document.getElementById('add_tld_row');
-            if (row) {
-                row.querySelectorAll('select').forEach(function(el) { el.value = ''; });
-                row.querySelectorAll('input[type="text"]').forEach(function(el) { el.value = ''; });
-                row.querySelectorAll('input[type="checkbox"]').forEach(function(el) { el.checked = false; });
-            }
+    // TLD Meta Modal
+    function openTldMeta(tld) {
+        blestaModal({
+            close: '<?php echo addslashes($this->_('AppController.modal.text_close', true)); ?>',
+            url: config.baseUri + 'plugin/domains/admin_domains/meta/' + tld.replace(/\./g, '_') + '/',
+            min_width: Math.max((window.innerWidth / 4) * 2, 400),
+            max_width: Math.max((window.innerWidth / 4) * 2, 400)
+        });
+    }
+
+    // Dynamic Element Initialization
+    function initDynamicElements() {
+        // Re-bind global GUI events
+        if (typeof blestaBindGlobalGuiEvents === 'function') {
+            blestaBindGlobalGuiEvents(document);
         }
 
-        // Show add row if no TLDs exist
+        // Re-bind confirmation modals
+        if (typeof blestaBindConfirmationModals === 'function') {
+            blestaBindConfirmationModals();
+        }
+
+        initPopovers();
+        initSortable();
+        initSelectAll();
+        initBulkActions();
+        initBulkSubmit();
+        initCurrencySelector();
+        initAddTldButtons();
+    }
+
+    // Filter Form
+    function initFilterForm() {
+        var form = document.getElementById('filter_form');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            blestaRequest('POST', config.baseUri + 'plugin/domains/admin_domains/tlds/',
+                getPartialForm('filters', false),
+                function(response) {
+                    if (response.replacer && response.content) {
+                        var target = document.querySelector(response.replacer);
+                        if (target) {
+                            target.innerHTML = response.content;
+                            initDynamicElements();
+                        }
+                    }
+                },
+                null,
+                {dataType: 'json'}
+            );
+        });
+
+        var clearBtn = document.getElementById('clear-filters');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                form.reset();
+                form.dispatchEvent(new Event('submit'));
+            });
+        }
+    }
+
+    // Initial Setup
+    function initializeAddRowDisplay() {
         var tbody = document.getElementById('tldPricingTableBody');
         if (tbody && tbody.querySelectorAll('tr[id^="tlds_"]').length < 1) {
             var addRow = document.getElementById('add_tld_row');
@@ -707,221 +818,22 @@ $this->Widget->create(
                 if (cancelBtn) cancelBtn.style.display = 'none';
             }
         }
+    }
 
-        // Filter form submission
-        var filterForm = document.getElementById('filter_form');
-        if (filterForm) {
-            filterForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/',
-                    getPartialForm('filters', false),
-                    function(response) {
-                        if (response.replacer && response.content) {
-                            var targetEl = document.querySelector(response.replacer);
-                            if (targetEl) {
-                                targetEl.innerHTML = response.content;
-                                // Re-initialize after filter reload
-                                initializeEventListeners();
-                            }
-                        }
-                    },
-                    null,
-                    {dataType: 'json'}
-                );
-            });
+    function init() {
+        setupGlobalEvents();
+        initDynamicElements();
+        initFilterForm();
+        initPricingModal();
+        initializeAddRowDisplay();
+
+        // Open TLD meta modal if TLD was just added
+        if (config.addedTld) {
+            openTldMeta(config.addedTld);
         }
+    }
 
-        // Clear filters
-        var clearFiltersBtn = document.getElementById('clear-filters');
-        if (clearFiltersBtn) {
-            clearFiltersBtn.addEventListener('click', function() {
-                if (filterForm) {
-                    filterForm.reset();
-                    filterForm.dispatchEvent(new Event('submit'));
-                }
-            });
-        }
-
-        // Central initialization function for event listeners
-        function initializeEventListeners() {
-            // Initialize GUI events
-            blestaBindGlobalGuiEvents(document);
-
-            // Initialize popovers
-            initPopovers();
-
-            // Initialize sortable
-            initSortable();
-
-            // Initialize select all checkbox
-            initSelectAllCheckbox();
-
-            // Re-initialize confirmation modals if blestaBindConfirmationModals exists
-            if (typeof blestaBindConfirmationModals === 'function') {
-                blestaBindConfirmationModals();
-            }
-
-            // Toggle "Add TLD" row
-            var addTldBtn = document.getElementById('add_tld');
-            if (addTldBtn) {
-                var oldAddTldBtn = addTldBtn.cloneNode(true);
-                addTldBtn.parentNode.replaceChild(oldAddTldBtn, addTldBtn);
-                oldAddTldBtn.addEventListener('click', function() {
-                    var row = document.getElementById('add_tld_row');
-                    if (row) {
-                        var isVisible = row.style.display !== 'none';
-                        if (isVisible) {
-                            row.style.display = 'none';
-                            resetAddTldRow();
-                        } else {
-                            row.style.display = '';
-                        }
-                    }
-                });
-            }
-
-            // Cancel add TLD
-            var cancelAddTldBtn = document.getElementById('cancel-add-tld');
-            if (cancelAddTldBtn) {
-                var oldCancelBtn = cancelAddTldBtn.cloneNode(true);
-                cancelAddTldBtn.parentNode.replaceChild(oldCancelBtn, cancelAddTldBtn);
-                oldCancelBtn.addEventListener('click', function() {
-                    var row = document.getElementById('add_tld_row');
-                    if (row) {
-                        row.style.display = 'none';
-                        resetAddTldRow();
-                    }
-                });
-            }
-
-            // Add new TLD
-            var addTldSubmitBtn = document.getElementById('add-tld-submit');
-            if (addTldSubmitBtn) {
-                var oldSubmitBtn = addTldSubmitBtn.cloneNode(true);
-                addTldSubmitBtn.parentNode.replaceChild(oldSubmitBtn, addTldSubmitBtn);
-                oldSubmitBtn.addEventListener('click', function() {
-                    blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/',
-                        getPartialForm('add_tld'),
-                        function(response) {
-                            reloadTlds();
-
-                            // Show message, if any
-                            if (response.message) {
-                                prependMessage(response.message);
-                            }
-                        },
-                        null,
-                        {dataType: 'json'}
-                    );
-                });
-            }
-
-            // Bulk action dropdown change
-            var bulkActionSelect = document.getElementById('bulkAction');
-            if (bulkActionSelect) {
-                var oldBulkSelect = bulkActionSelect.cloneNode(true);
-                bulkActionSelect.parentNode.replaceChild(oldBulkSelect, bulkActionSelect);
-                oldBulkSelect.addEventListener('change', function(e) {
-                    // Hide all conditional fields
-                    document.querySelectorAll('.bulk-action-fields').forEach(function(el) {
-                        el.classList.add('d-none');
-                    });
-
-                    // Field mapping for each action
-                    var fieldMap = {
-                        'change_status': 'changeStatusFields',
-                        'tld_sync': 'registrarPriceSyncFields',
-                        'dns_management': 'dnsManagementFields',
-                        'email_forwarding': 'emailForwardingFields',
-                        'id_protection': 'idProtectionFields',
-                        'epp_code': 'eppCodeFields',
-                        'update_nameservers': 'nameServersFields'
-                    };
-
-                    // Show appropriate field based on selected action
-                    if (fieldMap[e.target.value]) {
-                        var fieldEl = document.getElementById(fieldMap[e.target.value]);
-                        if (fieldEl) {
-                            fieldEl.classList.remove('d-none');
-                        }
-                    }
-                });
-
-                // Trigger initial change if there's a default value
-                if (oldBulkSelect.value) {
-                    oldBulkSelect.dispatchEvent(new Event('change'));
-                }
-            }
-
-            // Bulk action submit
-            var bulkActionSubmitBtn = document.getElementById('bulkActionSubmit');
-            if (bulkActionSubmitBtn) {
-                var oldBulkSubmitBtn = bulkActionSubmitBtn.cloneNode(true);
-                bulkActionSubmitBtn.parentNode.replaceChild(oldBulkSubmitBtn, bulkActionSubmitBtn);
-                oldBulkSubmitBtn.addEventListener('click', function() {
-                    this.disabled = true;
-
-                    blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/',
-                        getPartialForm('tlds_bulk'),
-                        function(response) {
-                            reloadTlds();
-
-                            // Show message, if any
-                            if (response.message) {
-                                prependMessage(response.message);
-                            }
-                        },
-                        null,
-                        {dataType: 'json'}
-                    );
-                });
-            }
-
-            // Currency selector for TLD sync
-            var currencySelector = document.getElementById('currency_selector');
-            if (currencySelector) {
-                var oldCurrencySelector = currencySelector.cloneNode(true);
-                currencySelector.parentNode.replaceChild(oldCurrencySelector, currencySelector);
-                oldCurrencySelector.addEventListener('change', function() {
-                    var currency = this.value;
-                    if (currency) {
-                        // Remove option from dropdown
-                        var option = this.querySelector('option[value="' + currency + '"]');
-                        if (option) option.remove();
-
-                        // Show currency badge
-                        var badge = document.getElementById('currency_selector_' + currency);
-                        if (badge) {
-                            badge.style.display = '';
-                            var checkbox = badge.querySelector('input[type="checkbox"]');
-                            if (checkbox) checkbox.checked = true;
-                        }
-                    }
-                });
-            }
-        }
-
-        // Handle currency badge checkbox changes (one-time delegation)
-        document.addEventListener('change', function(e) {
-            if (e.target.matches('.bulk-action-fields input[type="checkbox"][name="tlds_bulk[currencies][]"]')) {
-                if (!e.target.checked) {
-                    var currency = e.target.value;
-                    var badge = e.target.closest('span');
-                    if (badge) badge.style.display = 'none';
-
-                    // Re-add to dropdown
-                    var currencySelector = document.getElementById('currency_selector');
-                    if (currencySelector) {
-                        var option = document.createElement('option');
-                        option.value = currency;
-                        option.textContent = currency;
-                        currencySelector.appendChild(option);
-                    }
-                }
-            }
-        });
-
-        // Initial page load setup
-        initializeEventListeners();
-    });
+    // Start when DOM is ready
+    document.addEventListener('DOMContentLoaded', init);
+})();
 </script>
