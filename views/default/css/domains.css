@@ -100,10 +100,6 @@ input[type="checkbox"]:checked+.tld-import-card {
     display: none;
 }
 
-/* ============================================================
-   Domain Lookup / WHOIS Page Styles
-   ============================================================ */
-
 /* Custom Search Bar */
 .domain-search-input-group {
     position: relative;
@@ -206,10 +202,6 @@ input[type="checkbox"]:checked+.tld-import-card {
     background-color: rgba(220, 53, 69, 0.1);
 }
 
-/* ============================================================
-   Spotlight TLDs - 8 Slot System (Configuration Page)
-   ============================================================ */
-
 /* Spotlight Slots Grid - Fixed 8 slots */
 .spotlight-slots-grid {
     display: grid;
@@ -309,10 +301,6 @@ input[type="checkbox"]:checked+.tld-import-card {
     background-color: #c82333;
 }
 
-/* ============================================================
-   TLD Selection Modal
-   ============================================================ */
-
 /* TLD Selection Grid in Modal */
 .tld-selection-grid {
     display: grid;
@@ -377,10 +365,6 @@ input[type="checkbox"]:checked+.tld-import-card {
     display: none;
 }
 
-/* ============================================================
-   Responsive Adjustments
-   ============================================================ */
-
 @media (max-width: 768px) {
 
     /* Slots Grid - 2 columns on mobile */
@@ -421,10 +405,6 @@ input[type="checkbox"]:checked+.tld-import-card {
         font-size: 0.75rem;
     }
 }
-
-/* ============================================================
-   Bootstrap 5 Domain Add View Customizations
-   ============================================================ */
 
 /* Domain search pill checkboxes */
 .form-check-pill {
@@ -520,16 +500,11 @@ input[type="checkbox"]:checked+.tld-import-card {
 
 /* Form section headers */
 .form-section-header {
-    font-size: 1rem;
     font-weight: 600;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
     color: var(--bs-body-color, #212529);
 }
-
-/* ============================================================
-   Domain Edit Page - Admin
-   ============================================================ */
 
 /* Autocomplete Styles */
 .autocomplete-results {
@@ -582,7 +557,6 @@ input[type="checkbox"]:checked+.tld-import-card {
     padding: 0.375rem 0.75rem;
     white-space: nowrap;
     border-radius: 0.375rem !important;
-    /* Override btn-group border-radius */
 }
 
 .action-button-group .btn:first-child {
@@ -664,10 +638,6 @@ input[type="checkbox"]:checked+.tld-import-card {
         font-size: 0.8125rem;
     }
 }
-
-/* ============================================================
-   Sortable Drag Handle (TLD Pricing Table)
-   ============================================================ */
 
 /* Sortable Drag Handle - Hidden by default, visible on row hover */
 .sortable-drag-handle {

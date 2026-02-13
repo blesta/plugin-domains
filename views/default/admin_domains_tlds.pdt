@@ -178,19 +178,23 @@ $this->Widget->create(
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <?php if ($tld->package->status !== 'active') { ?>
-                                <button class="btn btn-sm btn-outline-success enable-tld"
-                                        data-package-id="<?php echo $tld->package_id; ?>"
-                                        data-confirm="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true)); ?>"
+                                <?php $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/enabletld/', ['class' => 'enable-tld-form d-inline']); ?>
+                                <?php $this->Form->fieldHidden('id', $tld->package_id); ?>
+                                <button type="button" class="btn btn-sm btn-outline-success modal-confirm-success"
+                                        data-confirm-message="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_enable', true)); ?>"
                                         title="<?php $this->_('AdminDomains.tlds.option_enable'); ?>">
                                     <i class="bi bi-check-circle"></i>
                                 </button>
+                                <?php $this->Form->end(); ?>
                             <?php } else { ?>
-                                <button class="btn btn-sm btn-outline-danger disable-tld"
-                                        data-package-id="<?php echo $tld->package_id; ?>"
-                                        data-confirm="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true)); ?>"
+                                <?php $this->Form->create($this->base_uri . 'plugin/domains/admin_domains/disabletld/', ['class' => 'disable-tld-form d-inline']); ?>
+                                <?php $this->Form->fieldHidden('id', $tld->package_id); ?>
+                                <button type="button" class="btn btn-sm btn-outline-danger modal-confirm-delete"
+                                        data-confirm-message="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.confirm_disable', true)); ?>"
                                         title="<?php $this->_('AdminDomains.tlds.option_disable'); ?>">
                                     <i class="bi bi-x-circle"></i>
                                 </button>
+                                <?php $this->Form->end(); ?>
                             <?php } ?>
                         </div>
                     </td>
@@ -358,9 +362,17 @@ $this->Widget->create(
 
         // Reload TLDs table
         function reloadTlds() {
-            document.querySelectorAll('.error_section').forEach(function(el) { el.remove(); });
+            var mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.querySelectorAll('.alert, .error_section, .message_section').forEach(function(el) { el.remove(); });
+            }
 
-            blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/' + (currentPage > 1 ? currentPage + '/' : ''),
+            // Determine filter visibility state by checking if .filter-section-body is displayed
+            var filterSection = document.querySelector('.filter-section-body');
+            var showFilters = filterSection && filterSection.offsetParent !== null;
+            var showFiltersParam = showFilters ? 'true' : 'false';
+
+            blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/' + (currentPage > 1 ? currentPage + '/' : '') + '?show_filters=' + showFiltersParam,
                 getPartialForm('filters'),
                 function(response) {
                     if (response.replacer && response.content) {
@@ -370,6 +382,15 @@ $this->Widget->create(
                             initPopovers();
                             initSortable();
                             initEditTldModal(); // Re-initialize modal bindings after content reload
+
+                            // Reset select all checkbox state after filter reload
+                            var selectAllCheckbox = document.getElementById('selectAllTlds');
+                            if (selectAllCheckbox) {
+                                selectAllCheckbox.checked = false;
+                            }
+
+                            // Reset bulk actions bar visibility
+                            updateBulkActionsBar();
                         }
                     }
                 },
@@ -380,8 +401,15 @@ $this->Widget->create(
 
         // Prepend message
         function prependMessage(message) {
-            var container = document.querySelector('#right_container');
+            var container = document.querySelector('.main-content');
             if (container) {
+                // Remove existing message if any
+                var existingMessage = container.querySelector('.alert, .error_section, .message_section');
+                if (existingMessage) {
+                    existingMessage.remove();
+                }
+
+                // Insert new message at the top
                 var tempDiv = document.createElement('div');
                 tempDiv.innerHTML = message;
                 container.insertBefore(tempDiv.firstElementChild, container.firstChild);
@@ -442,7 +470,11 @@ $this->Widget->create(
         // Quick update checkboxes and selects
         document.addEventListener('change', function(e) {
             if (e.target.classList.contains('quickupdate')) {
+                e.stopPropagation(); // Prevent event bubbling to filter toggle
+
                 var row = e.target.closest('tr');
+                var originalOpacity = row.style.opacity;
+                var originalPointerEvents = row.style.pointerEvents;
                 row.style.opacity = '0.5';
                 row.style.pointerEvents = 'none';
 
@@ -450,7 +482,10 @@ $this->Widget->create(
                 blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/updatetlds/' + tld.replace(/\./g, '_') + '/',
                     getPartialForm('tlds'),
                     function(response) {
-                        reloadTlds();
+                        // Restore row state
+                        row.style.opacity = originalOpacity;
+                        row.style.pointerEvents = originalPointerEvents;
+
                         if (response.message) {
                             prependMessage(response.message);
                         }
@@ -460,32 +495,15 @@ $this->Widget->create(
                             setTldMeta(tld);
                         }
                     },
-                    null,
-                    {dataType: 'json'}
-                );
-            }
-        });
+                    function(response) {
+                        // Error handler - restore row and show error
+                        row.style.opacity = originalOpacity;
+                        row.style.pointerEvents = originalPointerEvents;
 
-        // Enable/Disable TLD
-        document.addEventListener('click', function(e) {
-            var button = e.target.closest('.enable-tld, .disable-tld');
-            if (button) {
-                var action = button.classList.contains('enable-tld') ? 'enabletld' : 'disabletld';
-                var packageId = button.dataset.packageId;
-                var confirmMsg = button.dataset.confirm;
-
-                if (confirmMsg && !confirm(confirmMsg)) {
-                    return;
-                }
-
-                var formData = new FormData();
-                formData.append('id', packageId);
-                formData.append('_csrf_token', csrfToken);
-
-                blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/' + action + '/',
-                    formData,
-                    function() { reloadTlds(); },
-                    null,
+                        if (response && response.message) {
+                            prependMessage(response.message);
+                        }
+                    },
                     {dataType: 'json'}
                 );
             }
@@ -573,30 +591,32 @@ $this->Widget->create(
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
 
-                if (typeof jQuery !== 'undefined' && typeof jQuery.fn.blestaRequest === 'function') {
-                    jQuery(this).blestaRequest(
-                        'POST',
-                        form.getAttribute('action'),
-                        jQuery(form).serialize(),
-                        function(response) {
-                            if (response.message) {
-                                var messageContainer = document.querySelector('#body_container .gap_row #right_outer');
-                                if (messageContainer) {
-                                    messageContainer.querySelectorAll('.error_section').forEach(function(el) { el.remove(); });
-                                    messageContainer.insertAdjacentHTML('afterbegin', response.message);
-                                }
-                            }
+                // Use vanilla JS blestaRequest (Paradigm theme)
+                var formData = new FormData(form);
 
-                            // Close modal and reload TLDs table after successful update
-                            if (editTldModal) {
-                                editTldModal.hide();
-                                reloadTlds();
-                            }
-                        },
-                        null,
-                        {dataType: 'json'}
-                    );
-                }
+                blestaRequest(
+                    'POST',
+                    form.getAttribute('action'),
+                    formData,
+                    function(response) {
+                        if (response.message) {
+                            prependMessage(response.message);
+                        }
+
+                        // Close modal and reload TLDs table after successful update
+                        if (editTldModal) {
+                            editTldModal.hide();
+                            reloadTlds();
+                        }
+                    },
+                    function(response) {
+                        // Error handler
+                        if (response && response.message) {
+                            prependMessage(response.message);
+                        }
+                    },
+                    {dataType: 'json'}
+                );
             });
 
             // Load sample email functionality
@@ -766,10 +786,12 @@ $this->Widget->create(
         var bulkActionSelect = document.getElementById('bulkAction');
         if (bulkActionSelect) {
             bulkActionSelect.addEventListener('change', function(e) {
+                // Hide all conditional fields
                 document.querySelectorAll('.bulk-action-fields').forEach(function(el) {
                     el.classList.add('d-none');
                 });
 
+                // Field mapping for each action
                 var fieldMap = {
                     'change_status': 'changeStatusFields',
                     'tld_sync': 'registrarPriceSyncFields',
@@ -780,6 +802,7 @@ $this->Widget->create(
                     'update_nameservers': 'nameServersFields'
                 };
 
+                // Show appropriate field based on selected action
                 if (fieldMap[e.target.value]) {
                     var fieldEl = document.getElementById(fieldMap[e.target.value]);
                     if (fieldEl) {
@@ -787,6 +810,11 @@ $this->Widget->create(
                     }
                 }
             });
+
+            // Trigger initial change if there's a default value (initializes first visible field)
+            if (bulkActionSelect.value) {
+                bulkActionSelect.dispatchEvent(new Event('change'));
+            }
         }
 
         // Bulk action submit
@@ -794,6 +822,11 @@ $this->Widget->create(
         if (bulkActionSubmitBtn) {
             bulkActionSubmitBtn.addEventListener('click', function() {
                 this.disabled = true;
+
+                // Remember filter state before reload
+                var filterToggle = document.querySelector('.widget_filters_toggle');
+                var filterExpanded = filterToggle ? filterToggle.getAttribute('aria-expanded') === 'true' : false;
+
                 blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/',
                     getPartialForm('tlds_bulk'),
                     function(response) {
@@ -802,6 +835,18 @@ $this->Widget->create(
                             prependMessage(response.message);
                         }
                         bulkActionSubmitBtn.disabled = false;
+
+                        // Restore filter state after reload (with slight delay for DOM update)
+                        setTimeout(function() {
+                            var filterToggleAfter = document.querySelector('.widget_filters_toggle');
+                            if (filterToggleAfter) {
+                                var currentExpanded = filterToggleAfter.getAttribute('aria-expanded') === 'true';
+                                if (filterExpanded !== currentExpanded) {
+                                    filterToggleAfter.click();
+                                }
+                            }
+                        }, 200);
+
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     },
                     null,

@@ -9,7 +9,10 @@
 
 <div class="modal-body">
 <?php
-$this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
+$this->Form->create(
+    $this->base_uri . 'plugin/domains/admin_domains/pricing/' . $this->Html->safe($tld->package_id ?? '') . '/',
+    ['id' => 'edit_tld_form' . $this->Html->safe($id)]
+);
 ?>
 
 <!-- Main Tab Navigation -->
@@ -374,5 +377,3 @@ $this->Form->end();
         <?php $this->_('AdminDomains.pricing.field_update');?>
     </button>
 </div>
-
-<!-- Modal functionality is handled by parent page (admin_domains_tlds.pdt) -->
