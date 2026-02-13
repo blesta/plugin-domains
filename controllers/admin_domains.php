@@ -102,10 +102,10 @@ class AdminDomains extends DomainsController
         $domains_filters = $post_filters;
         $domains_filters['type'] = 'domains';
 
-        $status = (isset($this->get[0]) ? $this->get[0] : 'active');
+        $status = ($this->get[0] ?? 'active');
         $page = (isset($this->get[1]) ? (int)$this->get[1] : 1);
-        $sort = (isset($this->get['sort']) ? $this->get['sort'] : 'date_added');
-        $order = (isset($this->get['order']) ? $this->get['order'] : 'desc');
+        $sort = ($this->get['sort'] ?? 'date_added');
+        $order = ($this->get['order'] ?? 'desc');
 
         $alt_sort = false;
         if (in_array($sort, ['name', 'registrar', 'expiration_date', 'renewal_price'])) {
@@ -170,7 +170,7 @@ class AdminDomains extends DomainsController
         $this->set('status_count', $status_count);
         $this->set('actions', $this->getDomainActions());
         $this->set('modules', $modules);
-        $this->set('widget_state', isset($this->widgets_state['services']) ? $this->widgets_state['services'] : null);
+        $this->set('widget_state', $this->widgets_state['services'] ?? null);
         $this->set('sort', $alt_sort ? $alt_sort : $sort);
         $this->set('order', $order);
         $this->set('negate_order', ($order == 'asc' ? 'desc' : 'asc'));
@@ -296,7 +296,7 @@ class AdminDomains extends DomainsController
         Loader::loadModels($this, ['Domains.DomainsTlds']);
 
         if (!empty($this->post) && $this->isAjax()) {
-            set_time_limit(60*60*15); // 15 minutes
+            set_time_limit(60 * 60 * 15); // 15 minutes
 
             $response = [];
             $tries = Configure::get('Blesta.transaction_deadlock_reattempts');
@@ -465,7 +465,7 @@ class AdminDomains extends DomainsController
                     'whois_data' => $parsed_data,
                     'raw_text' => $text
                 ]);
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 $this->outputAsJson([
                     'success' => false,
                     'message' => $e->getMessage()
@@ -482,7 +482,7 @@ class AdminDomains extends DomainsController
                     'text' => $whois->lookupDomain($this->post['domain'])->text,
                     'available' => $whois->isDomainAvailable($this->post['domain'])
                 ];
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 $domain_info = [
                     'text' => $e->getMessage(),
                     'available' => false
@@ -490,7 +490,7 @@ class AdminDomains extends DomainsController
             }
         }
         $this->set('vars', $this->post);
-        $this->set('domain_info', isset($domain_info) ? $domain_info : []);
+        $this->set('domain_info', $domain_info ?? []);
     }
 
     /**
@@ -516,21 +516,27 @@ class AdminDomains extends DomainsController
         }
 
         // Parse registration date
-        if (preg_match('/Creation Date:\s*(.+)/i', $text, $matches) ||
-            preg_match('/Created:\s*(.+)/i', $text, $matches)) {
+        if (
+            preg_match('/Creation Date:\s*(.+)/i', $text, $matches) ||
+            preg_match('/Created:\s*(.+)/i', $text, $matches)
+        ) {
             $data['reg_date'] = trim($matches[1]);
         }
 
         // Parse expiration date
-        if (preg_match('/Registry Expiry Date:\s*(.+)/i', $text, $matches) ||
+        if (
+            preg_match('/Registry Expiry Date:\s*(.+)/i', $text, $matches) ||
             preg_match('/Expiration Date:\s*(.+)/i', $text, $matches) ||
-            preg_match('/Expiry Date:\s*(.+)/i', $text, $matches)) {
+            preg_match('/Expiry Date:\s*(.+)/i', $text, $matches)
+        ) {
             $data['exp_date'] = trim($matches[1]);
         }
 
         // Parse status
-        if (preg_match('/Status:\s*(.+)/i', $text, $matches) ||
-            preg_match('/Domain Status:\s*(.+)/i', $text, $matches)) {
+        if (
+            preg_match('/Status:\s*(.+)/i', $text, $matches) ||
+            preg_match('/Domain Status:\s*(.+)/i', $text, $matches)
+        ) {
             $data['status'] = trim($matches[1]);
         }
 
@@ -614,14 +620,16 @@ class AdminDomains extends DomainsController
             $this->DomainsTlds->updateDomainsCompanySettings($company_id, $this->post);
 
             // Update tax status if setting was changed
-            if (isset($this->post['domains_taxable'])
+            if (
+                isset($this->post['domains_taxable'])
                 && $this->post['domains_taxable'] != ($vars['domains_taxable'] ?? null)
             ) {
                 $this->DomainsTlds->updateTax($this->post['domains_taxable']);
             }
 
             // Update override price package setting if setting was changed
-            if (isset($this->post['domains_override_price'])
+            if (
+                isset($this->post['domains_override_price'])
                 && $this->post['domains_override_price'] != ($vars['domains_override_price'] ?? null)
             ) {
                 $this->DomainsTlds->updateOverridePriceSetting($this->post['domains_override_price']);
@@ -964,7 +972,8 @@ class AdminDomains extends DomainsController
                 // Check if the package is from the Domain Manager package group
                 $from_domain_manager = false;
                 foreach ($package->groups as $group) {
-                    if (isset($company_settings['domains_package_group'])
+                    if (
+                        isset($company_settings['domains_package_group'])
                         && $group->id == $company_settings['domains_package_group']
                     ) {
                         $from_domain_manager = true;
@@ -1000,10 +1009,11 @@ class AdminDomains extends DomainsController
                 $package_tlds = array_fill_keys((array) $package->meta->tlds, [$package]);
 
                 foreach ($package_tlds as $tld => $packages) {
-                    foreach($packages as $package) {
+                    foreach ($packages as $package) {
                         // Skip TLD/module pairs that are already in the domain manager
                         // unless the option was selected to overwite it
-                        if (!$overwrite_packages
+                        if (
+                            !$overwrite_packages
                             && array_key_exists($tld, $existing_tld_packages)
                             && array_key_exists($package->module_id, $existing_tld_packages[$tld])
                         ) {
@@ -1045,13 +1055,15 @@ class AdminDomains extends DomainsController
         $migrate_services
     ) {
         // Skip this package/TLD if a package with the same module_id has already been imported
-        if (array_key_exists($tld, $imported_tld_packages)
+        if (
+            array_key_exists($tld, $imported_tld_packages)
             && array_key_exists($package->module_id, $imported_tld_packages[$tld])
         ) {
             return;
         }
 
-        if (array_key_exists($tld, $existing_tld_packages)
+        if (
+            array_key_exists($tld, $existing_tld_packages)
             && array_key_exists($package->module_id, $existing_tld_packages[$tld])
         ) {
             // A package exists for this TLD and module, so skip it unless the option was selected to overwite it
@@ -1215,13 +1227,15 @@ class AdminDomains extends DomainsController
             $from_pricing = $this->Services->getPackagePricing($service->pricing_id);
             $pricing_id = null;
             foreach ($to_package->pricing as $pricing) {
-                if ($pricing->term == $from_pricing->term
+                if (
+                    $pricing->term == $from_pricing->term
                     && $pricing->period == $from_pricing->period
                     && $pricing->currency == $from_pricing->currency
                 ) {
                     $pricing_id = $pricing->id;
                     break;
-                } elseif ($pricing->term == '1'
+                } elseif (
+                    $pricing->term == '1'
                     && $pricing->period == 'year'
                     && $pricing->currency == $from_pricing->currency
                 ) {
@@ -1299,7 +1313,7 @@ class AdminDomains extends DomainsController
         $company_settings = $this->Form->collapseObjectArray($this->Companies->getSettings($company_id), 'value', 'key');
 
         // Get company default currency
-        $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
+        $default_currency = $company_settings['default_currency'] ?? 'USD';
 
         // Get company currencies
         $currencies = $this->Currencies->getAll($company_id);
@@ -1386,7 +1400,8 @@ class AdminDomains extends DomainsController
         $this->components(['Record']);
 
         // Fetch the configurable option
-        if (!isset($this->get[0])
+        if (
+            !isset($this->get[0])
             || !($option = $this->PackageOptions->get($this->get[0]))
         ) {
             $this->redirect($this->base_uri . 'plugin/domains/admin_domains/configurableoptions/');
@@ -1660,7 +1675,7 @@ class AdminDomains extends DomainsController
             $post_filters = $this->post['filters'];
             unset($this->post['filters']);
 
-            foreach($post_filters as $filter => $value) {
+            foreach ($post_filters as $filter => $value) {
                 if (empty($value)) {
                     unset($post_filters[$filter]);
                 }
@@ -2190,11 +2205,7 @@ class AdminDomains extends DomainsController
         $vars = [];
         // Automatically select the first available module row group
         if (isset($package_fields['groups'])) {
-            if (empty($package_fields['groups'])) {
-                $vars['module_group'] = '';
-            } else {
-                $vars['module_group'] = array_key_first($package_fields['groups']);
-            }
+            $vars['module_group'] = empty($package_fields['groups']) ? '' : array_key_first($package_fields['groups']);
         }
 
         // Automatically select the first available module row
@@ -2560,7 +2571,7 @@ class AdminDomains extends DomainsController
             $fields->fieldSelect(
                 'filters[module_id]',
                 ['' => Language::_('AdminDomains.getfilters.any', true)] + $modules,
-                isset($vars['module_id']) ? $vars['module_id'] : null,
+                $vars['module_id'] ?? null,
                 ['id' => 'module_id', 'class' => 'form-control']
             )
         );
@@ -2574,7 +2585,7 @@ class AdminDomains extends DomainsController
         $package_name->attach(
             $fields->fieldText(
                 'filters[package_name]',
-                isset($vars['package_name']) ? $vars['package_name'] : null,
+                $vars['package_name'] ?? null,
                 [
                     'id' => 'package_name',
                     'class' => 'form-control stretch',
@@ -2592,7 +2603,7 @@ class AdminDomains extends DomainsController
         $service_meta->attach(
             $fields->fieldText(
                 'filters[service_meta]',
-                isset($vars['service_meta']) ? $vars['service_meta'] : null,
+                $vars['service_meta'] ?? null,
                 [
                     'id' => 'service_meta',
                     'class' => 'form-control stretch',
@@ -2617,7 +2628,7 @@ class AdminDomains extends DomainsController
             $fields->fieldSelect(
                 'filters[price_override]',
                 $options,
-                isset($vars['price_override']) ? $vars['price_override'] : null,
+                $vars['price_override'] ?? null,
                 ['id' => 'price_override', 'class' => 'form-control']
             )
         );

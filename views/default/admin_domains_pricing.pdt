@@ -104,31 +104,31 @@ $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
                                 for ($i = 1; $i <= 10; $i++) {
                                     foreach ($package->pricing ?? [] as $package_pricing) {
                                         if ($package_pricing->currency == $currency->code && $package_pricing->term == $i) {
-                                ?>
+                                            ?>
                                 <tr>
                                     <td class="text-center">
-                                        <?php
-                                        $this->Form->fieldCheckbox('pricing[' . $package_pricing->term . '][' . $currency->code . '][enabled]', '1', ($package_pricing->enabled ?? false), ['class' => 'form-check-input pricing-enable']);
-                                        ?>
+                                            <?php
+                                            $this->Form->fieldCheckbox('pricing[' . $package_pricing->term . '][' . $currency->code . '][enabled]', '1', ($package_pricing->enabled ?? false), ['class' => 'form-check-input pricing-enable']);
+                                            ?>
                                     </td>
                                     <td><?php echo $package_pricing->term; ?> <?php echo $package_pricing->period; ?></td>
                                     <td>
-                                        <?php
-                                        $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price]', $this->CurrencyFormat->format(($package_pricing->price ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'form-control pricing-price', 'type' => 'number', 'step' => '0.01', 'min' => '0']);
-                                        ?>
+                                            <?php
+                                            $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price]', $this->CurrencyFormat->format(($package_pricing->price ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'form-control pricing-price', 'type' => 'number', 'step' => '0.01', 'min' => '0']);
+                                            ?>
                                     </td>
                                     <td>
-                                        <?php
-                                        $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_renews]', $this->CurrencyFormat->format(($package_pricing->price_renews ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'form-control pricing-renew', 'type' => 'number', 'step' => '0.01', 'min' => '0']);
-                                        ?>
+                                            <?php
+                                            $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_renews]', $this->CurrencyFormat->format(($package_pricing->price_renews ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'form-control pricing-renew', 'type' => 'number', 'step' => '0.01', 'min' => '0']);
+                                            ?>
                                     </td>
                                     <td>
-                                        <?php
-                                        $disabled = [];
-                                        if (!($package_pricing->enabled_transfer ?? false)) {
-                                            $disabled = ['disabled' => 'disabled'];
-                                        }
-                                        ?>
+                                            <?php
+                                            $disabled = [];
+                                            if (!($package_pricing->enabled_transfer ?? false)) {
+                                                $disabled = ['disabled' => 'disabled'];
+                                            }
+                                            ?>
                                         <div class="input-group">
                                             <div class="input-group-text">
                                                 <?php
@@ -141,7 +141,7 @@ $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
                                         </div>
                                     </td>
                                 </tr>
-                                <?php
+                                            <?php
                                         }
                                     }
                                 }
@@ -176,7 +176,7 @@ $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
             <div class="col-12">
                 <?php
                 $this->Form->label($this->_('AdminDomains.pricing.field_nameserver', true, 1), 'ns1' . $this->Html->safe($id), ['class' => 'form-label']);
-                $this->Form->fieldText('meta[ns][]', isset($package->meta->ns[0]) ? $package->meta->ns[0] : '', ['id' => 'ns1' . $this->Html->safe($id), 'class' => 'form-control', 'placeholder' => 'ns1.example.com']);
+                $this->Form->fieldText('meta[ns][]', $package->meta->ns[0] ?? '', ['id' => 'ns1' . $this->Html->safe($id), 'class' => 'form-control', 'placeholder' => 'ns1.example.com']);
                 ?>
             </div>
 
@@ -184,7 +184,7 @@ $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
             <div class="col-12">
                 <?php
                 $this->Form->label($this->_('AdminDomains.pricing.field_nameserver', true, 2), 'ns2' . $this->Html->safe($id), ['class' => 'form-label']);
-                $this->Form->fieldText('meta[ns][]', isset($package->meta->ns[1]) ? $package->meta->ns[1] : '', ['id' => 'ns2' . $this->Html->safe($id), 'class' => 'form-control', 'placeholder' => 'ns2.example.com']);
+                $this->Form->fieldText('meta[ns][]', $package->meta->ns[1] ?? '', ['id' => 'ns2' . $this->Html->safe($id), 'class' => 'form-control', 'placeholder' => 'ns2.example.com']);
                 ?>
             </div>
 
@@ -192,7 +192,7 @@ $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
             <div class="col-12">
                 <?php
                 $this->Form->label($this->_('AdminDomains.pricing.field_nameserver', true, 3), 'ns3' . $this->Html->safe($id), ['class' => 'form-label']);
-                $this->Form->fieldText('meta[ns][]', isset($package->meta->ns[2]) ? $package->meta->ns[2] : '', ['id' => 'ns3' . $this->Html->safe($id), 'class' => 'form-control', 'placeholder' => 'ns3.example.com']);
+                $this->Form->fieldText('meta[ns][]', $package->meta->ns[2] ?? '', ['id' => 'ns3' . $this->Html->safe($id), 'class' => 'form-control', 'placeholder' => 'ns3.example.com']);
                 ?>
             </div>
 
@@ -200,7 +200,7 @@ $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
             <div class="col-12">
                 <?php
                 $this->Form->label($this->_('AdminDomains.pricing.field_nameserver', true, 4), 'ns4' . $this->Html->safe($id), ['class' => 'form-label']);
-                $this->Form->fieldText('meta[ns][]', isset($package->meta->ns[3]) ? $package->meta->ns[3] : '', ['id' => 'ns4' . $this->Html->safe($id), 'class' => 'form-control', 'placeholder' => 'ns4.example.com']);
+                $this->Form->fieldText('meta[ns][]', $package->meta->ns[3] ?? '', ['id' => 'ns4' . $this->Html->safe($id), 'class' => 'form-control', 'placeholder' => 'ns4.example.com']);
                 ?>
             </div>
 
@@ -237,33 +237,33 @@ $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
         <div class="mb-3">
             <?php
             $this->Form->label($package_fields['group_name'], 'module_group' . $this->Html->safe($id), ['class' => 'form-label']);
-            $this->Form->fieldSelect('module_group', ['select' => $this->_('AppController.select.please', true)] + ['' => $this->_('AdminDomains.pricing.field_modulegroup_any', true)] + (isset($package_fields['groups']) ? $package_fields['groups'] : []), (isset($package->module_group) ? $package->module_group : ''), ['id' => 'module_group' . $this->Html->safe($id), 'class' => 'form-select']);
+            $this->Form->fieldSelect('module_group', ['select' => $this->_('AppController.select.please', true)] + ['' => $this->_('AdminDomains.pricing.field_modulegroup_any', true)] + ($package_fields['groups'] ?? []), ($package->module_group ?? ''), ['id' => 'module_group' . $this->Html->safe($id), 'class' => 'form-select']);
             ?>
         </div>
 
-        <?php
-        if (!empty($package_fields['rows'])) {
-        ?>
-        <div class="mb-3 module_row_field">
             <?php
-            $this->Form->label($package_fields['row_name'], 'module_row' . $this->Html->safe($id), ['class' => 'form-label']);
-            $this->Form->fieldSelect('module_row', $package_fields['rows'], (isset($package->module_row) ? $package->module_row : 0), ['id' => 'module_row' . $this->Html->safe($id), 'class' => 'form-select']);
-            ?>
+            if (!empty($package_fields['rows'])) {
+                ?>
+        <div class="mb-3 module_row_field">
+                <?php
+                $this->Form->label($package_fields['row_name'], 'module_row' . $this->Html->safe($id), ['class' => 'form-label']);
+                $this->Form->fieldSelect('module_row', $package_fields['rows'], ($package->module_row ?? 0), ['id' => 'module_row' . $this->Html->safe($id), 'class' => 'form-select']);
+                ?>
         </div>
-        <?php
-        } else {
-            $this->Form->fieldHidden('module_row', (isset($package->module_row) ? $package->module_row : 0), ['id' => 'module_row' . $this->Html->safe($id)]);
-        }
+                <?php
+            } else {
+                $this->Form->fieldHidden('module_row', ($package->module_row ?? 0), ['id' => 'module_row' . $this->Html->safe($id)]);
+            }
 
         // Show module fields
-        if (isset($package_fields['input_html']) && ($module_field_html = $package_fields['input_html']->generate(null, $package_fields_view))) {
-        ?>
+            if (isset($package_fields['input_html']) && ($module_field_html = $package_fields['input_html']->generate(null, $package_fields_view))) {
+                ?>
         <div class="mb-3">
-            <?php echo $module_field_html; ?>
+                <?php echo $module_field_html; ?>
         </div>
-        <?php
-        }
-        ?>
+                <?php
+            }
+            ?>
         <?php } ?>
 
         <!-- Edit Package Section (Centered) -->
@@ -328,22 +328,22 @@ $this->Form->create(null, ['id' => 'edit_tld_form' . $this->Html->safe($id)]);
             foreach ($languages as $i => $lang) {
                 $found = false;
                 foreach ((isset($package->email_content) ? (array) $package->email_content : []) as $email_data) {
-                    if ((isset($email_data->lang) ? $email_data->lang : '') == $lang->code) {
+                    if (($email_data->lang ?? '') == $lang->code) {
                         $found = true;
                         break;
                     }
                 }
-            ?>
+                ?>
             <div class="tab-pane fade<?php echo ($this->Html->ifSet($lang->code) == Configure::get('Blesta.language') ? ' show active' : '');?>"
                  id="email-<?php echo $this->Html->safe($lang->code . $id); ?>"
                  role="tabpanel"
                  aria-labelledby="email-<?php echo $this->Html->safe($lang->code . $id); ?>-tab">
-                <?php $this->Form->fieldHidden('email_content[' . $i . '][lang]', (isset($lang->code) ? $lang->code : '')); ?>
+                <?php $this->Form->fieldHidden('email_content[' . $i . '][lang]', ($lang->code ?? '')); ?>
 
                 <div class="mb-0">
                     <?php
                     $this->Form->label($this->_('AdminDomains.pricing.field_email_body', true), 'email_body_' . $lang->code . $this->Html->safe($id), ['class' => 'form-label']);
-                    $this->Form->fieldTextarea('email_content[' . $i . '][html]', $found ? (isset($email_data->html) ? $email_data->html : '') : null, ['class' => 'form-control wysiwyg', 'id' => 'email_body_' . $lang->code . $this->Html->safe($id), 'rows' => 10, 'placeholder' => $this->_('AdminDomains.pricing.placeholder_email_template', true)]);
+                    $this->Form->fieldTextarea('email_content[' . $i . '][html]', $found ? ($email_data->html ?? '') : null, ['class' => 'form-control wysiwyg', 'id' => 'email_body_' . $lang->code . $this->Html->safe($id), 'rows' => 10, 'placeholder' => $this->_('AdminDomains.pricing.placeholder_email_template', true)]);
                     ?>
                 </div>
             </div>

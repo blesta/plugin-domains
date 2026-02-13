@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Domain Manager parent controller
  *
@@ -36,9 +37,9 @@ class DomainsController extends AppController
         }
 
         // Override default view directory
-        $this->view->view = "default";
+        $this->view->view = 'default';
         $this->orig_structure_view = $this->structure->view;
-        $this->structure->view = "default";
+        $this->structure->view = 'default';
 
         // Restore structure view location of the admin portal
         $this->structure->setDefaultView(APPDIR);

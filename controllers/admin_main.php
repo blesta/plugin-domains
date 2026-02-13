@@ -105,19 +105,18 @@ class AdminMain extends DomainsController
 
         // Render action
         switch ($action) {
-            case "lookup":
+            case 'lookup':
                 $this->renderLookupStep($client);
                 break;
-            case "configuration":
+            case 'configuration':
                 $this->renderConfigurationStep($client);
                 break;
-            case "confirmation":
+            case 'confirmation':
                 $this->renderConfirmationStep($client);
                 break;
             default:
                 $this->redirect($this->base_uri . 'clients/');
                 break;
-
         }
 
         $this->set('client', $client);
@@ -168,19 +167,19 @@ class AdminMain extends DomainsController
                 // If the domain does not contain a TLD, search by the first 4 TLDs on the spotlight
                 if (empty($tld)) {
                     $this->post['tlds'] = array_slice($spotlight_tlds, 0, 4);
-                } else if (in_array($tld, $tlds)) {
+                } elseif (in_array($tld, $tlds)) {
                     $this->post['tlds'] = [$tld];
                 }
             }
 
             // Remove TLD from domain
-            preg_match("/^(.*?)\.(.*)/i", $this->post['domain'], $matches);
+            preg_match('/^(.*?)\.(.*)/i', $this->post['domain'], $matches);
             $domain = $matches[1] ?? $this->post['domain'];
             $this->post['domain'] = $domain;
 
             // Process action
             switch ($action) {
-                case "lookup":
+                case 'lookup':
                     foreach ($this->post['tlds'] ?? [] as $tld) {
                         $availability = $this->DomainsDomains->checkAvailability($domain . $tld);
                         $lookup[] = [
@@ -191,7 +190,7 @@ class AdminMain extends DomainsController
                         ];
                     }
                     break;
-                case "transfer":
+                case 'transfer':
                     foreach ($this->post['tlds'] ?? [] as $tld) {
                         $availability = $this->DomainsDomains->checkTransferAvailability($domain . $tld);
                         $lookup[] = [
@@ -205,7 +204,6 @@ class AdminMain extends DomainsController
                 default:
                     $this->redirect($this->base_uri . 'plugin/domains/admin_main/add/' . $client->id . '/');
                     break;
-
             }
 
             if (empty($lookup)) {
@@ -799,7 +797,8 @@ class AdminMain extends DomainsController
         }
 
         // Ensure we have a service
-        if (!isset($this->get[1])
+        if (
+            !isset($this->get[1])
             || !($service = $this->Services->get((int)$this->get[1]))
             || $service->client_id != $client->id
             || !isset($this->get[2])
@@ -1026,7 +1025,7 @@ class AdminMain extends DomainsController
                 }
 
                 $this->flashMessage('message', Language::_($term, true), null, false);
-                $this->redirect($this->base_uri . 'clients/view/'. ($this->get['client_id'] ?? ($this->get[0] ?? null)));
+                $this->redirect($this->base_uri . 'clients/view/' . ($this->get['client_id'] ?? ($this->get[0] ?? null)));
             }
         }
 
@@ -1046,7 +1045,7 @@ class AdminMain extends DomainsController
             $post_filters = $this->post['filters'];
             unset($this->post['filters']);
 
-            foreach($post_filters as $filter => $value) {
+            foreach ($post_filters as $filter => $value) {
                 if (empty($value)) {
                     unset($post_filters[$filter]);
                 }

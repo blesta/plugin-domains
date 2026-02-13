@@ -3,7 +3,7 @@
 <?php
 // Duplicate TLDs warning
 if (!($render_section ?? null) && !empty($duplicate_tlds)) {
-?>
+    ?>
     <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
         <div class="flex-grow-1">
@@ -17,7 +17,7 @@ if (!($render_section ?? null) && !empty($duplicate_tlds)) {
             <?php $this->Form->end(); ?>
         </div>
     </div>
-<?php
+    <?php
 }
 ?>
 
@@ -501,7 +501,7 @@ $this->Widget->create(
             wysiwygTextareas.forEach(function(textarea) {
                 if (typeof blestaBindWysiwygEditor === 'function') {
                     blestaBindWysiwygEditor('#' + textarea.id, {
-                        language: '<?php echo substr(Configure::get("Blesta.language"), 0, 2);?>'
+                        language: '<?php echo substr(Configure::get('Blesta.language'), 0, 2);?>'
                     });
                 }
             });

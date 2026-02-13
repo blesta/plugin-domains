@@ -29,7 +29,9 @@ $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submi
                             <?php
                             $filled_slots = 0;
                             if (isset($vars['domains_spotlight_tlds']) && is_array($vars['domains_spotlight_tlds'])) {
-                                $filled_slots = count(array_filter($vars['domains_spotlight_tlds'], function($v) { return $v === '1'; }));
+                                $filled_slots = count(array_filter($vars['domains_spotlight_tlds'], function ($v) {
+                                    return $v === '1';
+                                }));
                             }
                             echo $filled_slots;
                             ?> of 8 slots filled

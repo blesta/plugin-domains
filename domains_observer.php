@@ -1,4 +1,5 @@
 <?php
+
 use Blesta\Core\Util\Events\Observer;
 use Blesta\Core\Util\Events\Common\EventInterface;
 
