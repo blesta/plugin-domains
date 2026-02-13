@@ -2161,8 +2161,11 @@ class AdminDomains extends DomainsController
             }
         }
 
+        header('Content-Type: application/json');
+
         if (!empty($error)) {
             echo json_encode([
+                'status' => 'error',
                 'message' => $this->setMessage(
                     'error',
                     $error,
@@ -2174,6 +2177,7 @@ class AdminDomains extends DomainsController
             ]);
         } else {
             echo json_encode([
+                'status' => 'success',
                 'message' => $this->setMessage(
                     'message',
                     Language::_('AdminDomains.!success.tld_updated', true),

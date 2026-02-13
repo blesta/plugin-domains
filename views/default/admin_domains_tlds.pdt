@@ -373,7 +373,7 @@ $this->Widget->create(
             var showFiltersParam = showFilters ? 'true' : 'false';
 
             blestaRequest('POST', baseUri + 'plugin/domains/admin_domains/tlds/' + (currentPage > 1 ? currentPage + '/' : '') + '?show_filters=' + showFiltersParam,
-                getPartialForm('filters'),
+                {},
                 function(response) {
                     if (response.replacer && response.content) {
                         var targetEl = document.querySelector(response.replacer);
@@ -402,7 +402,7 @@ $this->Widget->create(
         // Prepend message
         function prependMessage(message) {
             var container = document.querySelector('.main-content');
-            if (container) {
+            if (container && message) {
                 // Remove existing message if any
                 var existingMessage = container.querySelector('.alert, .error_section, .message_section');
                 if (existingMessage) {
@@ -412,7 +412,11 @@ $this->Widget->create(
                 // Insert new message at the top
                 var tempDiv = document.createElement('div');
                 tempDiv.innerHTML = message;
-                container.insertBefore(tempDiv.firstElementChild, container.firstChild);
+
+                // Only insert if we have a valid element
+                if (tempDiv.firstElementChild) {
+                    container.insertBefore(tempDiv.firstElementChild, container.firstChild);
+                }
             }
         }
 
@@ -486,24 +490,25 @@ $this->Widget->create(
                         row.style.opacity = originalOpacity;
                         row.style.pointerEvents = originalPointerEvents;
 
+                        // Check if response indicates an error
+                        if (response.status === 'error') {
+                            // Handle error: uncheck and disable field
+                            if (e.target.type === 'checkbox') {
+                                e.target.checked = false;
+                            }
+                        }
+
+                        // Show message (success or error)
                         if (response.message) {
                             prependMessage(response.message);
                         }
 
-                        // If module updated, ask to update meta
-                        if (e.target.name.includes('[module]') && response.update_meta && tld !== '') {
+                        // If module updated successfully, ask to update meta
+                        if (response.status === 'success' && e.target.name.includes('[module]') && response.update_meta && tld !== '') {
                             setTldMeta(tld);
                         }
                     },
-                    function(response) {
-                        // Error handler - restore row and show error
-                        row.style.opacity = originalOpacity;
-                        row.style.pointerEvents = originalPointerEvents;
-
-                        if (response && response.message) {
-                            prependMessage(response.message);
-                        }
-                    },
+                    null,
                     {dataType: 'json'}
                 );
             }
