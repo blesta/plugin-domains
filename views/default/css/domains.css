@@ -463,6 +463,33 @@ input[type="checkbox"]:checked+.tld-import-card {
     }
 }
 
+/* Prevent horizontal scroll in modal */
+#editTldPricingModal .modal-body {
+    overflow-x: hidden;
+}
+
+#editTldPricingModal .nav-tabs-steps {
+    flex-wrap: wrap;
+    max-width: 100%;
+}
+
+#editTldPricingModal .step-line {
+    flex-shrink: 0;
+    min-width: 20px;
+    max-width: 40px;
+    flex-grow: 1;
+}
+
+/* Ensure tab content doesn't overflow */
+#editTldPricingModal .tab-pane {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+#editTldPricingModal .tab-pane > * {
+    max-width: 100%;
+}
+
 /* Collapse trigger styling */
 .collapse-trigger {
     text-decoration: none;
