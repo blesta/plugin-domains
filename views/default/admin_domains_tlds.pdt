@@ -400,7 +400,7 @@ $this->Widget->create(
                     var target = document.querySelector(response.replacer);
                     if (target) {
                         target.innerHTML = response.content;
-                        initDynamicElements();
+                        initDynamicElements(target);
                     }
                 }
                 showMessage(response.message);
@@ -597,7 +597,14 @@ $this->Widget->create(
                     temp.querySelectorAll('script').forEach(function(s) { s.remove(); });
                     modalContent.innerHTML = temp.innerHTML;
 
-                    setTimeout(function() { setupPricingForm(modalContent, modalInstance); }, 150);
+                    setTimeout(function() {
+                        setupPricingForm(modalContent, modalInstance);
+
+                        // Bind global GUI events after form setup (WYSIWYG editors must be initialized first)
+                        if (typeof blestaBindGlobalGuiEvents === 'function') {
+                            blestaBindGlobalGuiEvents(modalContent);
+                        }
+                    }, 150);
                 })
                 .catch(function() {
                     modalContent.innerHTML = '<div class="modal-body"><div class="alert alert-danger">' +
@@ -618,6 +625,46 @@ $this->Widget->create(
                 });
             }
         });
+
+        // Load Sample Email button handler
+        var loadSampleBtn = container.querySelector('.load_sample_email');
+        if (loadSampleBtn) {
+            loadSampleBtn.addEventListener('click', function() {
+                if (!confirm('<?php echo addslashes($this->_('AdminDomains.pricing.text_confirm_load_email', true)); ?>')) {
+                    return;
+                }
+
+                // Fetch and load sample email template
+                fetch(config.baseUri + 'plugin/domains/admin_domains/getsampleemail/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: '_csrf_token=' + encodeURIComponent(config.csrfToken) + '&' + new URLSearchParams(new FormData(form)).toString()
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(response) {
+                    if (response && response.templates) {
+                        // Load templates into WYSIWYG editors by language
+                        response.templates.forEach(function(template) {
+                            // Find the tab pane for this language
+                            var tabPane = document.getElementById('email-' + template.lang + loadSampleBtn.dataset.formId);
+                            if (tabPane) {
+                                // Find the CKEditor editable element within this tab
+                                var editorElement = tabPane.querySelector('.ck-editor__editable');
+                                if (editorElement && editorElement.ckeditorInstance) {
+                                    editorElement.ckeditorInstance.setData(template.html || '');
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error loading sample email:', error);
+                });
+            });
+        }
 
         // Sync prices
         form.querySelectorAll('input.pricing-price').forEach(function(input) {
@@ -754,15 +801,11 @@ $this->Widget->create(
     }
 
     // Dynamic Element Initialization
-    function initDynamicElements() {
-        // Re-bind global GUI events
-        if (typeof blestaBindGlobalGuiEvents === 'function') {
-            blestaBindGlobalGuiEvents(document);
-        }
-
-        // Re-bind confirmation modals
-        if (typeof blestaBindConfirmationModals === 'function') {
-            blestaBindConfirmationModals();
+    function initDynamicElements(container) {
+        // Only rebind GUI events when container is explicitly provided (after AJAX updates)
+        // Don't rebind on initial load as it's already handled globally by Blesta framework
+        if (container && typeof blestaBindGlobalGuiEvents === 'function') {
+            blestaBindGlobalGuiEvents(container);
         }
 
         initPopovers();
@@ -789,7 +832,7 @@ $this->Widget->create(
                         var target = document.querySelector(response.replacer);
                         if (target) {
                             target.innerHTML = response.content;
-                            initDynamicElements();
+                            initDynamicElements(target);
                         }
                     }
                 },

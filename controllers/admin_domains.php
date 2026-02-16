@@ -2541,6 +2541,56 @@ class AdminDomains extends DomainsController
     }
 
     /**
+     * Gets sample email templates for a domain TLD package
+     *
+     * @return false
+     */
+    public function getSampleEmail()
+    {
+        if (!$this->isAjax()) {
+            $this->redirect($this->base_uri . 'plugin/domains/admin_domains/tlds/');
+        }
+
+        $this->uses(['Domains.DomainsTlds']);
+
+        // Get form data to determine which TLD/module
+        $post = $this->post;
+        $tld = $post['tld'] ?? null;
+        $module_id = $post['module_id'] ?? null;
+
+        $templates = [];
+
+        // Try to load module-specific email templates
+        if ($module_id) {
+            Loader::loadModels($this, ['ModuleManager']);
+            $module = $this->ModuleManager->get($module_id);
+
+            if ($module) {
+                // Load module class
+                $module_instance = $this->ModuleManager->initModule($module_id);
+
+                // Check if module has email template method
+                if ($module_instance && method_exists($module_instance, 'getEmailTemplates')) {
+                    $templates = $module_instance->getEmailTemplates();
+                }
+            }
+        }
+
+        // Fallback to generic domain email templates if no module-specific templates
+        if (empty($templates)) {
+            Configure::load('generic_domains', COMPONENTDIR . 'modules' . DS . 'generic_domains' . DS . 'config' . DS);
+            $default_templates = Configure::get('GenericDomains.email_templates');
+
+            if ($default_templates && isset($default_templates['en_us'])) {
+                $templates[] = $default_templates['en_us'];
+            }
+        }
+
+        $this->outputAsJson(['templates' => $templates]);
+        return false;
+    }
+
+    /**
      * Gets a list of input fields for filtering domains
      *
      * @param array $options A list of options for building the filters including:
