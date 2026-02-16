@@ -334,7 +334,7 @@ $this->Widget->create(
         return formData;
     }
 
-    // Show message at top of page
+    // Show message at top of page (Safe from XSS)
     function showMessage(message) {
         if (!message) return;
 
@@ -342,15 +342,21 @@ $this->Widget->create(
         if (!container) return;
 
         // Remove old messages
-        container.querySelectorAll('.alert, .error_section, .message_section').forEach(function(el) {
+        container.querySelectorAll('.alert').forEach(function(el) {
             el.remove();
         });
 
-        // Add new message
-        var tempDiv = document.createElement('div');
-        tempDiv.innerHTML = message;
-        if (tempDiv.firstElementChild) {
-            container.insertBefore(tempDiv.firstElementChild, container.firstChild);
+        // Safely parse HTML string using DOMParser
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(message, 'text/html');
+
+        // Extract the first element from the parsed string
+        var messageElement = doc.body.firstElementChild;
+
+        if (messageElement) {
+            // Import the node and append it
+            var importedNode = document.importNode(messageElement, true);
+            container.insertBefore(importedNode, container.firstChild);
         }
     }
 
