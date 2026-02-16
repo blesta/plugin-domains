@@ -258,6 +258,10 @@ $lang['AdminDomains.tlds.field_status'] = 'Status';
 $lang['AdminDomains.tlds.field_currency'] = 'Currency';
 $lang['AdminDomains.tlds.confirm_disable'] = 'Are you sure you want to disable this TLD?';
 $lang['AdminDomains.tlds.confirm_enable'] = 'Are you sure you want to enable this TLD?';
+$lang['AdminDomains.tlds.text_items_selected'] = 'items selected';
+$lang['AdminDomains.tlds.text_perform'] = 'perform';
+$lang['AdminDomains.tlds.text_to'] = 'to';
+$lang['AdminDomains.tlds.text_set_to'] = 'set to';
 
 $lang['AdminDomains.tlds.tooltip_dns_management'] = 'The availability of DNS management will depend on whether the registrar module implements such functionality and may not be available for all TLDs or registrars';
 $lang['AdminDomains.tlds.tooltip_email_forwarding'] = 'The availability of Email Forwarding will depend on whether the registrar module implements such functionality and may not be available for all TLDs or registrars';

@@ -206,67 +206,78 @@ $this->Widget->create(
         </table>
     </div>
 
-    <!-- Bulk Actions Bar -->
+    <!-- Floating Bulk Actions Box -->
     <div class="bulk-actions-bar" id="bulkActionsBar" style="display: none;">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span class="selected-count" id="selectedCount">0 <?php $this->_('AdminDomains.tlds.text_items_selected'); ?></span>
-            <div class="d-flex gap-2 align-items-center flex-wrap">
-                <?php $this->Form->fieldSelect('tlds_bulk[action]', $tld_actions ?? [], null, ['class' => 'form-select form-select-sm', 'style' => 'width: 180px;', 'id' => 'bulkAction']); ?>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="text-nowrap">
+                <span id="selectedCount">0</span> <?php $this->_('AdminDomains.tlds.text_items_selected'); ?>,
+            </span>
+            <span class="text-nowrap"><?php $this->_('AdminDomains.tlds.text_perform'); ?>:</span>
+            <?php $this->Form->fieldSelect('tlds_bulk[action]', $tld_actions ?? [], null, ['class' => 'form-select form-select-sm', 'style' => 'width: 180px;', 'id' => 'bulkAction']); ?>
 
-                <!-- Conditional fields for different actions -->
-                <div id="changeStatusFields" class="bulk-action-fields d-none">
-                    <?php $this->Form->fieldSelect('tlds_bulk[status]', $tld_statuses ?? [], null, ['class' => 'form-select form-select-sm']); ?>
-                </div>
-
-                <div id="dnsManagementFields" class="bulk-action-fields d-none">
-                    <?php $this->Form->fieldSelect('tlds_bulk[dns_management]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm']); ?>
-                </div>
-
-                <div id="emailForwardingFields" class="bulk-action-fields d-none">
-                    <?php $this->Form->fieldSelect('tlds_bulk[email_forwarding]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm']); ?>
-                </div>
-
-                <div id="idProtectionFields" class="bulk-action-fields d-none">
-                    <?php $this->Form->fieldSelect('tlds_bulk[id_protection]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm']); ?>
-                </div>
-
-                <div id="eppCodeFields" class="bulk-action-fields d-none">
-                    <?php $this->Form->fieldSelect('tlds_bulk[epp_code]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm']); ?>
-                </div>
-
-                <div id="nameServersFields" class="bulk-action-fields d-none">
-                    <div class="d-flex gap-2">
-                        <?php
-                        $this->Form->fieldText('tlds_bulk[nameservers][0]', $vars->tlds_bulk['nameservers'][0] ?? '', ['class' => 'form-control form-control-sm', 'placeholder' => $this->_('AdminDomains.browse.action.field_nameservers', true) . ' 1', 'style' => 'width: 140px;']);
-                        $this->Form->fieldText('tlds_bulk[nameservers][1]', $vars->tlds_bulk['nameservers'][1] ?? '', ['class' => 'form-control form-control-sm', 'placeholder' => $this->_('AdminDomains.browse.action.field_nameservers', true) . ' 2', 'style' => 'width: 140px;']);
-                        ?>
-                    </div>
-                </div>
-
-                <div id="registrarPriceSyncFields" class="bulk-action-fields d-none">
-                    <div class="d-flex gap-2 align-items-center">
-                        <?php
-                        $currency_options = ['' => $this->_('AppController.select.please', true)] + ($currencies ?? []);
-                        $this->Form->fieldSelect('currency_selector', $currency_options, $default_currency ?? 'USD', ['class' => 'form-select form-select-sm', 'id' => 'currency_selector', 'style' => 'width: 120px;']);
-                        ?>
-                        <div id="selected-currencies" class="d-flex gap-2 flex-wrap">
-                            <?php foreach ($currencies ?? [] as $currency) { ?>
-                            <span id="currency_selector_<?php echo $this->Html->safe($currency); ?>" class="badge bg-light text-secondary border" style="display: none;">
-                                <?php
-                                $this->Form->fieldCheckbox('tlds_bulk[currencies][]', $currency, null, ['class' => 'form-check-input form-check-input-sm me-1']);
-                                echo $this->Html->safe($currency);
-                                ?>
-                            </span>
-                            <?php } ?>
-                        </div>
-                        <a class="text-sm" href="<?php echo $this->base_uri . 'plugin/domains/admin_domains/configuration/?tab=tld_sync'; ?>" target="_blank"><?php $this->_('AdminDomains.tlds.option_configure_sync'); ?></a>
-                    </div>
-                </div>
-
-                <button class="btn btn-sm btn-light" id="bulkActionSubmit">
-                    <i class="bi bi-check-lg me-1"></i><?php $this->_('AdminDomains.tlds.option_submit'); ?>
-                </button>
+            <!-- Conditional fields for different actions -->
+            <span id="changeStatusFields" class="bulk-action-fields d-none text-nowrap">
+                <?php $this->_('AdminDomains.tlds.text_to'); ?>:
+            </span>
+            <div id="changeStatusFieldsSelect" class="bulk-action-fields d-none">
+                <?php $this->Form->fieldSelect('tlds_bulk[status]', $tld_statuses ?? [], null, ['class' => 'form-select form-select-sm', 'style' => 'width: 150px;']); ?>
             </div>
+
+            <span id="dnsManagementFields" class="bulk-action-fields d-none text-nowrap">
+                <?php $this->_('AdminDomains.tlds.text_set_to'); ?>:
+            </span>
+            <div id="dnsManagementFieldsSelect" class="bulk-action-fields d-none">
+                <?php $this->Form->fieldSelect('tlds_bulk[dns_management]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm', 'style' => 'width: 100px;']); ?>
+            </div>
+
+            <span id="emailForwardingFields" class="bulk-action-fields d-none text-nowrap">
+                <?php $this->_('AdminDomains.tlds.text_set_to'); ?>:
+            </span>
+            <div id="emailForwardingFieldsSelect" class="bulk-action-fields d-none">
+                <?php $this->Form->fieldSelect('tlds_bulk[email_forwarding]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm', 'style' => 'width: 100px;']); ?>
+            </div>
+
+            <span id="idProtectionFields" class="bulk-action-fields d-none text-nowrap">
+                <?php $this->_('AdminDomains.tlds.text_set_to'); ?>:
+            </span>
+            <div id="idProtectionFieldsSelect" class="bulk-action-fields d-none">
+                <?php $this->Form->fieldSelect('tlds_bulk[id_protection]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm', 'style' => 'width: 100px;']); ?>
+            </div>
+
+            <span id="eppCodeFields" class="bulk-action-fields d-none text-nowrap">
+                <?php $this->_('AdminDomains.tlds.text_set_to'); ?>:
+            </span>
+            <div id="eppCodeFieldsSelect" class="bulk-action-fields d-none">
+                <?php $this->Form->fieldSelect('tlds_bulk[epp_code]', ['1' => $this->_('AdminDomains.browse.text_on', true), '0' => $this->_('AdminDomains.browse.text_off', true)], null, ['class' => 'form-select form-select-sm', 'style' => 'width: 100px;']); ?>
+            </div>
+
+            <div id="nameServersFields" class="bulk-action-fields d-none d-flex gap-2">
+                <?php
+                $this->Form->fieldText('tlds_bulk[nameservers][0]', $vars->tlds_bulk['nameservers'][0] ?? '', ['class' => 'form-control form-control-sm', 'placeholder' => $this->_('AdminDomains.browse.action.field_nameservers', true) . ' 1', 'style' => 'width: 140px;']);
+                $this->Form->fieldText('tlds_bulk[nameservers][1]', $vars->tlds_bulk['nameservers'][1] ?? '', ['class' => 'form-control form-control-sm', 'placeholder' => $this->_('AdminDomains.browse.action.field_nameservers', true) . ' 2', 'style' => 'width: 140px;']);
+                ?>
+            </div>
+
+            <div id="registrarPriceSyncFields" class="bulk-action-fields d-none d-flex gap-2 align-items-center">
+                <?php
+                $currency_options = ['' => $this->_('AppController.select.please', true)] + ($currencies ?? []);
+                $this->Form->fieldSelect('currency_selector', $currency_options, $default_currency ?? 'USD', ['class' => 'form-select form-select-sm', 'id' => 'currency_selector', 'style' => 'width: 120px;']);
+                ?>
+                <div id="selected-currencies" class="d-flex gap-2 flex-wrap">
+                    <?php foreach ($currencies ?? [] as $currency) { ?>
+                    <span id="currency_selector_<?php echo $this->Html->safe($currency); ?>" class="badge bg-light text-secondary border" style="display: none;">
+                        <?php
+                        $this->Form->fieldCheckbox('tlds_bulk[currencies][]', $currency, null, ['class' => 'form-check-input form-check-input-sm me-1']);
+                        echo $this->Html->safe($currency);
+                        ?>
+                    </span>
+                    <?php } ?>
+                </div>
+            </div>
+
+            <button class="btn btn-sm btn-primary" id="bulkActionSubmit">
+                <?php $this->_('AdminDomains.tlds.option_submit'); ?>
+            </button>
         </div>
     </div>
 
@@ -424,9 +435,19 @@ $this->Widget->create(
         var bar = document.getElementById('bulkActionsBar');
         var countEl = document.getElementById('selectedCount');
 
-        if (bar) bar.style.display = checkedCount > 0 ? 'block' : 'none';
+        if (bar) {
+            if (checkedCount > 0) {
+                bar.style.display = 'block';
+                // Small delay to trigger CSS transition
+                setTimeout(function() { bar.classList.add('show'); }, 10);
+            } else {
+                bar.classList.remove('show');
+                // Hide after transition completes
+                setTimeout(function() { bar.style.display = 'none'; }, 300);
+            }
+        }
         if (countEl) {
-            countEl.textContent = checkedCount + ' <?php echo addslashes($this->_('AdminDomains.tlds.text_items_selected', true)); ?>';
+            countEl.textContent = checkedCount;
         }
     }
 
@@ -435,13 +456,13 @@ $this->Widget->create(
         if (!bulkSelect) return;
 
         var fieldMap = {
-            'change_status': 'changeStatusFields',
-            'tld_sync': 'registrarPriceSyncFields',
-            'dns_management': 'dnsManagementFields',
-            'email_forwarding': 'emailForwardingFields',
-            'id_protection': 'idProtectionFields',
-            'epp_code': 'eppCodeFields',
-            'update_nameservers': 'nameServersFields'
+            'change_status': ['changeStatusFields', 'changeStatusFieldsSelect'],
+            'tld_sync': ['registrarPriceSyncFields'],
+            'dns_management': ['dnsManagementFields', 'dnsManagementFieldsSelect'],
+            'email_forwarding': ['emailForwardingFields', 'emailForwardingFieldsSelect'],
+            'id_protection': ['idProtectionFields', 'idProtectionFieldsSelect'],
+            'epp_code': ['eppCodeFields', 'eppCodeFieldsSelect'],
+            'update_nameservers': ['nameServersFields']
         };
 
         bulkSelect.addEventListener('change', function() {
@@ -450,11 +471,13 @@ $this->Widget->create(
                 el.classList.add('d-none');
             });
 
-            // Show selected field
-            var fieldId = fieldMap[this.value];
-            if (fieldId) {
-                var field = document.getElementById(fieldId);
-                if (field) field.classList.remove('d-none');
+            // Show selected fields (label + input)
+            var fieldIds = fieldMap[this.value];
+            if (fieldIds) {
+                fieldIds.forEach(function(fieldId) {
+                    var field = document.getElementById(fieldId);
+                    if (field) field.classList.remove('d-none');
+                });
             }
         });
 

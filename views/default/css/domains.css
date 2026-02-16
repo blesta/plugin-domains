@@ -699,3 +699,58 @@ tr:hover .sortable-drag-handle {
     font-size: .875rem !important;
     border-radius: var(--bs-border-radius-sm) !important;
 }
+
+/* Floating Bulk Actions Box (Support Manager Style) */
+.bulk-actions-bar {
+    position: fixed;
+    z-index: 1000;
+    right: 1rem;
+    bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--bg-secondary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.bulk-actions-bar.show {
+    transform: translateY(0);
+}
+
+.bulk-actions-bar .selected-count {
+    font-weight: 600;
+}
+
+.bulk-actions-bar span {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Responsive adjustments for bulk actions */
+@media (max-width: 768px) {
+    .bulk-actions-bar {
+        right: 0.5rem;
+        bottom: 0.5rem;
+        min-width: auto;
+        max-width: calc(100vw - 1rem);
+        padding: 0.75rem;
+    }
+
+    .bulk-actions-bar .d-flex {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+
+    .bulk-actions-bar .selected-count {
+        font-size: 0.8125rem;
+    }
+
+    .bulk-actions-bar .form-select,
+    .bulk-actions-bar .form-control {
+        width: 100% !important;
+    }
+}
