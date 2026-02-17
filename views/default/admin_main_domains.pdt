@@ -178,9 +178,15 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
                 if (in_array(($status ?? null), ['pending', 'canceled'])) {
                     echo ($show_manage ? ' ' : '');
                     ?>
-                <a href="<?php echo $this->base_uri . 'clients/deleteservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null) . '/';?>" class="btn btn-sm btn-outline-danger manage" data-service-id="<?php (print (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null));?>" rel="<?php echo $this->Html->safe($this->_('AdminMain.index.confirm_delete', true));?>" title="<?php $this->_('AdminMain.index.option_delete');?>">
+                <?php
+                $this->Form->create($this->base_uri . 'clients/deleteservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null) . '/', ['class' => 'd-inline']);
+                ?>
+                <button type="button" class="btn btn-sm btn-outline-danger modal-confirm-delete"
+                    data-confirm-message="<?php echo $this->Html->safe($this->_('AdminMain.index.confirm_delete', true));?>"
+                    title="<?php $this->_('AdminMain.index.option_delete');?>">
                     <i class="bi bi-trash"></i>
-                </a>
+                </button>
+                <?php $this->Form->end();?>
                     <?php
                 }
                 ?>
@@ -270,9 +276,10 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
                 </div>
                 <div class="col-md-10">
                     <?php
-                    $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control', 'id' => 'domain_client']);
+                    $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control', 'id' => 'domain_client', 'autocomplete' => 'off']);
                     $this->Form->fieldHidden('client_id', ($vars->client_id ?? null), ['id' => 'domain_client_id']);
                     ?>
+                    <div id="domain_client_autocomplete_results" class="autocomplete-results position-absolute bg-body border rounded shadow-sm" style="display: none; z-index: 1050; width: 100%; max-height: 200px; overflow-y: auto;"></div>
                 </div>
             </div>
         </div>
@@ -300,17 +307,7 @@ $this->Widget->end();
             new bootstrap.Tooltip(trigger);
         });
 
-        // Handle confirmation for delete links
-        const deleteLinks = widget.querySelectorAll('a.manage[rel]');
-        deleteLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                const message = this.getAttribute('rel');
-                if (message && !confirm(message)) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-        });
+        // Delete confirmation is handled automatically by app.js via modal-confirm-delete
 
         // Show service actions based on checkboxes
         function showServiceActions() {
@@ -369,42 +366,74 @@ $this->Widget->end();
             actionSelect.dispatchEvent(new Event('change'));
         }
 
-        // Client autocomplete (if jQuery autocomplete exists)
+        // Client autocomplete
         const clientInput = document.getElementById('domain_client');
-        if (clientInput && typeof jQuery !== 'undefined' && jQuery.fn.autocomplete) {
-            jQuery(clientInput).autocomplete({
-                minLength: 3,
-                source: function(request, response) {
+        const clientIdInput = document.getElementById('domain_client_id');
+        const resultsContainer = document.getElementById('domain_client_autocomplete_results');
+
+        if (clientInput && resultsContainer) {
+            let debounceTimer;
+
+            clientInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value;
+
+                if (query.length < 3) {
+                    resultsContainer.innerHTML = '';
+                    resultsContainer.style.display = 'none';
+                    return;
+                }
+
+                debounceTimer = setTimeout(function() {
+                    const formData = new FormData();
+                    formData.append('search', query);
+
                     const csrfToken = widget.querySelector('input[name="_csrf_token"]');
-                    jQuery.ajax({
-                        url: '<?php echo $this->Html->safe($this->base_uri . 'clients/getclients/'); ?>',
-                        method: 'POST',
-                        data: {
-                            _csrf_token: csrfToken ? csrfToken.value : null,
-                            search: request.term
-                        },
-                        dataType: 'json',
-                        success: function(data) {
-                            if (data && data.clients) {
-                                // Build the response
-                                const clients = [];
-                                for (const id in data.clients) {
-                                    clients.push({
-                                        label: data.clients[id],
-                                        value: data.clients[id],
-                                        id: id
-                                    });
-                                }
-                                response(clients);
-                            }
-                        }
-                    });
-                },
-                select: function(event, ui) {
-                    const clientIdField = document.getElementById('domain_client_id');
-                    if (clientIdField) {
-                        clientIdField.value = ui.item.id;
+                    if (csrfToken) {
+                        formData.append('_csrf_token', csrfToken.value);
                     }
+
+                    fetch('<?php echo $this->Html->safe($this->base_uri . 'clients/getclients/');?>', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.clients) {
+                            let html = '<ul class="list-group">';
+                            for (const id in data.clients) {
+                                html += '<li class="list-group-item list-group-item-action" data-id="' + id + '">' + data.clients[id] + '</li>';
+                            }
+                            html += '</ul>';
+
+                            if (Object.keys(data.clients).length === 0) {
+                                html = '';
+                            }
+
+                            resultsContainer.innerHTML = html;
+                            resultsContainer.style.display = html ? 'block' : 'none';
+
+                            resultsContainer.querySelectorAll('.list-group-item').forEach(item => {
+                                item.addEventListener('click', function() {
+                                    clientInput.value = this.textContent;
+                                    if (clientIdInput) clientIdInput.value = this.getAttribute('data-id');
+                                    resultsContainer.style.display = 'none';
+                                });
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }, 300);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!clientInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+                    resultsContainer.style.display = 'none';
                 }
             });
         }

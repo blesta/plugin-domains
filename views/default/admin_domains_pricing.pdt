@@ -86,7 +86,7 @@ $this->Form->create(
                 <div>
                     <?php if ($currency->automatic_currency_conversion) { ?>
                     <div class="alert alert-warning d-flex align-items-center rounded-0 mb-0" role="alert">
-                        <i class="fas fa-exclamation-triangle fa-fw me-2"></i>
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
                         <div><?php $this->_('AdminDomains.!warning.automatic_currency_conversion', false, $default_currency);?></div>
                     </div>
                     <?php } ?>
@@ -159,7 +159,7 @@ $this->Form->create(
 
         <?php if (!empty($has_multiple_packages)) { ?>
         <div class="alert alert-info d-flex align-items-center mt-3 mb-3" role="alert">
-            <i class="fas fa-info-circle fa-fw me-2"></i>
+            <i class="bi bi-info-circle-fill me-2"></i>
             <div><?php $this->_('AdminDomains.pricing.text_multiple_packages_info');?></div>
         </div>
 

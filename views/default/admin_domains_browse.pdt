@@ -124,9 +124,14 @@ if (!empty($domains)) {
                 if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
                     echo ($show_manage ? ' ' : '');
                     ?>
-                <a class="btn btn-sm btn-outline-danger manage ms-1 submit" href="#" data-client-id="<?php echo $this->Html->safe(($domain->client_id ?? null));?>" data-service-id="<?php echo $this->Html->safe(($domain->id ?? null));?>" rel="<?php echo $this->Html->safe($this->_('AdminDomains.browse.confirm_delete', true));?>" title="<?php $this->_('AdminDomains.browse.option_delete');?>">
+                <button type="button" class="btn btn-sm btn-outline-danger modal-confirm-delete ms-1"
+                    data-confirm-message="<?php echo $this->Html->safe($this->_('AdminDomains.browse.confirm_delete', true));?>"
+                    data-form="delete_service"
+                    data-client-id="<?php echo $this->Html->safe(($domain->client_id ?? null));?>"
+                    data-service-id="<?php echo $this->Html->safe(($domain->id ?? null));?>"
+                    title="<?php $this->_('AdminDomains.browse.option_delete');?>">
                     <i class="bi bi-trash"></i>
-                </a>
+                </button>
                     <?php
                 }
                 ?>
@@ -219,9 +224,10 @@ if (!empty($domains)) {
                 </div>
                 <div class="col-md-10">
                     <?php
-                    $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control', 'id' => 'client']);
+                    $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control', 'id' => 'client', 'autocomplete' => 'off']);
                     $this->Form->fieldHidden('client_id', ($vars->client_id ?? null), ['id' => 'client_id']);
                     ?>
+                    <div id="client_autocomplete_results" class="autocomplete-results position-absolute bg-body border rounded shadow-sm" style="display: none; z-index: 1050; width: 100%; max-height: 200px; overflow-y: auto;"></div>
                 </div>
             </div>
         </div>
@@ -263,30 +269,15 @@ $this->Widget->end();
             new bootstrap.Tooltip(trigger);
         });
 
-        // Handle confirmation for manage links
-        const manageLinks = form.querySelectorAll('a.manage[rel]');
-        manageLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                const message = this.getAttribute('rel');
-                if (message && !confirm(message)) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-        });
-
-        // Handle delete service
-        const deleteLinks = form.querySelectorAll('a.manage.submit[rel]');
-        deleteLinks.forEach(link => {
-            link.addEventListener('click', function() {
-                const serviceId = this.getAttribute('data-service-id');
-                const clientId = this.getAttribute('data-client-id');
-
+        // Populate hidden delete form fields when a delete button is clicked
+        // (confirmation modal is handled automatically by app.js via modal-confirm-delete)
+        form.querySelectorAll('.modal-confirm-delete[data-service-id]').forEach(btn => {
+            btn.addEventListener('click', function() {
                 const clientIdField = document.getElementById('delete_service_client_id');
                 const serviceIdField = document.getElementById('delete_service_service_id');
 
-                if (clientIdField) clientIdField.value = clientId;
-                if (serviceIdField) serviceIdField.value = serviceId;
+                if (clientIdField) clientIdField.value = this.getAttribute('data-client-id');
+                if (serviceIdField) serviceIdField.value = this.getAttribute('data-service-id');
             });
         });
 
@@ -347,42 +338,74 @@ $this->Widget->end();
             actionSelect.dispatchEvent(new Event('change'));
         }
 
-        // Client autocomplete (if jQuery autocomplete exists)
+        // Client autocomplete
         const clientInput = document.getElementById('client');
-        if (clientInput && typeof jQuery !== 'undefined' && jQuery.fn.autocomplete) {
-            jQuery(clientInput).autocomplete({
-                minLength: 3,
-                source: function(request, response) {
+        const clientIdInput = document.getElementById('client_id');
+        const resultsContainer = document.getElementById('client_autocomplete_results');
+
+        if (clientInput && resultsContainer) {
+            let debounceTimer;
+
+            clientInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value;
+
+                if (query.length < 3) {
+                    resultsContainer.innerHTML = '';
+                    resultsContainer.style.display = 'none';
+                    return;
+                }
+
+                debounceTimer = setTimeout(function() {
+                    const formData = new FormData();
+                    formData.append('search', query);
+
                     const csrfToken = form.querySelector('input[name="_csrf_token"]');
-                    jQuery.ajax({
-                        url: '<?php echo $this->Html->safe($this->base_uri . 'clients/getclients/'); ?>',
-                        method: 'POST',
-                        data: {
-                            _csrf_token: csrfToken ? csrfToken.value : null,
-                            search: request.term
-                        },
-                        dataType: 'json',
-                        success: function(data) {
-                            if (data && data.clients) {
-                                // Build the response
-                                const clients = [];
-                                for (const id in data.clients) {
-                                    clients.push({
-                                        label: data.clients[id],
-                                        value: data.clients[id],
-                                        id: id
-                                    });
-                                }
-                                response(clients);
-                            }
-                        }
-                    });
-                },
-                select: function(event, ui) {
-                    const clientIdField = document.getElementById('client_id');
-                    if (clientIdField) {
-                        clientIdField.value = ui.item.id;
+                    if (csrfToken) {
+                        formData.append('_csrf_token', csrfToken.value);
                     }
+
+                    fetch('<?php echo $this->Html->safe($this->base_uri . 'clients/getclients/');?>', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.clients) {
+                            let html = '<ul class="list-group">';
+                            for (const id in data.clients) {
+                                html += '<li class="list-group-item list-group-item-action" data-id="' + id + '">' + data.clients[id] + '</li>';
+                            }
+                            html += '</ul>';
+
+                            if (Object.keys(data.clients).length === 0) {
+                                html = '';
+                            }
+
+                            resultsContainer.innerHTML = html;
+                            resultsContainer.style.display = html ? 'block' : 'none';
+
+                            resultsContainer.querySelectorAll('.list-group-item').forEach(item => {
+                                item.addEventListener('click', function() {
+                                    clientInput.value = this.textContent;
+                                    if (clientIdInput) clientIdInput.value = this.getAttribute('data-id');
+                                    resultsContainer.style.display = 'none';
+                                });
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }, 300);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!clientInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+                    resultsContainer.style.display = 'none';
                 }
             });
         }

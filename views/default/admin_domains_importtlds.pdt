@@ -75,7 +75,7 @@ $this->Form->create(null, ['id' => 'import_tlds_form']);
         <div class="tld-import-grid" id="tld_grid">
             <!-- TLDs will be loaded here via AJAX -->
             <div class="text-center w-100">
-                <i class="bi bi-spinner fa-spin"></i>
+                <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></span>
             </div>
         </div>
     </div>
@@ -196,7 +196,7 @@ $this->Widget->end();
             // Clear TLD grid
             const tldGrid = document.getElementById('tld_grid');
             if (tldGrid) {
-                tldGrid.innerHTML = '<div class="text-center w-100"><i class="bi bi-spinner fa-spin"></i></div>';
+                tldGrid.innerHTML = '<div class="text-center w-100"><span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></span></div>';
             }
 
             // Hide sections
@@ -241,7 +241,7 @@ $this->Widget->end();
 
         // Show loading state
         if (tldGrid) {
-            tldGrid.innerHTML = '<div class="text-center w-100"><i class="bi bi-spinner fa-spin"></i></div>';
+            tldGrid.innerHTML = '<div class="text-center w-100"><span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></span></div>';
         }
 
         if (moduleTlds) {
