@@ -1,0 +1,756 @@
+/* TLD Import Grid */
+.tld-import-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-radius: 0.375rem;
+}
+
+/* Hide checkboxes but keep them functional */
+.tld-import-grid input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* TLD Card Styling */
+.tld-import-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+    background-color: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.875rem;
+    min-height: 45px;
+}
+
+.tld-import-card:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+}
+
+/* Selected state (blue outline) */
+input[type="checkbox"]:checked+.tld-import-card {
+    border-color: var(--accent-color);
+    background-color: var(--bg-tertiary);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+/* Imported TLD state (green outline with visible checkmark) */
+.tld-imported .tld-import-card {
+    border-color: var(--success-color);
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.tld-imported .tld-import-card:hover {
+    background-color: rgba(25, 135, 84, 0.15);
+    border-color: var(--success-color);
+}
+
+/* Keep green when selected AND imported */
+.tld-imported input[type="checkbox"]:checked+.tld-import-card {
+    border-color: var(--success-color);
+    background-color: rgba(25, 135, 84, 0.15);
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.15);
+}
+
+/* Checkmark icon for imported TLDs (always visible) */
+.tld-imported .tld-import-card .bi-check-circle {
+    margin-right: 0.25rem;
+    color: var(--success-color);
+    font-size: 1rem;
+}
+
+/* Failed TLD import state (red outline with X icon) */
+.tld-imported.failed .tld-import-card {
+    border-color: var(--danger-color);
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.tld-imported.failed .tld-import-card:hover {
+    background-color: rgba(220, 53, 69, 0.15);
+    border-color: var(--danger-color);
+}
+
+/* Keep red when selected AND failed */
+.tld-imported.failed input[type="checkbox"]:checked+.tld-import-card {
+    border-color: var(--danger-color);
+    background-color: rgba(220, 53, 69, 0.15);
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+}
+
+/* X icon for failed TLDs */
+.tld-imported.failed .tld-import-card .bi-x-circle {
+    margin-right: 0.25rem;
+    color: var(--danger-color);
+    font-size: 1rem;
+}
+
+/* Hide success icon on failed imports */
+.tld-imported.failed .tld-import-card .bi-check-circle {
+    display: none;
+}
+
+/* Custom Search Bar */
+.domain-search-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 50px;
+    padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.domain-search-input-group:focus-within {
+    border-color: var(--accent-color);
+}
+
+.domain-search-icon {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin-right: 0.75rem;
+    transition: color 0.2s ease;
+}
+
+.domain-search-input-group:focus-within .domain-search-icon {
+    color: var(--accent-color);
+}
+
+.domain-search-input {
+    flex: 1;
+    border: none !important;
+    background: transparent !important;
+    color: var(--text-primary);
+    font-size: 1rem;
+    padding: 0.5rem;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.domain-search-input:focus {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.domain-search-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.domain-search-btn {
+    border-radius: 40px;
+    padding: 0.5rem 1.5rem;
+    white-space: nowrap;
+}
+
+.search-btn-icon {
+    transition: transform 0.2s ease;
+}
+
+.domain-search-btn:hover .search-btn-icon {
+    transform: translateX(3px);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .domain-search-input-group {
+        padding: 0.375rem 0.375rem 0.375rem 1rem;
+    }
+
+    .domain-search-input {
+        font-size: 0.9375rem;
+        padding: 0.375rem;
+    }
+
+    .domain-search-btn {
+        padding: 0.5rem 1rem;
+    }
+
+    .search-btn-text {
+        display: none;
+    }
+}
+
+/* Import status styles */
+.tld-box.current .tld-import-card {
+    border-color: var(--accent-color);
+    background-color: var(--bg-tertiary);
+}
+
+.tld-box.success .tld-import-card {
+    border-color: var(--success-color);
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.tld-box.failed .tld-import-card {
+    border-color: var(--danger-color);
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* Spotlight Slots Grid - Fixed 8 slots */
+.spotlight-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-radius: 0.375rem;
+}
+
+/* Individual Slot Styling */
+.spotlight-slot {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.75rem 0.5rem;
+    background-color: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-size: 0.875rem;
+    min-height: 60px;
+    cursor: pointer;
+}
+
+/* Empty Slot Styling */
+.spotlight-slot.empty {
+    border-style: dashed;
+    border-color: var(--border-color);
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.spotlight-slot.empty:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+}
+
+.spotlight-slot.empty .bi-plus-lg {
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    opacity: 0.5;
+}
+
+.spotlight-slot.empty:hover .bi-plus-lg {
+    opacity: 1;
+    color: var(--accent-color);
+}
+
+/* Filled Slot Styling */
+.spotlight-slot.filled {
+    border-color: var(--warning-color);
+    background-color: rgba(255, 193, 7, 0.1);
+    cursor: default;
+}
+
+.spotlight-slot.filled .bi-star-fill {
+    color: var(--warning-color);
+    font-size: 0.875rem;
+}
+
+.spotlight-slot.filled .slot-tld {
+    font-weight: 600;
+}
+
+/* Remove Button */
+.slot-remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--danger-color);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    padding: 0;
+}
+
+.spotlight-slot.filled:hover .slot-remove {
+    opacity: 1;
+}
+
+.slot-remove:hover {
+    background-color: #c82333;
+}
+
+/* TLD Selection Grid in Modal */
+.tld-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0.75rem;
+}
+
+/* TLD Selection Item */
+.tld-selection-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.75rem 0.5rem;
+    background-color: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.875rem;
+    min-height: 45px;
+}
+
+.tld-selection-item:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--warning-color);
+    transform: translateY(-1px);
+}
+
+/* Selected TLD in Modal */
+.tld-selection-item.selected {
+    border-color: var(--warning-color);
+    background-color: rgba(255, 193, 7, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.15);
+}
+
+.tld-selection-item.selected .bi-star-fill {
+    color: var(--warning-color);
+    font-size: 0.875rem;
+}
+
+/* Disabled state when limit reached */
+.tld-selection-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Hide star icon by default, show when selected */
+.tld-selection-item .bi-star-fill {
+    display: none;
+}
+
+.tld-selection-item.selected .bi-star-fill {
+    display: inline-block;
+}
+
+/* Hidden state for filtered items */
+.tld-selection-item.hidden {
+    display: none;
+}
+
+@media (max-width: 768px) {
+
+    /* Slots Grid - 2 columns on mobile */
+    .spotlight-slots-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .spotlight-slot {
+        padding: 0.625rem 0.375rem;
+        font-size: 0.8125rem;
+        min-height: 50px;
+    }
+
+    .spotlight-slot.empty .bi-plus-lg {
+        font-size: 1rem;
+    }
+
+    .spotlight-slot.filled .bi-star-fill {
+        font-size: 0.75rem;
+    }
+
+    /* Modal Grid */
+    .tld-selection-grid {
+        grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .tld-selection-item {
+        padding: 0.625rem 0.375rem;
+        font-size: 0.8125rem;
+        min-height: 40px;
+        gap: 0.2rem;
+    }
+
+    .tld-selection-item.selected .bi-star-fill {
+        font-size: 0.75rem;
+    }
+}
+
+/* Domain search pill checkboxes */
+.form-check-pill {
+    display: inline-flex;
+}
+
+.form-check-pill .form-check-input {
+    display: none;
+}
+
+.form-check-pill .form-check-label {
+    padding: 0.375rem 0.75rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 50rem;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    background-color: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+}
+
+.form-check-pill .form-check-input:checked+.form-check-label {
+    background-color: var(--bs-primary, #0d6efd);
+    border-color: var(--bs-primary, #0d6efd);
+    color: #fff;
+}
+
+.form-check-pill .form-check-label:hover {
+    background-color: var(--bs-secondary-bg, #e9ecef);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .form-check-pill .form-check-label {
+        background-color: var(--bs-dark, #212529);
+        border-color: var(--bs-border-color-translucent, rgba(255, 255, 255, 0.15));
+        color: var(--bs-body-color, #dee2e6);
+    }
+
+    .form-check-pill .form-check-label:hover {
+        background-color: var(--bs-secondary-bg, #343a40);
+    }
+}
+
+/* Step tabs responsive adjustments */
+@media (max-width: 768px) {
+    .nav-tabs-steps {
+        flex-direction: column;
+    }
+
+    .nav-tabs-steps .step-line {
+        display: none;
+    }
+
+    .nav-tabs-steps .nav-link {
+        width: 100%;
+    }
+}
+
+/* Prevent horizontal scroll in modal */
+#editTldPricingModal .modal-body {
+    overflow-x: hidden;
+}
+
+#editTldPricingModal .nav-tabs-steps {
+    flex-wrap: wrap;
+    max-width: 100%;
+}
+
+#editTldPricingModal .step-line {
+    flex-shrink: 0;
+    min-width: 20px;
+    max-width: 40px;
+    flex-grow: 1;
+}
+
+/* Ensure tab content doesn't overflow */
+#editTldPricingModal .tab-pane {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+#editTldPricingModal .tab-pane > * {
+    max-width: 100%;
+}
+
+/* Collapse trigger styling */
+.collapse-trigger {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--bs-body-color, #212529);
+    font-weight: 500;
+}
+
+.collapse-trigger:hover {
+    color: var(--bs-primary, #0d6efd);
+}
+
+.collapse-trigger i {
+    transition: transform 0.2s ease;
+}
+
+.collapse-trigger[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+.collapse-content {
+    padding: 1rem;
+    background-color: var(--bs-secondary-bg, #e9ecef);
+    border-radius: var(--bs-border-radius, 0.375rem);
+}
+
+/* Dark mode for collapse content */
+@media (prefers-color-scheme: dark) {
+    .collapse-content {
+        background-color: var(--bs-dark, #212529);
+    }
+}
+
+/* Form section headers */
+.form-section-header {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    color: var(--bs-body-color, #212529);
+}
+
+/* Autocomplete Styles */
+.autocomplete-results {
+    background: var(--bg-primary, #fff);
+    border: 1px solid var(--border-color, #dee2e6);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-results .list-group-item {
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    border: none;
+}
+
+.autocomplete-results .list-group-item:hover {
+    background-color: var(--bg-secondary, #f8f9fa);
+}
+
+/* Service Info Bar */
+.service-info-bar {
+    background: var(--bg-secondary, #f8f9fa);
+    border: 1px solid var(--border-color, #dee2e6);
+    border-radius: 0.375rem;
+    padding: 1rem;
+}
+
+/* Service Info Details Container */
+.service-info-details-container {
+    background: var(--bg-secondary, #f8f9fa);
+    border: 1px solid var(--border-color, #dee2e6);
+    border-radius: 0.375rem;
+    padding: 1rem;
+}
+
+.service-info-details-container .form-control-plaintext {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* Action Button Group */
+.action-button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.25rem;
+}
+
+.action-button-group .btn {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+    white-space: nowrap;
+    border-radius: 0.375rem !important;
+}
+
+.action-button-group .btn:first-child {
+    margin-left: -1px;
+}
+
+.action-button-group .btn.active {
+    background-color: var(--primary-color, #0d6efd);
+    border-color: var(--primary-color, #0d6efd);
+    color: #fff;
+}
+
+.action-button-group .btn i {
+    font-size: 0.875rem;
+}
+
+/* Action Form Container */
+.action-form-container {
+    background: var(--bg-secondary, #f8f9fa);
+    border: 1px solid var(--border-color, #dee2e6);
+    border-radius: 0.375rem;
+    padding: 1.5rem;
+    min-height: 150px;
+}
+
+/* Action Empty State */
+.action-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+}
+
+/* Action Form */
+.action-form {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+
+    .service-info-bar,
+    .service-info-details-container,
+    .action-form-container {
+        background: var(--bg-secondary, #212529);
+        border-color: var(--border-color, rgba(255, 255, 255, 0.15));
+    }
+
+    .autocomplete-results {
+        background: var(--bg-primary, #212529);
+        border-color: var(--border-color, rgba(255, 255, 255, 0.15));
+    }
+
+    .autocomplete-results .list-group-item:hover {
+        background-color: var(--bg-secondary, #343a40);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .action-button-group .btn {
+        font-size: 0.8125rem;
+        padding: 0.3125rem 0.625rem;
+    }
+
+    .action-button-group .btn i {
+        font-size: 0.8125rem;
+    }
+}
+
+/* Sortable Drag Handle - Hidden by default, visible on row hover */
+.sortable-drag-handle {
+    cursor: move;
+    cursor: grab;
+    text-align: center;
+    color: var(--text-secondary, #6c757d) !important;
+    opacity: 0 !important;
+    transition: opacity 0.2s ease;
+    user-select: none;
+    padding: 0.5rem 0.25rem !important;
+}
+
+.sortable-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Show handle on row hover */
+tr:hover .sortable-drag-handle {
+    opacity: 1 !important;
+}
+
+/* SortableJS ghost class for drag preview */
+.sortable-ghost {
+    opacity: 0.4;
+}
+
+/* Small form control to match form-select-sm sizing */
+.form-control-sm {
+    min-height: calc(1.5em + .5rem + calc(var(--bs-border-width) * 2));
+    padding: .25rem .5rem !important;
+    font-size: .875rem !important;
+    border-radius: var(--bs-border-radius-sm) !important;
+}
+
+/* Floating Bulk Actions Box (Support Manager Style) */
+.bulk-actions-bar {
+    position: fixed;
+    z-index: 1000;
+    right: 1rem;
+    bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--bg-secondary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.bulk-actions-bar.show {
+    transform: translateY(0);
+}
+
+.bulk-actions-bar .selected-count {
+    font-weight: 600;
+}
+
+.bulk-actions-bar span {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Responsive adjustments for bulk actions */
+@media (max-width: 768px) {
+    .bulk-actions-bar {
+        right: 0.5rem;
+        bottom: 0.5rem;
+        min-width: auto;
+        max-width: calc(100vw - 1rem);
+        padding: 0.75rem;
+    }
+
+    .bulk-actions-bar .d-flex {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+
+    .bulk-actions-bar .selected-count {
+        font-size: 0.8125rem;
+    }
+
+    .bulk-actions-bar .form-select,
+    .bulk-actions-bar .form-control {
+        width: 100% !important;
+    }
+}

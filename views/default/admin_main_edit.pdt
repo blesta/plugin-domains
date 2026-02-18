@@ -1,307 +1,705 @@
+<?php /** @var View $this */ ?>
 
-        <?php
-        echo ($message ?? null);
+<!-- Delay Suspension Modal -->
+<div class="modal fade" id="delaySuspensionModal" tabindex="-1" aria-labelledby="delaySuspensionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" id="delaySuspensionModalContent">
+            <!-- Content loaded via AJAX -->
+        </div>
+    </div>
+</div>
 
-        $this->Widget->clear();
-        $this->Widget->setTabs($tabs ?? []);
-        $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->name ?? null)), ['id' => 'admin_main_edit'], ($render_section ?? null));
-        ?>
-        <div class="inner">
-            <div class="title_row first">
-                <h3><?php $this->_('AdminMain.edit.title_domain_information');?></h3>
-            </div>
-            <div class="pad">
-                <ul>
-                    <li>
-                        <?php $this->_('AdminMain.edit.text_domain');?>
-                        <?php (print (isset($service->name) ? $this->Html->safe($service->name) : null));?>
-                    </li>
-                    <li>
-                        <?php $this->_('AdminMain.edit.text_registrar');?>
-                        <?php (print (isset($module->name) ? $this->Html->safe($module->name) : null));?>
-                    </li>
-                    <li>
-                        <?php $this->_('AdminMain.edit.text_years');?>
-                        <?php
-                        $period = (($service->package_pricing->term ?? 1) > 1) ? $service->package_pricing->period . 's' : $service->package_pricing->period;
-                        $this->_('AdminMain.edit.term_' . $period, false, ($service->package_pricing->term ?? 1));
-                        ?>
-                    </li>
-                    <li>
-                        <?php $this->_('AdminMain.edit.text_status');?>
-                        <?php echo $this->Html->safe(($statuses[$service->status] ?? null));?>
-                    </li>
-                    <li>
-                        <?php $this->_('AdminMain.edit.text_date_added');?>
-                        <?php echo (!empty($service->date_added) ? $this->Date->cast($service->date_added) : '');?>
-                    </li>
-                    <li>
-                        <?php $this->_('AdminMain.edit.text_registration_date');?>
-                        <?php echo (!empty($service->registration_date) ? $this->Date->cast($service->registration_date) : '');?>
-                    </li>
-                    <li>
-                        <?php $this->_('AdminMain.edit.text_date_renews');?>
-                        <?php echo (!empty($service->date_renews) ? $this->Date->cast($service->date_renews) : $this->_('AdminMain.edit.text_never', true));?>
-                    </li>
-                    <li>
-                        <?php $this->_('AdminMain.edit.text_date_expires');?>
-                        <?php echo (!empty($service->expiration_date) ? $this->Date->cast($service->expiration_date) : $this->_('AdminMain.edit.text_never', true));?>
-                    </li>
-                    <?php
-                    if (!empty($service->date_last_renewed)) {
-                    ?>
-                    <li>
-                        <?php $this->_('AdminMain.edit.text_date_last_renewed');?>
-                        <?php echo $this->Date->cast($service->date_last_renewed);?>
-                    </li>
-                    <?php
-                    }
-                    if (!empty($service->date_suspended)) {
-                    ?>
-                    <li>
-                        <?php $this->_('AdminMain.edit.text_date_suspended');?>
-                        <?php echo $this->Date->cast($service->date_suspended);?>
-                    </li>
-                    <?php
-                    }
-                    if (!empty($service->date_canceled)) {
-                    ?>
-                    <li>
-                        <?php $this->_('AdminMain.edit.text_date_canceled');?>
-                        <?php echo $this->Date->cast($service->date_canceled);?>
-                    </li>
-                    <?php
-                    }
-                    ?>
-                </ul>
+<?php
+echo ($message ?? null);
+
+$this->Widget->clear();
+$this->Widget->setStyleSheet($this->view_dir . 'css/domains.css');
+$this->Widget->setTabs($tabs ?? []);
+$this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->name ?? null)), ['id' => 'admin_main_edit'], ($render_section ?? null));
+?>
+<div class="inner">
+    <h6 class="form-section-header"><?php $this->_('AdminMain.edit.title_domain_information');?></h6>
+
+    <!-- Domain Info Bar -->
+    <div class="service-info-bar mb-3">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <h6 class="mb-1"><?php echo $this->Html->safe($service->name ?? '');?></h6>
+                <div class="text-muted"><?php echo $this->Html->safe($module->name ?? '');?></div>
             </div>
             <?php
-            if ($service->status == 'active' || $service->status == 'suspended') {
-                $this->Form->create(null, ['id' => 'action_domain']);
-            ?>
-                <div class="title_row">
-                    <h3><?php $this->_('AdminMain.edit.title_actions');?></h3>
-                </div>
-                <div class="pad">
-                    <ul>
-                        <li>
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_action', true), 'action');
-                            $this->Form->fieldSelect('action', ($actions ?? null), ($vars->action ?? null), ['id' => 'action']);
-                            ?>
-                        </li>
-                        <li class="domain_renewal">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_years', true));
-                            $this->Form->fieldText('years', ($vars->years ?? 1), ['class' => 'form-control', 'id' => 'years']);
-                            ?>
-                        </li>
-                        <li class="change_registrar">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_module', true), 'module_id');
-                            $this->Form->fieldSelect('module_id', $modules ?? [], $vars->module ?? null, ['id' => 'module_id']);
-                            ?>
-                        </li>
-                        <li class="change_auto_renewal">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_auto_renewal', true), 'auto_renewal');
-                            $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], $vars->auto_renewal ?? null);
-                            ?>
-                        </li>
-                        <li class="change_expiration_date">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_expiration_date', true));
-                            $this->Form->fieldText('expiration_date', $this->Date->cast($vars->expiration_date ?? $service->expiration_date, 'Y-m-d'), ['class' => 'date', 'id' => 'expiration_date']);
-                            ?>
-                        </li>
-                        <li class="change_registration_date">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_registration_date', true));
-                            $this->Form->fieldText('registration_date', $this->Date->cast($vars->registration_date ?? $service->registration_date, 'Y-m-d'), ['class' => 'date', 'id' => 'registration_date']);
-                            ?>
-                        </li>
-                        <li class="update_nameservers">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_ns1', true), 'nameservers_1');
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[0] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_1']);
-                            ?>
-                        </li>
-                        <li class="update_nameservers">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_ns2', true), 'nameservers_2');
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[1] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_2']);
-                            ?>
-                        </li>
-                        <li class="update_nameservers">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_ns3', true), 'nameservers_3');
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[2] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_3']);
-                            ?>
-                        </li>
-                        <li class="update_nameservers">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_ns4', true), 'nameservers_4');
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[3] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_4']);
-                            ?>
-                        </li>
-                        <li class="update_nameservers">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_ns5', true), 'nameservers_5');
-                            $this->Form->fieldText('nameservers[]', ($vars->nameservers[4] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_5']);
-                            ?>
-                        </li>
-                        <li class="push_to_client">
-                            <?php
-                            $this->Form->label($this->_('AdminMain.edit.field_client', true), 'domain_client');
-                            $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control ui-autocomplete-input', 'id' => 'client']);
-                            $this->Form->fieldHidden('client_id', ($vars->client_id ?? null), ['id' => 'client_id']);
-                            ?>
-                        </li>
-                    </ul>
-                </div>
-                <div id="service_action_totals"></div>
-                <div class="button_row">
-                    <?php
-                    $this->Form->fieldSubmit('submit', $this->_('AdminMain.edit.field_submit', true), ['class' => 'btn btn-primary pull-right']);
-                    ?>
-                </div>
-            <?php
-                $this->Form->end();
+            $status_class = 'bg-secondary';
+            if ($service->status == 'active') {
+                $status_class = 'bg-success';
+            } elseif ($service->status == 'suspended') {
+                $status_class = 'bg-warning';
+            } elseif ($service->status == 'canceled') {
+                $status_class = 'bg-danger';
+            } elseif ($service->status == 'pending') {
+                $status_class = 'bg-info';
             }
-
-            $this->Form->create(null, ['id' => 'edit_domain']);
             ?>
-                <div class="title_row">
-                    <h3><?php echo $this->_('AdminMain.edit.title_basic_options', true);?></h3>
-                </div>
-                <div class="pad">
-                    <ul>
-                        <?php
-                        if ($service->status == 'pending') {
-                            $this->Form->fieldHidden('status', 'active');
-                        }
+            <span class="badge <?php echo $status_class;?>">
+                <i class="bi bi-circle-fill me-1"></i><?php echo $this->Html->safe($statuses[$service->status] ?? '');?>
+            </span>
+        </div>
+    </div>
 
-                        if ($service->status == 'pending') {
-                        ?>
-                            <li>
-                                <?php $this->Form->label($this->_('AdminMain.edit.field_module', true));?>
-                                <?php $this->Form->fieldSelect('module', $modules ?? [], ($vars->module ?? null), ['id' => 'module']);?>
-                            </li>
-                            <li>
-                                <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order']);?>
-                                <?php $this->Form->label($this->_('AdminMain.edit.field_notify_order', true), 'notify_order', ['class' => 'inline']);?>
-                            </li>
-                        <?php
-                        }
-                        ?>
-                        <li>
-                            <div id="module_fields">
-                                <?php
-                                if ($service->status == 'pending') {
-                                    $this->Form->fieldHidden('domain', $domain ?? $vars->domain ?? '');
-                                    $this->Form->fieldHidden('service_id', $service->id ?? '');
-                                    $this->Form->fieldHidden('module_row', $vars->module_row ?? '');
-                                } else {
-                                    $this->Form->fieldHidden('module', $module->id ?? null, ['id' => 'module']);
-                                    echo $fields ?? '';
-                                }
-                                ?>
-                            </div>
-                        </li>
-                        <li>
-                            <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module']);?>
-                            <?php $this->Form->label($this->_('AdminMain.edit.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'inline']);?>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="button_row">
+    <!-- Domain Details -->
+    <div class="service-info-details-container mb-3">
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-calendar3 me-1"></i><?php $this->_('AdminMain.edit.text_years');?>
+                </label>
+                <div class="form-control-plaintext">
                     <?php
-                    $this->Form->fieldSubmit('submit', $this->_('AdminMain.edit.field_' . (($service->status == 'pending') ? 'activate' : 'submit'), true), ['class' => 'btn btn-primary pull-right']);
+                    $period = (($service->package_pricing->term ?? 1) > 1) ? $service->package_pricing->period . 's' : $service->package_pricing->period;
+                    $this->_('AdminMain.edit.term_' . $period, false, ($service->package_pricing->term ?? 1));
                     ?>
-                    <a href="<?php echo $this->base_uri . 'clients/editservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($service->id) ? $this->Html->safe($service->id) : null) . '/';?>" class="btn btn-default pull-right"><?php echo $this->_('AdminMain.edit.field_edit_service', true);?></a>
                 </div>
-                <div class="clearfix"></div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-calendar-check me-1"></i><?php $this->_('AdminMain.edit.text_date_added');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo (!empty($service->date_added) ? $this->Date->cast($service->date_added) : '');?></div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-calendar-event me-1"></i><?php $this->_('AdminMain.edit.text_registration_date');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo (!empty($service->registration_date) ? $this->Date->cast($service->registration_date) : '');?></div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-0">
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-arrow-repeat me-1"></i><?php $this->_('AdminMain.edit.text_date_renews');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo (!empty($service->date_renews) ? $this->Date->cast($service->date_renews) : $this->_('AdminMain.edit.text_never', true));?></div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-calendar-x me-1"></i><?php $this->_('AdminMain.edit.text_date_expires');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo (!empty($service->expiration_date) ? $this->Date->cast($service->expiration_date) : $this->_('AdminMain.edit.text_never', true));?></div>
+            </div>
+            <?php if (!empty($service->date_last_renewed)) { ?>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-arrow-clockwise me-1"></i><?php $this->_('AdminMain.edit.text_date_last_renewed');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo $this->Date->cast($service->date_last_renewed);?></div>
+            </div>
+            <?php } ?>
+        </div>
+
+        <?php if (!empty($service->date_suspended) || !empty($service->date_canceled)) { ?>
+        <div class="row g-3 mb-0 mt-3">
+            <?php if (!empty($service->date_suspended)) { ?>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-pause-circle me-1"></i><?php $this->_('AdminMain.edit.text_date_suspended');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo $this->Date->cast($service->date_suspended);?></div>
+            </div>
+            <?php } ?>
+            <?php if (!empty($service->date_canceled)) { ?>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">
+                    <i class="bi bi-x-circle me-1"></i><?php $this->_('AdminMain.edit.text_date_canceled');?>
+                </label>
+                <div class="form-control-plaintext"><?php echo $this->Date->cast($service->date_canceled);?></div>
+            </div>
+            <?php } ?>
+        </div>
+        <?php } ?>
+    </div>
+
+    <?php
+    if ($service->status == 'active' || $service->status == 'suspended') {
+        $this->Form->create(null, ['id' => 'action_domain']);
+        ?>
+        <hr>
+        <h6 class="form-section-header"><?php $this->_('AdminMain.edit.title_actions');?></h6>
+
+        <!-- Action Button Group -->
+        <?php
+        $this->Form->fieldHidden('action', ($vars->action ?? null), ['id' => 'action_value']);
+        ?>
+        <div class="btn-group action-button-group mb-3 flex-wrap" role="group" aria-label="Domain actions">
             <?php
-            $this->Form->end();
+            if (isset($actions) && is_array($actions)) {
+                foreach ($actions as $action_key => $action_label) {
+                    if ($action_key === '') {
+                        continue; // Skip empty option
+                    }
+
+                    // Map action keys to icons
+                    $icon_map = [
+                        'domain_renewal' => 'arrow-repeat',
+                        'change_registrar' => 'box-arrow-right',
+                        'change_auto_renewal' => 'toggles',
+                        'change_expiration_date' => 'calendar-x',
+                        'change_registration_date' => 'calendar-event',
+                        'update_nameservers' => 'hdd-network',
+                        'push_to_client' => 'person-up',
+                        'set_price_override' => 'cash-coin',
+                        'remove_price_override' => 'x-circle',
+                        'unparent' => 'diagram-2'
+                    ];
+                    $icon = $icon_map[$action_key] ?? 'gear';
+
+                    // Actions that don't need forms (no configuration required)
+                    $direct_actions = ['set_price_override', 'remove_price_override', 'unparent'];
+                    ?>
+            <button type="button" class="btn btn-outline-secondary" data-action="<?php echo $this->Html->safe($action_key);?>" <?php echo in_array($action_key, $direct_actions) ? 'data-direct="true"' : '';?>>
+                <i class="bi bi-<?php echo $icon;?> me-2"></i><?php echo $this->Html->safe($action_label);?>
+            </button>
+                    <?php
+                } // end foreach
+            }
+            ?>
+        </div>
+
+        <!-- Expandable Form Container -->
+        <div class="action-form-container mb-3">
+            <!-- Empty State - No Action Selected -->
+            <div class="action-empty-state" id="action-empty">
+                <div class="text-center py-5">
+                    <i class="bi bi-hand-index" style="font-size: 3rem; color: var(--text-secondary);"></i>
+                    <p class="text-muted mt-3 mb-0"><?php $this->_('AdminMain.edit.text_select_action');?></p>
+                </div>
+            </div>
+
+            <!-- Empty State - Direct Action (No Fields) -->
+            <div class="action-empty-state" id="action-no-fields" style="display: none;">
+                <div class="text-center py-4">
+                    <i class="bi bi-info-circle" style="font-size: 3rem; color: var(--accent-color, #0d6efd);"></i>
+                    <p class="text-muted mt-3 mb-0"><?php $this->_('AdminMain.edit.text_no_fields');?></p>
+                </div>
+            </div>
+
+            <!-- Domain Renewal Form -->
+            <div class="action-form domain_renewal" style="display: none;">
+                <div class="mb-3">
+                    <?php
+                    $this->Form->label($this->_('AdminMain.edit.field_years', true), 'years', ['class' => 'form-label']);
+                    $this->Form->fieldText('years', ($vars->years ?? 1), ['class' => 'form-control', 'id' => 'years']);
+                    ?>
+                </div>
+            </div>
+
+            <!-- Change Registrar Form -->
+            <div class="action-form change_registrar" style="display: none;">
+                <div class="mb-3">
+                    <?php
+                    $this->Form->label($this->_('AdminMain.edit.field_module', true), 'module_id', ['class' => 'form-label']);
+                    $this->Form->fieldSelect('module_id', $modules ?? [], $vars->module ?? null, ['id' => 'module_id', 'class' => 'form-select']);
+                    ?>
+                </div>
+            </div>
+
+            <!-- Change Auto Renewal Form -->
+            <div class="action-form change_auto_renewal" style="display: none;">
+                <div class="mb-3">
+                    <?php
+                    $this->Form->label($this->_('AdminMain.edit.field_auto_renewal', true), 'auto_renewal', ['class' => 'form-label']);
+                    $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], $vars->auto_renewal ?? null, ['class' => 'form-select']);
+                    ?>
+                </div>
+            </div>
+
+            <!-- Change Expiration Date Form -->
+            <div class="action-form change_expiration_date" style="display: none;">
+                <div class="mb-3">
+                    <?php
+                    $this->Form->label($this->_('AdminMain.edit.field_expiration_date', true), 'expiration_date', ['class' => 'form-label']);
+                    $this->Form->fieldText('expiration_date', $this->Date->cast($vars->expiration_date ?? $service->expiration_date, 'Y-m-d'), ['class' => 'form-control date', 'id' => 'expiration_date']);
+                    ?>
+                </div>
+            </div>
+
+            <!-- Change Registration Date Form -->
+            <div class="action-form change_registration_date" style="display: none;">
+                <div class="mb-3">
+                    <?php
+                    $this->Form->label($this->_('AdminMain.edit.field_registration_date', true), 'registration_date', ['class' => 'form-label']);
+                    $this->Form->fieldText('registration_date', $this->Date->cast($vars->registration_date ?? $service->registration_date, 'Y-m-d'), ['class' => 'form-control date', 'id' => 'registration_date']);
+                    ?>
+                </div>
+            </div>
+
+            <!-- Update Nameservers Form -->
+            <div class="action-form update_nameservers" style="display: none;">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.edit.field_ns1', true), 'nameservers_1', ['class' => 'form-label text-muted small']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[0] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_1']);
+                        ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.edit.field_ns2', true), 'nameservers_2', ['class' => 'form-label text-muted small']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[1] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_2']);
+                        ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.edit.field_ns3', true), 'nameservers_3', ['class' => 'form-label text-muted small']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[2] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_3']);
+                        ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.edit.field_ns4', true), 'nameservers_4', ['class' => 'form-label text-muted small']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[3] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_4']);
+                        ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php
+                        $this->Form->label($this->_('AdminMain.edit.field_ns5', true), 'nameservers_5', ['class' => 'form-label text-muted small']);
+                        $this->Form->fieldText('nameservers[]', ($vars->nameservers[4] ?? ''), ['class' => 'form-control', 'id' => 'nameservers_5']);
+                        ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Push to Client Form -->
+            <div class="action-form push_to_client" style="display: none;">
+                <div class="position-relative">
+                    <?php
+                    $this->Form->label($this->_('AdminMain.edit.field_client', true), 'client', ['class' => 'form-label']);
+                    $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control', 'id' => 'client', 'autocomplete' => 'off']);
+                    $this->Form->fieldHidden('client_id', ($vars->client_id ?? null), ['id' => 'client_id']);
+                    ?>
+                    <div id="client_autocomplete_results" class="autocomplete-results position-absolute bg-body border rounded shadow-sm" style="display: none; z-index: 1050; width: 100%; max-height: 200px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="service_action_totals" class="mb-3"></div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <?php
+            $this->Form->fieldSubmit('submit', $this->_('AdminMain.edit.field_submit', true), ['class' => 'btn btn-primary']);
             ?>
         </div>
         <?php
-        $this->Widget->end();
+        $this->Form->end();
+    }
+    ?>
+
+    <?php
+    $this->Form->create(null, ['id' => 'edit_domain']);
+    ?>
+        <hr>
+        <h6 class="form-section-header"><?php echo $this->_('AdminMain.edit.title_basic_options', true);?></h6>
+
+        <?php
+        if ($service->status == 'pending') {
+            $this->Form->fieldHidden('status', 'active');
+        }
         ?>
 
+        <?php
+        if ($service->status == 'pending') {
+            ?>
+            <div class="mb-3">
+                <?php
+                $this->Form->label($this->_('AdminMain.edit.field_module', true), 'module', ['class' => 'form-label d-flex align-items-center']);
+                $this->Form->fieldSelect('module', $modules ?? [], ($vars->module ?? null), ['id' => 'module', 'class' => 'form-select']);
+                ?>
+            </div>
+
+            <div class="form-check mb-3">
+                <?php $this->Form->fieldCheckbox('notify_order', 'true', ($vars->notify_order ?? 'true') === 'true', ['id' => 'notify_order', 'class' => 'form-check-input']);?>
+                <?php $this->Form->label($this->_('AdminMain.edit.field_notify_order', true), 'notify_order', ['class' => 'form-check-label']);?>
+            </div>
+            <?php
+        }
+        ?>
+
+        <div class="mb-3">
+            <div id="module_fields">
+                <?php
+                if ($service->status == 'pending') {
+                    $this->Form->fieldHidden('domain', $domain ?? $vars->domain ?? '');
+                    $this->Form->fieldHidden('service_id', $service->id ?? '');
+                    $this->Form->fieldHidden('module_row', $vars->module_row ?? '');
+                } else {
+                    $this->Form->fieldHidden('module', $module->id ?? null, ['id' => 'module']);
+                    echo $fields ?? '';
+                }
+                ?>
+            </div>
+        </div>
+
+        <div class="form-check mb-3">
+            <?php $this->Form->fieldCheckbox('use_module', 'true', ($vars->use_module ?? 'true') === 'true', ['id' => 'use_module', 'class' => 'form-check-input']);?>
+            <?php $this->Form->label($this->_('AdminMain.edit.field_use_module', true, ($module_name ?? null)), 'use_module', ['class' => 'form-check-label']);?>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <a href="<?php echo $this->base_uri . 'clients/editservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($service->id) ? $this->Html->safe($service->id) : null) . '/';?>" class="btn btn-outline-secondary"><?php echo $this->_('AdminMain.edit.field_edit_service', true);?></a>
+            <?php
+            $this->Form->fieldSubmit('submit', $this->_('AdminMain.edit.field_' . (($service->status == 'pending') ? 'activate' : 'submit'), true), ['class' => 'btn btn-primary']);
+            ?>
+        </div>
+    <?php
+    $this->Form->end();
+    ?>
+</div>
+<?php
+$this->Widget->end();
+?>
+
 <script type="text/javascript">
-    $(document).ready(function() {
-        $('#module').on('change', function() {
+(function() {
+    'use strict';
+
+    var actionDomainForm = document.getElementById('action_domain');
+    var editDomainForm = document.getElementById('edit_domain');
+
+    // Module change handler (for pending services)
+    var moduleSelect = document.getElementById('module');
+    if (moduleSelect) {
+        moduleSelect.addEventListener('change', function() {
             updateModuleFields();
         });
+    }
+
+    // Initialize module fields
+    if (moduleSelect && editDomainForm) {
         updateModuleFields();
+    }
 
+        /**
+         * Update module fields via AJAX
+         */
         function updateModuleFields() {
-            var module_id = $('#module').val();
-            var form_data = $('#edit_domain').serialize("serialize");
+            const moduleId = moduleSelect ? moduleSelect.value : '';
 
-            $(this).blestaRequest(
-                "POST",
-                '<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getmodulefields/');?>' + module_id + '/<?php echo $this->Html->safe($package->id ?? null);?>/<?php echo ($service->status !== 'pending') ? 'edit/' : ''; ?>',
-                form_data,
-                function(response) {
-                    $('#module_fields').html(response);
-                },
-                null,
-                {dataType: 'json'}
-            );
+            const formData = new FormData(editDomainForm);
+
+            fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getmodulefields/');?>' + moduleId + '/<?php echo $this->Html->safe($package->id ?? null);?>/<?php echo ($service->status !== 'pending') ? 'edit/' : ''; ?>', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const moduleFields = document.getElementById('module_fields');
+                if (moduleFields && data.content) {
+                    moduleFields.innerHTML = data.content;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading module fields:', error);
+            });
         }
 
-        serviceActionChange();
-        $("#action").change(function() {
-            serviceActionChange();
-        });
+        // Service action button group handler
+        const actionButtons = document.querySelectorAll('.action-button-group .btn');
+        const actionValueInput = document.getElementById('action_value');
+        const actionEmpty = document.getElementById('action-empty');
+        const actionNoFields = document.getElementById('action-no-fields');
 
-        function serviceActionChange() {
-            $(".domain_renewal").hide();
-            $(".change_auto_renewal").hide();
-            $(".change_expiration_date").hide();
-            $(".change_registration_date").hide();
-            $(".change_registrar").hide();
-            $(".update_nameservers").hide();
-            $(".push_to_client").hide();
+        if (actionButtons.length > 0 && actionDomainForm) {
+            actionButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const action = this.getAttribute('data-action');
+                    const isDirect = this.getAttribute('data-direct') === 'true';
 
-            var action = $("#action").val();
-            if (action !== '') {
-                $("." + action).show();
+                    // Update active state
+                    actionButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Update hidden input
+                    if (actionValueInput) {
+                        actionValueInput.value = action;
+                    }
+
+                    // Show selected form or no-fields message
+                    serviceActionChange(action, isDirect);
+                });
+            });
+        }
+
+        /**
+         * Show/hide action sections based on selection
+         */
+        function serviceActionChange(action, isDirect) {
+            if (!actionDomainForm) return;
+
+            // Hide all action sections and empty states
+            const sections = actionDomainForm.querySelectorAll('.action-form');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+
+            if (actionEmpty) {
+                actionEmpty.style.display = 'none';
+            }
+            if (actionNoFields) {
+                actionNoFields.style.display = 'none';
+            }
+
+            if (action && action !== '') {
+                if (isDirect) {
+                    // Show "no fields required" message for direct actions
+                    if (actionNoFields) {
+                        actionNoFields.style.display = 'block';
+                    }
+                } else {
+                    // Show form for actions with fields
+                    const selectedSection = actionDomainForm.querySelector('.action-form.' + action);
+                    if (selectedSection) {
+                        selectedSection.style.display = 'block';
+                    }
+                }
+            } else {
+                // Show "select action" empty state
+                if (actionEmpty) {
+                    actionEmpty.style.display = 'block';
+                }
             }
         }
 
-        $('#client').autocomplete({
-            minLength: 3,
-            source: function(request, response) {
-                $(document).blestaRequest('POST', '<?php echo $this->Html->safe($this->base_uri . 'clients/getclients/'); ?>',
-                    { _csrf_token: $('#action_domain').closest('form').find('input[name=_csrf_token]').val(), search: request.term},
-                    function(data) {
-                        if (data && data.clients) {
-                            // Build the response to show
-                            var clients = [];
-                            for (var id in data.clients) {
-                                clients.push({label: data.clients[id], value: data.clients[id], id: id});
-                            }
-                            response(clients);
+        // Initialize - show empty state
+        if (actionEmpty) {
+            actionEmpty.style.display = 'block';
+        }
 
-                            // No results
-                            if (clients.length == 0) {
-                                $('#no_clients').show();
-                            } else {
-                                $('#no_clients').hide();
+        // Client autocomplete - Vanilla JS implementation
+        const clientInput = document.getElementById('client');
+        const clientIdInput = document.getElementById('client_id');
+        const resultsContainer = document.getElementById('client_autocomplete_results');
+
+        if (clientInput && actionDomainForm) {
+            let debounceTimer;
+
+            clientInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value;
+
+                if (query.length < 3) {
+                    if (resultsContainer) resultsContainer.style.display = 'none';
+                    return;
+                }
+
+                debounceTimer = setTimeout(function() {
+                    const formData = new FormData();
+                    formData.append('search', query);
+
+                    // Get CSRF token from form
+                    const csrfToken = actionDomainForm.querySelector('input[name="_csrf_token"]');
+                    if (csrfToken) {
+                        formData.append('_csrf_token', csrfToken.value);
+                    }
+
+                    fetch('<?php echo $this->Html->safe($this->base_uri . 'clients/getclients/');?>', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.clients && resultsContainer) {
+                            let html = '<ul class="list-group list-group-flush">';
+                            for (const id in data.clients) {
+                                html += '<li class="list-group-item list-group-item-action" data-id="' + id + '">' + data.clients[id] + '</li>';
+                            }
+                            html += '</ul>';
+
+                            if (Object.keys(data.clients).length === 0) {
+                                html = '<div class="p-2 text-muted small">No clients found</div>';
+                            }
+
+                            resultsContainer.innerHTML = html;
+                            resultsContainer.style.display = 'block';
+
+                            // Handle clicks on autocomplete results
+                            resultsContainer.querySelectorAll('.list-group-item').forEach(item => {
+                                item.addEventListener('click', function() {
+                                    clientInput.value = this.textContent;
+                                    if (clientIdInput) {
+                                        clientIdInput.value = this.getAttribute('data-id');
+                                    }
+                                    resultsContainer.style.display = 'none';
+                                });
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading clients:', error);
+                    });
+                }, 300);
+            });
+
+            // Hide autocomplete when clicking outside
+            document.addEventListener('click', function(e) {
+                if (resultsContainer && !clientInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+                    resultsContainer.style.display = 'none';
+                }
+            });
+        }
+
+    // Setup client settings toggle
+    var settingsToggle = document.getElementById('clientSettingsToggle');
+    var settingsCollapse = document.getElementById('clientSettingsCollapse');
+    var settingsChevron = document.getElementById('settingsChevron');
+
+    if (settingsToggle && settingsCollapse && settingsChevron) {
+        var clientId = <?php echo json_encode($client->id ?? 0);?>;
+
+        // Load saved state
+        var settingsState = localStorage.getItem('clientSettingsCollapsed_' + clientId);
+        if (settingsState === 'true') {
+            settingsChevron.classList.remove('bi-chevron-down');
+            settingsChevron.classList.add('bi-chevron-up');
+            settingsCollapse.style.display = 'none';
+        } else {
+            settingsCollapse.style.display = 'block';
+        }
+
+        settingsToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            blestaSlideToggle(settingsCollapse, 400, function(isNowOpen) {
+                if (isNowOpen) {
+                    settingsChevron.classList.remove('bi-chevron-up');
+                    settingsChevron.classList.add('bi-chevron-down');
+                    localStorage.setItem('clientSettingsCollapsed_' + clientId, 'false');
+                } else {
+                    settingsChevron.classList.remove('bi-chevron-down');
+                    settingsChevron.classList.add('bi-chevron-up');
+                    localStorage.setItem('clientSettingsCollapsed_' + clientId, 'true');
+                }
+            });
+        });
+    }
+
+    // Setup quick update links (status bar, invoice method, etc.)
+    var quickupdateLinks = document.querySelectorAll('a.quickupdate');
+    quickupdateLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            var url = this.getAttribute('href');
+            var self = this;
+
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.class_name) {
+                    if (self.classList.contains('statusupdate')) {
+                        var statusBar = self.querySelector('.client-status-bar');
+                        if (statusBar) {
+                            statusBar.className = 'client-status-bar ' + data.class_name.replace('status_box ', '').replace(' status_box', '').replace('status_box', '');
+                            var statusText = statusBar.querySelector('.client-status-text');
+                            if (statusText) {
+                                statusText.textContent = data.text + ' <?php echo $this->_('AdminClients.view.status_link', true);?>';
                             }
                         }
-                    },
-                    null,
-                    {dataType:'json'}
-                );
-            },
-            select: function(event, ui) {
-                $('#client_id').val(ui.item.id);
-            }
+                    } else {
+                        var strong = self.querySelector('strong');
+                        if (strong) {
+                            strong.className = data.class_name;
+                            var statusSpan = strong.querySelector('.status');
+                            if (statusSpan) {
+                                statusSpan.textContent = data.text + ' ';
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
         });
     });
+
+    // Setup toggle switch quick updates (autodebit, autosuspend, etc.)
+    var quickupdateToggles = document.querySelectorAll('.quickupdate-toggle');
+    quickupdateToggles.forEach(function(toggle) {
+        toggle.addEventListener('change', function(e) {
+            var url = this.getAttribute('data-url');
+            var checkbox = this;
+            var previousState = !checkbox.checked;
+
+            checkbox.disabled = true;
+
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.class_name) {
+                    checkbox.checked = (data.class_name === 'enable');
+
+                    // Handle autosuspend date visibility
+                    if (typeof data.autosuspend_date !== 'undefined') {
+                        var autosuspendDate = document.querySelector('.autosuspend-date');
+                        if (autosuspendDate) {
+                            if (data.class_name === 'enable') {
+                                autosuspendDate.classList.remove('d-none');
+                            } else {
+                                autosuspendDate.classList.add('d-none');
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                checkbox.checked = previousState;
+            })
+            .finally(function() {
+                checkbox.disabled = false;
+            });
+        });
+    });
+
+    // Setup autosuspend date modal
+    var autosuspendDates = document.querySelectorAll('.autosuspend-date');
+    autosuspendDates.forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var url = this.getAttribute('data-url');
+            var modalContent = document.getElementById('delaySuspensionModalContent');
+            var modalElement = document.getElementById('delaySuspensionModal');
+
+            if (!url || !modalContent || !modalElement) return;
+
+            // Load modal content via AJAX
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                modalContent.innerHTML = html;
+
+                // Open modal using Bootstrap's modal
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    var modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                }
+            })
+            .catch(error => console.error('Error loading modal:', error));
+        });
+    });
+})();
 </script>

@@ -1,142 +1,155 @@
-        <?php
-        echo (isset($message) ? $message : null);
+<?php /** @var View $this */ ?>
 
-        $this->Widget->clear();
-        $this->Widget->create($this->_('AdminDomains.configurableoptions_pricing.boxtitle_edit_configurable_option', true, ($configurable_option->label ?? null)), ['id' => 'edit_configurable_option_' . (isset($configurable_option->name) ? $configurable_option->name : null)], (isset($render_section) ? $render_section : null));
+<div class="modal-header">
+    <h5 class="modal-title"><?php $this->_('AdminDomains.configurableoptions_pricing.boxtitle_edit_configurable_option', false, ($configurable_option->label ?? null)); ?></h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<?php echo $this->Html->safe($this->_('AppController.modal.text_close', true)); ?>"></button>
+</div>
 
-        $this->Form->create($this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updateconfigurableoption/' . $configurable_option->id . '/'), ['id' => 'edit_configurable_option']);
+<div class="modal-body">
+<?php
+$this->Form->create($this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/updateconfigurableoption/' . $configurable_option->id . '/'), ['id' => 'edit_configurable_option']);
+?>
+
+<!-- Currency Tabs (Folder Style) -->
+<ul class="nav nav-tabs-connected" role="tablist">
+    <?php
+    $index = 0;
+    foreach (($currencies ?? []) as $currency) {
         ?>
-        <div class="inner">
-            <div class="tab_content">
-                <ul class="tabs">
-                    <?php
-                    foreach (($currencies ?? []) as $currency) {
-                    ?>
-                    <li<?php echo ($currency->code == ($default_currency ?? '')) ? ' class="current"' : '';?>>
-                        <a href="#"><?php echo $this->Html->safe($currency->code);?></a>
-                    </li>
-                    <?php
-                    }
-                    ?>
-                </ul>
-                <div class="inner_content">
-                    <?php
-                    foreach (($currencies ?? []) as $currency) {
-                    ?>
-                        <div>
-                            <?php
-                            foreach (($configurable_option->values ?? []) as $i => $value) {
-                            ?>
-                                <?php
-                                if (count($configurable_option->values) > 1) {
-                                ?>
-                                <div class="tab_table">
-                                    <div class="tab_table_title"><h3><?php echo $this->Html->safe($value->name);?></h3></div>
-                                    <div class="tab_table_body">
-                                <?php
-                                }
-                                ?>
-                                    <table class="table option_table">
-                                        <thead>
-                                            <tr class="heading_row">
-                                                <td class="icon center"></td>
-                                                <td><span><?php $this->_('AdminDomains.configurableoptions_pricing.heading_term');?></span></td>
-                                                <td><span><?php $this->_('AdminDomains.configurableoptions_pricing.heading_price');?></span></td>
-                                                <td class="last"><span><?php $this->_('AdminDomains.configurableoptions_pricing.heading_renew_price');?></span></td>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            $i = 0;
-                                            foreach ($value->pricing as $value_pricing) {
-                                                if ($value_pricing->currency == $currency->code) {
-                                            ?>
-                                                <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : '';?>>
-                                                    <td class="icon center">
-                                                        <?php
-                                                        $this->Form->fieldCheckbox('pricing[' . $value->id . '][' . $value_pricing->term . '][' . $currency->code . '][enabled]', '1', (isset($value_pricing->option_value_id) ? true : false));
-                                                        ?>
-                                                    </td>
-                                                    <td><?php echo $value_pricing->term; ?> <?php echo $value_pricing->period; ?></td>
-                                                    <td>
-                                                        <?php
-                                                        $this->Form->fieldText('pricing[' . $value->id . '][' . $value_pricing->term . '][' . $currency->code . '][price]', $this->CurrencyFormat->format((isset($value_pricing->price) ? $value_pricing->price : 0), $value_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'stretch']);
-                                                        ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php
-                                                        $this->Form->fieldText('pricing[' . $value->id . '][' . $value_pricing->term . '][' . $currency->code . '][price_renews]', $this->CurrencyFormat->format((isset($value_pricing->price_renews) ? $value_pricing->price_renews : 0), $value_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'stretch']);
-                                                        ?>
-                                                    </td>
-                                                </tr>
-                                            <?php
-                                                    $i++;
-                                                }
-                                            }
-                                            ?>
-                                        </tbody>
-                                    </table>
-                                <?php
-                                if (count($configurable_option->values) > 1) {
-                                ?>
-                                    </div>
-                                </div>
-                                <?php
-                                }
-                                ?>
-                            <?php
-                            }
-                            ?>
-                        </div>
-                    <?php
-                    }
-                    ?>
-                </div>
-            </div>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link<?php echo ($currency->code == ($default_currency ?? '')) ? ' active' : '';?>"
+                id="config-<?php echo $this->Html->safe(strtolower($currency->code)); ?>-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#config-<?php echo $this->Html->safe(strtolower($currency->code)); ?>"
+                type="button"
+                role="tab"
+                aria-controls="config-<?php echo $this->Html->safe(strtolower($currency->code)); ?>"
+                aria-selected="<?php echo ($currency->code == ($default_currency ?? '')) ? 'true' : 'false';?>">
+            <?php echo $this->Html->safe($currency->code);?>
+        </button>
+    </li>
+        <?php
+        $index++;
+    }
+    ?>
+</ul>
 
-            <div class="button_row">
-                <?php
-                $this->Form->fieldSubmit('save', $this->_('AdminDomains.configurableoptions_pricing.field_update', true), ['class' => 'btn btn-primary float-right']);
-                ?>
-                <a href="#" class="btn btn-default close float-right"><?php $this->_('AdminDomains.configurableoptions_pricing.field_cancel');?></a>
-            </div>
+<!-- Currency Tab Content -->
+<div class="tab-content tab-content-connected rounded-top-0 p-0 pb-1">
+    <?php
+    $index = 0;
+    foreach (($currencies ?? []) as $currency) {
+        ?>
+    <div class="tab-pane fade<?php echo ($currency->code == ($default_currency ?? '')) ? ' show active' : '';?>"
+         id="config-<?php echo $this->Html->safe(strtolower($currency->code)); ?>"
+         role="tabpanel"
+         aria-labelledby="config-<?php echo $this->Html->safe(strtolower($currency->code)); ?>-tab">
+        <?php
+        foreach (($configurable_option->values ?? []) as $i => $value) {
+            ?>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;"></th>
+                        <th style="width: 120px;"><?php $this->_('AdminDomains.configurableoptions_pricing.heading_term');?></th>
+                        <th><?php $this->_('AdminDomains.configurableoptions_pricing.heading_price');?></th>
+                        <th><?php $this->_('AdminDomains.configurableoptions_pricing.heading_renew_price');?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $row = 0;
+                    foreach ($value->pricing as $value_pricing) {
+                        if ($value_pricing->currency == $currency->code) {
+                            ?>
+                            <tr>
+                                <td class="text-center">
+                                    <?php
+                                    $this->Form->fieldCheckbox('pricing[' . $value->id . '][' . $value_pricing->term . '][' . $currency->code . '][enabled]', '1', (isset($value_pricing->option_value_id) ? true : false), ['class' => 'form-check-input term-checkbox pricing-enable']);
+                                    ?>
+                                </td>
+                                <td><?php echo $value_pricing->term; ?> <?php echo $value_pricing->period; ?></td>
+                                <td>
+                                    <?php
+                                    $this->Form->fieldText('pricing[' . $value->id . '][' . $value_pricing->term . '][' . $currency->code . '][price]', $this->CurrencyFormat->format(($value_pricing->price ?? 0), $value_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'form-control pricing-price', 'type' => 'number', 'step' => '0.01', 'min' => '0']);
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    $this->Form->fieldText('pricing[' . $value->id . '][' . $value_pricing->term . '][' . $currency->code . '][price_renews]', $this->CurrencyFormat->format(($value_pricing->price_renews ?? 0), $value_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), ['class' => 'form-control pricing-renew', 'type' => 'number', 'step' => '0.01', 'min' => '0']);
+                                    ?>
+                                </td>
+                            </tr>
+                            <?php
+                            $row++;
+                        }
+                    }
+                    ?>
+                </tbody>
+            </table>
         </div>
-        <?php
-        $this->Form->end();
-        $this->Widget->end();
+            <?php
+        }
         ?>
+    </div>
+        <?php
+        $index++;
+    }
+    ?>
+</div>
+
+<?php
+$this->Form->end();
+?>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php $this->_('AdminDomains.configurableoptions_pricing.field_cancel');?></button>
+    <button type="submit" form="edit_configurable_option" class="btn btn-primary"><?php $this->_('AdminDomains.configurableoptions_pricing.field_update');?></button>
+</div>
 
 <script type="text/javascript">
-    $(document).ready(function() {
-        // Set secondary tabs
-        $('div.tab_content').blestaTabbedContent();
+(function() {
+    'use strict';
 
-        // Close modal
-        $('#edit_configurable_option_<?php echo $this->Html->safe($configurable_option->name ?? null);?> .btn.close').on('click', function() {
-            $(this).closest('.qtip').find('.qtip-close').click();
-        });
+    var form = document.getElementById('edit_configurable_option');
+    if (!form) return;
 
-        // Sync Register and Renew price
-        $('.table input[name*="[price]"]').change(function() {
-            if ($(this).parent().parent().find('input[name*="[price_renews]"]').val() == 0) {
-                $(this).parent().parent().find('input[name*="[price_renews]"]').val($(this).val());
+    // Sync Register and Renew price
+    form.addEventListener('change', function(e) {
+        var priceInput = e.target.closest('input[name*="[price]"]:not([name*="[price_renews]"])');
+        if (priceInput) {
+            var row = priceInput.closest('tr');
+            if (!row) return;
+
+            var renewInput = row.querySelector('input[name*="[price_renews]"]');
+            if (renewInput && parseFloat(renewInput.value) === 0) {
+                renewInput.value = priceInput.value;
             }
-        });
-
-        // Disable pricing rows
-        function disablePricings() {
-            $('.table .icon input[name*="enabled"]').each(function () {
-                if ($(this).is(":checked")) {
-                    $(this).parent().parent().find('input[type="text"]').prop('disabled', false);
-                } else {
-                    $(this).parent().parent().find('input[type="text"]').prop('disabled', true);
-                }
-            });
         }
-        disablePricings();
 
-        $('.table .icon input[name*="enabled"]').change(function() {
+        var enableCheckbox = e.target.closest('input.pricing-enable');
+        if (enableCheckbox) {
             disablePricings();
-        });
+        }
     });
+
+    // Disable pricing rows based on checkbox
+    function disablePricings() {
+        var enableCheckboxes = form.querySelectorAll('input.pricing-enable');
+        enableCheckboxes.forEach(function(checkbox) {
+            var row = checkbox.closest('tr');
+            if (!row) return;
+
+            var numberInputs = row.querySelectorAll('input[type="number"]');
+            numberInputs.forEach(function(input) {
+                input.disabled = !checkbox.checked;
+            });
+        });
+    }
+
+    // Initialize pricing rows state
+    disablePricings();
+})();
 </script>

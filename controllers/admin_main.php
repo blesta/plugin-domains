@@ -51,13 +51,51 @@ class AdminMain extends DomainsController
      */
     public function add()
     {
-        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains']);
+        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Contacts', 'ClientGroups', 'EmailVerifications', 'Invoices']);
 
         // Ensure a valid client was given
         $client_id = ($this->get['client_id'] ?? ($this->get[0] ?? null));
         if (empty($client_id) || !($client = $this->Clients->get($client_id))) {
             $this->redirect($this->base_uri . 'clients/');
         }
+
+        // Load additional client data for sidebar
+        $client->contacts = array_merge(
+            $this->Contacts->getAll($client->id, 'billing'),
+            $this->Contacts->getAll($client->id, 'other')
+        );
+        $client->numbers = $this->Contacts->getNumbers($client->contact_id);
+        $client->note_count = $this->Clients->getNoteListCount($client->id);
+        $client->group = $this->ClientGroups->get($client->client_group_id);
+
+        // Include an international-formatted version of each number
+        foreach ($client->numbers as $number) {
+            $number->international = $this->Contacts->intlNumber($number->number, $client->country, ' ');
+        }
+
+        // Fetch email verification status
+        $email_verification = $this->EmailVerifications->getByContactId($client->contact_id);
+        $client->settings['email_verification_status'] = 'unsent';
+        if (isset($email_verification->verified)) {
+            $client->settings['email_verification_status'] = ($email_verification->verified == 1 ? 'verified' : 'unverified');
+        }
+
+        // Load additional data for sidebar
+        $status = [
+            'active' => Language::_('AdminClients.view.status_active', true),
+            'inactive' => Language::_('AdminClients.view.status_inactive', true),
+            'fraud' => Language::_('AdminClients.view.status_fraud', true)
+        ];
+
+        $number_types = $this->Contacts->getNumberTypes();
+        $number_locations = $this->Contacts->getNumberLocations();
+        $delivery_methods = $this->Invoices->getDeliveryMethods($client->id);
+
+        // Set sidebar variables
+        $this->set('status', $status);
+        $this->set('number_types', $number_types);
+        $this->set('number_locations', $number_locations);
+        $this->set('delivery_methods', $delivery_methods);
 
         // Get the wizard action/step
         $action = ($this->get['action'] ?? ($this->get[1] ?? null));
@@ -67,19 +105,18 @@ class AdminMain extends DomainsController
 
         // Render action
         switch ($action) {
-            case "lookup":
+            case 'lookup':
                 $this->renderLookupStep($client);
                 break;
-            case "configuration":
+            case 'configuration':
                 $this->renderConfigurationStep($client);
                 break;
-            case "confirmation":
+            case 'confirmation':
                 $this->renderConfirmationStep($client);
                 break;
             default:
                 $this->redirect($this->base_uri . 'clients/');
                 break;
-
         }
 
         $this->set('client', $client);
@@ -130,19 +167,19 @@ class AdminMain extends DomainsController
                 // If the domain does not contain a TLD, search by the first 4 TLDs on the spotlight
                 if (empty($tld)) {
                     $this->post['tlds'] = array_slice($spotlight_tlds, 0, 4);
-                } else if (in_array($tld, $tlds)) {
+                } elseif (in_array($tld, $tlds)) {
                     $this->post['tlds'] = [$tld];
                 }
             }
 
             // Remove TLD from domain
-            preg_match("/^(.*?)\.(.*)/i", $this->post['domain'], $matches);
+            preg_match('/^(.*?)\.(.*)/i', $this->post['domain'], $matches);
             $domain = $matches[1] ?? $this->post['domain'];
             $this->post['domain'] = $domain;
 
             // Process action
             switch ($action) {
-                case "lookup":
+                case 'lookup':
                     foreach ($this->post['tlds'] ?? [] as $tld) {
                         $availability = $this->DomainsDomains->checkAvailability($domain . $tld);
                         $lookup[] = [
@@ -153,7 +190,7 @@ class AdminMain extends DomainsController
                         ];
                     }
                     break;
-                case "transfer":
+                case 'transfer':
                     foreach ($this->post['tlds'] ?? [] as $tld) {
                         $availability = $this->DomainsDomains->checkTransferAvailability($domain . $tld);
                         $lookup[] = [
@@ -167,7 +204,6 @@ class AdminMain extends DomainsController
                 default:
                     $this->redirect($this->base_uri . 'plugin/domains/admin_main/add/' . $client->id . '/');
                     break;
-
             }
 
             if (empty($lookup)) {
@@ -537,13 +573,51 @@ class AdminMain extends DomainsController
      */
     public function edit()
     {
-        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains']);
+        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Contacts', 'ClientGroups', 'EmailVerifications', 'Invoices']);
 
         // Ensure a valid client was given
         $client_id = ($this->get['client_id'] ?? ($this->get[0] ?? null));
         if (empty($client_id) || !($client = $this->Clients->get($client_id))) {
             $this->redirect($this->base_uri . 'clients/');
         }
+
+        // Load additional client data for sidebar
+        $client->contacts = array_merge(
+            $this->Contacts->getAll($client->id, 'billing'),
+            $this->Contacts->getAll($client->id, 'other')
+        );
+        $client->numbers = $this->Contacts->getNumbers($client->contact_id);
+        $client->note_count = $this->Clients->getNoteListCount($client->id);
+        $client->group = $this->ClientGroups->get($client->client_group_id);
+
+        // Include an international-formatted version of each number
+        foreach ($client->numbers as $number) {
+            $number->international = $this->Contacts->intlNumber($number->number, $client->country, ' ');
+        }
+
+        // Fetch email verification status
+        $email_verification = $this->EmailVerifications->getByContactId($client->contact_id);
+        $client->settings['email_verification_status'] = 'unsent';
+        if (isset($email_verification->verified)) {
+            $client->settings['email_verification_status'] = ($email_verification->verified == 1 ? 'verified' : 'unverified');
+        }
+
+        // Load additional data for sidebar
+        $status = [
+            'active' => Language::_('AdminClients.view.status_active', true),
+            'inactive' => Language::_('AdminClients.view.status_inactive', true),
+            'fraud' => Language::_('AdminClients.view.status_fraud', true)
+        ];
+
+        $number_types = $this->Contacts->getNumberTypes();
+        $number_locations = $this->Contacts->getNumberLocations();
+        $delivery_methods = $this->Invoices->getDeliveryMethods($client->id);
+
+        // Set sidebar variables
+        $this->set('status', $status);
+        $this->set('number_types', $number_types);
+        $this->set('number_locations', $number_locations);
+        $this->set('delivery_methods', $delivery_methods);
 
         // Ensure a valid service was given
         $service_id = ($this->get['service_id'] ?? ($this->get[1] ?? null));
@@ -693,12 +767,6 @@ class AdminMain extends DomainsController
 
         $fields = (new Html($fields))->generate();
 
-        $this->Javascript->setFile('date.min.js');
-        $this->Javascript->setFile('jquery.datePicker.min.js');
-        $this->Javascript->setInline(
-            'Date.firstDayOfWeek=' . ($company_settings['calendar_begins'] == 'sunday' ? 0 : 1) . ';'
-        );
-
         return $this->clientProfileView(
             'admin_main_edit',
             compact(
@@ -729,7 +797,8 @@ class AdminMain extends DomainsController
         }
 
         // Ensure we have a service
-        if (!isset($this->get[1])
+        if (
+            !isset($this->get[1])
             || !($service = $this->Services->get((int)$this->get[1]))
             || $service->client_id != $client->id
             || !isset($this->get[2])
@@ -956,7 +1025,7 @@ class AdminMain extends DomainsController
                 }
 
                 $this->flashMessage('message', Language::_($term, true), null, false);
-                $this->redirect($this->base_uri . 'clients/view/'. ($this->get['client_id'] ?? ($this->get[0] ?? null)));
+                $this->redirect($this->base_uri . 'clients/view/' . ($this->get['client_id'] ?? ($this->get[0] ?? null)));
             }
         }
 
@@ -976,7 +1045,7 @@ class AdminMain extends DomainsController
             $post_filters = $this->post['filters'];
             unset($this->post['filters']);
 
-            foreach($post_filters as $filter => $value) {
+            foreach ($post_filters as $filter => $value) {
                 if (empty($value)) {
                     unset($post_filters[$filter]);
                 }
@@ -1219,6 +1288,11 @@ class AdminMain extends DomainsController
         $this->set('client_account', $this->Clients->getDebitAccount($client->id));
         $this->set('is_ajax', $this->isAjax());
 
+        // Set override variables
+        foreach ($vars as $key => $value) {
+            $this->set($key, $value);
+        }
+
         // Fetch default admin layout
         $layout = 'default';
         $admin_view_dir = $this->Companies->getSetting(Configure::get('Blesta.company_id'), 'admin_view_dir');
@@ -1231,18 +1305,7 @@ class AdminMain extends DomainsController
             $this->controller = $view;
             $this->action = null;
 
-            foreach ($vars as $key => $value) {
-                $this->set($key, $value);
-            }
-
             return $this->renderAjaxWidgetIfAsync();
-        } else {
-            // Set view path to app directory
-            $this->view->view_path = APPDIR;
-            $this->view->default_view_path = APPDIR;
-            $this->view->view_dir = str_replace(ROOTWEBDIR, DS, VIEWDIR . $this->portal . DS . $layout) . DS;
-
-            $this->render('admin_clients_view', VIEWDIR . $this->portal . DS . $layout);
         }
     }
 

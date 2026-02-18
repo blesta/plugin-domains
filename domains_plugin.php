@@ -48,9 +48,9 @@ class DomainsPlugin extends Plugin
             // domains_tlds
             $this->Record
                 ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-                ->setField('tld', ['type' => 'VARCHAR', 'size' => "64"])
-                ->setField('company_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true, 'is_null' => true])
+                ->setField('tld', ['type' => 'VARCHAR', 'size' => '64'])
+                ->setField('company_id', ['type' => 'INT', 'size' => '10', 'unsigned' => true])
+                ->setField('package_id', ['type' => 'INT', 'size' => '10', 'unsigned' => true, 'is_null' => true])
                 ->setKey(['id'], 'primary')
                 ->setKey(['tld', 'company_id'], 'unique')
                 ->create('domains_tlds', true);
@@ -58,15 +58,15 @@ class DomainsPlugin extends Plugin
             // domains_packages
             $this->Record
                 ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-                ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('tld_id', ['type' => 'INT', 'size' => '10', 'unsigned' => true])
+                ->setField('package_id', ['type' => 'INT', 'size' => '10', 'unsigned' => true])
                 ->setKey(['id'], 'primary')
                 ->setKey(['tld_id', 'package_id'], 'unique')
                 ->create('domains_packages', true);
 
             $this->createDomainsDomainsTable(false);
             $this->addDomainCountDataFeed();
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
             return;
@@ -106,16 +106,12 @@ class DomainsPlugin extends Plugin
         $emails = Configure::get('Domains.install.emails');
         foreach ($emails as $email) {
             $group = $this->EmailGroups->getByAction($email['action']);
-            if ($group) {
-                $group_id = $group->id;
-            } else {
-                $group_id = $this->EmailGroups->add([
+            $group_id = $group ? $group->id : $this->EmailGroups->add([
                     'action' => $email['action'],
                     'type' => $email['type'],
                     'plugin_dir' => $email['plugin_dir'],
                     'tags' => $email['tags']
                 ]);
-            }
 
             // Set from hostname to use that which is configured for the company
             if (isset(Configure::get('Blesta.company')->hostname)) {
@@ -430,7 +426,7 @@ class DomainsPlugin extends Plugin
 
         try {
             $this->createDomainsDomainsTable();
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
             return;
@@ -455,7 +451,6 @@ class DomainsPlugin extends Plugin
 
                 $this->Record->duplicate('service_id', '=', $domain->id)->insert('domains_domains', $vars, $fields);
             }
-
         }
     }
 
@@ -826,16 +821,12 @@ class DomainsPlugin extends Plugin
                 }
 
                 $group = $this->EmailGroups->getByAction($email['action']);
-                if ($group) {
-                    $group_id = $group->id;
-                } else {
-                    $group_id = $this->EmailGroups->add([
+                $group_id = $group ? $group->id : $this->EmailGroups->add([
                         'action' => $email['action'],
                         'type' => $email['type'],
                         'plugin_dir' => $email['plugin_dir'],
                         'tags' => $email['tags']
                     ]);
-                }
 
                 if (isset(Configure::get('Blesta.company')->hostname)) {
                     $email['from'] = str_replace(
@@ -871,7 +862,7 @@ class DomainsPlugin extends Plugin
     {
         if (is_object($object) || is_array($object)) {
             $array = (array) $object;
-            foreach($array as &$item) {
+            foreach ($array as &$item) {
                 $item = $this->castToArray($item);
             }
 
@@ -888,7 +879,7 @@ class DomainsPlugin extends Plugin
     {
         $this->Record
             ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-            ->setField('service_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+            ->setField('service_id', ['type' => 'INT', 'size' => '10', 'unsigned' => true])
             ->setField('registration_date', ['type' => 'datetime', 'is_null' => true])
             ->setField('expiration_date', ['type' => 'datetime', 'is_null' => true]);
         if (!$upgrade) {
@@ -947,7 +938,8 @@ class DomainsPlugin extends Plugin
         $order = 0;
         foreach ($navigation_items as $navigation_item) {
             // Don't re-add existing Domain Manager nav items
-            if ($navigation_item->url == 'plugin/domains/admin_domains/browse/'
+            if (
+                $navigation_item->url == 'plugin/domains/admin_domains/browse/'
                 || $navigation_item->url == 'plugin/domains/admin_domains/tlds/'
             ) {
                 continue;
@@ -1000,8 +992,8 @@ class DomainsPlugin extends Plugin
             // Create domains packages table
             $this->Record
                 ->setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])
-                ->setField('tld_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
-                ->setField('package_id', ['type' => 'INT', 'size' => "10", 'unsigned' => true])
+                ->setField('tld_id', ['type' => 'INT', 'size' => '10', 'unsigned' => true])
+                ->setField('package_id', ['type' => 'INT', 'size' => '10', 'unsigned' => true])
                 ->setKey(['id'], 'primary')
                 ->setKey(['tld_id', 'package_id'], 'unique')
                 ->create('domains_packages', true);
@@ -1019,7 +1011,7 @@ class DomainsPlugin extends Plugin
                     DROP COLUMN `id_protection`,
                     DROP COLUMN `epp_code`;'
             );
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             // Error adding... no permission?
             $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
             return;
@@ -1044,7 +1036,8 @@ class DomainsPlugin extends Plugin
         foreach ($companies as $company) {
             $company_domains_package_group = $this->Companies->getSetting($company->id, 'domains_package_group');
 
-            if ($domains_package_group
+            if (
+                $domains_package_group
                 && $company_domains_package_group
                 && $company_domains_package_group->value == $domains_package_group->value
                 && $company->id != $company_id
@@ -1056,7 +1049,8 @@ class DomainsPlugin extends Plugin
         }
 
         // Don't create a new TLD package group if it is already set
-        if (!($package_group_setting = $this->Companies->getSetting($company_id, 'domains_package_group'))
+        if (
+            !($package_group_setting = $this->Companies->getSetting($company_id, 'domains_package_group'))
             || !($package_group = $this->PackageGroups->get($package_group_setting->value))
         ) {
             // Assemble the parameters for adding the TLD package group
@@ -1107,7 +1101,7 @@ class DomainsPlugin extends Plugin
             $this->ModuleManager->add(['class' => 'generic_domains', 'company_id' => $company_id]);
         }
         $module = $this->ModuleManager->getByClass('generic_domains', $company_id);
-        $module = isset($module[0]) ? $module[0] : null;
+        $module = $module[0] ?? null;
 
         if (!isset($module->id)) {
             $this->Input->setErrors([
@@ -1140,7 +1134,8 @@ class DomainsPlugin extends Plugin
 
         foreach ($default_tlds as $default_tld) {
             // Skip package creation for this TLD if there is already a package assigned to it
-            if (array_key_exists($default_tld, $tld_packages)
+            if (
+                array_key_exists($default_tld, $tld_packages)
                 && ($package = $this->Packages->get($tld_packages[$default_tld]))
             ) {
                 $package_id = $package->id;
@@ -1191,7 +1186,8 @@ class DomainsPlugin extends Plugin
         foreach ($tld_addons as $tld_addon) {
             $setting = $this->Companies->getSetting($company_id, 'domains_' . $tld_addon . '_option_group');
             // Skip option group creation for this tld and if there is already a group assigned to it
-            if ($setting
+            if (
+                $setting
                 && ($option_group = $this->PackageOptionGroups->get($setting->value))
                 && $option_group->company_id === $company_id
             ) {
@@ -1269,7 +1265,7 @@ class DomainsPlugin extends Plugin
                 $this->Record->drop('domains_tlds');
                 $this->Record->drop('domains_packages');
                 $this->Record->drop('domains_domains');
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 // Error dropping... no permission?
                 $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
                 return;
@@ -1513,7 +1509,6 @@ class DomainsPlugin extends Plugin
             $services = $this->DomainsDomains->getAll(['awaiting_sync' => 1], ['date_added' => 'DESC']);
             $this->synchronizeDomainServices($services, $renewal_days);
         }
-
     }
 
     private function synchronizeDomainServices($services, $renewal_days)
@@ -1539,7 +1534,8 @@ class DomainsPlugin extends Plugin
 
             // Fetch the domain registration date from the registrar, and update
             // if different than what is stored locally
-            if (method_exists($modules[$module_id], 'getRegistrationDate')
+            if (
+                method_exists($modules[$module_id], 'getRegistrationDate')
                 && ($new_registration_date = $modules[$module_id]->getRegistrationDate($service, 'Y-m-d H:i:s'))
                 && (strtotime($service->registration_date) !== strtotime($new_registration_date)
                     || $database_registration_date == null)
@@ -1562,7 +1558,8 @@ class DomainsPlugin extends Plugin
 
             // Fetch the domain expiration date from the registrar, and update if
             // different than what is stored locally
-            if (method_exists($modules[$module_id], 'getExpirationDate')
+            if (
+                method_exists($modules[$module_id], 'getExpirationDate')
                 && ($new_expiration_date = $modules[$module_id]->getExpirationDate($service, 'Y-m-d H:i:s'))
                 && (strtotime($service->expiration_date) !== strtotime($new_expiration_date)
                     || $database_expiration_date == null)
@@ -1593,7 +1590,8 @@ class DomainsPlugin extends Plugin
 
             // Update the renew date if the expiration date is greater than or equal to the renew date
             // and the adjusted renew date doesn't already match the current renew date
-            if ($service->expiration_date
+            if (
+                $service->expiration_date
                 && strtotime($service->expiration_date) >= strtotime($service->date_renews)
                 && strtotime($new_renew_date) !== strtotime($service->date_renews)
             ) {
@@ -1726,7 +1724,8 @@ class DomainsPlugin extends Plugin
 
             foreach ($service->package->pricing as $pricing) {
                 // Find the 1 year pricing for the current package and update the service to use it
-                if ($pricing->term == 1
+                if (
+                    $pricing->term == 1
                     && $pricing->period == 'year'
                     && $service->package_pricing->currency == $pricing->currency
                 ) {
@@ -2095,7 +2094,8 @@ class DomainsPlugin extends Plugin
         Loader::loadModels($this, ['Domains.DomainsDomains', 'Companies', 'Services', 'ModuleManager']);
         $params = $event->getParams();
 
-        if (!($this->DomainsDomains->isManagedDomain($params['service_id'] ?? null)
+        if (
+            !($this->DomainsDomains->isManagedDomain($params['service_id'] ?? null)
                 && $this->serviceActivationOccuring($event)
                 && ($service = $this->Services->get($params['service_id'] ?? null))
                 && $service->date_canceled == null
@@ -2187,7 +2187,7 @@ class DomainsPlugin extends Plugin
             }
 
             // Get the company hostname
-            $hostname = isset(Configure::get('Blesta.company')->hostname) ? Configure::get('Blesta.company')->hostname : '';
+            $hostname = Configure::get('Blesta.company')->hostname ?? '';
 
             // Set web dir
             $webdir = WEBDIR;
@@ -2246,7 +2246,8 @@ class DomainsPlugin extends Plugin
         $params = $event->getParams();
         $this->logger->info(json_encode($params));
 
-        if (!($this->DomainsDomains->isManagedDomain($params['service_id'] ?? null)
+        if (
+            !($this->DomainsDomains->isManagedDomain($params['service_id'] ?? null)
                 && ($service = $this->Services->get($params['service_id'] ?? null))
             )
         ) {

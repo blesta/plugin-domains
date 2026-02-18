@@ -74,7 +74,7 @@ $lang['AdminMain.domains.action.field_client'] = 'Client';
 
 // Add domain
 $lang['AdminMain.add.boxtitle_client'] = 'Client #%1$s'; // %1$s is the Client ID
-$lang['AdminMain.add.boxtitle_add'] = 'Add Domain: %1$s'; // %1$s is the TLD of the domain
+$lang['AdminMain.add.boxtitle_add'] = 'Add Domain %1$s'; // %1$s is the TLD of the domain
 
 $lang['AdminMain.add.link_viewclient'] = 'View Client';
 
@@ -119,6 +119,14 @@ $lang['AdminMain.add.term_recurring'] = '%1$s @ %2$s (renews @ %3$s)'; // %1$s i
 $lang['AdminMain.add.edit_package_pricing'] = 'Edit Pricing';
 $lang['AdminMain.add.text_refresh'] = 'Refresh';
 
+$lang['AdminMain.add.heading_search'] = 'Domain Lookup';
+$lang['AdminMain.add.field_domain'] = 'Domain';
+$lang['AdminMain.add.label_spotlight_tlds'] = 'Spotlight TLDs';
+$lang['AdminMain.add.link_more_tlds'] = 'More TLDs';
+$lang['AdminMain.add.button_cancel'] = 'Cancel';
+$lang['AdminMain.add.button_previous'] = 'Previous';
+$lang['AdminMain.add.button_continue'] = 'Continue';
+
 
 // Domain confirmation
 $lang['AdminMain.add_confirmation.field_invoice_method'] = 'Invoice Method:';
@@ -147,6 +155,12 @@ $lang['AdminMain.add_confirmation.qty'] = 'Quantity';
 $lang['AdminMain.add_confirmation.price'] = 'Price';
 $lang['AdminMain.add_confirmation.subtotal'] = 'Sub Total:';
 $lang['AdminMain.add_confirmation.discount'] = 'Discount:';
+$lang['AdminMain.add_confirmation.total'] = 'Total:';
+
+$lang['AdminMain.add_confirmation.heading_line_items'] = 'Line Items';
+$lang['AdminMain.add_confirmation.heading_coupon'] = 'Coupon Code';
+$lang['AdminMain.add_confirmation.heading_total'] = 'Order Total';
+$lang['AdminMain.add_confirmation.placeholder_coupon_code'] = 'Enter coupon code';
 
 
 // Edit domain
@@ -198,6 +212,9 @@ $lang['AdminMain.edit.term_years'] = '%1$s Years'; // %1$s is the term
 $lang['AdminMain.edit.title_domain_information'] = 'Domain Information';
 $lang['AdminMain.edit.title_actions'] = 'Actions';
 $lang['AdminMain.edit.title_basic_options'] = 'Basic Options';
+
+$lang['AdminMain.edit.text_select_action'] = 'Click a button above to display the form to perform an action.';
+$lang['AdminMain.edit.text_no_fields'] = 'This action does not require any additional options. Click Submit to proceed.';
 
 
 // Get filters

@@ -518,7 +518,7 @@ class DomainsDomains extends DomainsModel
                     strtotime(Configure::get('Blesta.cache_length')) - time(),
                     Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
                 );
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 // Write to cache failed, so disable caching
                 Configure::set('Caching.on', false);
             }
@@ -599,7 +599,7 @@ class DomainsDomains extends DomainsModel
                         strtotime(Configure::get('Blesta.cache_length')) - time(),
                         Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
                     );
-                } catch (Exception $e) {
+                } catch (\Throwable $e) {
                     // Write to cache failed, so disable caching
                     Configure::set('Caching.on', false);
                 }
@@ -686,7 +686,7 @@ class DomainsDomains extends DomainsModel
                         strtotime(Configure::get('Blesta.cache_length')) - time(),
                         Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
                     );
-                } catch (Exception $e) {
+                } catch (\Throwable $e) {
                     // Write to cache failed, so disable caching
                     Configure::set('Caching.on', false);
                 }
