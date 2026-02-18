@@ -96,75 +96,70 @@ $this->Widget->end();
 (function() {
     'use strict';
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('meta_tld');
-        if (!form) return;
+    var form = document.getElementById('meta_tld');
+    if (!form) return;
 
-        // Set pages
-        const continueBtn = form.querySelector('#continue');
+    // Set pages
+    form.addEventListener('click', function(e) {
+        var continueBtn = e.target.closest('#continue');
         if (continueBtn) {
-            continueBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const pageWarning = form.querySelector('#page_warning');
-                const pageMeta = form.querySelector('#page_meta');
-                if (pageWarning) pageWarning.style.display = 'none';
-                if (pageMeta) pageMeta.style.display = 'block';
-            });
+            e.preventDefault();
+            var pageWarning = form.querySelector('#page_warning');
+            var pageMeta = form.querySelector('#page_meta');
+            if (pageWarning) pageWarning.style.display = 'none';
+            if (pageMeta) pageMeta.style.display = 'block';
         }
 
-        // Close modal
-        const closeBtns = form.querySelectorAll('.btn.close');
-        closeBtns.forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                // Find and click qtip close button if exists
-                const qtipClose = document.querySelector('.qtip-close');
-                if (qtipClose) {
-                    qtipClose.click();
-                }
-                location.reload();
-            });
-        });
+        var closeBtn = e.target.closest('.btn.close');
+        if (closeBtn) {
+            e.preventDefault();
+            var modalEl = form.closest('.modal');
+            if (modalEl) {
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            }
+            location.reload();
+        }
+    });
 
-        // Update package meta
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
+    // Update package meta
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
 
-            const formData = new FormData(form);
-            const data = new URLSearchParams(formData).toString();
+        var formData = new FormData(form);
+        var data = new URLSearchParams(formData).toString();
 
-            fetch(form.action || window.location.href, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept': 'application/json'
-                },
-                body: data,
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(response => {
-                // Show messages
-                if (response.hasOwnProperty('message')) {
-                    // Remove existing error sections
-                    const existingErrors = form.querySelectorAll('.error_section');
-                    existingErrors.forEach(error => error.remove());
+        fetch(form.action || window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
+            },
+            body: data,
+            credentials: 'same-origin'
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(response) {
+            // Show messages
+            if (response.hasOwnProperty('message')) {
+                // Remove existing error sections
+                var existingErrors = form.querySelectorAll('.error_section');
+                existingErrors.forEach(function(error) { error.remove(); });
 
-                    // Prepend message
-                    form.insertAdjacentHTML('afterbegin', response.message);
-                }
+                // Prepend message
+                form.insertAdjacentHTML('afterbegin', response.message);
+            }
 
-                // Check if message doesn't contain error
-                if (response.message && !response.message.includes('error_box error')) {
-                    const saveBtn = form.querySelector('#page_meta input[name="save"]');
-                    const finishBtn = form.querySelector('#page_meta #finish');
-                    if (saveBtn) saveBtn.style.display = 'none';
-                    if (finishBtn) finishBtn.style.display = 'inline-block';
-                }
-            })
-            .catch(error => {
-                console.error('Error updating meta:', error);
-            });
+            // Check if message doesn't contain error
+            if (response.message && !response.message.includes('error_box error')) {
+                var saveBtn = form.querySelector('#page_meta input[name="save"]');
+                var finishBtn = form.querySelector('#page_meta #finish');
+                if (saveBtn) saveBtn.style.display = 'none';
+                if (finishBtn) finishBtn.style.display = 'inline-block';
+            }
+        })
+        .catch(function(error) {
+            console.error('Error updating meta:', error);
         });
     });
 })();

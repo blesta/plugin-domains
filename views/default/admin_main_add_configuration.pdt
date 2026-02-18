@@ -114,162 +114,160 @@ $this->Form->end();
 (function() {
     'use strict';
 
-    document.addEventListener('DOMContentLoaded', function() {
-        var form = document.getElementById('add_configuration');
-        if (!form) return;
+    var form = document.getElementById('add_configuration');
+    if (!form) return;
 
-        var moduleSelect = document.getElementById('module');
-        var refreshLink = document.getElementById('refresh_modules');
-        var statusSelect = document.getElementById('status');
-        var useModuleCheckbox = document.getElementById('use_module');
-        var notifyOrderCheckbox = document.getElementById('notify_order');
+    var moduleSelect = document.getElementById('module');
+    var refreshLink = document.getElementById('refresh_modules');
+    var statusSelect = document.getElementById('status');
+    var useModuleCheckbox = document.getElementById('use_module');
+    var notifyOrderCheckbox = document.getElementById('notify_order');
 
-        // Module change handler
-        if (moduleSelect) {
-            moduleSelect.addEventListener('change', function() {
-                updateModuleFields();
-                updatePricingOptions();
-            });
+    // Module change handler
+    if (moduleSelect) {
+        moduleSelect.addEventListener('change', function() {
+            updateModuleFields();
+            updatePricingOptions();
+        });
+    }
+
+    // Refresh button handler
+    if (refreshLink) {
+        refreshLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            updatePricingOptions();
+        });
+    }
+
+    // Status change handler
+    if (statusSelect) {
+        statusSelect.addEventListener('change', function() {
+            updateStatusFields();
+        });
+    }
+
+    // Initialize
+    updateModuleFields();
+    updatePricingOptions();
+    updateStatusFields();
+
+    /**
+     * Update module fields via AJAX
+     */
+    function updateModuleFields() {
+        var moduleId = moduleSelect ? moduleSelect.value : '';
+
+        var formData = new FormData();
+        var csrfToken = form.querySelector('input[name="_csrf_token"]');
+        if (csrfToken) {
+            formData.append('_csrf_token', csrfToken.value);
         }
 
-        // Refresh button handler
-        if (refreshLink) {
-            refreshLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                updatePricingOptions();
-            });
-        }
-
-        // Status change handler
-        if (statusSelect) {
-            statusSelect.addEventListener('change', function() {
-                updateStatusFields();
-            });
-        }
-
-        // Initialize
-        updateModuleFields();
-        updatePricingOptions();
-        updateStatusFields();
-
-        /**
-         * Update module fields via AJAX
-         */
-        function updateModuleFields() {
-            var moduleId = moduleSelect ? moduleSelect.value : '';
-
-            var formData = new FormData();
-            var csrfToken = form.querySelector('input[name="_csrf_token"]');
-            if (csrfToken) {
-                formData.append('_csrf_token', csrfToken.value);
+        // Add all form data
+        var formInputs = form.querySelectorAll('input, select, textarea');
+        formInputs.forEach(function(input) {
+            if (input.name && (input.type !== 'checkbox' || input.checked)) {
+                formData.append(input.name, input.value);
             }
+        });
 
-            // Add all form data
-            var formInputs = form.querySelectorAll('input, select, textarea');
-            formInputs.forEach(function(input) {
-                if (input.name && (input.type !== 'checkbox' || input.checked)) {
-                    formData.append(input.name, input.value);
-                }
-            });
+        fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getmodulefields/');?>' + moduleId + '/<?php echo $this->Html->safe($package->id ?? null);?>/', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            var moduleFields = document.getElementById('module_fields');
+            if (moduleFields && data.content) {
+                moduleFields.innerHTML = data.content;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading module fields:', error);
+        });
+    }
 
-            fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getmodulefields/');?>' + moduleId + '/<?php echo $this->Html->safe($package->id ?? null);?>/', {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                var moduleFields = document.getElementById('module_fields');
-                if (moduleFields && data.content) {
-                    moduleFields.innerHTML = data.content;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading module fields:', error);
-            });
+    /**
+     * Update pricing options via AJAX
+     */
+    function updatePricingOptions() {
+        var moduleId = moduleSelect ? moduleSelect.value : '';
+
+        var formData = new FormData();
+        var csrfToken = form.querySelector('input[name="_csrf_token"]');
+        if (csrfToken) {
+            formData.append('_csrf_token', csrfToken.value);
         }
 
-        /**
-         * Update pricing options via AJAX
-         */
-        function updatePricingOptions() {
-            var moduleId = moduleSelect ? moduleSelect.value : '';
+        fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getpricing/');?>' + moduleId + '/<?php echo $this->Html->safe($package->id ?? null);?>/', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            var yearsSelect = document.getElementById('years');
+            var packageEditLink = document.getElementById('package_edit_link');
 
-            var formData = new FormData();
-            var csrfToken = form.querySelector('input[name="_csrf_token"]');
-            if (csrfToken) {
-                formData.append('_csrf_token', csrfToken.value);
-            }
+            if (yearsSelect && data.pricing) {
+                // Remove all existing options
+                yearsSelect.innerHTML = '';
 
-            fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getpricing/');?>' + moduleId + '/<?php echo $this->Html->safe($package->id ?? null);?>/', {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                var yearsSelect = document.getElementById('years');
-                var packageEditLink = document.getElementById('package_edit_link');
-
-                if (yearsSelect && data.pricing) {
-                    // Remove all existing options
-                    yearsSelect.innerHTML = '';
-
-                    // Add new options
-                    for (var key in data.pricing) {
-                        if (data.pricing.hasOwnProperty(key)) {
-                            var option = document.createElement('option');
-                            option.value = key;
-                            option.textContent = data.pricing[key];
-                            yearsSelect.appendChild(option);
-                        }
-                    }
-
-                    // Select first option matching currency
-                    var defaultCurrency = '<?php echo $this->Html->safe($client->settings['default_currency'] ?? ''); ?>';
-                    if (defaultCurrency) {
-                        var currencyOptions = yearsSelect.querySelectorAll('option[value*="' + defaultCurrency + '"]');
-                        if (currencyOptions.length > 0) {
-                            currencyOptions[0].selected = true;
-                        }
+                // Add new options
+                for (var key in data.pricing) {
+                    if (data.pricing.hasOwnProperty(key)) {
+                        var option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = data.pricing[key];
+                        yearsSelect.appendChild(option);
                     }
                 }
 
-                if (packageEditLink && data.package_id) {
-                    packageEditLink.href = '<?php echo $this->base_uri . 'packages/edit/'; ?>' + data.package_id + '/';
-                }
-            })
-            .catch(error => {
-                console.error('Error loading pricing:', error);
-            });
-        }
-
-        /**
-         * Update status field states
-         */
-        function updateStatusFields() {
-            var status = statusSelect ? statusSelect.value : '';
-
-            if (status !== 'active') {
-                if (useModuleCheckbox) {
-                    useModuleCheckbox.disabled = true;
-                    useModuleCheckbox.checked = (status === 'pending');
-                }
-                if (notifyOrderCheckbox) {
-                    notifyOrderCheckbox.disabled = true;
-                    notifyOrderCheckbox.checked = (status === 'pending');
-                }
-            } else {
-                if (useModuleCheckbox) {
-                    useModuleCheckbox.disabled = false;
-                    useModuleCheckbox.checked = true;
-                }
-                if (notifyOrderCheckbox) {
-                    notifyOrderCheckbox.disabled = false;
-                    notifyOrderCheckbox.checked = true;
+                // Select first option matching currency
+                var defaultCurrency = '<?php echo $this->Html->safe($client->settings['default_currency'] ?? ''); ?>';
+                if (defaultCurrency) {
+                    var currencyOptions = yearsSelect.querySelectorAll('option[value*="' + defaultCurrency + '"]');
+                    if (currencyOptions.length > 0) {
+                        currencyOptions[0].selected = true;
+                    }
                 }
             }
+
+            if (packageEditLink && data.package_id) {
+                packageEditLink.href = '<?php echo $this->base_uri . 'packages/edit/'; ?>' + data.package_id + '/';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading pricing:', error);
+        });
+    }
+
+    /**
+     * Update status field states
+     */
+    function updateStatusFields() {
+        var status = statusSelect ? statusSelect.value : '';
+
+        if (status !== 'active') {
+            if (useModuleCheckbox) {
+                useModuleCheckbox.disabled = true;
+                useModuleCheckbox.checked = (status === 'pending');
+            }
+            if (notifyOrderCheckbox) {
+                notifyOrderCheckbox.disabled = true;
+                notifyOrderCheckbox.checked = (status === 'pending');
+            }
+        } else {
+            if (useModuleCheckbox) {
+                useModuleCheckbox.disabled = false;
+                useModuleCheckbox.checked = true;
+            }
+            if (notifyOrderCheckbox) {
+                notifyOrderCheckbox.disabled = false;
+                notifyOrderCheckbox.checked = true;
+            }
         }
-    });
+    }
 })();
 </script>

@@ -905,7 +905,7 @@ $this->Widget->create(
         }
     }
 
-    // Start when DOM is ready
-    document.addEventListener('DOMContentLoaded', init);
+    // Initialize
+    init();
 })();
 </script>

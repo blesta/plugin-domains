@@ -113,46 +113,43 @@ $this->Form->end();
 (function() {
     'use strict';
 
-    document.addEventListener('DOMContentLoaded', function() {
-        var form = document.getElementById('edit_configurable_option');
-        if (!form) return;
+    var form = document.getElementById('edit_configurable_option');
+    if (!form) return;
 
-        // Sync Register and Renew price
-        var priceInputs = form.querySelectorAll('input[name*="[price]"]:not([name*="[price_renews]"])');
-        priceInputs.forEach(function(input) {
-            input.addEventListener('change', function() {
-                var row = this.closest('tr');
-                if (!row) return;
+    // Sync Register and Renew price
+    form.addEventListener('change', function(e) {
+        var priceInput = e.target.closest('input[name*="[price]"]:not([name*="[price_renews]"])');
+        if (priceInput) {
+            var row = priceInput.closest('tr');
+            if (!row) return;
 
-                var renewInput = row.querySelector('input[name*="[price_renews]"]');
-                if (renewInput && parseFloat(renewInput.value) === 0) {
-                    renewInput.value = this.value;
-                }
-            });
-        });
-
-        // Disable pricing rows based on checkbox
-        function disablePricings() {
-            var enableCheckboxes = form.querySelectorAll('input.pricing-enable');
-            enableCheckboxes.forEach(function(checkbox) {
-                var row = checkbox.closest('tr');
-                if (!row) return;
-
-                var numberInputs = row.querySelectorAll('input[type="number"]');
-                numberInputs.forEach(function(input) {
-                    input.disabled = !checkbox.checked;
-                });
-            });
+            var renewInput = row.querySelector('input[name*="[price_renews]"]');
+            if (renewInput && parseFloat(renewInput.value) === 0) {
+                renewInput.value = priceInput.value;
+            }
         }
 
-        // Initialize pricing rows state
-        disablePricings();
+        var enableCheckbox = e.target.closest('input.pricing-enable');
+        if (enableCheckbox) {
+            disablePricings();
+        }
+    });
 
-        // Update state when checkboxes change
+    // Disable pricing rows based on checkbox
+    function disablePricings() {
         var enableCheckboxes = form.querySelectorAll('input.pricing-enable');
         enableCheckboxes.forEach(function(checkbox) {
-            checkbox.addEventListener('change', disablePricings);
+            var row = checkbox.closest('tr');
+            if (!row) return;
+
+            var numberInputs = row.querySelectorAll('input[type="number"]');
+            numberInputs.forEach(function(input) {
+                input.disabled = !checkbox.checked;
+            });
         });
-    });
+    }
+
+    // Initialize pricing rows state
+    disablePricings();
 })();
 </script>

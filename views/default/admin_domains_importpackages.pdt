@@ -85,167 +85,165 @@ $this->Form->end();
     var lang_no_tlds_available = '<?php echo addslashes($this->_('AdminDomains.importpackages.text_no_tlds_available', true)); ?>';
     var lang_refresh = '<?php echo addslashes($this->_('AdminDomains.importpackages.field_refresh', true)); ?>';
 
-    document.addEventListener('DOMContentLoaded', function() {
-        var form = document.getElementById('importpackages');
-        if (!form) return;
+    var form = document.getElementById('importpackages');
+    if (!form) return;
 
-        // Initialize popovers
-        var popoverTriggers = form.querySelectorAll('[data-bs-toggle="popover"]');
-        popoverTriggers.forEach(function(trigger) {
-            new bootstrap.Popover(trigger);
+    // Initialize popovers
+    var popoverTriggers = form.querySelectorAll('[data-bs-toggle="popover"]');
+    popoverTriggers.forEach(function(trigger) {
+        new bootstrap.Popover(trigger);
+    });
+
+    // Import packages
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        var formData = new FormData(form);
+        var data = new URLSearchParams(formData).toString();
+
+        // Disable form inputs and submit button
+        var inputs = form.querySelectorAll('input:not([type="hidden"])');
+        inputs.forEach(function(input) {
+            input.disabled = true;
         });
 
+        var submitBtn = form.querySelector('input[name="save"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+        }
+
+        var importedPackages = document.getElementById('imported_packages');
+        if (importedPackages) {
+            importedPackages.style.display = 'block';
+        }
+
+        // Fetch TLD packages to import
+        fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/list/');?>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: data,
+            credentials: 'same-origin'
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(tlds) {
+            // Build TLD boxes
+            var container = document.querySelector('#tld_boxes_container');
+            if (!container) return;
+
+            // Filter out empty entries
+            var validTlds = tlds.filter(function(tld) {
+                return tld && tld !== '.';
+            });
+
+            // Check if we have any TLDs to import
+            if (validTlds.length === 0) {
+                container.innerHTML = '<div class="text-center py-4"><i class="bi bi-info-circle text-muted me-2" style="font-size: 1.5rem;"></i><span class="text-muted">' + lang_no_tlds_available + '</span></div>';
+
+                // Replace submit button with refresh button
+                var submitBtn = form.querySelector('input[name="save"]');
+                if (submitBtn) {
+                    var refreshBtn = document.createElement('a');
+                    refreshBtn.href = window.location.href;
+                    refreshBtn.className = 'btn btn-primary';
+                    refreshBtn.textContent = lang_refresh;
+                    submitBtn.parentNode.replaceChild(refreshBtn, submitBtn);
+                }
+
+                return;
+            }
+
+            container.innerHTML = '<div class="tld-import-grid" id="tld_boxes_wrapper"></div>';
+            var wrapper = document.getElementById('tld_boxes_wrapper');
+
+            validTlds.forEach(function(tld) {
+                // Format TLD id
+                var tldId = tld.replace(/\./g, '_');
+
+                // Build HTML
+                var tldBox = document.createElement('div');
+                tldBox.className = 'tld-box current';
+                tldBox.id = 'package' + tldId;
+
+                var tldCard = document.createElement('div');
+                tldCard.className = 'tld-import-card';
+                tldCard.textContent = tld;
+
+                tldBox.appendChild(tldCard);
+                wrapper.appendChild(tldBox);
+            });
+
+            // Start importing
+            importPackages(data);
+        })
+        .catch(function(error) {
+            console.error('Error fetching TLD list:', error);
+        });
+    });
+
+    /**
+     * Import packages via AJAX
+     */
+    function importPackages(data) {
         // Import packages
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            var formData = new FormData(form);
-            var data = new URLSearchParams(formData).toString();
-
-            // Disable form inputs and submit button
-            var inputs = form.querySelectorAll('input:not([type="hidden"])');
-            inputs.forEach(function(input) {
-                input.disabled = true;
-            });
-
-            var submitBtn = form.querySelector('input[name="save"]');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-            }
-
-            var importedPackages = document.getElementById('imported_packages');
-            if (importedPackages) {
-                importedPackages.style.display = 'block';
-            }
-
-            // Fetch TLD packages to import
-            fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/importpackages/list/');?>', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: data,
-                credentials: 'same-origin'
-            })
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(tlds) {
-                // Build TLD boxes
-                var container = document.querySelector('#tld_boxes_container');
-                if (!container) return;
-
-                // Filter out empty entries
-                var validTlds = tlds.filter(function(tld) {
-                    return tld && tld !== '.';
-                });
-
-                // Check if we have any TLDs to import
-                if (validTlds.length === 0) {
-                    container.innerHTML = '<div class="text-center py-4"><i class="bi bi-info-circle text-muted me-2" style="font-size: 1.5rem;"></i><span class="text-muted">' + lang_no_tlds_available + '</span></div>';
-
-                    // Replace submit button with refresh button
-                    var submitBtn = form.querySelector('input[name="save"]');
-                    if (submitBtn) {
-                        var refreshBtn = document.createElement('a');
-                        refreshBtn.href = window.location.href;
-                        refreshBtn.className = 'btn btn-primary';
-                        refreshBtn.textContent = lang_refresh;
-                        submitBtn.parentNode.replaceChild(refreshBtn, submitBtn);
-                    }
-
-                    return;
-                }
-
-                container.innerHTML = '<div class="tld-import-grid" id="tld_boxes_wrapper"></div>';
-                var wrapper = document.getElementById('tld_boxes_wrapper');
-
-                validTlds.forEach(function(tld) {
-                    // Format TLD id
-                    var tldId = tld.replace(/\./g, '_');
-
-                    // Build HTML
-                    var tldBox = document.createElement('div');
-                    tldBox.className = 'tld-box current';
-                    tldBox.id = 'package' + tldId;
-
-                    var tldCard = document.createElement('div');
-                    tldCard.className = 'tld-import-card';
-                    tldCard.textContent = tld;
-
-                    tldBox.appendChild(tldCard);
-                    wrapper.appendChild(tldBox);
-                });
-
-                // Start importing
-                importPackages(data);
-            })
-            .catch(function(error) {
-                console.error('Error fetching TLD list:', error);
-            });
-        });
-
-        /**
-         * Import packages via AJAX
-         */
-        function importPackages(data) {
-            // Import packages
-            fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: data,
-                credentials: 'same-origin'
-            })
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(response) {
-                if (response.hasOwnProperty('message')) {
-                    // Mark all as success
-                    var tldBoxes = document.querySelectorAll('#imported_packages .tld-box');
-                    tldBoxes.forEach(function(box) {
-                        box.classList.remove('current');
-                        box.classList.add('success');
-                    });
-
-                    // Show message
-                    var rightOuter = document.getElementById('right_outer');
-                    if (rightOuter && response.message) {
-                        rightOuter.insertAdjacentHTML('afterbegin', response.message);
-                    }
-                } else {
-                    // Mark failed ones
-                    var tldBoxes = document.querySelectorAll('#imported_packages .tld-box:not(.success)');
-                    tldBoxes.forEach(function(box) {
-                        box.classList.remove('current');
-                        box.classList.add('failed');
-                    });
-
-                    // Show error
-                    var rightOuter = document.getElementById('right_outer');
-                    if (rightOuter && response.error) {
-                        rightOuter.insertAdjacentHTML('afterbegin', response.error);
-                    }
-                }
-            })
-            .catch(function(error) {
-                // Mark all non-current as failed
-                var tldBoxes = document.querySelectorAll('#imported_packages .tld-box:not(.current):not(.success)');
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: data,
+            credentials: 'same-origin'
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(response) {
+            if (response.hasOwnProperty('message')) {
+                // Mark all as success
+                var tldBoxes = document.querySelectorAll('#imported_packages .tld-box');
                 tldBoxes.forEach(function(box) {
                     box.classList.remove('current');
-                    box.classList.remove('success');
+                    box.classList.add('success');
+                });
+
+                // Show message
+                var rightOuter = document.getElementById('right_outer');
+                if (rightOuter && response.message) {
+                    rightOuter.insertAdjacentHTML('afterbegin', response.message);
+                }
+            } else {
+                // Mark failed ones
+                var tldBoxes = document.querySelectorAll('#imported_packages .tld-box:not(.success)');
+                tldBoxes.forEach(function(box) {
+                    box.classList.remove('current');
                     box.classList.add('failed');
                 });
 
-                console.error('Error importing packages:', error);
+                // Show error
+                var rightOuter = document.getElementById('right_outer');
+                if (rightOuter && response.error) {
+                    rightOuter.insertAdjacentHTML('afterbegin', response.error);
+                }
+            }
+        })
+        .catch(function(error) {
+            // Mark all non-current as failed
+            var tldBoxes = document.querySelectorAll('#imported_packages .tld-box:not(.current):not(.success)');
+            tldBoxes.forEach(function(box) {
+                box.classList.remove('current');
+                box.classList.remove('success');
+                box.classList.add('failed');
             });
-        }
-    });
+
+            console.error('Error importing packages:', error);
+        });
+    }
 })();
 </script>

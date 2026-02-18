@@ -361,22 +361,21 @@ $this->Widget->end();
 (function() {
     'use strict';
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const actionDomainForm = document.getElementById('action_domain');
-        const editDomainForm = document.getElementById('edit_domain');
+    var actionDomainForm = document.getElementById('action_domain');
+    var editDomainForm = document.getElementById('edit_domain');
 
-        // Module change handler (for pending services)
-        const moduleSelect = document.getElementById('module');
-        if (moduleSelect) {
-            moduleSelect.addEventListener('change', function() {
-                updateModuleFields();
-            });
-        }
-
-        // Initialize module fields
-        if (moduleSelect && editDomainForm) {
+    // Module change handler (for pending services)
+    var moduleSelect = document.getElementById('module');
+    if (moduleSelect) {
+        moduleSelect.addEventListener('change', function() {
             updateModuleFields();
-        }
+        });
+    }
+
+    // Initialize module fields
+    if (moduleSelect && editDomainForm) {
+        updateModuleFields();
+    }
 
         /**
          * Update module fields via AJAX
@@ -551,7 +550,6 @@ $this->Widget->end();
                 }
             });
         }
-    });
 
     // Setup client settings toggle
     var settingsToggle = document.getElementById('clientSettingsToggle');
