@@ -701,7 +701,8 @@ tr:hover .sortable-drag-handle {
 }
 
 /* Floating Bulk Actions Box (Support Manager Style) */
-.bulk-actions-bar {
+#admin_domains_tlds .bulk-actions-bar,
+#browse_domains .bulk-actions-bar {
     position: fixed;
     z-index: 1000;
     right: 1rem;
@@ -717,22 +718,26 @@ tr:hover .sortable-drag-handle {
     margin-bottom: 1rem;
 }
 
-.bulk-actions-bar.show {
+#browse_domains .bulk-actions-bar.show,
+#admin_domains_tlds .bulk-actions-bar.show {
     transform: translateY(0);
 }
 
-.bulk-actions-bar .selected-count {
+#browse_domains .bulk-actions-bar .selected-count,
+#admin_domains_tlds .bulk-actions-bar .selected-count {
     font-weight: 600;
 }
 
-.bulk-actions-bar span {
+#browse_domains .bulk-actions-bar span,
+#admin_domains_tlds .bulk-actions-bar span {
     font-size: 0.875rem;
     color: var(--text-secondary);
 }
 
 /* Responsive adjustments for bulk actions */
 @media (max-width: 768px) {
-    .bulk-actions-bar {
+    #browse_domains .bulk-actions-bar,
+    #admin_domains_tlds .bulk-actions-bar {
         right: 0.5rem;
         bottom: 0.5rem;
         min-width: auto;
@@ -740,17 +745,21 @@ tr:hover .sortable-drag-handle {
         padding: 0.75rem;
     }
 
-    .bulk-actions-bar .d-flex {
+    #browse_domains .bulk-actions-bar .d-flex,
+    #admin_domains_tlds .bulk-actions-bar .d-flex {
         flex-direction: column;
         gap: 0.5rem !important;
     }
 
-    .bulk-actions-bar .selected-count {
+    #browse_domains .bulk-actions-bar .selected-count,
+    #admin_domains_tlds .bulk-actions-bar .selected-count {
         font-size: 0.8125rem;
     }
 
-    .bulk-actions-bar .form-select,
-    .bulk-actions-bar .form-control {
+    #browse_domains .bulk-actions-bar .form-select,
+    #browse_domains .bulk-actions-bar .form-control,
+    #admin_domains_tlds .bulk-actions-bar .form-select,
+    #admin_domains_tlds .bulk-actions-bar .form-control {
         width: 100% !important;
     }
 }
