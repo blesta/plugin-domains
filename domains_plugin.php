@@ -1579,6 +1579,17 @@ class DomainsPlugin extends Plugin
                 ));
             }
 
+            // If no date was returned from the registrar but the domain is awaiting sync
+            // (just renewed), bump the stored expiration date based on the renew date
+            if ($new_expiration_date == null && $domain && $domain->awaiting_sync) {
+                $this->DomainsDomains->setExpirationDate($service->id, $this->Services->Date->modify(
+                    $service->date_renews,
+                    '+' . ($renewal_days->value ?? 0) . ' days',
+                    'Y-m-d 00:00:00',
+                    Configure::get('Blesta.company_timezone')
+                ));
+            }
+
             // Get the adjusted renew date base on the expiration date of this service and the configured
             // renewal offset from domains_renewal_days_before_expiration
             $new_renew_date = $this->Services->Date->modify(
