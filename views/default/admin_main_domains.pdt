@@ -11,7 +11,7 @@ $links = [
 ];
 $link_buttons = [
     [
-        'icon' => 'bi bi-plus',
+        'icon' => 'bi bi-plus-lg me-1',
         'name' => '',
         'attributes' => [
             'title' => $this->_('AdminMain.index.categorylink_newservice', true),
