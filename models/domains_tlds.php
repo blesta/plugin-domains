@@ -479,10 +479,10 @@ class DomainsTlds extends DomainsModel
         }
 
         $meta_fields = [
-            ['key' => 'tlds', 'value' => serialize([$vars['tld']]), 'serialized' => '1'],
+            ['key' => 'tlds', 'value' => safe_serialize([$vars['tld']]), 'serialized' => '1'],
             ['key' => 'type', 'value' => 'domain', 'serialized' => '0'],
             ['key' => 'epp_code', 'value' => ($vars['epp_code'] ?? '0'), 'serialized' => '0'],
-            ['key' => 'ns', 'value' => serialize($vars['ns'] ?? []), 'serialized' => '1']
+            ['key' => 'ns', 'value' => safe_serialize($vars['ns'] ?? []), 'serialized' => '1']
         ];
         if ($package_id) {
             foreach ($meta_fields as $meta_field) {
@@ -691,7 +691,7 @@ class DomainsTlds extends DomainsModel
                     $params = [
                         'package_id' => $module_package->id,
                         'key' => 'ns',
-                        'value' => serialize($name_servers),
+                        'value' => safe_serialize($name_servers),
                         'serialized' => 1
                     ];
                     $this->Record->duplicate('package_meta.value', '=', $params['value'])

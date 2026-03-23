@@ -37,7 +37,7 @@ $lang['AdminMain.index.heading_daterenews'] = 'Date Renews';
 $lang['AdminMain.index.heading_dateexpires'] = 'Date Expires';
 $lang['AdminMain.index.heading_datesuspended'] = 'Date Suspended';
 $lang['AdminMain.index.heading_datecanceled'] = 'Date Canceled';
-$lang['AdminMain.index.heading_options'] = 'Options';
+$lang['AdminMain.index.heading_options'] = 'Actions';
 
 $lang['AdminMain.index.category_active'] = 'Active';
 $lang['AdminMain.index.category_pending'] = 'Pending';
@@ -99,7 +99,7 @@ $lang['AdminMain.add.title_registrar_options'] = 'Registrar Options';
 
 $lang['AdminMain.add.heading_domain'] = 'Domain';
 $lang['AdminMain.add.heading_status'] = 'Status';
-$lang['AdminMain.add.heading_options'] = 'Options';
+$lang['AdminMain.add.heading_options'] = 'Actions';
 
 $lang['AdminMain.add.text_domain_available'] = 'Available';
 $lang['AdminMain.add.text_domain_unavailable'] = 'Unavailable';

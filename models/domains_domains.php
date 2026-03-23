@@ -473,7 +473,7 @@ class DomainsDomains extends DomainsModel
         );
 
         if ($cache) {
-            return unserialize(base64_decode($cache));
+            return safe_unserialize(base64_decode($cache));
         }
 
         // Get service domain name
@@ -514,7 +514,7 @@ class DomainsDomains extends DomainsModel
 
                 Cache::writeCache(
                     'nameservers_' . $service_id,
-                    base64_encode(serialize($nameservers)),
+                    base64_encode(safe_serialize($nameservers)),
                     strtotime(Configure::get('Blesta.cache_length')) - time(),
                     Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
                 );
