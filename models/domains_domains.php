@@ -514,7 +514,7 @@ class DomainsDomains extends DomainsModel
 
                 Cache::writeCache(
                     'nameservers_' . $service_id,
-                    base64_encode(safe_serialize($nameservers)),
+                    base64_encode(serialize($nameservers)),
                     strtotime(Configure::get('Blesta.cache_length')) - time(),
                     Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
                 );

@@ -1126,7 +1126,7 @@ class DomainsPlugin extends Plugin
 
             if ($company_tld_packages == $tld_packages && $company->id != $company_id) {
                 // A collision was found, set the domains_tld_packages setting as an empty array for the current company
-                $this->Companies->setSetting($company_id, 'domains_tld_packages', safe_serialize([]));
+                $this->Companies->setSetting($company_id, 'domains_tld_packages', serialize([]));
                 $tld_packages = [];
                 break;
             }
@@ -1169,7 +1169,7 @@ class DomainsPlugin extends Plugin
         }
 
         // Save the TLD packages for this company
-        $this->Companies->setSetting($company_id, 'domains_tld_packages', safe_serialize($tld_packages));
+        $this->Companies->setSetting($company_id, 'domains_tld_packages', serialize($tld_packages));
     }
 
     /**
@@ -1300,7 +1300,7 @@ class DomainsPlugin extends Plugin
             $this->Companies->setSetting(
                 Configure::get('Blesta.company_id'),
                 'domains_tld_packages',
-                safe_serialize($tld_packages)
+                serialize($tld_packages)
             );
 
             // Remove company TLDs
