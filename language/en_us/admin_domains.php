@@ -54,7 +54,7 @@ $lang['AdminDomains.browse.heading_added'] = 'Added Date';
 $lang['AdminDomains.browse.heading_renewal'] = 'Renewal Date';
 $lang['AdminDomains.browse.heading_expiration'] = 'Expiration Date';
 $lang['AdminDomains.browse.heading_renew'] = 'Auto Renewal';
-$lang['AdminDomains.browse.heading_options'] = 'Options';
+$lang['AdminDomains.browse.heading_options'] = 'Actions';
 $lang['AdminDomains.browse.option_delete'] = 'Delete';
 $lang['AdminDomains.browse.option_parent'] = 'Parent';
 $lang['AdminDomains.browse.option_manage'] = 'Manage';
@@ -225,7 +225,7 @@ $lang['AdminDomains.importpackages.field_refresh'] = 'Refresh';
 $lang['AdminDomains.configurableoptions.page_title'] = 'Domains > Configuration';
 $lang['AdminDomains.configurableoptions.boxtitle'] = 'Configuration';
 $lang['AdminDomains.configurableoptions.heading_configurable_option'] = 'Configurable Option';
-$lang['AdminDomains.configurableoptions.heading_options'] = 'Options';
+$lang['AdminDomains.configurableoptions.heading_options'] = 'Actions';
 $lang['AdminDomains.configurableoptions.option_edit'] = 'Edit';
 
 
@@ -246,7 +246,7 @@ $lang['AdminDomains.tlds.heading_email_forwarding'] = 'Email Forwarding';
 $lang['AdminDomains.tlds.heading_id_protection'] = 'ID Protection';
 $lang['AdminDomains.tlds.heading_epp_code'] = 'EPP Code';
 $lang['AdminDomains.tlds.heading_module'] = 'Module';
-$lang['AdminDomains.tlds.heading_options'] = 'Options';
+$lang['AdminDomains.tlds.heading_options'] = 'Actions';
 $lang['AdminDomains.tlds.option_edit'] = 'Edit';
 $lang['AdminDomains.tlds.option_disable'] = 'Disable';
 $lang['AdminDomains.tlds.option_enable'] = 'Enable';

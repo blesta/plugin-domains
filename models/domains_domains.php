@@ -473,7 +473,7 @@ class DomainsDomains extends DomainsModel
         );
 
         if ($cache) {
-            return unserialize(base64_decode($cache));
+            return safe_unserialize(base64_decode($cache));
         }
 
         // Get service domain name

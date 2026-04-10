@@ -1115,14 +1115,14 @@ class DomainsPlugin extends Plugin
         // Create a package for each tld and add it to the database
         $default_tlds = $this->DomainsTlds->getDefaultTlds();
         $tld_packages_setting = $this->Companies->getSetting($company_id, 'domains_tld_packages');
-        $tld_packages = (array)($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
+        $tld_packages = (array)($tld_packages_setting ? safe_unserialize($tld_packages_setting->value) : []);
 
         // Check if there is a package collision between all system companies
         $companies = $this->Companies->getAll();
 
         foreach ($companies as $company) {
             $company_tld_packages_setting = $this->Companies->getSetting($company->id, 'domains_tld_packages');
-            $company_tld_packages = (array)($company_tld_packages_setting ? unserialize($company_tld_packages_setting->value) : []);
+            $company_tld_packages = (array)($company_tld_packages_setting ? safe_unserialize($company_tld_packages_setting->value) : []);
 
             if ($company_tld_packages == $tld_packages && $company->id != $company_id) {
                 // A collision was found, set the domains_tld_packages setting as an empty array for the current company
@@ -1287,7 +1287,7 @@ class DomainsPlugin extends Plugin
                 Configure::get('Blesta.company_id'),
                 'domains_tld_packages'
             );
-            $tld_packages = ($tld_packages_setting ? unserialize($tld_packages_setting->value) : []);
+            $tld_packages = ($tld_packages_setting ? safe_unserialize($tld_packages_setting->value) : []);
             $tlds = $this->Record->select()->
                 from('domains_tlds')->
                 where('domains_tlds.company_id', '=', Configure::get('Blesta.company_id'))->
