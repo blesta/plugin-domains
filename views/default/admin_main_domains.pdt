@@ -178,15 +178,15 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
                 if (in_array(($status ?? null), ['pending', 'canceled'])) {
                     echo ($show_manage ? ' ' : '');
                     ?>
-                <?php
-                $this->Form->create($this->base_uri . 'clients/deleteservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null) . '/', ['class' => 'd-inline']);
-                ?>
+                    <?php
+                    $this->Form->create($this->base_uri . 'clients/deleteservice/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null) . '/', ['class' => 'd-inline']);
+                    ?>
                 <button type="button" class="btn btn-sm btn-outline-danger modal-confirm-delete"
                     data-confirm-message="<?php echo $this->Html->safe($this->_('AdminMain.index.confirm_delete', true));?>"
                     title="<?php $this->_('AdminMain.index.option_delete');?>">
                     <i class="bi bi-trash"></i>
                 </button>
-                <?php $this->Form->end();?>
+                    <?php $this->Form->end();?>
                     <?php
                 }
                 ?>

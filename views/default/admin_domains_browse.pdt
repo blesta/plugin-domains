@@ -38,27 +38,41 @@ if (!empty($domains)) {
             }
             ?>
             <th>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=name&order=' . ($sort == 'name' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_domain');?><?php if ($sort == 'name') { ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php } ?></a>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=name&order=' . ($sort == 'name' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_domain');?><?php if ($sort == 'name') {
+                    ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php
+                         } ?></a>
             </th>
             <th>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=client_first_name&order=' . ($sort == 'client_first_name' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_client');?><?php if ($sort == 'client_first_name') { ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php } ?></a>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=client_first_name&order=' . ($sort == 'client_first_name' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_client');?><?php if ($sort == 'client_first_name') {
+                    ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php
+                         } ?></a>
             </th>
             <th>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=registrar&order=' . ($sort == 'registrar' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_registrar');?><?php if ($sort == 'registrar') { ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php } ?></a>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=registrar&order=' . ($sort == 'registrar' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_registrar');?><?php if ($sort == 'registrar') {
+                    ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php
+                         } ?></a>
             </th>
             <th>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=renewal_price&order=' . ($sort == 'renewal_price' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_price');?><?php if ($sort == 'renewal_price') { ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php } ?></a>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=renewal_price&order=' . ($sort == 'renewal_price' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_price');?><?php if ($sort == 'renewal_price') {
+                    ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php
+                         } ?></a>
             </th>
             <th><?php $this->_('AdminDomains.browse.heading_registration');?></th>
             <th>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=date_added&order=' . ($sort == 'date_added' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_added');?><?php if ($sort == 'date_added') { ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php } ?></a>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=date_added&order=' . ($sort == 'date_added' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_added');?><?php if ($sort == 'date_added') {
+                    ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php
+                         } ?></a>
             </th>
             <th>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=date_renews&order=' . ($sort == 'date_renews' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_renewal');?><?php if ($sort == 'date_renews') { ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php } ?></a>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=date_renews&order=' . ($sort == 'date_renews' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_renewal');?><?php if ($sort == 'date_renews') {
+                    ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php
+                         } ?></a>
             </th>
             <th><?php $this->_('AdminDomains.browse.heading_expiration');?></th>
             <th>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=date_canceled&order=' . ($sort == 'date_canceled' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_renew');?><?php if ($sort == 'date_canceled') { ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php } ?></a>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_domains/browse/' . ($status ?? null) . '/?sort=date_canceled&order=' . ($sort == 'date_canceled' ? $negate_order : $order));?>" class="ajax text-decoration-none"><?php $this->_('AdminDomains.browse.heading_renew');?><?php if ($sort == 'date_canceled') {
+                    ?> <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i><?php
+                         } ?></a>
                 <button type="button" class="btn btn-link btn-sm p-0 ms-1" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="<?php $this->_('AdminDomains.browse.tooltip_renew');?>">
                     <i class="bi bi-info-circle text-secondary"></i>
                 </button>

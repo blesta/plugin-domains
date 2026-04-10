@@ -173,6 +173,9 @@ $this->Form->end();
 
         fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getmodulefields/');?>' + moduleId + '/<?php echo $this->Html->safe($package->id ?? null);?>/', {
             method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             body: formData,
             credentials: 'same-origin'
         })
@@ -202,6 +205,9 @@ $this->Form->end();
 
         fetch('<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/getpricing/');?>' + moduleId + '/<?php echo $this->Html->safe($package->id ?? null);?>/', {
             method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             body: formData,
             credentials: 'same-origin'
         })

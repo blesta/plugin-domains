@@ -926,7 +926,7 @@ class AdminMain extends DomainsController
 
         // Render HTML
         $html = (new Html($fields))->generate();
-        $this->outputAsJson($html);
+        $this->outputAsJson(['content' => $html]);
 
         return false;
     }
