@@ -700,8 +700,8 @@ tr:hover .sortable-drag-handle {
     border-radius: var(--bs-border-radius-sm) !important;
 }
 
-/* Floating Bulk Actions Box (Support Manager Style) */
-.bulk-actions-bar {
+/* Floating Bulk Actions Box (Domains TLD Management) */
+#bulkActionsBar.bulk-actions-bar {
     position: fixed;
     z-index: 1000;
     right: 1rem;
@@ -717,22 +717,22 @@ tr:hover .sortable-drag-handle {
     margin-bottom: 1rem;
 }
 
-.bulk-actions-bar.show {
+#bulkActionsBar.bulk-actions-bar.show {
     transform: translateY(0);
 }
 
-.bulk-actions-bar .selected-count {
+#bulkActionsBar.bulk-actions-bar .selected-count {
     font-weight: 600;
 }
 
-.bulk-actions-bar span {
+#bulkActionsBar.bulk-actions-bar span {
     font-size: 0.875rem;
     color: var(--text-secondary);
 }
 
 /* Responsive adjustments for bulk actions */
 @media (max-width: 768px) {
-    .bulk-actions-bar {
+    #bulkActionsBar.bulk-actions-bar {
         right: 0.5rem;
         bottom: 0.5rem;
         min-width: auto;
@@ -740,17 +740,17 @@ tr:hover .sortable-drag-handle {
         padding: 0.75rem;
     }
 
-    .bulk-actions-bar .d-flex {
+    #bulkActionsBar.bulk-actions-bar .d-flex {
         flex-direction: column;
         gap: 0.5rem !important;
     }
 
-    .bulk-actions-bar .selected-count {
+    #bulkActionsBar.bulk-actions-bar .selected-count {
         font-size: 0.8125rem;
     }
 
-    .bulk-actions-bar .form-select,
-    .bulk-actions-bar .form-control {
+    #bulkActionsBar.bulk-actions-bar .form-select,
+    #bulkActionsBar.bulk-actions-bar .form-control {
         width: 100% !important;
     }
 }
