@@ -1,4 +1,5 @@
 <?php
+
 use Blesta\Core\Util\Input\Fields\InputFields;
 
 /**
@@ -39,7 +40,7 @@ class ClientMain extends DomainsController
             $post_filters = $this->post['filters'];
             unset($this->post['filters']);
 
-            foreach($post_filters as $filter => $value) {
+            foreach ($post_filters as $filter => $value) {
                 if (empty($value)) {
                     unset($post_filters[$filter]);
                 }
@@ -200,7 +201,7 @@ class ClientMain extends DomainsController
         $package_name->attach(
             $fields->fieldText(
                 'filters[package_name]',
-                isset($vars['package_name']) ? $vars['package_name'] : null,
+                $vars['package_name'] ?? null,
                 [
                     'id' => 'package_name',
                     'class' => 'form-control stretch',
@@ -218,7 +219,7 @@ class ClientMain extends DomainsController
         $service_meta->attach(
             $fields->fieldText(
                 'filters[service_meta]',
-                isset($vars['service_meta']) ? $vars['service_meta'] : null,
+                $vars['service_meta'] ?? null,
                 [
                     'id' => 'service_meta',
                     'class' => 'form-control stretch',

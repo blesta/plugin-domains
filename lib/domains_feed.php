@@ -1,4 +1,5 @@
 <?php
+
 use Blesta\Core\Util\DataFeed\Common\AbstractDataFeed;
 use Blesta\Core\Util\Input\Fields\InputFields;
 

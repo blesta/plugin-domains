@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Domain Manager parent controller
  *
@@ -36,20 +37,36 @@ class DomainsController extends AppController
         }
 
         // Override default view directory
-        $this->view->view = "default";
+        $this->view->view = 'default';
         $this->orig_structure_view = $this->structure->view;
-        $this->structure->view = "default";
+        $this->structure->view = 'default';
 
         // Restore structure view location of the admin portal
         $this->structure->setDefaultView(APPDIR);
         $this->structure->setView(null, $this->orig_structure_view);
 
-        // Set the left nav for all settings pages to affiliate_leftnav
+        // Set the sidebar for all settings pages
         if ($this->portal == 'admin') {
-            $this->set(
-                'left_nav',
-                $this->getLeftNav()
-            );
+            // Determine if sidebar should be shown
+            $show_sidebar = false;
+            $sidebar_partial = null;
+
+            // AdminDomains controller: settings sidebar (excluding browse and index)
+            if ($this->controller === 'admin_domains' && !in_array($this->action, ['browse', 'index'])) {
+                $show_sidebar = true;
+                $sidebar_partial = 'partials/admin_domains_sidebar';
+            }
+
+            // AdminMain controller: client sidebar (for add and edit actions)
+            if ($this->controller === 'admin_main' && in_array($this->action, ['add', 'edit', 'tab'])) {
+                $show_sidebar = true;
+                $sidebar_partial = 'partials/admin_main_sidebar';
+            }
+
+            if ($show_sidebar && $sidebar_partial) {
+                Language::loadLang('admin_domains', null, PLUGINDIR . 'domains' . DS . 'language' . DS);
+                $this->structure->set('side_bar', [$sidebar_partial, $this->view]);
+            }
 
             // Set the page title language term
             $page_title = Loader::toCamelCase($this->controller) . '.'
@@ -58,17 +75,6 @@ class DomainsController extends AppController
         }
     }
 
-    /**
-     * Get the domains left navigation bar
-     *
-     * @return string The partial view of the domains left navigation bar
-     */
-    protected function getLeftNav()
-    {
-        Language::loadLang('admin_domains', null, PLUGINDIR . 'domains' . DS . 'language' . DS);
-
-        return $this->partial('admin_domains_leftnav', ['current_tab' => $this->controller]);
-    }
 
     /**
      * Gets a list of possible domain actions

@@ -1,4 +1,5 @@
 <?php
+
 Configure::set('Domains.first_reminder_days_min', 26);
 Configure::set('Domains.first_reminder_days_max', 35);
 Configure::set('Domains.second_reminder_days_min', 4);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Domain Manager TLD Sync Tool
  *
@@ -179,7 +180,7 @@ class TldSync
             $subtracted_rounding_price = $final_price - (float) $rounding;
             $floored_price = floor($subtracted_rounding_price);
             $final_price = $floored_price + (float) $rounding + ($subtracted_rounding_price == $floored_price ? 0 : 1);
-        } else if (!is_null($currency)) {
+        } elseif (!is_null($currency)) {
             if (!isset($this->Currencies)) {
                 Loader::loadModels($this, ['Currencies']);
             }

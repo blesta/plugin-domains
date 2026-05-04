@@ -411,9 +411,7 @@ class DomainsTlds extends DomainsModel
                 $vars['company_id'],
                 'domains_package_group'
             );
-            $vars['package_group_id'] = isset($domains_package_group->value)
-                ? $domains_package_group->value
-                : null;
+            $vars['package_group_id'] = $domains_package_group->value ?? null;
         }
 
         // Get company settings
@@ -424,7 +422,7 @@ class DomainsTlds extends DomainsModel
         );
 
         // Fetch company default currency
-        $default_currency = isset($company_settings['default_currency']) ? $company_settings['default_currency'] : 'USD';
+        $default_currency = $company_settings['default_currency'] ?? 'USD';
 
         // Fetch all company languages
         $languages = $this->Languages->getAll($vars['company_id']);
@@ -552,7 +550,8 @@ class DomainsTlds extends DomainsModel
             if (isset($vars['module_id'])) {
                 // If email content is not given, and a package does not exist for the new module, use the default
                 // module welcome email content
-                if (empty($vars['email_content'])
+                if (
+                    empty($vars['email_content'])
                     && !($this->getTldPackageByModuleId($vars['tld'], $vars['module_id']))
                 ) {
                     // Fetch sample welcome email from the module
@@ -619,7 +618,7 @@ class DomainsTlds extends DomainsModel
             // Validate nameservers
             if (isset($vars['meta']['ns'])) {
                 // Filter out empty nameservers
-                $vars['meta']['ns'] = array_filter($vars['meta']['ns'], function($ns) {
+                $vars['meta']['ns'] = array_filter($vars['meta']['ns'], function ($ns) {
                     return !empty(trim($ns));
                 });
 
@@ -910,7 +909,7 @@ class DomainsTlds extends DomainsModel
 
         // Get package id
         $tld = $this->get($tld);
-        $package_id = isset($tld->package_id) ? $tld->package_id : null;
+        $package_id = $tld->package_id ?? null;
 
         if (empty($package_id)) {
             return false;
@@ -1169,7 +1168,6 @@ class DomainsTlds extends DomainsModel
             $active_non_primaries = 0;
             foreach ($tld_packages as $tld_package) {
                 $active_non_primaries += $tld_package->package_id == $tld->package_id ? 0 : 1;
-
             }
             if ($active_non_primaries < 1) {
                 continue;
@@ -1351,7 +1349,7 @@ class DomainsTlds extends DomainsModel
                         } else {
                             $this->disablePricing($pricing_row->id);
                         }
-                    } else if ((bool) ($pricing['enabled'] ?? 0)) {
+                    } elseif ((bool) ($pricing['enabled'] ?? 0)) {
                         $this->addPricing($package_id, $pricing);
                     }
                 }
@@ -1415,7 +1413,7 @@ class DomainsTlds extends DomainsModel
                         ->update('services', ['pricing_id' => $pricing_package->id]);
                 }
             }
-        } else if (!empty($services_pricing) && $one_year_term == $pricing_id) {
+        } elseif (!empty($services_pricing) && $one_year_term == $pricing_id) {
             $this->Input->setErrors([
                 'service' => [
                     'message' => Language::_('DomainsTlds.!error.package_pricing.service', true)
@@ -2065,7 +2063,7 @@ class DomainsTlds extends DomainsModel
      *  - terms A list of terms to import for the TLD, if supported
      * @return bool True if all the TLDs where imported successfully, false otherwise
      */
-    public function import(array $tlds, int $module_id, int $company_id = null, array $filters = []) : bool
+    public function import(array $tlds, int $module_id, int $company_id = null, array $filters = []): bool
     {
         $company_id = !is_null($company_id) ? $company_id : Configure::get('Blesta.company_id');
 
@@ -2201,7 +2199,7 @@ class DomainsTlds extends DomainsModel
                 ],
                 'supported' => [
                     'if_set' => true,
-                    'rule' => function($tld) use (&$vars) {
+                    'rule' => function ($tld) use (&$vars) {
                         // Validate if the TLD is supported by the provided module
                         if (isset($vars['module_id'])) {
                             $parent = new stdClass();
