@@ -38,13 +38,15 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
 <table class="table table-hover">
     <thead>
         <tr>
-            <th style="width: 30px;"></th>
             <?php
             if (!in_array(($status ?? null), ['in_review', 'canceled'])) {
                 ?>
             <th style="width: 40px;"><?php $this->Form->fieldCheckbox('service_ids[]', 'all', (($vars->service_ids[0] ?? null) == 'all'), ['class' => 'actions form-check-input']);?></th>
                 <?php
             }
+            ?>
+            <th style="width: 30px;"></th>
+            <?php
             if (in_array(($status ?? null), ['active', 'suspended'])) {
                 ?>
             <th style="width: 30px;"></th>
@@ -97,6 +99,15 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
         for ($i = 0; $i < $num_domains; $i++) {
             ?>
         <tr<?php echo ($i % 2 == 1) ? ' class="table-light"' : '';?> class="domain_info">
+            <?php
+            if (!in_array(($status ?? null), ['in_review', 'canceled'])) {
+                ?>
+            <td>
+                <?php $this->Form->fieldCheckbox('service_ids[]', ($domains[$i]->id ?? null), in_array(($domains[$i]->id ?? null), ($vars->service_ids ?? [])), ['class' => 'actions form-check-input']);?>
+            </td>
+                <?php
+            }
+            ?>
             <td class="text-center">
                 <?php
                 if ($domains[$i]->found != '1') {
@@ -109,15 +120,8 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
                 ?>
             </td>
             <?php
-            if (!in_array(($status ?? null), ['in_review', 'canceled'])) {
-                ?>
-            <td>
-                <?php $this->Form->fieldCheckbox('service_ids[]', ($domains[$i]->id ?? null), in_array(($domains[$i]->id ?? null), ($vars->service_ids ?? [])), ['class' => 'actions form-check-input']);?>
-            </td>
-                <?php
-            }
             if (in_array(($status ?? null), ['active', 'suspended'])) {
-                $icon = empty($domains[$i]->date_canceled) ? 'bi-check-circle' : 'bi-calendar-x';
+                $icon = empty($domains[$i]->date_canceled) ? 'bi-check-circle' : 'bi-calendar-x text-warning';
                 ?>
             <td class="text-center"><i class="bi <?php (print (isset($icon) ? $this->Html->safe($icon) : null));?>"></i></td>
                 <?php
@@ -207,83 +211,65 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
     <?php
 }
 ?>
-<div id="domain_actions" class="button_row mt-3" style="display: none;">
-    <?php
-    $this->Form->fieldSubmit('save', $this->_('AdminMain.index.field_actionsubmit', true), ['class' => 'btn btn-primary float-end']);
-    ?>
-    <div class="actions">
-        <div id="domain_change_auto_renewal" class="action_section mb-3">
+<div id="domain_actions" class="bulk-actions-bar d-none">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <span class="selected-count" id="domainsSelectedCount">0 <?php $this->_('AdminMain.index.text_items_selected');?></span>
+        <div class="d-flex gap-3 align-items-center flex-wrap">
             <?php
-            $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminDomains.browse.text_on', true), 'off' => $this->_('AdminDomains.browse.text_off', true)], $vars->action ?? null, ['class' => 'form-select']);
+            $this->Form->fieldSelect('action', ['' => $this->_('AppController.select.please', true)] + ($actions ?? []), $vars->action ?? null, ['id' => 'domain_action', 'class' => 'form-select form-select-sm', 'style' => 'width: 180px;']);
             ?>
-        </div>
-        <div id="domain_change_expiration_date" class="action_section mb-3">
-            <?php
-            $this->Form->fieldText('expiration_date', $this->Date->cast($vars->expiration_date ?? date('c'), 'Y-m-d'), ['class' => 'form-control date']);
-            ?>
-        </div>
-        <div id="domain_change_registration_date" class="action_section mb-3">
-            <?php
-            $this->Form->fieldText('registration_date', $this->Date->cast($vars->registration_date ?? date('c'), 'Y-m-d'), ['class' => 'form-control date']);
-            ?>
-        </div>
-        <div id="domain_change_registrar" class="action_section mb-3">
-            <?php
-            $this->Form->fieldSelect('module_id', ($modules ?? []), ($vars->client ?? ''), ['class' => 'form-select']);
-            ?>
-        </div>
-        <div id="domain_renewal" class="action_section mb-3">
-            <div class="row g-2 align-items-center">
-                <div class="col-auto">
-                    <?php
-                    $this->Form->label($this->_('AdminDomains.browse.action.field_years', true), 'years', ['class' => 'col-form-label']);
-                    ?>
-                </div>
-                <div class="col-auto">
-                    <?php
-                    $this->Form->fieldText('years', ($vars->cycles ?? 1), ['class' => 'form-control', 'style' => 'width: 80px;']);
-                    ?>
-                </div>
+
+            <!-- Change Auto Renewal -->
+            <div id="domain_change_auto_renewal" class="action-option gap-2 align-items-center" style="display: none;">
+                <?php
+                $this->Form->fieldSelect('auto_renewal', ['on' => $this->_('AdminMain.index.text_on', true), 'off' => $this->_('AdminMain.index.text_off', true)], $vars->action ?? null, ['class' => 'form-select form-select-sm', 'style' => 'width: 120px;']);
+                ?>
             </div>
-        </div>
-        <div id="domain_update_nameservers" class="action_section mb-3">
-            <div class="row g-2">
-                <div class="col-12">
-                    <?php
-                    $this->Form->label($this->_('AdminDomains.browse.action.field_nameservers', true), 'nameservers1', ['class' => 'form-label']);
-                    ?>
-                </div>
-                <div class="col-md-6">
-                    <?php
-                    $this->Form->fieldText('nameservers[]', ($vars->nameservers[0] ?? ''), ['class' => 'form-control']);
-                    ?>
-                </div>
-                <div class="col-md-6">
-                    <?php
-                    $this->Form->fieldText('nameservers[]', ($vars->nameservers[1] ?? ''), ['class' => 'form-control']);
-                    ?>
-                </div>
+
+            <!-- Change Expiration Date -->
+            <div id="domain_change_expiration_date" class="action-option gap-2 align-items-center" style="display: none;">
+                <?php $this->Form->fieldText('expiration_date', $this->Date->cast($vars->expiration_date ?? date('c'), 'Y-m-d'), ['class' => 'form-control form-control-sm date', 'style' => 'width: 150px;']);?>
             </div>
-        </div>
-        <div id="domain_push_to_client" class="action_section mb-3">
-            <div class="row g-2">
-                <div class="col-12">
+
+            <!-- Change Registration Date -->
+            <div id="domain_change_registration_date" class="action-option gap-2 align-items-center" style="display: none;">
+                <?php $this->Form->fieldText('registration_date', $this->Date->cast($vars->registration_date ?? date('c'), 'Y-m-d'), ['class' => 'form-control form-control-sm date', 'style' => 'width: 150px;']);?>
+            </div>
+
+            <!-- Change Registrar -->
+            <div id="domain_change_registrar" class="action-option gap-2 align-items-center" style="display: none;">
+                <?php $this->Form->fieldSelect('module_id', ($modules ?? []), ($vars->client ?? ''), ['class' => 'form-select form-select-sm', 'style' => 'width: 180px;']);?>
+            </div>
+
+            <!-- Renewal -->
+            <div id="domain_renewal" class="action-option gap-2 align-items-center" style="display: none;">
+                <label for="years" class="form-label mb-0"><?php $this->_('AdminMain.domains.action.field_years');?></label>
+                <?php $this->Form->fieldText('years', ($vars->cycles ?? 1), ['id' => 'years', 'class' => 'form-control form-control-sm', 'style' => 'width: 80px;']);?>
+            </div>
+
+            <!-- Update Nameservers -->
+            <div id="domain_update_nameservers" class="action-option gap-2 align-items-center" style="display: none;">
+                <label class="form-label mb-0"><?php $this->_('AdminMain.domains.action.field_nameservers');?></label>
+                <?php
+                $this->Form->fieldText('nameservers[]', ($vars->nameservers[0] ?? ''), ['class' => 'form-control form-control-sm', 'style' => 'width: 160px;']);
+                $this->Form->fieldText('nameservers[]', ($vars->nameservers[1] ?? ''), ['class' => 'form-control form-control-sm', 'style' => 'width: 160px;']);
+                ?>
+            </div>
+
+            <!-- Push to Client -->
+            <div id="domain_push_to_client" class="action-option gap-2 align-items-center" style="display: none;">
+                <label for="domain_client" class="form-label mb-0"><?php $this->_('AdminMain.domains.action.field_client');?></label>
+                <div class="position-relative">
                     <?php
-                    $this->Form->label($this->_('AdminDomains.browse.action.field_client', true), 'domain_client', ['class' => 'form-label']);
-                    ?>
-                </div>
-                <div class="col-md-10">
-                    <?php
-                    $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control', 'id' => 'domain_client', 'autocomplete' => 'off']);
+                    $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control form-control-sm', 'id' => 'domain_client', 'style' => 'width: 200px;', 'autocomplete' => 'off']);
                     $this->Form->fieldHidden('client_id', ($vars->client_id ?? null), ['id' => 'domain_client_id']);
                     ?>
                     <div id="domain_client_autocomplete_results" class="autocomplete-results position-absolute bg-body border rounded shadow-sm" style="display: none; z-index: 1050; width: 100%; max-height: 200px; overflow-y: auto;"></div>
                 </div>
             </div>
+
+            <?php $this->Form->fieldSubmit('save', $this->_('AdminMain.index.field_actionsubmit', true), ['class' => 'btn btn-sm btn-primary']);?>
         </div>
-        <?php
-        $this->Form->fieldSelect('action', ['' => $this->_('AppController.select.please', true)] + ($actions ?? []), $vars->action ?? null, ['id' => 'domain_action', 'class' => 'form-select']);
-        ?>
     </div>
 </div>
 <?php
@@ -291,9 +277,9 @@ $this->Form->end();
 $this->Widget->end();
 
 // Delete service form outside the widget to avoid AJAX replacement
-$this->Form->create($this->base_uri . 'clients/deleteservice/', ['id' => 'delete_service']);
-$this->Form->fieldHidden('client_id', '', ['id' => 'delete_service_client_id']);
-$this->Form->fieldHidden('id', '', ['id' => 'delete_service_service_id']);
+$this->Form->create($this->base_uri . 'clients/deleteservice/', ['id' => 'delete_domain']);
+$this->Form->fieldHidden('client_id', '', ['id' => 'delete_domain_client_id']);
+$this->Form->fieldHidden('id', '', ['id' => 'delete_domain_service_id']);
 $this->Form->fieldHidden('redirect_uri', $this->base_uri . 'clients/view/' . ($client->id ?? null) . '/');
 $this->Form->end();
 ?>
@@ -305,6 +291,9 @@ $this->Form->end();
     var widget = document.getElementById('plugin_domains_admin_main_domains');
     if (!widget) return;
 
+    var textItemSelected = <?php echo json_encode($this->_('AdminMain.index.text_item_selected', true));?>;
+    var textItemsSelected = <?php echo json_encode($this->_('AdminMain.index.text_items_selected', true));?>;
+
     // Initialize Bootstrap components within a container
     function initBootstrapComponents(container) {
         var tooltipTriggers = container.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -313,21 +302,47 @@ $this->Form->end();
         });
     }
 
-    // Show service actions based on checkboxes
+    // Show/hide the bulk actions bar based on selected rows and update the count
     function showServiceActions() {
-        var checkedCount = widget.querySelectorAll('input.actions:checked').length;
         var domainActions = document.getElementById('domain_actions');
+        var selectedCountEl = document.getElementById('domainsSelectedCount');
+        if (!domainActions) return;
 
-        if (domainActions) {
-            domainActions.style.display = checkedCount > 0 ? 'block' : 'none';
+        var checkedBoxes = widget.querySelectorAll('input.actions:checked:not([value="all"])');
+        if (checkedBoxes.length > 0) {
+            domainActions.classList.remove('d-none');
+            if (selectedCountEl) {
+                var text = checkedBoxes.length === 1 ? textItemSelected : textItemsSelected;
+                selectedCountEl.textContent = checkedBoxes.length + ' ' + text;
+            }
+        } else {
+            domainActions.classList.add('d-none');
+        }
+    }
+
+    // Show only the action option matching the selected action
+    function switchDomainActions() {
+        var actionSelectEl = widget.querySelector('#domain_action');
+        if (!actionSelectEl) return;
+
+        widget.querySelectorAll('.action-option').forEach(function(opt) {
+            opt.style.display = 'none';
+        });
+
+        var action = actionSelectEl.value;
+        if (action) {
+            var targetElement = document.getElementById('domain_' + action);
+            if (targetElement) {
+                targetElement.style.display = 'flex';
+            }
         }
     }
 
     // Populate the dedicated delete form, confirm, and submit it explicitly by id
     function confirmDeleteDomain(deleteBtn) {
-        var deleteForm = document.getElementById('delete_service');
-        var clientIdField = document.getElementById('delete_service_client_id');
-        var serviceIdField = document.getElementById('delete_service_service_id');
+        var deleteForm = document.getElementById('delete_domain');
+        var clientIdField = document.getElementById('delete_domain_client_id');
+        var serviceIdField = document.getElementById('delete_domain_service_id');
         if (!deleteForm || !clientIdField || !serviceIdField) return;
 
         clientIdField.value = deleteBtn.getAttribute('data-client-id');
@@ -422,17 +437,8 @@ $this->Form->end();
 
         // Delegated change on widget
         widget.addEventListener('change', function(e) {
-            var actionSelect = e.target.closest('#domain_action');
-            if (actionSelect) {
-                // Hide all action sections
-                var actionSections = widget.querySelectorAll('.action_section');
-                actionSections.forEach(function(section) { section.style.display = 'none'; });
-
-                // Show selected action section
-                var selectedSection = document.getElementById('domain_' + actionSelect.value);
-                if (selectedSection) {
-                    selectedSection.style.display = 'block';
-                }
+            if (e.target.closest('#domain_action')) {
+                switchDomainActions();
             }
         });
 
@@ -512,10 +518,7 @@ $this->Form->end();
         });
     }
 
-    // Initialize first action (after the change listener is bound) — runs on every load
-    var actionSelect = document.getElementById('domain_action');
-    if (actionSelect) {
-        actionSelect.dispatchEvent(new Event('change'));
-    }
+    // Apply the initial action-option visibility — runs on every load
+    switchDomainActions();
 })();
 </script>
