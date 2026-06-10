@@ -241,8 +241,8 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
                 <?php $this->Form->fieldSelect('module_id', ($modules ?? []), ($vars->client ?? ''), ['class' => 'form-select form-select-sm', 'style' => 'width: 180px;']);?>
             </div>
 
-            <!-- Renewal -->
-            <div id="domain_renewal" class="action-option gap-2 align-items-center" style="display: none;">
+            <!-- Renewal — id matches the JS lookup `'domain_' + action`; the action key is itself `domain_renewal`. -->
+            <div id="domain_domain_renewal" class="action-option gap-2 align-items-center" style="display: none;">
                 <label for="years" class="form-label mb-0"><?php $this->_('AdminMain.domains.action.field_years');?></label>
                 <?php $this->Form->fieldText('years', ($vars->cycles ?? 1), ['id' => 'years', 'class' => 'form-control form-control-sm', 'style' => 'width: 80px;']);?>
             </div>
