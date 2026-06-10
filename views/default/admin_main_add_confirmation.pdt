@@ -74,7 +74,7 @@
     </div>
 
     <?php
-    $this->Form->create();
+    $this->Form->create(null, ['class' => 'disable-on-submit']);
 
     function parseFields($vars, $that, $parent_key = null)
     {

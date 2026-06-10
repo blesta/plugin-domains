@@ -66,6 +66,8 @@ $lang['AdminMain.index.update_nameservers'] = 'Update Nameservers';
 $lang['AdminMain.index.domain_push_to_client'] = 'Push to Client';
 $lang['AdminMain.index.unparent'] = 'Unparent and Reset Price';
 $lang['AdminMain.index.field_actionsubmit'] = 'Submit';
+$lang['AdminMain.index.text_item_selected'] = 'item selected';
+$lang['AdminMain.index.text_items_selected'] = 'items selected';
 
 $lang['AdminMain.domains.action.field_years'] = 'Years';
 $lang['AdminMain.domains.action.field_nameservers'] = 'Nameservers';

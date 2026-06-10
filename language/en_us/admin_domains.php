@@ -70,6 +70,8 @@ $lang['AdminDomains.browse.category_pending'] = 'Pending';
 $lang['AdminDomains.browse.category_in_review'] = 'In Review';
 $lang['AdminDomains.browse.category_scheduled_cancellation'] = 'Scheduled';
 $lang['AdminDomains.browse.field_actionsubmit'] = 'Submit';
+$lang['AdminDomains.browse.text_item_selected'] = 'item selected';
+$lang['AdminDomains.browse.text_items_selected'] = 'items selected';
 
 $lang['AdminDomains.browse.tooltip_renew'] = 'Auto Renewal for Blesta means that the user will be invoiced automatically and that the domain will be renewed once the invoice is paid.';
 $lang['AdminDomains.browse.tooltip_transferred'] = 'The domain has been transferred away from the registrar.';
