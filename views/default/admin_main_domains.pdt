@@ -35,6 +35,7 @@ $this->Form->create(null, ['class' => 'disable-on-submit']);
 
 if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
     ?>
+<div class="table-responsive">
 <table class="table table-hover">
     <thead>
         <tr>
@@ -98,7 +99,7 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
         // List all services
         for ($i = 0; $i < $num_domains; $i++) {
             ?>
-        <tr<?php echo ($i % 2 == 1) ? ' class="table-light"' : '';?> class="domain_info">
+        <tr class="domain_info">
             <?php
             if (!in_array(($status ?? null), ['in_review', 'canceled'])) {
                 ?>
@@ -199,6 +200,7 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
         ?>
     </tbody>
 </table>
+</div>
     <?php
     // Set pagination
     $this->Pagination->build();
