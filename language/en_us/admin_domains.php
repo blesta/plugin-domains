@@ -26,6 +26,7 @@ $lang['AdminDomains.!success.remove_price_override'] = 'The domain override pric
 $lang['AdminDomains.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 $lang['AdminDomains.!success.domains_pushed'] = 'The selected domains were successfully pushed to the new client.';
 $lang['AdminDomains.!success.domains_unparented'] = 'The selected domains were removed from their parent services and the price has been reset successfully!';
+$lang['AdminDomains.!success.queue_sync'] = 'The selected domains have been queued for synchronization!';
 $lang['AdminDomains.!success.packages_imported'] = 'Domain packages imported successfully!';
 $lang['AdminDomains.!success.configurable_option_updated'] = 'The configurable option has been updated!';
 $lang['AdminDomains.!success.tlds_imported'] = 'The TLDs were successfully imported!';

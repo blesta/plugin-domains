@@ -10,6 +10,7 @@ $lang['AdminMain.!success.remove_price_override'] = 'The domain override price h
 $lang['AdminMain.!success.update_nameservers'] = 'The Domain name servers has been updated!';
 $lang['AdminMain.!success.domains_pushed'] = 'The selected domains were successfully pushed to the new client.';
 $lang['AdminMain.!success.domains_unparented'] = 'The selected domains were removed from their parent services and the price has been reset successfully!';
+$lang['AdminMain.!success.queue_sync'] = 'The selected domains have been queued for synchronization!';
 
 $lang['AdminMain.!success.domain_register'] = 'The domain has been registered successfully!';
 $lang['AdminMain.!success.domain_transfer'] = 'The domain has been transferred successfully!';
