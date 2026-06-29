@@ -44,6 +44,7 @@ class DomainsPlugin extends Plugin
 
         Configure::load('domains', dirname(__FILE__) . DS . 'config' . DS);
 
+        $this->upgrade1_5_0();
         try {
             // domains_tlds
             $this->Record
@@ -137,7 +138,6 @@ class DomainsPlugin extends Plugin
             }
         }
 
-        $this->upgrade1_5_0();
         $this->upgrade1_6_2();
         $this->upgrade1_8_0();
 
