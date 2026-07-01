@@ -1022,6 +1022,9 @@ class AdminMain extends DomainsController
                     case 'unparent':
                         $term = 'AdminMain.!success.domains_unparented';
                         break;
+                    case 'queue_sync':
+                        $term = 'AdminMain.!success.queue_sync';
+                        break;
                 }
 
                 $this->flashMessage('message', Language::_($term, true), null, false);

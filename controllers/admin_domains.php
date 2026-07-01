@@ -76,6 +76,9 @@ class AdminDomains extends DomainsController
                     case 'unparent':
                         $term = 'AdminDomains.!success.domains_unparented';
                         break;
+                    case 'queue_sync':
+                        $term = 'AdminDomains.!success.queue_sync';
+                        break;
                 }
 
                 $this->setMessage('message', Language::_($term, true), false, null, false);
