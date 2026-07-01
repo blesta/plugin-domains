@@ -93,7 +93,8 @@ class DomainsController extends AppController
             'remove_price_override' => Language::_('DomainsController.getDomainActions.remove_price_override', true),
             'update_nameservers' => Language::_('DomainsController.getDomainActions.update_nameservers', true),
             'push_to_client' => Language::_('DomainsController.getDomainActions.push_to_client', true),
-            'unparent' => Language::_('DomainsController.getDomainActions.unparent', true)
+            'unparent' => Language::_('DomainsController.getDomainActions.unparent', true),
+            'queue_sync' => Language::_('DomainsController.getDomainActions.queue_sync', true)
         ];
     }
 
@@ -265,6 +266,15 @@ class DomainsController extends AppController
 
                     if (($errors = $this->Services->errors())) {
                         return $errors;
+                    }
+                }
+                break;
+            case 'queue_sync':
+                foreach ($data['service_ids'] as $service_id) {
+                    $this->DomainsDomains->queueSync($service_id);
+
+                    if (($errors = $this->DomainsDomains->errors())) {
+                        break;
                     }
                 }
                 break;

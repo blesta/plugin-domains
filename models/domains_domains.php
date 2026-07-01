@@ -726,6 +726,17 @@ class DomainsDomains extends DomainsModel
     }
 
     /**
+     * Flags a domain to be synchronized on the next Domain Synchronization task run
+     *
+     * @param int $service_id The ID of the service belonging to the domain
+     */
+    public function queueSync($service_id)
+    {
+        $this->Record->duplicate('domains_domains.awaiting_sync', '=', 1)
+            ->insert('domains_domains', ['service_id' => $service_id, 'awaiting_sync' => 1]);
+    }
+
+    /**
      * Checks if a domain is available for registration
      *
      * @param string $domain The domain name to check

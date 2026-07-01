@@ -242,7 +242,7 @@ class AdminMain extends DomainsController
 
         // Set action
         $action = 'register';
-        if (isset($this->post['transfer']) && $this->post['transfer'] == '1') {
+        if (isset($this->post['transfer'])) {
             $action = 'transfer';
         }
 
@@ -349,7 +349,7 @@ class AdminMain extends DomainsController
     {
         // Set action
         $action = 'register';
-        if (isset($this->post['transfer']) && $this->post['transfer'] == '1') {
+        if (isset($this->post['transfer'])) {
             $action = 'transfer';
         }
 
@@ -1021,6 +1021,9 @@ class AdminMain extends DomainsController
                         break;
                     case 'unparent':
                         $term = 'AdminMain.!success.domains_unparented';
+                        break;
+                    case 'queue_sync':
+                        $term = 'AdminMain.!success.queue_sync';
                         break;
                 }
 

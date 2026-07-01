@@ -15,3 +15,4 @@ $lang['DomainsController.getDomainActions.remove_price_override'] = 'Remove Pric
 $lang['DomainsController.getDomainActions.update_nameservers'] = 'Update Nameservers';
 $lang['DomainsController.getDomainActions.push_to_client'] = 'Push to Client';
 $lang['DomainsController.getDomainActions.unparent'] = 'Unparent and Reset Price';
+$lang['DomainsController.getDomainActions.queue_sync'] = 'Queue Sync';
