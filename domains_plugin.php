@@ -1,13 +1,14 @@
 <?php
 
 use Blesta\Core\Util\Common\Traits\Container;
+use Blesta\Core\Util\ExampleData\Common\ExampleDataProviderInterface;
 
 /**
  * Domain Manager plugin handler
  *
  * @link https://www.blesta.com Blesta
  */
-class DomainsPlugin extends Plugin
+class DomainsPlugin extends Plugin implements ExampleDataProviderInterface
 {
     // Load traits
     use Container;
@@ -2299,5 +2300,49 @@ class DomainsPlugin extends Plugin
             null,
             ['type' => 'domains']
         );
+    }
+
+    /**
+     * Returns field extensions to merge into existing core model examples
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function getExampleExtensions(): array
+    {
+        return [
+            'Services' => [
+                'expiration_date' => '2027-03-20'
+            ]
+        ];
+    }
+
+    /**
+     * Returns entirely new model examples that have no core JSON file
+     *
+     * The {domain} template tag resolves to a plain string at runtime (the
+     * domain name, i.e. the service name), not an object with fields — the
+     * domain emails only ever use {domain} bare, never {domain.something}. It
+     * is registered here as a scalar example so the AI email-tag helper sees it
+     * as a usable string tag rather than reporting it as having no schema.
+     *
+     * @return array<string, mixed>
+     */
+    public function getExampleModels(): array
+    {
+        return [
+            'DomainName' => 'example.com'
+        ];
+    }
+
+    /**
+     * Returns tag name to model name mappings for new root-level template tags
+     *
+     * @return array<string, string>
+     */
+    public function getTagMappings(): array
+    {
+        return [
+            'domain' => 'DomainName'
+        ];
     }
 }

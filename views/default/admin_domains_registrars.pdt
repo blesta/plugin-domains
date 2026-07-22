@@ -17,11 +17,26 @@ $this->Widget->create(
             ?>
     <div class="d-flex align-items-start gap-3 pb-3<?php echo !$is_last ? ' mb-3' : '';?>"<?php echo !$is_last ? ' style="border-bottom: 1px solid var(--border-color);"' : '';?>>
         <div style="width: 200px; flex-shrink: 0;">
+            <?php if (!empty($registrars[$i]->icon)) { ?>
+            <div class="extension-logo extension-logo-dual">
+                <div class="extension-logo-blesta">
+                    <img src="<?php echo $this->view_dir;?>images/logo.svg" class="logo-dark" alt="Blesta">
+                    <img src="<?php echo $this->view_dir;?>images/logo-color.svg" class="logo-light" alt="Blesta">
+                </div>
+                <div class="extension-logo-icon">
+                    <i class="bi <?php echo $this->Html->safe($registrars[$i]->icon);?>"></i>
+                </div>
+            </div>
+            <?php } else { ?>
             <div class="extension-logo extension-logo-single">
-                <?php if (!empty($registrars[$i]->logo)) { ?>
-                <img src="<?php echo $this->Html->safe($registrars[$i]->logo);?>" alt="<?php echo $this->Html->safe($registrars[$i]->name);?>" class="img-fluid">
+                <?php if (!empty($registrars[$i]->logos)) { ?>
+                <img src="<?php echo $this->Html->safe($registrars[$i]->logos->dark);?>" class="logo-dark" alt="<?php echo $this->Html->safe($registrars[$i]->name);?>">
+                <img src="<?php echo $this->Html->safe($registrars[$i]->logos->light);?>" class="logo-light" alt="<?php echo $this->Html->safe($registrars[$i]->name);?>">
+                <?php } elseif (!empty($registrars[$i]->logo)) { ?>
+                <img src="<?php echo $this->Html->safe($registrars[$i]->logo);?>" alt="<?php echo $this->Html->safe($registrars[$i]->name);?>">
                 <?php } ?>
             </div>
+            <?php } ?>
         </div>
         <div class="flex-grow-1">
             <h6 class="mb-1">
