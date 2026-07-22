@@ -2319,11 +2319,19 @@ class DomainsPlugin extends Plugin implements ExampleDataProviderInterface
     /**
      * Returns entirely new model examples that have no core JSON file
      *
-     * @return array<string, array>
+     * The {domain} template tag resolves to a plain string at runtime (the
+     * domain name, i.e. the service name), not an object with fields — the
+     * domain emails only ever use {domain} bare, never {domain.something}. It
+     * is registered here as a scalar example so the AI email-tag helper sees it
+     * as a usable string tag rather than reporting it as having no schema.
+     *
+     * @return array<string, mixed>
      */
     public function getExampleModels(): array
     {
-        return [];
+        return [
+            'DomainName' => 'example.com'
+        ];
     }
 
     /**
@@ -2334,8 +2342,7 @@ class DomainsPlugin extends Plugin implements ExampleDataProviderInterface
     public function getTagMappings(): array
     {
         return [
-            'service' => 'Services',
-            'contact' => 'Contacts'
+            'domain' => 'DomainName'
         ];
     }
 }
