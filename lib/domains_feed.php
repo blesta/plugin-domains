@@ -95,17 +95,22 @@ class DomainsFeed extends AbstractDataFeed
             <div class="title_row"><h3>' . Language::_('DomainsFeed.getOptionFields.title_row_example_code', true) . '</h3></div>
             <div class="pad">
                 <small>' . Language::_('DomainsFeed.getOptionFields.example_code_pricing', true) . '</small>
-                <pre class="rounded bg-light text-secondary border border-secondary p-2 m-0 my-1">'
+                <pre class="rounded bg-body-tertiary border p-2 m-0 my-1">'
                     . '&lt;script src="' . $base_url . 'feed/domain/pricing/?currency=USD&style=bootstrap&term=1,2,3,4,5,10"&gt;&lt;/script&gt;'
                 . '</pre>
-                <h4 class="mb-1"><a id="domain_pricing_params" href="#" class="show_content"><i class="fas fa-chevron-down"></i> ' . Language::_('DomainsFeed.getOptionFields.params', true) . '</a></h4>
-                <div id="domain_pricing_params_content" class="pad_top mb-2 hidden">
-                    <div>
+                <p class="mb-1">
+                    <a class="collapse-trigger" data-bs-toggle="collapse" href="#domain_pricing_params_content" role="button" aria-expanded="false" aria-controls="domain_pricing_params_content">
+                        <i class="bi bi-chevron-down"></i>
+                        ' . Language::_('DomainsFeed.getOptionFields.params', true) . '
+                    </a>
+                </p>
+                <div class="collapse mb-2" id="domain_pricing_params_content">
+                    <div class="collapse-content">
                         <table class="table table-striped">
                             <thead>
-                                <tr class="heading_row">
-                                    <td>' . Language::_('DomainsFeed.getOptionFields.header_name', true) . '</td>
-                                    <td>' . Language::_('DomainsFeed.getOptionFields.header_description', true) . '</td>
+                                <tr>
+                                    <th>' . Language::_('DomainsFeed.getOptionFields.header_name', true) . '</th>
+                                    <th>' . Language::_('DomainsFeed.getOptionFields.header_description', true) . '</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -126,17 +131,22 @@ class DomainsFeed extends AbstractDataFeed
                     </div>
                 </div>
                 <small>' . Language::_('DomainsFeed.getOptionFields.example_code_count', true) . '</small>
-                <pre class="rounded bg-light text-secondary border border-secondary p-2 m-0 my-1">'
+                <pre class="rounded bg-body-tertiary border p-2 m-0 my-1">'
                     . '&lt;script src="' . $base_url . 'feed/domain/count/?status=active&tlds=com,org"&gt;&lt;/script&gt;'
                 . '</pre>
-                <h4 class="mb-1"><a id="domain_count_params" href="#" class="show_content"><i class="fas fa-chevron-down"></i> ' . Language::_('DomainsFeed.getOptionFields.params', true) . '</a></h4>
-                <div id="domain_count_params_content" class="pad_top mb-2 hidden">
-                    <div>
+                <p class="mb-1">
+                    <a class="collapse-trigger" data-bs-toggle="collapse" href="#domain_count_params_content" role="button" aria-expanded="false" aria-controls="domain_count_params_content">
+                        <i class="bi bi-chevron-down"></i>
+                        ' . Language::_('DomainsFeed.getOptionFields.params', true) . '
+                    </a>
+                </p>
+                <div class="collapse mb-2" id="domain_count_params_content">
+                    <div class="collapse-content">
                         <table class="table table-striped">
                             <thead>
-                                <tr class="heading_row">
-                                    <td>' . Language::_('DomainsFeed.getOptionFields.header_name', true) . '</td>
-                                    <td>' . Language::_('DomainsFeed.getOptionFields.header_description', true) . '</td>
+                                <tr>
+                                    <th>' . Language::_('DomainsFeed.getOptionFields.header_name', true) . '</th>
+                                    <th>' . Language::_('DomainsFeed.getOptionFields.header_description', true) . '</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -152,12 +162,6 @@ class DomainsFeed extends AbstractDataFeed
                         </table>
                     </div>
                 </div>
-                <script>
-                    $(document).ready(function () {
-                        $(this).blestaBindToggleEvent("#domain_pricing_params", "#domain_pricing_params_content");
-                        $(this).blestaBindToggleEvent("#domain_count_params", "#domain_count_params_content");
-                    });
-                </script>
             </div>
         ');
 
