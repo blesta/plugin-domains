@@ -148,12 +148,13 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_edit', true, ($service->
                         'push_to_client' => 'person-up',
                         'set_price_override' => 'cash-coin',
                         'remove_price_override' => 'x-circle',
-                        'unparent' => 'diagram-2'
+                        'unparent' => 'diagram-2',
+                        'queue_sync' => 'arrow-clockwise'
                     ];
                     $icon = $icon_map[$action_key] ?? 'gear';
 
                     // Actions that don't need forms (no configuration required)
-                    $direct_actions = ['set_price_override', 'remove_price_override', 'unparent'];
+                    $direct_actions = ['set_price_override', 'remove_price_override', 'unparent', 'queue_sync'];
                     ?>
             <button type="button" class="btn btn-outline-secondary" data-action="<?php echo $this->Html->safe($action_key);?>" <?php echo in_array($action_key, $direct_actions) ? 'data-direct="true"' : '';?>>
                 <i class="bi bi-<?php echo $icon;?> me-2"></i><?php echo $this->Html->safe($action_label);?>
