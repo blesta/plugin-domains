@@ -265,7 +265,7 @@ $this->Widget->create(
                 ?>
                 <div id="selected-currencies" class="d-flex gap-2 flex-wrap">
                     <?php foreach ($currencies ?? [] as $currency) { ?>
-                    <span id="currency_selector_<?php echo $this->Html->safe($currency); ?>" class="badge bg-light text-secondary border" style="display: none;">
+                    <span id="currency_selector_<?php echo $this->Html->safe($currency); ?>" class="badge bg-secondary" style="display: none;">
                         <?php
                         $this->Form->fieldCheckbox('tlds_bulk[currencies][]', $currency, null, ['class' => 'form-check-input form-check-input-sm me-1']);
                         echo $this->Html->safe($currency);
@@ -533,6 +533,9 @@ $this->Widget->create(
                 if (checkbox) checkbox.checked = true;
             }
         });
+
+        // Select the pre-selected default currency
+        selector.dispatchEvent(new Event('change'));
     }
 
     // Add TLD Row

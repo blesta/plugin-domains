@@ -1832,7 +1832,7 @@ class AdminDomains extends DomainsController
      */
     private function processTldActions(array $params)
     {
-        $this->uses(['Domains.DomainsTlds']);
+        $this->uses(['Domains.DomainsTlds', 'Currencies']);
 
         $action = $params['action'] ?? null;
         $actions = $this->getTldActions();
@@ -1905,13 +1905,40 @@ class AdminDomains extends DomainsController
                     }
                     break;
                 case 'tld_sync':
+                    // Only accept a flat list of TLDs, an empty list would otherwise match all TLDs
+                    $tlds = array_filter(
+                        is_array($params['tlds'] ?? null) ? $params['tlds'] : [],
+                        'is_scalar'
+                    );
+
+                    if (empty($tlds)) {
+                        return Language::_('AdminDomains.!warning.tld_sync_tlds', true);
+                    }
+
+                    // Only accept currency codes configured for this company
+                    $currencies = array_intersect(
+                        array_filter(
+                            is_array($params['currencies'] ?? null) ? $params['currencies'] : [],
+                            'is_scalar'
+                        ),
+                        $this->Form->collapseObjectArray(
+                            $this->Currencies->getAll(Configure::get('Blesta.company_id')),
+                            'code',
+                            'code'
+                        )
+                    );
+
+                    if (empty($currencies)) {
+                        return Language::_('AdminDomains.!warning.tld_sync_currencies', true);
+                    }
+
                     Loader::load(dirname(__FILE__) . DS . '..' . DS . 'lib' . DS . 'tld_sync.php');
                     $sync_utility = new TldSync();
                     $sync_utility->synchronizePrices(
-                        $params['tlds'],
+                        array_values($tlds),
                         null,
                         [],
-                        $params['currencies']
+                        array_values($currencies)
                     );
                     break;
                 case 'delete':
