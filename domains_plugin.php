@@ -76,7 +76,7 @@ class DomainsPlugin extends Plugin implements ExampleDataProviderInterface
         $plugin = $this->PluginManager->get($plugin_id);
 
         // Add cron tasks for this plugin
-        $this->addCronTasks($this->getCronTasks());
+        $this->addCronTasks($this->getCronTaskDefinitions());
 
         $company_id = $plugin ? $plugin->company_id : Configure::get('Blesta.company_id');
         $languages = $this->Languages->getAll($company_id);
@@ -307,7 +307,7 @@ class DomainsPlugin extends Plugin implements ExampleDataProviderInterface
         Loader::loadModels($this, ['CronTasks', 'Companies', 'PackageOptions', 'PackageOptionGroups']);
 
         // Add new cron task to automatically synchronize TLDs
-        $cron_tasks = $this->getCronTasks();
+        $cron_tasks = $this->getCronTaskDefinitions();
         $task = null;
         foreach ($cron_tasks as $task) {
             if ($task['key'] == 'domain_tld_synchronization') {
@@ -1258,7 +1258,7 @@ class DomainsPlugin extends Plugin implements ExampleDataProviderInterface
         $emails = Configure::get('Domains.install.emails');
 
         // Fetch the cron tasks for this plugin
-        $cron_tasks = $this->getCronTasks();
+        $cron_tasks = $this->getCronTaskDefinitions();
 
         if ($last_instance) {
             try {
@@ -1381,7 +1381,7 @@ class DomainsPlugin extends Plugin implements ExampleDataProviderInterface
      *
      * @return array A list of cron tasks
      */
-    private function getCronTasks()
+    public function getCronTaskDefinitions()
     {
         return [
             [
