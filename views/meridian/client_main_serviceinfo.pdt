@@ -1,0 +1,98 @@
+<?php /** @var View $this **/ ?>
+        <?php
+        if (($domain->cancellation_reason ?? null)) {
+            ?>
+        <div class="alert alert-danger mb-2">
+            <p class="mb-0"><?php $this->_('ClientMain.serviceinfo.cancellation_reason', false, $domain->cancellation_reason);?></p>
+        </div>
+            <?php
+        }
+
+        if (($domain->parent_service ?? null)) {
+            $link = $this->Html->safe($this->base_uri . 'services/manage/' . ($domain->parent_service->id ?? null) . '/');
+            ?>
+        <div class="alert alert-warning mb-2">
+            <p class="mb-0"><?php $this->_('ClientMain.serviceinfo.parent_service', false, $link, $domain->parent_service->package->name, $domain->parent_service->name);?></p>
+        </div>
+            <?php
+        }
+
+        if (($content ?? null)) {
+            echo $content;
+        } else {
+            ?>
+        <div class="alert alert-info mb-2">
+            <p class="mb-0"><?php $this->_('ClientMain.serviceinfo.no_results');?></p>
+        </div>
+            <?php
+        }
+
+        // List add-on services
+        if (($num_services = count(($services ?? []))) > 0) {
+            // Maps a service status onto the template's status badge classes
+            $status_classes = [
+                'active' => 'status-active',
+                'pending' => 'status-pending',
+                'suspended' => 'status-suspended',
+                'canceled' => 'status-cancelled'
+            ];
+            ?>
+        <h4 class="h6 fw-semibold mb-2"><?php $this->_('ClientMain.index.heading_addons');?></h4>
+        <div class="table-responsive">
+            <table class="table table-modern table-hover">
+                <thead>
+                    <tr>
+                        <th><?php $this->_('ClientMain.index.heading_package');?></th>
+                        <th><?php $this->_('ClientMain.index.heading_label');?></th>
+                        <th><?php $this->_('ClientMain.index.heading_term');?></th>
+                        <th><?php $this->_('ClientMain.index.heading_status');?></th>
+                        <th class="text-end"><?php $this->_('ClientMain.index.heading_options');?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    for ($i = 0; $i < $num_services; $i++) {
+                        $service_status = ($services[$i]->status ?? null);
+                        $status_class = ($status_classes[$service_status] ?? 'status-draft');
+                        ?>
+                    <tr class="expand service_info">
+                        <td class="fw-semibold"><?php (print (isset($services[$i]->package->name) ? $this->Html->safe($services[$i]->package->name) : null));?></td>
+                        <td><?php (print (isset($services[$i]->name) ? $this->Html->safe($services[$i]->name) : null));?></td>
+                        <td>
+                            <?php
+                            if (($services[$i]->package_pricing->period ?? null) == 'onetime') {
+                                (print (isset($periods[$services[$i]->package_pricing->period]) ? $this->Html->safe($periods[$services[$i]->package_pricing->period]) : null));
+                            } else {
+                                $term = (isset($services[$i]->package_pricing->term) ? $this->Html->safe($services[$i]->package_pricing->term) : null);
+                                $period = ($term == 1 ? ($periods[$services[$i]->package_pricing->period] ?? null) : ($periods[$services[$i]->package_pricing->period . '_plural'] ?? null));
+                                $renewal_price = $this->CurrencyFormat->format(($services[$i]->renewal_price ?? null), ($services[$i]->override_currency ?? ($services[$i]->package_pricing->currency ?? null)));
+                                $this->_('ClientMain.index.recurring_term', false, $this->Html->safe($term), $this->Html->safe($period), $this->Html->safe($renewal_price));
+                            }
+                            ?>
+                        </td>
+                        <td><span class="status-badge <?php echo $this->Html->safe($status_class);?>"><?php echo (isset($statuses[$service_status]) ? $this->Html->safe($statuses[$service_status]) : null);?></span></td>
+                        <td class="text-end">
+                            <?php
+                            if ($services[$i]->status != 'canceled') {
+                                ?>
+                            <a href="<?php echo $this->Html->safe($this->base_uri . 'services/manage/' . ($services[$i]->id ?? null) . '/');?>" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-gear me-1"></i><?php $this->_('ClientMain.index.option_manage');?>
+                            </a>
+                                <?php
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                    <tr class="expand_details" id="services_<?php (print (isset($services[$i]->id) ? $this->Html->safe($services[$i]->id) : null));?>">
+                        <td colspan="5" class="subtable">
+                        </td>
+                    </tr>
+                        <?php
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+            <?php
+        }
+        ?>
