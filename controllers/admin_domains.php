@@ -589,6 +589,7 @@ class AdminDomains extends DomainsController
                 'domains_sync_price_markup',
                 'domains_sync_renewal_markup',
                 'domains_sync_transfer_markup',
+                'domains_allow_zero_transfer',
                 'domains_enable_rounding',
                 'domains_markup_rounding',
                 'domains_automatic_sync',
@@ -612,6 +613,9 @@ class AdminDomains extends DomainsController
             }
             if (!isset($this->post['domains_override_price'])) {
                 $this->post['domains_override_price'] = '0';
+            }
+            if (!isset($this->post['domains_allow_zero_transfer'])) {
+                $this->post['domains_allow_zero_transfer'] = '0';
             }
             if (!isset($this->post['migrate_services'])) {
                 $this->post['migrate_services'] = '0';

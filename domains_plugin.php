@@ -146,6 +146,11 @@ class DomainsPlugin extends Plugin implements ExampleDataProviderInterface
         if (!($setting = $this->Companies->getSetting($company_id, 'domains_renewal_days_before_expiration'))) {
             $this->Companies->setSetting($company_id, 'domains_renewal_days_before_expiration', 30);
         }
+
+        // Treat a transfer price of 0 as free by default
+        if (!($setting = $this->Companies->getSetting($company_id, 'domains_allow_zero_transfer'))) {
+            $this->Companies->setSetting($company_id, 'domains_allow_zero_transfer', 1);
+        }
     }
 
     /**
@@ -248,6 +253,28 @@ class DomainsPlugin extends Plugin implements ExampleDataProviderInterface
             // Upgrade to 1.18.0
             if (version_compare($current_version, '1.18.0', '<')) {
                 $this->upgrade1_18_0();
+            }
+
+            // Upgrade to 2.0.5
+            if (version_compare($current_version, '2.0.5', '<')) {
+                $this->upgrade2_0_5();
+            }
+        }
+    }
+
+    /**
+     * Update to v2.0.5
+     */
+    private function upgrade2_0_5()
+    {
+        Loader::loadModels($this, ['Companies', 'PluginManager']);
+
+        // Keep the previous behavior available, but default to treating a transfer
+        // price of 0 as free rather than as unavailable
+        $plugins = $this->PluginManager->getByDir('domains');
+        foreach ($plugins as $plugin) {
+            if (!($setting = $this->Companies->getSetting($plugin->company_id, 'domains_allow_zero_transfer'))) {
+                $this->Companies->setSetting($plugin->company_id, 'domains_allow_zero_transfer', 1);
             }
         }
     }
