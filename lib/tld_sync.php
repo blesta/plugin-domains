@@ -140,9 +140,10 @@ class TldSync
                         $prices['transfer'],
                         $this->tld_settings['domains_sync_transfer_markup'] ?? 0,
                         $tld_rounding,
-                        $currency
+                        $currency,
+                        (bool) ($this->tld_settings['domains_allow_zero_transfer'] ?? 1)
                     );
-                    $prices['enabled_transfer'] = true;
+                    $prices['enabled_transfer'] = !is_null($prices['transfer']);
                 } else {
                     $prices['transfer'] = null;
                     $prices['enabled_transfer'] = false;
@@ -167,11 +168,18 @@ class TldSync
      * @param int $markup The percentage of markup to add
      * @param string $rounding The nearest decimal to round up the final price
      * @param string $currency The currency of the given price
+     * @param bool $allow_zero True to treat a price of 0 as a real price rather than
+     *  as no price at all (optional, default false)
      * @return float The total amount of the price plus the markup
      */
-    private function markup($price, $markup, $rounding = null, $currency = null)
+    private function markup($price, $markup, $rounding = null, $currency = null, $allow_zero = false)
     {
-        if ($price == 0) {
+        // No price given
+        if ($price === null || $price === '') {
+            return null;
+        }
+
+        if (!$allow_zero && $price == 0) {
             return null;
         }
 
