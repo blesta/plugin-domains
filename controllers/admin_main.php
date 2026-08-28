@@ -160,6 +160,23 @@ class AdminMain extends DomainsController
 
             $this->post['domain'] = preg_replace('/^www\./i', '', $this->post['domain'] ?? '');
 
+            // Adding a domain that is already registered, skip the availability lookup entirely
+            // and continue to the configuration step with the domain as it was entered
+            if (isset($this->post['existing'])) {
+                $validator = new Server();
+                $tld = strstr($this->post['domain'], '.');
+
+                if (!$validator->isDomain($this->post['domain']) || !in_array($tld, $tlds)) {
+                    $this->flashMessage('error', Language::_('AdminMain.!error.unsupported_domain', true), null, false);
+                    $this->redirect($this->base_uri . 'plugin/domains/admin_main/add/' . $client->id . '/lookup/');
+                }
+
+                $this->Session->write('domain_configuration_fields', $this->post);
+                $this->redirect(
+                    $this->base_uri . 'plugin/domains/admin_main/add/' . $client->id . '/configuration/'
+                );
+            }
+
             // Get TLD from domain, if no TLD checkboxes were checked
             if (empty($this->post['tlds'])) {
                 $tld = strstr($this->post['domain'] ?? '', '.');
@@ -245,6 +262,9 @@ class AdminMain extends DomainsController
         if (isset($this->post['transfer'])) {
             $action = 'transfer';
         }
+        if (isset($this->post['existing'])) {
+            $action = 'existing';
+        }
 
         // Redirect to lookup if no post data has been passed
         if (empty($this->post) || is_null($action)) {
@@ -326,7 +346,7 @@ class AdminMain extends DomainsController
             }
 
             $price = $this->CurrencyFormat->format(
-                ($action == 'register' ? $pricing->price : $pricing->price_transfer) + $pricing->setup_fee,
+                ($action == 'transfer' ? $pricing->price_transfer : $pricing->price) + $pricing->setup_fee,
                 $pricing->currency
             );
             $term = Language::_('AdminMain.add.term_' . $pricing->period . ($pricing->term > 1 ? 's' : ''), true, $pricing->term);
@@ -352,6 +372,9 @@ class AdminMain extends DomainsController
         if (isset($this->post['transfer'])) {
             $action = 'transfer';
         }
+        if (isset($this->post['existing'])) {
+            $action = 'existing';
+        }
 
         // Redirect to lookup if no post data has been passed
         if (empty($this->post) || is_null($action)) {
@@ -371,6 +394,11 @@ class AdminMain extends DomainsController
             if (!isset($this->post[$checkbox])) {
                 $this->post[$checkbox] = 'false';
             }
+        }
+
+        // The domain is already registered, so it must never be provisioned through the registrar
+        if ($action == 'existing') {
+            $this->post['use_module'] = 'false';
         }
 
         // Get TLD from domain
