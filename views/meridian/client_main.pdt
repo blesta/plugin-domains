@@ -1,5 +1,94 @@
 <?php /** @var View $this **/ ?>
             <?php
+            // The dashboard reaches this view through the widget action and the full domains page
+            // through index. The widget lists the active domains only, so it carries no status
+            // tabs, no filter bar and no pagination
+            $is_widget = (($action ?? 'index') === 'widget');
+
+            if ($is_widget) {
+                $badge_classes = [
+                    'active' => 'status-active',
+                    'pending' => 'status-pending',
+                    'suspended' => 'status-suspended',
+                    'canceled' => 'status-cancelled'
+                ];
+                $badge_labels = [
+                    'active' => 'category_active',
+                    'pending' => 'category_pending',
+                    'suspended' => 'category_suspended',
+                    'canceled' => 'category_deleted'
+                ];
+                $badge_class = ($badge_classes[$status ?? 'active'] ?? 'status-active');
+                $badge_label = $this->_(
+                    'ClientMain.index.' . ($badge_labels[$status ?? 'active'] ?? 'category_active'),
+                    true
+                );
+                ?>
+            <div class="card" id="client_domains">
+                <div class="card-header">
+                    <h5 class="card-title"><?php $this->_('ClientMain.index.boxtitle_registered_domains');?></h5>
+                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/index/');?>" class="view-all"><?php $this->_('ClientMain.index.link_viewall');?></a>
+                </div>
+                <div class="card-body p-0">
+                <?php
+                if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
+                    for ($i = 0; $i < $num_domains; $i++) {
+                        // "1 Year @ $12.00 - Renews Dec 03, 2025"
+                        if (($domains[$i]->package_pricing->period ?? null) == 'onetime') {
+                            $meta = ($periods[$domains[$i]->package_pricing->period] ?? null);
+                        } else {
+                            $term = ($domains[$i]->package_pricing->term ?? null);
+                            $period = ($term == 1
+                                ? ($periods[$domains[$i]->package_pricing->period] ?? null)
+                                : ($periods[$domains[$i]->package_pricing->period . '_plural'] ?? null));
+                            $renewal_price = $this->CurrencyFormat->format(
+                                ($domains[$i]->renewal_price ?? ($domains[$i]->package_pricing->price_renews ?? null)),
+                                ($domains[$i]->override_currency ?? ($domains[$i]->package_pricing->currency ?? null))
+                            );
+                            $meta = $this->_('ClientMain.index.recurring_term', true, $term, $period, $renewal_price);
+                        }
+
+                        $renews = (!empty($domains[$i]->date_paid_through)
+                            ? $domains[$i]->date_paid_through
+                            : ($domains[$i]->date_renews ?? null));
+                        if (!empty($renews)) {
+                            $meta .= ' - ' . $this->_('ClientMain.index.text_renews', true, $this->Date->cast($renews));
+                        }
+                    ?>
+                    <div class="widget-item expandable-item" data-detail-uri="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/serviceinfo/' . ($domains[$i]->id ?? null));?>">
+                        <div class="widget-item-info">
+                            <div class="widget-item-title"><?php echo (isset($domains[$i]->name) ? $this->Html->safe($domains[$i]->name) : null);?></div>
+                            <div class="widget-item-meta"><?php echo $this->Html->safe($meta);?></div>
+                        </div>
+                        <div class="widget-item-actions">
+                            <span class="status-badge <?php echo $this->Html->safe($badge_class);?>"><?php echo $this->Html->safe($badge_label);?></span>
+                            <a href="<?php echo $this->Html->safe($this->client_uri . 'services/manage/' . ($domains[$i]->id ?? null) . '/');?>" class="btn btn-outline-secondary btn-sm"><?php $this->_('ClientMain.index.option_manage');?></a>
+                            <i class="bi bi-chevron-down expand-caret"></i>
+                        </div>
+                    </div>
+                    <div class="expandable-detail widget-item-detail">
+                        <div class="expandable-detail-content"></div>
+                    </div>
+                    <?php
+                    }
+                } else {
+                    ?>
+                    <div class="empty-state">
+                        <i class="bi bi-globe2 empty-state-icon"></i>
+                        <div class="empty-state-text">
+                            <?php
+                            $section_language = $this->_('ClientMain.index.category_' . ($status ?? null), true);
+                            $this->_('ClientMain.index.no_results', false, $section_language);
+                            ?>
+                        </div>
+                    </div>
+                    <?php
+                }
+                ?>
+                </div>
+            </div>
+                <?php
+            } else {
             // Don't show this container when only rendering the widget section
             if (!($render_section ?? null) && !($is_ajax ?? null)) {
                 ?>
@@ -20,9 +109,7 @@
             $this->WidgetClient->setLinks($links);
             $this->WidgetClient->setFilters(($filters ?? null), $this->Html->safe($this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/' . (isset($status) ? $this->Html->safe($status) : null)), !empty($filter_vars));
             $this->WidgetClient->setAjaxFiltering();
-            if (($action ?? 'index') !== 'widget') {
-                $this->WidgetClient->setAsTitle();
-            }
+            $this->WidgetClient->setAsTitle();
             $this->WidgetClient->create($this->_('ClientMain.index.boxtitle_domains', true), ['id' => 'client_domains'], ($render_section ?? null));
             // The filter panel is a sibling of the card body, so it must be built before it opens
             $this->WidgetClient->buildFilters();
@@ -169,3 +256,6 @@
         });
     });
 </script>
+<?php
+            }
+            ?>
