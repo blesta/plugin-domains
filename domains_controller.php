@@ -1,5 +1,7 @@
 <?php
 
+use Blesta\Core\Pricing\Presenter\Type\PresenterInterface;
+
 /**
  * Domain Manager parent controller
  *
@@ -281,5 +283,202 @@ class DomainsController extends AppController
         }
 
         return $errors;
+    }
+
+    /**
+     * Fetches all pending service changes queued for the given service
+     *
+     * @param int $service_id The ID of the service whose queued changes to fetch
+     * @return array An array of stdClass objects representing each queued service change
+     */
+    protected function getQueuedServiceChanges($service_id)
+    {
+        $this->uses(['ServiceChanges']);
+
+        return $this->ServiceChanges->getAll('pending', $service_id);
+    }
+
+    /**
+     * Cancels any pending queued service changes
+     *
+     * @param int $service_id The ID of the service whose pending service changes to cancel
+     */
+    protected function cancelServiceChanges($service_id)
+    {
+        $this->uses(['Invoices', 'ServiceChanges', 'Transactions']);
+
+        foreach ($this->getQueuedServiceChanges($service_id) as $change) {
+            // Unapply any payments from the invoice
+            $transactions = $this->Transactions->getApplied(null, $change->invoice_id);
+            foreach ($transactions as $transaction) {
+                $this->Transactions->unapply($transaction->id, [$change->invoice_id]);
+            }
+
+            // Void the invoice
+            $this->Invoices->edit($change->invoice_id, ['status' => 'void']);
+
+            // Cancel the service change
+            $this->ServiceChanges->edit($change->id, ['status' => 'canceled']);
+        }
+    }
+
+    /**
+     * Queues a service change for later processing
+     *
+     * @param int $service_id The ID of the service being queued
+     * @param int $invoice_id The ID of the invoice associated with the service change
+     * @param array $vars An array of all data to queue to successfully update a service
+     * @return array An array of queue info, including:
+     *
+     *  - service_change_id The ID of the service change, if created
+     *  - errors An array of errors
+     */
+    protected function queueServiceChange($service_id, $invoice_id, array $vars)
+    {
+        $this->uses(['ServiceChanges']);
+
+        unset($vars['prorate']);
+        $change_id = $this->ServiceChanges->add($service_id, $invoice_id, ['data' => $vars]);
+
+        return [
+            'service_change_id' => $change_id,
+            'errors' => $this->ServiceChanges->errors()
+        ];
+    }
+
+    /**
+     * Creates an invoice from the given line items
+     *
+     * @param stdClass $client An stdClass object representing the client
+     * @param PresenterInterface $presenter An instance of the PresenterInterface
+     * @param string $currency The ISO 4217 currency code
+     * @param bool $deliver True to set the invoice for delivery to the client's invoice method
+     * @param int $service_id The ID of the service the items are for (optional)
+     * @return array An key/value array containing:
+     *
+     *  - invoice_id The ID of the invoice, if created
+     *  - errors An array of errors if the invoice could not be created
+     */
+    protected function makeInvoice(
+        stdClass $client,
+        PresenterInterface $presenter,
+        $currency,
+        $deliver = true,
+        $service_id = null
+    ) {
+        $this->uses(['Invoices']);
+
+        $invoice_vars = [
+            'client_id' => $client->id,
+            'date_billed' => date('c'),
+            'date_due' => date('c'),
+            'currency' => $currency,
+            'lines' => $this->makeLineItems($presenter, $service_id)
+        ];
+
+        // Set this invoice for delivery
+        if ($deliver && isset($client->settings['inv_method'])) {
+            $invoice_vars['delivery'] = [$client->settings['inv_method']];
+        }
+
+        $invoice_id = $this->Invoices->add($invoice_vars);
+
+        return [
+            'invoice_id' => $invoice_id,
+            'errors' => $this->Invoices->errors()
+        ];
+    }
+
+    /**
+     * Creates a set of line items from the given presenter
+     *
+     * @see DomainsController::makeInvoice
+     *
+     * @param PresenterInterface $presenter An instance of the PresenterInterface
+     * @param int $service_id The ID of the service the items are for (optional)
+     * @return array An array of line items
+     */
+    protected function makeLineItems(PresenterInterface $presenter, $service_id = null)
+    {
+        $items = [];
+
+        // Setup line items from each of the presenter's items
+        foreach ($presenter->items() as $item) {
+            // Tax has to be deconstructed since the presenter's tax amounts cannot be passed along
+            $items[] = [
+                'qty' => $item->qty,
+                'amount' => $item->price,
+                'description' => $item->description,
+                'tax' => !empty($item->taxes),
+                'service_id' => ($service_id ? $service_id : null)
+            ];
+        }
+
+        // Add a line item for each discount amount
+        foreach ($presenter->discounts() as $discount) {
+            // The total discount is the negated total
+            $items[] = [
+                'qty' => 1,
+                'amount' => (-1 * $discount->total),
+                'description' => $discount->description,
+                'tax' => false,
+                'service_id' => ($service_id ? $service_id : null)
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * Creates an in-house credit for the client
+     *
+     * @param int $client_id The ID of the client to credit
+     * @param float $amount The amount to credit
+     * @param string $currency The ISO 4217 currency code for the credit
+     * @return int The ID of the transaction for this credit
+     */
+    protected function createCredit($client_id, $amount, $currency)
+    {
+        $this->uses(['Transactions']);
+
+        $vars = [
+            'client_id' => $client_id,
+            'amount' => $amount,
+            'currency' => $currency,
+            'type' => 'other'
+        ];
+
+        // Find and set the transaction type to In House Credit, if available
+        foreach ($this->Transactions->getTypes() as $type) {
+            if ($type->name == 'in_house_credit') {
+                $vars['transaction_type_id'] = $type->id;
+                break;
+            }
+        }
+
+        return $this->Transactions->add($vars);
+    }
+
+    /**
+     * Fetches the ID of the coupon matching the given code
+     *
+     * @param string $coupon_code The coupon code
+     * @return int The ID of the coupon, 0 if no such coupon exists, or null if no code was given
+     */
+    protected function getCouponId($coupon_code)
+    {
+        $this->uses(['Coupons']);
+
+        $coupon_id = null;
+        $coupon_code = trim($coupon_code);
+
+        if ($coupon_code !== '') {
+            $coupon_id = 0;
+            if (($coupon = $this->Coupons->getByCode($coupon_code))) {
+                $coupon_id = $coupon->id;
+            }
+        }
+
+        return $coupon_id;
     }
 }

@@ -99,6 +99,7 @@ $lang['AdminMain.add.field_notify_order'] = 'Send order confirmation email when 
 $lang['AdminMain.add.title_search_results'] = 'Search Results';
 $lang['AdminMain.add.title_basic_options'] = 'Basic Options';
 $lang['AdminMain.add.title_registrar_options'] = 'Registrar Options';
+$lang['AdminMain.add.title_configurable_options'] = 'Configurable Options';
 
 $lang['AdminMain.add.heading_domain'] = 'Domain';
 $lang['AdminMain.add.heading_status'] = 'Status';
@@ -188,7 +189,6 @@ $lang['AdminMain.edit.field_use_module'] = 'Use module';
 $lang['AdminMain.edit.field_notify_order'] = 'Send order confirmation email when activated';
 $lang['AdminMain.edit.field_submit'] = 'Update';
 $lang['AdminMain.edit.field_activate'] = 'Activate';
-$lang['AdminMain.edit.field_edit_service'] = 'Edit Service';
 
 $lang['AdminMain.edit.text_domain'] = 'Domain:';
 $lang['AdminMain.edit.text_registrar'] = 'Registrar:';
@@ -202,6 +202,10 @@ $lang['AdminMain.edit.text_never'] = 'Never';
 $lang['AdminMain.edit.text_date_last_renewed'] = 'Last Renewed Date:';
 $lang['AdminMain.edit.text_date_suspended'] = 'Suspension Date:';
 $lang['AdminMain.edit.text_date_canceled'] = 'Cancellation Date:';
+$lang['AdminMain.edit.text_auto_renewal'] = 'Auto-Renewal:';
+$lang['AdminMain.edit.text_renewal_price'] = 'Renewal Price:';
+$lang['AdminMain.edit.text_quantity'] = 'Quantity:';
+$lang['AdminMain.edit.text_coupon_code'] = 'Coupon Code:';
 
 $lang['AdminMain.edit.term_day'] = '%1$s Day'; // %1$s is the term
 $lang['AdminMain.edit.term_days'] = '%1$s Days'; // %1$s is the term
@@ -215,6 +219,11 @@ $lang['AdminMain.edit.term_years'] = '%1$s Years'; // %1$s is the term
 $lang['AdminMain.edit.title_domain_information'] = 'Domain Information';
 $lang['AdminMain.edit.title_actions'] = 'Actions';
 $lang['AdminMain.edit.title_basic_options'] = 'Basic Options';
+$lang['AdminMain.edit.title_options'] = 'Term & Configurable Options';
+$lang['AdminMain.edit.title_service_information'] = 'Service Information';
+
+$lang['AdminMain.edit.tab_domain'] = 'Domain';
+$lang['AdminMain.edit.tab_options'] = 'Term & Configurable Options';
 
 $lang['AdminMain.edit.text_select_action'] = 'Click a button above to display the form to perform an action.';
 $lang['AdminMain.edit.text_no_fields'] = 'This action does not require any additional options. Click Submit to proceed.';

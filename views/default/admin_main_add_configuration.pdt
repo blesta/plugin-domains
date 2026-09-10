@@ -88,6 +88,22 @@
         </div>
     </div>
 
+    <!-- Configurable Options Section -->
+    <h6 class="form-section-header"><?php echo $this->_('AdminMain.add.title_configurable_options', true);?></h6>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="package-options">
+                <?php
+                // Preserve any options already selected, e.g. when returning from the confirmation step
+                foreach (($vars->configoptions ?? []) as $option_id => $option_value) {
+                    $this->Form->fieldHidden('configoptions[' . $option_id . ']', $option_value);
+                }
+                ?>
+            </div>
+        </div>
+    </div>
+
     <!-- Registrar Options Section -->
     <h6 class="form-section-header"><?php echo $this->_('AdminMain.add.title_registrar_options', true);?></h6>
 
@@ -122,6 +138,9 @@ $this->Form->end();
     var statusSelect = document.getElementById('status');
     var useModuleCheckbox = document.getElementById('use_module');
     var notifyOrderCheckbox = document.getElementById('notify_order');
+    var yearsSelect = document.getElementById('years');
+    var packageOptions = document.querySelector('.package-options');
+    var pricing_ids = <?php echo json_encode($pricing_ids ?? []);?>;
 
     // Module change handler
     if (moduleSelect) {
@@ -146,10 +165,69 @@ $this->Form->end();
         });
     }
 
+    // Term change handler
+    if (yearsSelect) {
+        yearsSelect.addEventListener('change', function() {
+            updateConfigOptions();
+        });
+    }
+
     // Initialize
     updateModuleFields();
     updatePricingOptions();
     updateStatusFields();
+    updateConfigOptions();
+
+    /**
+     * Fetch the configurable options of the selected term
+     */
+    function updateConfigOptions() {
+        var term = (yearsSelect ? yearsSelect.value : '');
+        var pricingId = pricing_ids[term];
+
+        if (!pricingId || !packageOptions) {
+            return;
+        }
+
+        var params = new URLSearchParams();
+        form.querySelectorAll('[name^="configoptions"]').forEach(function(field) {
+            if ((field.type === 'checkbox' || field.type === 'radio') && !field.checked) {
+                return;
+            }
+
+            params.append(field.name, field.value);
+        });
+
+        fetch('<?php echo $this->Html->safe($this->base_uri . 'clients/packageoptions/');?>' + pricingId + '?' + params.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.text())
+        .then(text => {
+            try {
+                text = JSON.parse(text);
+            } catch (e) {
+                // Use the raw response
+            }
+
+            packageOptions.innerHTML = text || '';
+
+            // Inline scripts inserted through innerHTML are not executed
+            packageOptions.querySelectorAll('script').forEach(function(oldScript) {
+                var newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(function(attr) {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                newScript.textContent = oldScript.textContent;
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading package options:', error);
+        });
+    }
 
     /**
      * Update module fields via AJAX
@@ -242,6 +320,11 @@ $this->Form->end();
 
             if (packageEditLink && data.package_id) {
                 packageEditLink.href = '<?php echo $this->base_uri . 'packages/edit/'; ?>' + data.package_id + '/';
+            }
+
+            if (data.pricing_ids) {
+                pricing_ids = data.pricing_ids;
+                updateConfigOptions();
             }
         })
         .catch(error => {
