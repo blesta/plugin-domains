@@ -1,0 +1,248 @@
+<?php /** @var View $this **/ ?>
+            <?php
+            // The dashboard reaches this view through the widget action and the full domains page
+            // through index. The widget lists the active domains only, so it carries no status
+            // tabs, no filter bar and no pagination
+            $is_widget = (($action ?? 'index') === 'widget');
+
+            if ($is_widget) {
+                $badge_classes = [
+                    'active' => 'status-active',
+                    'pending' => 'status-pending',
+                    'suspended' => 'status-suspended',
+                    'canceled' => 'status-cancelled'
+                ];
+                $badge_labels = [
+                    'active' => 'category_active',
+                    'pending' => 'category_pending',
+                    'suspended' => 'category_suspended',
+                    'canceled' => 'category_deleted'
+                ];
+                $badge_class = ($badge_classes[$status ?? 'active'] ?? 'status-active');
+                $badge_label = $this->_(
+                    'ClientMain.index.' . ($badge_labels[$status ?? 'active'] ?? 'category_active'),
+                    true
+                );
+                ?>
+            <div class="card" id="client_domains">
+                <div class="card-header">
+                    <h5 class="card-title"><?php $this->_('ClientMain.index.boxtitle_registered_domains');?></h5>
+                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/index/');?>" class="view-all"><?php $this->_('ClientMain.index.link_viewall');?></a>
+                </div>
+                <div class="card-body p-0">
+                <?php
+                if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
+                    for ($i = 0; $i < $num_domains; $i++) {
+                        // "1 Year @ $12.00 - Renews Dec 03, 2025"
+                        if (($domains[$i]->package_pricing->period ?? null) == 'onetime') {
+                            $meta = ($periods[$domains[$i]->package_pricing->period] ?? null);
+                        } else {
+                            $term = ($domains[$i]->package_pricing->term ?? null);
+                            $period = ($term == 1
+                                ? ($periods[$domains[$i]->package_pricing->period] ?? null)
+                                : ($periods[$domains[$i]->package_pricing->period . '_plural'] ?? null));
+                            $renewal_price = $this->CurrencyFormat->format(
+                                ($domains[$i]->renewal_price ?? ($domains[$i]->package_pricing->price_renews ?? null)),
+                                ($domains[$i]->override_currency ?? ($domains[$i]->package_pricing->currency ?? null))
+                            );
+                            $meta = $this->_('ClientMain.index.recurring_term', true, $term, $period, $renewal_price);
+                        }
+
+                        $renews = (!empty($domains[$i]->date_paid_through)
+                            ? $domains[$i]->date_paid_through
+                            : ($domains[$i]->date_renews ?? null));
+                        if (!empty($renews)) {
+                            $meta .= ' - ' . $this->_('ClientMain.index.text_renews', true, $this->Date->cast($renews));
+                        }
+                    ?>
+                    <div class="widget-item expandable-item" data-detail-uri="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/serviceinfo/' . ($domains[$i]->id ?? null));?>">
+                        <div class="widget-item-info">
+                            <div class="widget-item-title"><?php echo (isset($domains[$i]->name) ? $this->Html->safe($domains[$i]->name) : null);?></div>
+                            <div class="widget-item-meta"><?php echo $this->Html->safe($meta);?></div>
+                        </div>
+                        <div class="widget-item-actions">
+                            <span class="status-badge <?php echo $this->Html->safe($badge_class);?>"><?php echo $this->Html->safe($badge_label);?></span>
+                            <a href="<?php echo $this->Html->safe($this->client_uri . 'services/manage/' . ($domains[$i]->id ?? null) . '/');?>" class="btn btn-outline-secondary btn-sm"><?php $this->_('ClientMain.index.option_manage');?></a>
+                            <i class="bi bi-chevron-down expand-caret"></i>
+                        </div>
+                    </div>
+                    <div class="expandable-detail widget-item-detail">
+                        <div class="expandable-detail-content"></div>
+                    </div>
+                    <?php
+                    }
+                } else {
+                    ?>
+                    <div class="empty-state">
+                        <i class="bi bi-globe2 empty-state-icon"></i>
+                        <div class="empty-state-text">
+                            <?php
+                            $section_language = $this->_('ClientMain.index.category_' . ($status ?? null), true);
+                            $this->_('ClientMain.index.no_results', false, $section_language);
+                            ?>
+                        </div>
+                    </div>
+                    <?php
+                }
+                ?>
+                </div>
+            </div>
+                <?php
+            } else {
+            // Don't show this container when only rendering the widget section
+            if (!($render_section ?? null) && !($is_ajax ?? null)) {
+                ?>
+        <div class="col-12">
+                <?php
+            }
+
+            // Bootstrap 5 badges carry no background of their own, so each category
+            // states its own. Warning uses text-bg-* because white on yellow fails contrast.
+            $links = [
+                ['name' => $this->_('ClientMain.index.category_active', true) . ' <span class="badge bg-success">' . (isset($status_count['active']) ? $this->Html->safe($status_count['active']) : null) . '</span>', 'current' => (($status ?? null) == 'active' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/active/', 'class' => 'ajax']],
+                ['name' => $this->_('ClientMain.index.category_pending', true) . ' <span class="badge text-bg-warning">' . (isset($status_count['pending']) ? $this->Html->safe($status_count['pending']) : null) . '</span>', 'current' => (($status ?? null) == 'pending' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/pending/', 'class' => 'ajax']],
+                ['name' => $this->_('ClientMain.index.category_suspended', true) . ' <span class="badge bg-danger">' . (isset($status_count['suspended']) ? $this->Html->safe($status_count['suspended']) : null) . '</span>', 'current' => (($status ?? null) == 'suspended' ? true : false), 'highlight' => true, 'attributes' => ['href' => $this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/suspended/', 'class' => 'ajax']],
+                ['name' => $this->_('ClientMain.index.category_deleted', true) . ' <span class="badge bg-secondary">' . (isset($status_count['canceled']) ? $this->Html->safe($status_count['canceled']) : null) . '</span>', 'current' => (($status ?? null) == 'canceled' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/canceled/', 'class' => 'ajax']],
+            ];
+
+            $this->WidgetClient->clear();
+            $this->WidgetClient->setLinks($links);
+            $this->WidgetClient->setFilters(($filters ?? null), $this->Html->safe($this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/' . (isset($status) ? $this->Html->safe($status) : null)), !empty($filter_vars));
+            $this->WidgetClient->setAjaxFiltering();
+            $this->WidgetClient->setAsTitle();
+            $this->WidgetClient->create($this->_('ClientMain.index.boxtitle_domains', true), ['id' => 'client_domains'], ($render_section ?? null));
+            // The filter panel is a sibling of the card body, so it must be built before it opens
+            $this->WidgetClient->buildFilters();
+            $this->WidgetClient->startBody(true, 'p-0');
+
+            if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
+                ?>
+                <div class="table-responsive">
+                    <table class="table table-modern table-expandable" id="domains">
+                        <thead>
+                            <tr>
+                                <th><?php $this->_('ClientMain.index.heading_domain');?></th>
+                                <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/' . ($status ?? null) . '/?sort=term&order=' . ($sort == 'term' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'term' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_term');?></a></th>
+                                <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/' . ($status ?? null) . '/?sort=date_added&order=' . ($sort == 'date_added' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_added' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_registration_date');?></a></th>
+                                <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/' . ($status ?? null) . '/?sort=date_renews&order=' . ($sort == 'date_renews' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_renews' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_renewal_date');?></a></th>
+                                <th><?php $this->_('ClientMain.index.heading_expiration_date');?></th>
+                                <?php
+                                if (($status ?? null) != 'canceled') {
+                                    if (($status ?? null) == 'suspended') {
+                                        ?>
+                                    <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=date_suspended&order=' . ($sort == 'date_suspended' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_suspended' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_suspension_date');?></a></th>
+                                        <?php
+                                    }
+                                    ?>
+                                <th class="text-end"><?php $this->_('ClientMain.index.heading_options');?></th>
+                                    <?php
+                                } else {
+                                    ?>
+                                <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=date_canceled&order=' . ($sort == 'date_canceled' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_canceled' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_deletion_date');?></a></th>
+                                    <?php
+                                }
+                                ?>
+                                <th style="width: 40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            // List all domains
+                            for ($i = 0; $i < $num_domains; $i++) {
+                                ?>
+                            <tr class="expandable-row" data-detail-uri="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/serviceinfo/' . ($domains[$i]->id ?? null));?>">
+                                <td class="fw-semibold"><?php (print (isset($domains[$i]->name) ? $this->Html->safe($domains[$i]->name) : null));?></td>
+                                <td>
+                                    <?php
+                                    if (($domains[$i]->package_pricing->period ?? null) == 'onetime') {
+                                        (print (isset($periods[$domains[$i]->package_pricing->period]) ? $this->Html->safe($periods[$domains[$i]->package_pricing->period]) : null));
+                                    } else {
+                                        $term = (isset($domains[$i]->package_pricing->term) ? $this->Html->safe($domains[$i]->package_pricing->term) : null);
+                                        $period = ($term == 1 ? ($periods[$domains[$i]->package_pricing->period] ?? null) : ($periods[$domains[$i]->package_pricing->period . '_plural'] ?? null));
+                                        $renewal_price = $this->CurrencyFormat->format(($domains[$i]->renewal_price ?? ($domains[$i]->package_pricing->price_renews ?? null)), ($domains[$i]->override_currency ?? ($domains[$i]->package_pricing->currency ?? null)));
+                                        $this->_('ClientMain.index.recurring_term', false, $this->Html->safe($term), $this->Html->safe($period), $this->Html->safe($renewal_price));
+                                    }
+                                    ?>
+                                </td>
+                                <td class="text-muted"><?php echo $this->Date->cast((isset($domains[$i]->date_added) ? $this->Html->safe($domains[$i]->date_added) : null));?></td>
+                                <td>
+                                    <?php echo (
+                                        empty($domains[$i]->date_paid_through)
+                                            ? (empty($domains[$i]->date_renews)
+                                                ? $this->_('ClientMain.index.text_never', true)
+                                                : $this->Date->cast($domains[$i]->date_renews))
+                                            : $this->Date->cast($domains[$i]->date_paid_through)
+                                    );?>
+                                    <?php
+                                    if (($status ?? null) != 'canceled' && !empty($domains[$i]->date_canceled) && $this->Date->toTime($this->Date->cast($domains[$i]->date_canceled)) > $this->Date->toTime($this->Date->cast(date('c')))) {
+                                        ?>
+                                    <a href="#" data-bs-toggle="tooltip" title="<?php $this->_('ClientMain.manage.text_date_to_cancel', false, $this->Date->cast($domains[$i]->date_canceled));?>"><i class="bi bi-clock text-primary"></i></a>
+                                        <?php
+                                    }
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php echo isset($domains[$i]->expiration_date) ? $this->Date->cast($domains[$i]->expiration_date) : '';?>
+                                </td>
+                                <?php
+                                if (($status ?? null) != 'canceled') {
+                                    if (($status ?? null) == 'suspended') {
+                                        ?>
+                                    <td><?php echo (empty($domains[$i]->date_suspended) ? $this->_('ClientMain.index.text_never', true) : $this->Date->cast((isset($domains[$i]->date_suspended) ? $this->Html->safe($domains[$i]->date_suspended) : null)));?></td>
+                                        <?php
+                                    }
+                                    ?>
+                                <td class="text-end">
+                                    <a href="<?php echo $this->Html->safe($this->client_uri . 'services/manage/' . ($domains[$i]->id ?? null) . '/');?>" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-gear me-1"></i><?php $this->_('ClientMain.index.option_manage');?>
+                                    </a>
+                                </td>
+                                    <?php
+                                } else {
+                                    ?>
+                                <td><?php echo (empty($domains[$i]->date_canceled) ? $this->_('ClientMain.index.text_never', true) : $this->Date->cast((isset($domains[$i]->date_canceled) ? $this->Html->safe($domains[$i]->date_canceled) : null)));?></td>
+                                    <?php
+                                }
+                                ?>
+                                <td class="text-center"><span class="expand-caret"><i class="bi bi-chevron-down"></i></span></td>
+                            </tr>
+                            <tr class="expandable-detail">
+                                <td colspan="8"><div class="expandable-detail-content"></div></td>
+                            </tr>
+                                <?php
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php
+            } else {
+                ?>
+            <div class="empty-state">
+                <i class="bi bi-globe2 empty-state-icon"></i>
+                <div class="empty-state-text">
+                    <?php
+                    $section_language = $this->_('ClientMain.index.category_' . ($status ?? null), true);
+                    $this->_('ClientMain.index.no_results', false, $section_language);
+                    ?>
+                </div>
+            </div>
+                <?php
+            }
+
+            $this->WidgetClient->endBody();
+            if ($this->Pagination->hasPages()) {
+                $this->WidgetClient->startFooter();
+                $this->Pagination->build();
+                $this->WidgetClient->endFooter();
+            }
+            $this->WidgetClient->end();
+
+            // Don't show this container when only rendering the widget section
+            if (!($render_section ?? null) && !($is_ajax ?? null)) {
+                ?>
+        </div>
+                <?php
+            }
+            }
+            ?>
