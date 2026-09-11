@@ -37,9 +37,9 @@
                 'canceled' => 'status-cancelled'
             ];
             ?>
-        <h4 class="h6 fw-semibold mb-2"><?php $this->_('ClientMain.index.heading_addons');?></h4>
-        <div class="table-responsive">
-            <table class="table table-modern table-hover">
+        <h4 class="h6 fw-semibold mt-3 mb-2"><?php $this->_('ClientMain.index.heading_addons');?></h4>
+        <div class="detail-table-wrap">
+            <table class="detail-table">
                 <thead>
                     <tr>
                         <th><?php $this->_('ClientMain.index.heading_package');?></th>
@@ -55,7 +55,7 @@
                         $service_status = ($services[$i]->status ?? null);
                         $status_class = ($status_classes[$service_status] ?? 'status-draft');
                         ?>
-                    <tr class="expand service_info">
+                    <tr>
                         <td class="fw-semibold"><?php (print (isset($services[$i]->package->name) ? $this->Html->safe($services[$i]->package->name) : null));?></td>
                         <td><?php (print (isset($services[$i]->name) ? $this->Html->safe($services[$i]->name) : null));?></td>
                         <td>
@@ -81,10 +81,6 @@
                                 <?php
                             }
                             ?>
-                        </td>
-                    </tr>
-                    <tr class="expand_details" id="services_<?php (print (isset($services[$i]->id) ? $this->Html->safe($services[$i]->id) : null));?>">
-                        <td colspan="5" class="subtable">
                         </td>
                     </tr>
                         <?php

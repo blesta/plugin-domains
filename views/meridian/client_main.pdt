@@ -118,7 +118,7 @@
             if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
                 ?>
                 <div class="table-responsive">
-                    <table class="table table-modern table-hover" id="domains">
+                    <table class="table table-modern table-expandable" id="domains">
                         <thead>
                             <tr>
                                 <th><?php $this->_('ClientMain.index.heading_domain');?></th>
@@ -142,6 +142,7 @@
                                     <?php
                                 }
                                 ?>
+                                <th style="width: 40px;"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -149,7 +150,7 @@
                             // List all domains
                             for ($i = 0; $i < $num_domains; $i++) {
                                 ?>
-                            <tr class="expand service_info">
+                            <tr class="expandable-row" data-detail-uri="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/serviceinfo/' . ($domains[$i]->id ?? null));?>">
                                 <td class="fw-semibold"><?php (print (isset($domains[$i]->name) ? $this->Html->safe($domains[$i]->name) : null));?></td>
                                 <td>
                                     <?php
@@ -203,10 +204,10 @@
                                     <?php
                                 }
                                 ?>
+                                <td class="text-center"><span class="expand-caret"><i class="bi bi-chevron-down"></i></span></td>
                             </tr>
-                            <tr class="expand_details" id="domains_<?php (print (isset($domains[$i]->id) ? $this->Html->safe($domains[$i]->id) : null));?>">
-                                <td colspan="7" class="subtable">
-                                </td>
+                            <tr class="expandable-detail">
+                                <td colspan="8"><div class="expandable-detail-content"></div></td>
                             </tr>
                                 <?php
                             }
@@ -243,19 +244,5 @@
         </div>
                 <?php
             }
-            ?>
-
-<script type="text/javascript">
-    $(document).ready(function() {
-        // Fetch all transactions applied to the given invoices
-        $("#client_domains").on('click', '.service_info a,.service_info input', function(e) {
-            e.stopPropagation();
-        });
-        $("#client_domains").on('click', '.service_info', function() {
-            $(this).blestaUpdateRow("<?php echo (isset($this->base_uri) ? $this->Html->safe($this->base_uri) : null) . 'plugin/domains/client_main/serviceinfo/';?>" + $(this).next("tr").attr("id").split("_")[1], ".subtable");
-        });
-    });
-</script>
-<?php
             }
             ?>

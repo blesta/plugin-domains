@@ -169,8 +169,9 @@ class ClientMain extends DomainsController
         $this->set('statuses', $this->Services->getStatusTypes());
 
         // Returned as raw html: both the widget's expandable row and the legacy table row
-        // assign the response straight to innerHTML without decoding it
-        echo $this->view->fetch('client_main_serviceinfo');
+        // assign the response straight to innerHTML without decoding it. The view is fetched
+        // directly rather than rendered, so resolve it against the active template here
+        echo $this->view->fetch('client_main_serviceinfo', $this->getPluginViewDir('client_main_serviceinfo'));
 
         return false;
     }
