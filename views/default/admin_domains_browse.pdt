@@ -225,7 +225,7 @@ if (!empty($domains)) {
                     $this->Form->fieldText('client', ($vars->client ?? ''), ['class' => 'form-control form-control-sm', 'id' => 'client', 'style' => 'width: 200px;', 'autocomplete' => 'off']);
                     $this->Form->fieldHidden('client_id', ($vars->client_id ?? null), ['id' => 'client_id']);
                     ?>
-                    <div id="client_autocomplete_results" class="autocomplete-results position-absolute bg-body border rounded shadow-sm" style="display: none; z-index: 1050; width: 100%; max-height: 200px; overflow-y: auto;"></div>
+                    <div id="client_autocomplete_results" class="autocomplete-results position-fixed bg-body border rounded shadow-sm" style="display: none; z-index: 1056; max-height: 200px; overflow-y: auto;"></div>
                 </div>
             </div>
 
@@ -298,6 +298,7 @@ if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
             }
         } else {
             domainActions.classList.add('d-none');
+            hideAutocompleteResults(document.getElementById('client_autocomplete_results'));
         }
     }
 
@@ -311,12 +312,66 @@ if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
         });
 
         var action = actionSelectEl.value;
+        // Close the autocomplete unless "Push to Client" stays active so a
+        // re-run of this script doesn't dismiss an open dropdown
+        if (action !== 'push_to_client') {
+            hideAutocompleteResults(document.getElementById('client_autocomplete_results'));
+        }
         if (action) {
             var targetElement = document.getElementById(action);
             if (targetElement) {
                 targetElement.style.display = 'flex';
             }
         }
+    }
+
+    // Generation token for autocomplete lookups; bumped on hide so a pending
+    // debounce or in-flight response can't re-show stale results afterward
+    var autocompleteRequestId = 0;
+    var debounceTimer;
+
+    // The autocomplete dropdown uses position: fixed so it escapes the card's
+    // rounded-corner overflow: hidden clipping (same approach as the billing
+    // services widget). left/top/width are set from the input's bounding rect
+    // while open.
+    function positionAutocompleteResults() {
+        var clientInput = document.getElementById('client');
+        var resultsContainer = document.getElementById('client_autocomplete_results');
+        if (!clientInput || !resultsContainer) return;
+
+        var rect = clientInput.getBoundingClientRect();
+        resultsContainer.style.width = rect.width + 'px';
+        resultsContainer.style.left = rect.left + 'px';
+        resultsContainer.style.top = (rect.bottom + 2) + 'px';
+    }
+
+    function repositionAutocompleteResults() {
+        var resultsContainer = document.getElementById('client_autocomplete_results');
+        // Self-teardown if the dropdown was hidden or the widget content replaced
+        if (!resultsContainer || resultsContainer.style.display === 'none') {
+            hideAutocompleteResults(resultsContainer);
+            return;
+        }
+        positionAutocompleteResults();
+    }
+
+    function showAutocompleteResults(resultsContainer) {
+        positionAutocompleteResults();
+        resultsContainer.style.display = 'block';
+        // Keep the dropdown anchored to the input while open
+        window.addEventListener('scroll', repositionAutocompleteResults, true);
+        window.addEventListener('resize', repositionAutocompleteResults);
+    }
+
+    function hideAutocompleteResults(resultsContainer) {
+        autocompleteRequestId++;
+        clearTimeout(debounceTimer);
+        if (resultsContainer) {
+            resultsContainer.innerHTML = '';
+            resultsContainer.style.display = 'none';
+        }
+        window.removeEventListener('scroll', repositionAutocompleteResults, true);
+        window.removeEventListener('resize', repositionAutocompleteResults);
     }
 
     // Populate the dedicated delete form, confirm, and submit it explicitly by id
@@ -379,7 +434,6 @@ if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
     // persists, so guard against stacking duplicate listeners (e.g. multiple delete modals).
     if (!widget.dataset.domainsBound) {
         widget.dataset.domainsBound = 'true';
-        var debounceTimer;
 
         // Re-initialize after AJAX content replacement
         document.addEventListener('blestaAjaxComplete', function(e) {
@@ -433,11 +487,13 @@ if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
             if (!resultsContainer) return;
 
             if (query.length < 3) {
-                resultsContainer.innerHTML = '';
-                resultsContainer.style.display = 'none';
+                hideAutocompleteResults(resultsContainer);
                 return;
             }
 
+            // Bump the token now (not when the debounce fires) so an older
+            // in-flight response arriving during the debounce window is discarded
+            var requestId = ++autocompleteRequestId;
             debounceTimer = setTimeout(function() {
                 var formData = new FormData();
                 formData.append('search', query);
@@ -457,6 +513,9 @@ if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
                 })
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
+                    // Discard late responses: the dropdown was hidden or a newer
+                    // lookup superseded this one
+                    if (requestId !== autocompleteRequestId) return;
                     if (data && data.clients) {
                         var html = '<ul class="list-group">';
                         for (var id in data.clients) {
@@ -468,8 +527,12 @@ if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
                             html = '';
                         }
 
-                        resultsContainer.innerHTML = html;
-                        resultsContainer.style.display = html ? 'block' : 'none';
+                        if (html) {
+                            resultsContainer.innerHTML = html;
+                            showAutocompleteResults(resultsContainer);
+                        } else {
+                            hideAutocompleteResults(resultsContainer);
+                        }
                     }
                 })
                 .catch(function(error) {
@@ -489,12 +552,12 @@ if (in_array(($status ?? null), ['pending', 'canceled', 'in_review'])) {
                 clientInput.value = listItem.textContent;
                 var clientIdInput = document.getElementById('client_id');
                 if (clientIdInput) clientIdInput.value = listItem.getAttribute('data-id');
-                resultsContainer.style.display = 'none';
+                hideAutocompleteResults(resultsContainer);
                 return;
             }
 
             if (!clientInput.contains(e.target) && !resultsContainer.contains(e.target)) {
-                resultsContainer.style.display = 'none';
+                hideAutocompleteResults(resultsContainer);
             }
         });
     }
