@@ -1,0 +1,154 @@
+<?php /** @var View $this **/ ?>
+        <?php
+        $is_active = (($service->status ?? null) == 'active');
+        $can_change = ($is_active && empty($service->date_canceled) && !($queued_service_change ?? null));
+
+        // Set button options. Entries carrying a "modal" open a dialog rather than following a link
+        $buttons = [
+            'renew_domain' => [
+                'enabled' => (($client_renew_service ?? null) && $can_change),
+                'icon' => 'bi bi-arrow-clockwise',
+                'lang' => 'ClientMain.manage.button_renew',
+                'modal' => 'renew'
+            ],
+            'change_service_term' => [
+                'enabled' => (($client_change_service_term ?? null) && !empty($alternate_service_terms) && $can_change),
+                'icon' => 'bi bi-calendar-range',
+                'lang' => 'ClientServices.manage.button_change_service_term',
+                'link' => $plugin_uri . 'changeterm/' . ($service->id ?? null) . '/'
+            ],
+            'change_service_package' => [
+                'enabled' => (($client_change_service_package ?? null) && $can_change),
+                'icon' => 'bi bi-arrow-left-right',
+                'lang' => 'ClientServices.manage.button_change_service_package',
+                'link' => $plugin_uri . 'upgrade/' . ($service->id ?? null) . '/'
+            ],
+            'change_configurable_options' => [
+                'enabled' => (($available_config_options ?? null) && !($queued_service_change ?? null) && $is_active),
+                'icon' => 'bi bi-sliders',
+                'lang' => 'ClientServices.manage.button_config_options',
+                'attributes' => ['data-bs-toggle' => 'modal', 'data-bs-target' => '#config_options_modal']
+            ],
+            'domain_auto_renewal' => [
+                'enabled' => $is_active,
+                'icon' => 'bi bi-arrow-repeat',
+                'lang' => 'ClientMain.manage.button_auto_renewal',
+                'modal' => 'autorenewal'
+            ],
+            'domain_registrar_lock' => [
+                'enabled' => (($capabilities['lock'] ?? false) && $is_active),
+                'icon' => 'bi bi-lock',
+                'lang' => 'ClientMain.manage.button_registrar_lock',
+                'modal' => 'registrarlock'
+            ],
+            'domain_contacts' => [
+                'enabled' => (($capabilities['contacts'] ?? false) && $is_active),
+                'icon' => 'bi bi-person-vcard',
+                'lang' => 'ClientMain.manage.button_contacts',
+                'modal' => 'contacts'
+            ],
+            'domain_epp' => [
+                'enabled' => (($capabilities['epp'] ?? false) && $is_active),
+                'icon' => 'bi bi-key',
+                'lang' => 'ClientMain.manage.button_epp_code',
+                'modal' => 'eppcode'
+            ],
+            'manage_parent' => [
+                'enabled' => (!empty($service->parent) && ($service->parent->status ?? null) == 'active' && $is_active),
+                'icon' => 'bi bi-gear',
+                'lang' => 'ClientServices.manage.button_manage_parent',
+                'link' => $this->base_uri . 'services/manage/' . ($service->parent->id ?? null) . '/'
+            ],
+            'cancel_domain' => [
+                'enabled' => (($client_cancel_service ?? null) && !in_array(($service->status ?? null), ['canceled', 'suspended']) && !empty($clients_cancel_options)),
+                'icon' => 'bi bi-x-circle',
+                'class' => 'danger',
+                'lang' => 'ClientMain.manage.button_cancel',
+                'modal' => 'cancel'
+            ]
+        ];
+
+        $show_options = false;
+        foreach ($buttons as $button) {
+            if ($button['enabled']) {
+                $show_options = true;
+                break;
+            }
+        }
+
+        // Display the Quick Actions card
+        if ($show_options) {
+        ?>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title"><?php $this->_('ClientServices.manage.heading_quick_actions');?></h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <?php
+                    foreach ($buttons as $key => $button) {
+                        if (!$button['enabled']) {
+                            continue;
+                        }
+                    ?>
+                    <a href="<?php echo (isset($button['link']) ? $this->Html->safe($button['link']) : '#');?>" class="action-tile <?php echo $this->Html->concat(' ', ($button['class'] ?? ''), $this->Html->safe($key));?>"<?php echo $this->Html->buildAttributes($button['attributes'] ?? []);?>>
+                        <i class="<?php echo $this->Html->safe($button['icon'] ?? '');?>"></i>
+                        <?php $this->_($button['lang']);?>
+                    </a>
+                    <?php
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+        <?php
+        }
+
+        // Bind every action that opens a modal rather than following a link. The renew tile in
+        // the hero carries the same class, so it is bound here too
+        $bindings = '';
+        foreach ($buttons as $key => $button) {
+            if (!$button['enabled'] || empty($button['modal'])) {
+                continue;
+            }
+
+            $bindings .= 'blesta.modal(Array.from(document.querySelectorAll("a.' . $this->Html->safe($key, true) . '")), '
+                . '{url: "' . $this->Html->safe($plugin_uri . $button['modal'] . '/' . ($service->id ?? null) . '/', true) . '"});'
+                . "\n                ";
+        }
+
+        $this->Javascript->setInline('
+            document.addEventListener("DOMContentLoaded", function() {
+                ' . $bindings . '
+
+                // Delegated handlers for the cancel/renew dialogs, whose content is loaded via AJAX
+                document.addEventListener("change", function(e) {
+                    // Show the message for the selected cancellation option
+                    if (e.target.matches("#cancel_service input[name=cancel]")) {
+                        var form = e.target.closest("#cancel_service");
+                        form.querySelectorAll("div.cancel_message").forEach(function(div) {
+                            div.style.display = "none";
+                        });
+                        if (e.target.value) {
+                            form.querySelectorAll("div.cancel_message." + e.target.value).forEach(function(div) {
+                                div.style.display = "";
+                            });
+                        }
+                    }
+
+                    // Show the renewal message for the selected term
+                    if (e.target.matches("#renew_service select[name=pricing_id]")) {
+                        var form = e.target.closest("#renew_service");
+                        var message = form.querySelector("div.renew_message");
+                        var messages = JSON.parse(e.target.dataset.renewMessages || "{}");
+                        if (e.target.value && messages[e.target.value]) {
+                            message.textContent = messages[e.target.value];
+                            message.style.display = "";
+                        } else {
+                            message.style.display = "none";
+                        }
+                    }
+                });
+            });
+        ');
+        ?>

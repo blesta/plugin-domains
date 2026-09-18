@@ -1,0 +1,217 @@
+        <div class="col-md-3">
+            <?php echo (isset($tabs) ? $tabs : null);?>
+        </div>
+        <div class="col-md-9">
+            <?php echo (isset($message) ? $message : null);?>
+
+            <?php
+            $this->WidgetClient->clear();
+            $this->WidgetClient->create($this->_('ClientServices.review.boxtitle_review', true, (isset($package->name) ? $package->name : null), (isset($service->name) ? $service->name : null)), ['id' => 'client_review_options'], (isset($render_section) ? $render_section : null));
+            $this->WidgetClient->startBody();
+
+            $this->Form->create(null, ['class' => 'disable-on-submit']);
+            $this->Form->fieldHidden('update', 1);
+            ?>
+
+            <?php
+            if ((isset($review->packages->current) ? $review->packages->current : null) && (isset($review->packages->new) ? $review->packages->new : null)) {
+            ?>
+            <div class="panel-pad">
+                <div class="row">
+                    <div class="col-md-6 col-border">
+                        <h4><em><?php $this->_('ClientServices.review.heading_current_service');?></em></h4>
+
+                        <?php $this->Form->label($this->_('ClientServices.manage.heading_package', true));?>
+                        <h4><?php (print (isset($review->packages->current->name) ? $this->Html->safe($review->packages->current->name) : null));?></h4>
+
+                        <label><?php $this->_('ClientServices.manage.heading_package_term');?></label>
+                        <?php
+                        $package_term = '';
+                        if ((isset($review->packages->current->pricing->period) ? $review->packages->current->pricing->period : null) == 'onetime') {
+                            $package_term = (isset($periods[$review->packages->current->pricing->period]) ? $periods[$review->packages->current->pricing->period] : null);
+                        } else {
+                            $term = (isset($review->packages->current->pricing->term) ? $this->Html->safe($review->packages->current->pricing->term) : null);
+                            $package_term = $this->Html->concat(' ', $term, ($term == 1 ? (isset($periods[$review->packages->current->pricing->period]) ? $periods[$review->packages->current->pricing->period] : null) : (isset($periods[$review->packages->current->pricing->period . '_plural']) ? $periods[$review->packages->current->pricing->period . '_plural'] : null)));
+                        }
+                        ?>
+                        <h4><?php (print (isset($package_term) ? $this->Html->safe($package_term) : null));?></h4>
+
+                        <label><?php $this->_('ClientServices.manage.heading_price');?></label>
+                        <h4>
+                            <?php
+                            $price = (isset($service->override_price) ? $service->override_price : (isset($review->packages->current->pricing->price_renews) ? $review->packages->current->pricing->price_renews : (isset($review->packages->current->pricing->price) ? $review->packages->current->pricing->price : 0)));
+                            $currency = (isset($service->override_currency) ? $service->override_currency : (isset($service->package_pricing->currency) ? $service->package_pricing->currency : null));
+                            $this->_('ClientServices.manage.text_price', false, $this->CurrencyFormat->truncateDecimal((isset($service->qty) ? $service->qty : 1), 0), $this->CurrencyFormat->format($price, $currency));
+                            ?>
+                        </h4>
+                    </div>
+                    <div class="col-md-6">
+                        <h4><em><?php $this->_('ClientServices.review.heading_updated_service');?></em></h4>
+
+                        <?php $this->Form->label($this->_('ClientServices.manage.heading_package', true));?>
+                        <h4><?php (print (isset($review->packages->new->name) ? $this->Html->safe($review->packages->new->name) : null));?></h4>
+
+                        <label><?php $this->_('ClientServices.manage.heading_package_term');?></label>
+                        <?php
+                        $package_term = '';
+                        if ((isset($review->packages->new->pricing->period) ? $review->packages->new->pricing->period : null) == 'onetime') {
+                            $package_term = (isset($periods[$review->packages->new->pricing->period]) ? $periods[$review->packages->new->pricing->period] : null);
+                        } else {
+                            $term = (isset($review->packages->new->pricing->term) ? $this->Html->safe($review->packages->new->pricing->term) : null);
+                            $package_term = $this->Html->concat(' ', $term, ($term == 1 ? (isset($periods[$review->packages->new->pricing->period]) ? $periods[$review->packages->new->pricing->period] : null) : (isset($periods[$review->packages->new->pricing->period . '_plural']) ? $periods[$review->packages->new->pricing->period . '_plural'] : null)));
+                        }
+                        ?>
+                        <h4><?php (print (isset($package_term) ? $this->Html->safe($package_term) : null));?></h4>
+
+                        <?php
+                        // Display the initial price for transitioning to this package
+                        // since it is not the same as the renewal price
+                        if (!(isset($review->packages->new->upgrades_use_renewal) ? $review->packages->new->upgrades_use_renewal : null)
+                            && (isset($review->packages->new->pricing->price_renews) ? $review->packages->new->pricing->price_renews : null)
+                            && (isset($review->packages->new->id) ? $review->packages->new->id : null) != (isset($review->packages->current->id) ? $review->packages->current->id : null)
+                        ) {
+                        ?>
+                        <label><?php $this->_('ClientServices.manage.heading_price_initial');?></label>
+                        <h4>
+                            <?php
+                            $this->_('ClientServices.manage.text_price', false, $this->Html->safe((isset($service->qty) ? $service->qty : 1)), $this->CurrencyFormat->format((isset($review->packages->new->pricing->price) ? $review->packages->new->pricing->price : null), (isset($review->packages->new->pricing->currency) ? $review->packages->new->pricing->currency : null)));
+                            ?>
+                        </h4>
+                        <?php
+                        }
+                        ?>
+
+                        <label><?php $this->_('ClientServices.manage.heading_price');?></label>
+                        <h4>
+                            <?php
+                            $price = (isset($review->packages->new->pricing->price_renews) ? $review->packages->new->pricing->price_renews : null)
+                                ? (isset($review->packages->new->pricing->price_renews) ? $review->packages->new->pricing->price_renews : (isset($review->packages->new->pricing->price) ? $review->packages->new->pricing->price : null))
+                                : (isset($review->packages->new->pricing->price) ? $review->packages->new->pricing->price : null);
+                            $currency = (isset($review->packages->new->pricing->currency) ? $review->packages->new->pricing->currency : null);
+                            $this->_('ClientServices.manage.text_price', false, $this->Html->safe((isset($service->qty) ? $service->qty : 1)), $this->CurrencyFormat->format($price, $currency));
+                            ?>
+                        </h4>
+                        <?php
+                        $setup_fee = (isset($review->packages->new->pricing->setup_fee) ? $review->packages->new->pricing->setup_fee : null);
+                        if ((isset($review->packages->current->id) ? $review->packages->current->id : null) != (isset($review->packages->new->id) ? $review->packages->new->id : null) && $setup_fee != 0) {
+                        ?>
+                            <label><?php $this->_('ClientServices.manage.heading_setup_fee');?></label>
+                            <?php
+                            $currency = (isset($review->packages->new->pricing->currency) ? $review->packages->new->pricing->currency : null);
+                            $formatted_setup_fee = $this->CurrencyFormat->format($setup_fee, $currency);
+                            ?>
+                            <h4>
+                                <?php
+                                $this->_('ClientServices.manage.text_price', false, $this->Html->safe((isset($service->qty) ? $service->qty : 1)), $formatted_setup_fee);
+                                ?>
+                            </h4>
+                        <?php
+                        }
+                        ?>
+                    </div>
+                </div>
+            </div>
+            <?php
+            }
+
+            if (!empty($review->config_options)) {
+                if ((isset($review->packages->current) ? $review->packages->current : null) && (isset($review->packages->new) ? $review->packages->new : null)) {
+            ?>
+            <hr />
+            <?php
+                }
+            ?>
+            <h4><?php $this->_('ClientServices.manage.heading_config_options');?></h4>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th><?php $this->_('ClientServices.review.heading_label');?></th>
+                            <th><?php $this->_('ClientServices.review.heading_old_value');?></th>
+                            <th><?php $this->_('ClientServices.review.heading_new_value');?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        foreach ((isset($review->config_options) ? $review->config_options : []) as $option) {
+                            $quantity_type = ((isset($option->type) ? $option->type : null) == 'quantity');
+                            $is_user_defined_value = (in_array((isset($option->type) ? $option->type : null), ['text', 'textarea', 'password']));
+                        ?>
+                        <tr>
+                            <td><?php (print (isset($option->label) ? $this->Html->safe($option->label) : null));?></td>
+                            <td>
+                                <?php
+                                if ((isset($option->current_value) ? $option->current_value : null)) {
+                                    $display_name = ($is_user_defined_value ? $option->current_value->selected_value : $option->current_value->name);
+
+                                    // Hide pricing if disable_pricing is enabled
+                                    if (isset($option->disable_pricing) && $option->disable_pricing == 1) {
+                                        echo nl2br($this->Html->safe($display_name));
+                                    } else {
+                                        $quantity = $this->CurrencyFormat->truncateDecimal(($quantity_type ? (isset($option->current_value->selected_value) ? $option->current_value->selected_value : 0) : 1), 0);
+                                        $price = $this->CurrencyFormat->format((isset($option->current_value->pricing->price_renews) ? $option->current_value->pricing->price_renews : (isset($option->current_value->pricing->price) ? $option->current_value->pricing->price : 0)), (isset($option->current_value->pricing->currency) ? $option->current_value->pricing->currency : null));
+                                        $this->_('ClientServices.review.value', false, nl2br((isset($display_name) ? $this->Html->safe($display_name) : '')), $quantity, $price);
+                                    }
+                                } else {
+                                    $this->_('ClientServices.review.none');
+                                }
+                                ?>
+                            </td>
+                            <td>
+                                <?php
+                                if ((isset($option->new_value) ? $option->new_value : null)) {
+                                    $display_name = ($is_user_defined_value ? $option->new_value->selected_value : $option->new_value->name);
+
+                                    // Hide pricing if disable_pricing is enabled
+                                    if (isset($option->disable_pricing) && $option->disable_pricing == 1) {
+                                        echo nl2br($this->Html->safe($display_name));
+                                    } else {
+                                        $quantity = $this->CurrencyFormat->truncateDecimal(($quantity_type ? (isset($option->new_value->selected_value) ? $option->new_value->selected_value : 0) : 1), 0);
+
+                                        // if upgrading and uses renewal on upgrade || if not upgrading and config exists
+                                        $package_changed = (isset($review->packages->current->id) ? $review->packages->current->id : null) != (isset($review->packages->new->id) ? $review->packages->new->id : (isset($review->packages->current->id) ? $review->packages->current->id : null));
+                                        $price = ($package_changed && (isset($review->packages->new->upgrades_use_renewal) ? $review->packages->new->upgrades_use_renewal : null))
+                                            || (!$package_changed && (isset($option->current_value) ? $option->current_value : null))
+                                            ? (isset($option->new_value->pricing->price_renews) ? $option->new_value->pricing->price_renews : (isset($option->new_value->pricing->price) ? $option->new_value->pricing->price : null))
+                                            : (isset($option->new_value->pricing->price) ? $option->new_value->pricing->price : null);
+
+                                        $currency = (isset($option->new_value->pricing->currency) ? $option->new_value->pricing->currency : null);
+                                        $formatted_price = $this->CurrencyFormat->format($price, $currency);
+                                        if (!(isset($option->current_value) ? $option->current_value : null) && (isset($option->new_value->pricing->setup_fee) ? $option->new_value->pricing->setup_fee : null) != 0) {
+                                            // If this is a new option show the setup fee
+                                            $formatted_setup_fee = $this->CurrencyFormat->format((isset($option->new_value->pricing->setup_fee) ? $option->new_value->pricing->setup_fee : null), $currency);
+                                            $this->_('ClientServices.review.value_setup_fee', false, nl2br((isset($display_name) ? $this->Html->safe($display_name) : '')), $quantity, $formatted_price, $formatted_setup_fee);
+                                        } else {
+                                            $this->_('ClientServices.review.value', false, nl2br((isset($display_name) ? $this->Html->safe($display_name) : '')), $quantity, $formatted_price);
+                                        }
+                                    }
+                                } else {
+                                    $this->_('ClientServices.review.none');
+                                }
+                                ?>
+                            </td>
+                        </tr>
+                        <?php
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php
+            }
+
+            echo (isset($totals) ? $totals : null);
+            ?>
+            <div class="float-right">
+                <a href="<?php echo $this->Html->safe($plugin_uri . 'manage/' . ($service->id ?? null) . '/');?>" class="btn btn-danger">
+                    <i class="fas fa-ban fa-fw"></i> <?php $this->_('ClientServices.review.cancel');?>
+                </a>
+                <button type="submit" class="btn btn-light"><i class="fas fa-arrow-circle-right"></i> <?php $this->_('ClientServices.review.update');?></button>
+            </div>
+            <?php
+            $this->Form->end();
+
+            $this->WidgetClient->endBody();
+            $this->WidgetClient->end();
+            ?>
+        </div>
