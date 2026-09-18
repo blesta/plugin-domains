@@ -1,0 +1,105 @@
+<?php /** @var View $this **/ ?>
+        <?php
+        $domain_name = (!empty($service->name) ? $service->name : ($service->package->name ?? ''));
+
+        // Map the service status to a badge style
+        $status_badges = [
+            'active' => 'status-active',
+            'suspended' => 'status-suspended',
+            'canceled' => 'status-cancelled'
+        ];
+
+        // Set the package term
+        if (($service->package_pricing->period ?? null) == 'onetime') {
+            $package_term = ($periods[$service->package_pricing->period] ?? null);
+        } else {
+            $term = ($service->package_pricing->term ?? null);
+            $package_term = $this->Html->concat(
+                ' ',
+                $term,
+                ($term == 1
+                    ? ($periods[$service->package_pricing->period] ?? null)
+                    : ($periods[$service->package_pricing->period . '_plural'] ?? null))
+            );
+        }
+
+        $auto_renewal = (($service->auto_renewal ?? null) == 'on');
+        $can_renew = (($client_renew_service ?? null) && ($service->status ?? null) == 'active'
+            && empty($service->date_canceled) && !($queued_service_change ?? null));
+        ?>
+        <div class="card service-hero mb-4">
+            <div class="card-body">
+                <div class="service-hero-body">
+                    <div>
+                        <h2 class="service-hero-title"><?php echo $this->Html->safe($domain_name);?></h2>
+                        <div class="service-hero-subtitle">
+                            <span><i class="bi bi-globe2"></i> <?php echo $this->Html->safe($service->package->name ?? '');?></span>
+                            <span class="status-badge <?php echo $this->Html->safe($status_badges[$service->status ?? null] ?? 'status-pending');?>">
+                                <?php $this->_('ClientServices.manage.button_' . ($service->status ?? null));?>
+                            </span>
+                            <span><i class="bi bi-calendar-check"></i> <?php $this->_('ClientMain.manage.text_term', false, $this->Html->safe($package_term));?></span>
+                        </div>
+                        <div class="service-hero-actions">
+                            <?php
+                            if ($can_renew) {
+                            ?>
+                            <a href="#" class="btn btn-primary btn-sm renew_domain"><i class="bi bi-arrow-clockwise me-1"></i><?php $this->_('ClientMain.manage.button_renew');?></a>
+                            <?php
+                            }
+                            ?>
+                            <a href="<?php echo $this->Html->safe($plugin_uri . 'index/');?>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i><?php $this->_('ClientMain.manage.button_back_to_domains');?></a>
+                        </div>
+                    </div>
+                    <div class="service-health-panel">
+                        <div class="service-health-card">
+                            <div class="service-health-label"><?php $this->_('ClientMain.manage.heading_expiration');?></div>
+                            <div class="service-health-value">
+                                <?php echo (empty($service->expiration_date) ? $this->_('ClientMain.manage.text_never', true) : $this->Date->cast($service->expiration_date));?>
+                            </div>
+                            <div class="service-health-meta">
+                                <?php $this->_('ClientMain.manage.text_renews_' . ($auto_renewal ? 'automatically' : 'manually'));?>
+                            </div>
+                        </div>
+                        <?php
+                        // The registrar lock is only known when the registrar exposes it. An
+                        // unlocked domain can be transferred away, so it is called out in red
+                        if (($registrar_lock ?? null) !== null) {
+                            $unlocked_class = ($registrar_lock ? '' : ' bg-danger text-white');
+                            $unlocked_text = ($registrar_lock ? '' : ' text-white');
+                        ?>
+                        <div class="service-health-card<?php echo $unlocked_class;?>">
+                            <div class="service-health-label<?php echo $unlocked_text;?>"><?php $this->_('ClientMain.manage.heading_registrar_lock');?></div>
+                            <div class="service-health-value<?php echo $unlocked_text;?>"><?php $this->_('ClientMain.manage.text_' . ($registrar_lock ? 'locked' : 'unlocked'));?></div>
+                            <div class="service-health-meta<?php echo $unlocked_text;?>"><?php $this->_('ClientMain.manage.text_transfer_protection_' . ($registrar_lock ? 'enabled' : 'disabled'));?></div>
+                        </div>
+                        <?php
+                        } else {
+                            $overdue_count = (int)($overdue_invoice_count ?? 0);
+                            $healthy = (($service->status ?? null) == 'active' && $overdue_count == 0);
+                        ?>
+                        <div class="service-health-card">
+                            <div class="service-health-label"><?php $this->_('ClientServices.manage.heading_service_health');?></div>
+                            <div class="service-health-value<?php echo ($healthy ? '' : ' text-danger');?>">
+                                <?php $this->_('ClientServices.manage.text_health_' . ($healthy ? 'healthy' : 'unhealthy'));?>
+                            </div>
+                            <div class="service-health-meta">
+                                <?php
+                                if (($service->status ?? null) == 'suspended') {
+                                    $this->_('ClientServices.manage.text_health_suspended');
+                                } elseif (($service->status ?? null) == 'pending') {
+                                    $this->_('ClientServices.manage.text_health_pending');
+                                } elseif ($overdue_count > 0) {
+                                    $this->_('ClientServices.manage.text_health_overdue' . ($overdue_count == 1 ? '' : '_plural'), false, $overdue_count);
+                                } else {
+                                    $this->_('ClientServices.manage.text_health_ok');
+                                }
+                                ?>
+                            </div>
+                        </div>
+                        <?php
+                        }
+                        ?>
+                    </div>
+                </div>
+            </div>
+        </div>

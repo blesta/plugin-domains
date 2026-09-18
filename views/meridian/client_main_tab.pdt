@@ -1,0 +1,16 @@
+<?php /** @var View $this **/ ?>
+        <div class="col-lg-8">
+            <?php
+            echo ($message ?? null);
+
+            $this->WidgetClient->clear();
+            $this->WidgetClient->create($this->_('ClientMain.manage.heading_domain_details', true), ['id' => 'client_main_tab'], ($render_section ?? null));
+            $this->WidgetClient->startBody();
+            echo ($tab_view ?? null);
+            $this->WidgetClient->endBody();
+            $this->WidgetClient->end();
+            ?>
+        </div>
+        <div class="col-lg-4">
+            <?php echo ($tabs ?? null);?>
+        </div>

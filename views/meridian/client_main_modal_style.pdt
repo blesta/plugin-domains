@@ -1,0 +1,9 @@
+<?php /** @var View $this **/ ?>
+<style>
+    /* Match the Bootstrap large dialog, which the cloned global modal does not carry */
+    @media (min-width: 992px) {
+        .modal-dialog {
+            max-width: 800px;
+        }
+    }
+</style>

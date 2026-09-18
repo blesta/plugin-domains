@@ -1,0 +1,34 @@
+<?php /** @var View $this **/ ?>
+    <?php
+    $this->Form->create(null, ['id' => 'domain_auto_renewal']);
+    ?>
+        <div class="modal-header">
+            <h5 class="global_modal_title"><?php $this->_('ClientMain.manage.heading_auto_renewal');?></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-info"><?php $this->_('ClientMain.manage.text_auto_renewal_info');?></div>
+            <div class="mb-3">
+                <?php
+                $this->Form->label($this->_('ClientMain.manage.field_auto_renewal', true), 'auto_renewal', ['class' => 'form-label']);
+                $this->Form->fieldSelect(
+                    'auto_renewal',
+                    [
+                        'on' => $this->_('ClientMain.manage.text_auto_renewal_on', true),
+                        'off' => $this->_('ClientMain.manage.text_auto_renewal_off', true)
+                    ],
+                    ($vars->auto_renewal ?? 'on'),
+                    ['id' => 'auto_renewal', 'class' => 'form-select']
+                );
+                ?>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <?php
+            $this->Form->fieldButton('cancel', $this->_('ClientMain.manage.field_modal_cancel', true), ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']);
+            $this->Form->fieldButton('submit', $this->_('ClientMain.manage.field_submit', true), ['class' => 'btn btn-primary', 'type' => 'submit']);
+            ?>
+        </div>
+    <?php
+    $this->Form->end();
+    ?>
