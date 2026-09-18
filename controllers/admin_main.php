@@ -2,6 +2,7 @@
 
 use Blesta\Core\Util\Input\Fields\InputFields;
 use Blesta\Core\Util\Input\Fields\Html;
+use Blesta\Core\Util\PackageOptions\Logic as OptionLogic;
 use Blesta\Core\Util\Validate\Server;
 
 /**
@@ -289,6 +290,9 @@ class AdminMain extends DomainsController
         $status = $this->Services->getStatusTypes();
         unset($status['in_review']);
 
+        // Set the pricing IDs so the configurable options of the selected term can be fetched
+        $pricing_ids = $this->formatPricingIds($package);
+
         // Set vars
         $this->set('domain', $domain);
         $this->set(
@@ -301,6 +305,7 @@ class AdminMain extends DomainsController
                     'domain',
                     'package',
                     'years',
+                    'pricing_ids',
                     'modules',
                     'invoices',
                     'status',
@@ -573,7 +578,11 @@ class AdminMain extends DomainsController
      */
     public function edit()
     {
-        $this->uses(['Domains.DomainsTlds', 'Domains.DomainsDomains', 'Contacts', 'ClientGroups', 'EmailVerifications', 'Invoices']);
+        $this->uses([
+            'Domains.DomainsTlds', 'Domains.DomainsDomains', 'Contacts', 'ClientGroups',
+            'EmailVerifications', 'Invoices', 'Currencies', 'Coupons', 'Logs', 'PackageOptions',
+            'PackageOptionConditionSets', 'ServiceChanges'
+        ]);
 
         // Ensure a valid client was given
         $client_id = ($this->get['client_id'] ?? ($this->get[0] ?? null));
@@ -646,15 +655,20 @@ class AdminMain extends DomainsController
             $this->redirect($this->base_uri . 'clients/editservice/' . $client_id . '/' . $service_id . '/');
         }
 
+        // Determine which tab of the page is being viewed
+        $tab = ($this->get[2] ?? 'domain');
+        if (!in_array($tab, $this->getEditTabs($service))) {
+            $tab = 'domain';
+        }
+
         // Get list of registrar modules
         $modules = $this->getConfiguredRegistrarModules();
 
         // Get service statuses
         $statuses = $this->Services->getStatusTypes();
 
-        // Get domain actions
-        $actions = ['' => Language::_('AppController.select.please', true)];
-        $actions = array_merge($actions, $this->getDomainActions());
+        // Get the actions available for this domain
+        $actions = $this->getServiceActions($service);
 
         // Set action vars
         $vars->auto_renewal = empty($service->date_canceled) ? 'on' : 'off';
@@ -679,80 +693,87 @@ class AdminMain extends DomainsController
 
         $vars->module = $module_row->module_id;
         $vars->module_row = $service->module_row_id;
+        $vars->module_row_id = $service->module_row_id;
+
+        // Set the configurable options currently applied to the service
+        $vars = (object) array_merge(
+            (array) $vars,
+            $this->PackageOptions->formatServiceOptions($service->options)
+        );
+
+        // Set the price override fields
+        $vars->price_override = ($service->override_price !== null && $service->override_currency !== null
+            ? 'true'
+            : 'false'
+        );
+        $vars->override_price = $service->override_price;
+        $vars->override_currency = ($service->override_currency ?? ($service->package_pricing->currency ?? null));
+
+        // Set the dates used by the service actions
+        $vars->date_renews = (!empty($service->date_renews)
+            ? $this->Date->cast($service->date_renews, 'Y-m-d')
+            : null
+        );
+        $vars->date_canceled = (!empty($service->date_canceled)
+            ? $this->Date->cast($service->date_canceled, 'Y-m-d')
+            : $this->Date->modify(date('c'), '+1 day', 'Y-m-d', Configure::get('Blesta.company_timezone'))
+        );
+
+        // Set the coupon currently applied to the service
+        if ($service->coupon_id && ($coupon = $this->Coupons->get($service->coupon_id))) {
+            $service->coupon_code = $coupon->code;
+        }
+
+        // Set the terms, currencies and module rows available to the domain
+        $terms = $this->formatTermOptions($package);
+        $currencies = $this->Form->collapseObjectArray(
+            $this->Currencies->getAll(Configure::get('Blesta.company_id')),
+            'code',
+            'code'
+        );
+        [$module_row_fields, $module_row_name] = $this->getModuleRowOptions($module);
+
+        // Set the expected renewal price
+        $service->renewal_price = $this->Services->getRenewalPrice($service->id);
+
+        // Set the open invoices a reactivated domain may be appended to
+        $invoices = $this->Form->collapseObjectArray(
+            $this->Invoices->getAll($client->id, 'open', ['id_code' => 'desc']),
+            'id_code',
+            'id'
+        );
 
         // Fetch module management tabs
-        $tabs = $this->getServiceTabs($service, $package, $module);
+        $tabs = $this->getServiceTabs($service, $package, $module, null, null, $tab);
 
-        // Process edit
+        // Process the submitted section of the page
         if (!empty($this->post)) {
-            // Set checkboxes
-            $checkboxes = ['use_module'];
-            foreach ($checkboxes as $checkbox) {
-                if (!isset($this->post[$checkbox])) {
-                    $this->post[$checkbox] = 'false';
-                }
-            }
-
-            // Update package
-            if (isset($this->post['module']) && $module->id != $this->post['module'] && $service->status == 'pending') {
-                $tld = strstr($service->name ?? $this->post['domain'] ?? '', '.');
-                $package = $this->DomainsTlds->getTldPackageByModuleId(
-                    $tld,
-                    $this->post['module'],
-                    Configure::get('Blesta.company_id')
+            // Require authorization to update a client's service
+            if (!$this->authorized('admin_clients', 'editservice')) {
+                $this->flashMessage(
+                    'error',
+                    Language::_('AppController.!error.unauthorized_access', true),
+                    null,
+                    false
                 );
-
-                // If a package doesn't exist for this TLD and the provided module, clone the default one
-                if (empty($package)) {
-                    $this->DomainsTlds->duplicate($tld, $this->post['module']);
-                    $package = $this->DomainsTlds->getTldPackageByModuleId(
-                        $tld,
-                        $this->post['module'],
-                        Configure::get('Blesta.company_id')
-                    );
-                }
-
-                // Get the pricing from the amount of years
-                $pricing = $this->DomainsTlds->getPricing(
-                    $package->id,
-                    $service->package_pricing->term,
-                    $service->package_pricing->currency
-                );
-                $this->post['pricing_id'] = $pricing->pricing_id;
+                $this->redirect($this->base_uri . 'clients/');
             }
 
-            // Update service fields
-            if (empty($this->post['action'])) {
-                $allowed_fields = ['status', 'pricing_id', 'use_module'];
-                foreach ($fields->getFields() as $field) {
-                    foreach ($field->fields as $subfield) {
-                        if (str_contains($subfield->params['name'], '[')) {
-                            $parts = explode('[', $subfield->params['name'], 2);
-                            $subfield->params['name'] = $parts[0];
-                        }
+            $section = ($this->post['section'] ?? (!empty($this->post['action']) ? 'domain_action' : 'module'));
 
-                        $allowed_fields[] = $subfield->params['name'];
-                    }
-
-                    if ($field->type !== 'label') {
-                        if (str_contains($subfield->params['name'], '[')) {
-                            $parts = explode('[', $subfield->params['name'], 2);
-                            $subfield->params['name'] = $parts[0];
-                        }
-
-                        $allowed_fields[] = $field->params['name'];
-                    }
-                }
-
-                $params = array_intersect_key($this->post, array_flip($allowed_fields));
-                $this->Services->edit($service->id, $params);
-                $errors = $this->Services->errors();
-            }
-
-            // Process domain actions
-            if (!empty($this->post['action'])) {
-                $this->post['service_ids'] = [$service->id];
-                $errors = $this->updateDomains($this->post);
+            switch ($section) {
+                case 'domain_action':
+                    $errors = $this->processDomainAction($client, $service);
+                    break;
+                case 'information':
+                    $errors = $this->processServiceInformation($service, $module_row_fields);
+                    break;
+                case 'package':
+                    $errors = $this->processServicePackage($client, $service);
+                    break;
+                default:
+                    $errors = $this->processModuleFields($service, $package, $module, $fields);
+                    break;
             }
 
             if (!empty($errors)) {
@@ -762,7 +783,7 @@ class AdminMain extends DomainsController
                 $this->redirect($this->base_uri . 'clients/view/' . $client->id);
             }
 
-            $vars = (object) $this->post;
+            $vars = (object) array_merge((array) $vars, $this->post);
         }
 
         $fields = (new Html($fields))->generate();
@@ -779,9 +800,497 @@ class AdminMain extends DomainsController
                 'module',
                 'fields',
                 'tabs',
-                'vars'
+                'vars',
+                'terms',
+                'currencies',
+                'invoices',
+                'module_row_fields',
+                'module_row_name',
+                'tab'
             )
         );
+    }
+
+    /**
+     * Fetches the tabs of the domain management page available to the given service
+     *
+     * @param stdClass $service An object representing the domain service
+     * @return array A numerically indexed array of tab identifiers
+     */
+    private function getEditTabs(stdClass $service)
+    {
+        $tabs = ['domain'];
+
+        // The term and configurable options cannot be changed until the domain is active
+        if ($service->status !== 'pending' && $service->status !== 'canceled') {
+            $tabs[] = 'options';
+        }
+
+        $tabs[] = 'basic';
+
+        return $tabs;
+    }
+
+    /**
+     * Fetches the actions available for the given domain service, combining the domain specific
+     * actions with the service actions offered by the core
+     *
+     * @param stdClass $service An object representing the domain service
+     * @return array A key/value list of available actions and their language
+     */
+    private function getServiceActions(stdClass $service)
+    {
+        if ($service->status == 'pending') {
+            return [];
+        }
+
+        // Coupons are updated from the package section of the page
+        $service_actions = $this->Services->getActions($service->status);
+        unset($service_actions['update_coupon']);
+
+        // The renew date of a one-time service cannot be changed
+        if (($service->package_pricing->period ?? null) == 'onetime') {
+            unset($service_actions['change_renew']);
+        }
+
+        // Only the service actions apply to a canceled domain
+        if ($service->status == 'canceled') {
+            return $service_actions;
+        }
+
+        return array_merge($this->getDomainActions(), $service_actions);
+    }
+
+    /**
+     * Fetches a list of the terms available to the given package
+     *
+     * @param stdClass $package An object representing the package
+     * @return array A key/value list of pricing IDs and their term and renewal price
+     */
+    private function formatTermOptions(stdClass $package)
+    {
+        $terms = [];
+        foreach (($package->pricing ?? []) as $pricing) {
+            if ($pricing->period !== 'year') {
+                continue;
+            }
+
+            $term = Language::_(
+                'AdminMain.edit.term_' . $pricing->period . ($pricing->term > 1 ? 's' : ''),
+                true,
+                $pricing->term
+            );
+            $terms[$pricing->id] = Language::_(
+                'AdminMain.add.term',
+                true,
+                $term,
+                $this->CurrencyFormat->format($pricing->price_renews, $pricing->currency)
+            );
+        }
+
+        return $terms;
+    }
+
+    /**
+     * Fetches the module rows available to a domain of the given module
+     *
+     * @param stdClass $module An object representing the registrar module
+     * @return array An array containing a key/value list of module rows and the module row name
+     */
+    private function getModuleRowOptions(stdClass $module)
+    {
+        $meta_key = $this->ModuleManager->moduleRpc($module->id, 'moduleRowMetaKey');
+
+        $module_row_fields = [];
+        foreach (($module->rows ?? []) as $row) {
+            $module_row_fields[$row->id] = ($row->meta->{$meta_key} ?? $module->name);
+        }
+
+        return [$module_row_fields, $this->ModuleManager->moduleRpc($module->id, 'moduleRowName')];
+    }
+
+    /**
+     * Processes an action submitted from the domain actions section
+     *
+     * @param stdClass $client An object representing the client
+     * @param stdClass $service An object representing the domain service
+     * @return mixed An array of errors, or false otherwise
+     */
+    private function processDomainAction(stdClass $client, stdClass $service)
+    {
+        $action = ($this->post['action'] ?? null);
+        $service_actions = ['suspend', 'unsuspend', 'cancel', 'uncancel', 'schedule_cancel', 'change_renew'];
+
+        // Domain specific actions are shared with the domain browse page
+        if (!in_array($action, $service_actions)) {
+            $this->post['service_ids'] = [$service->id];
+
+            return $this->updateDomains($this->post);
+        }
+
+        switch ($action) {
+            case 'suspend':
+                $this->Services->suspend($service->id, $this->post);
+                break;
+            case 'unsuspend':
+                $this->Services->unsuspend($service->id, $this->post);
+                break;
+            case 'cancel':
+                // Cancel right now
+                $this->post['date_canceled'] = date('c');
+                $this->post['notify_cancel'] = ($this->post['notify_cancel'] ?? 'false');
+
+                $this->Services->cancel($service->id, $this->post);
+                break;
+            case 'uncancel':
+                $this->Services->unCancel($service->id, $this->post);
+                break;
+            case 'schedule_cancel':
+                // Remove any scheduled cancellation
+                if (($this->post['cancel'] ?? null) == 'none') {
+                    $this->Services->unCancel($service->id);
+                    break;
+                }
+
+                if (($this->post['cancel'] ?? null) == 'term') {
+                    $this->post['date_canceled'] = 'end_of_term';
+                }
+                $this->post['notify_cancel'] = ($this->post['notify_cancel'] ?? 'false');
+
+                $this->Services->cancel($service->id, $this->post);
+                break;
+            case 'change_renew':
+                return $this->changeRenewDate($client, $service);
+        }
+
+        return $this->Services->errors();
+    }
+
+    /**
+     * Changes the renew date of the given service, prorating the difference
+     *
+     * @param stdClass $client An object representing the client
+     * @param stdClass $service An object representing the domain service
+     * @return mixed An array of errors, or false otherwise
+     */
+    private function changeRenewDate(stdClass $client, stdClass $service)
+    {
+        $data = array_merge(
+            [
+                'date_renews' => (isset($this->post['date_renews'])
+                    ? $this->Services->dateToUtc($this->post['date_renews']) . 'Z'
+                    : $service->date_renews . 'Z'
+                ),
+                'date_paid_through' => null,
+                'pricing_id' => $service->pricing_id,
+                'qty' => $service->qty,
+                'use_module' => 'false'
+            ],
+            $this->PackageOptions->formatServiceOptions($service->options)
+        );
+
+        $prorate = (($this->post['prorate'] ?? null) == 'true');
+        $pricing = $service->package_pricing;
+
+        // Determine the items/totals
+        $service_change = $this->ServiceChanges->getPresenter($service->id, $data);
+        $total = ($service_change ? $service_change->totals()->total : 0);
+
+        $this->Services->validateServiceEdit($service->id, $data, true);
+        $errors = $this->Services->errors();
+
+        // Create the invoice for the service change
+        if (empty($errors) && $service_change && $prorate && $total > 0) {
+            $invoice_data = $this->makeInvoice($client, $service_change, $pricing->currency, true, $service->id);
+            $errors = $invoice_data['errors'];
+        }
+
+        if (empty($errors)) {
+            $this->Services->edit($service->id, $data, true);
+            $errors = $this->Services->errors();
+        }
+
+        // Issue a credit for the service change
+        $allow_credit = (($client->settings['client_prorate_credits'] ?? null) == 'true');
+        if (empty($errors) && $prorate && $total < 0 && $allow_credit) {
+            $this->createCredit($client->id, abs($total), $pricing->currency);
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Processes the service information section, assigning the domain to a different module row
+     *
+     * @param stdClass $service An object representing the domain service
+     * @param array $module_row_fields A key/value list of the module rows available to the service
+     * @return mixed An array of errors, or false otherwise
+     */
+    private function processServiceInformation(stdClass $service, array $module_row_fields)
+    {
+        // The module row to change to must be a valid row of the service's module
+        if (!isset($this->post['module_row_id'])
+            || !array_key_exists($this->post['module_row_id'], $module_row_fields)
+        ) {
+            return false;
+        }
+
+        $this->Services->edit(
+            $service->id,
+            ['module_row_id' => $this->post['module_row_id'], 'use_module' => 'false'],
+            true
+        );
+
+        return $this->Services->errors();
+    }
+
+    /**
+     * Processes the package section, updating the term, price override, coupon and configurable
+     * options of the domain and prorating the difference
+     *
+     * @param stdClass $client An object representing the client
+     * @param stdClass $service An object representing the domain service
+     * @return mixed An array of errors, or false otherwise
+     */
+    private function processServicePackage(stdClass $client, stdClass $service)
+    {
+        // Set unchecked checkboxes so they are not carried over when re-rendering the page
+        foreach (['price_override', 'prorate', 'disable_option_logic', 'use_module'] as $checkbox) {
+            $this->post[$checkbox] = ($this->post[$checkbox] ?? 'false');
+        }
+
+        $data = $this->post;
+
+        // Set any price overrides for this service
+        if (($this->post['price_override'] ?? null) == 'true') {
+            $data['override_price'] = (is_numeric($this->post['override_price'] ?? null)
+                ? $this->post['override_price']
+                : null
+            );
+            $data['override_currency'] = (is_numeric($this->post['override_price'] ?? null)
+                && !empty($this->post['override_currency'])
+                    ? $this->post['override_currency']
+                    : null
+            );
+
+            // Cannot change package/term
+            unset($data['pricing_id']);
+        } else {
+            // Reset price overrides
+            $data['override_price'] = null;
+            $data['override_currency'] = null;
+        }
+
+        if (isset($this->post['coupon_code'])) {
+            $data['coupon_id'] = $this->getCouponId($this->post['coupon_code']);
+        }
+
+        // Always set config options so that they can be removed if no longer valid
+        $data['configoptions'] = ($data['configoptions'] ?? []);
+
+        // Determine the pricing currency
+        $pricing = $service->package_pricing;
+        if (isset($data['pricing_id']) && ($package = $this->Packages->getByPricingId($data['pricing_id']))) {
+            foreach ($package->pricing as $price) {
+                if ($price->id == $data['pricing_id']) {
+                    $pricing = $price;
+                    break;
+                }
+            }
+        }
+
+        // Cancel any pending service change
+        $this->cancelServiceChanges($service->id);
+
+        // Determine the items/totals
+        $data = array_merge($data, ['qty' => (!empty($data['qty']) ? $data['qty'] : 1)]);
+        $service_change = $this->ServiceChanges->getPresenter($service->id, $data);
+        $total = ($service_change ? $service_change->totals()->total : 0);
+
+        // Determine whether credits are allowed
+        $allow_credit = (($client->settings['client_prorate_credits'] ?? null) == 'true');
+        $queue_service_changes = (($client->settings['process_paid_service_changes'] ?? null) == 'true');
+        $prorate = (($data['prorate'] ?? null) == 'true');
+
+        // Don't allow proration on the service to create an invoice. We'll handle this ourselves
+        unset($data['prorate']);
+
+        $this->Services->validateServiceEdit($service->id, $data);
+        $errors = $this->Services->errors();
+
+        // Validate that the submitted config options are valid given the Option Logic
+        $option_logic = new OptionLogic();
+        if (($this->post['disable_option_logic'] ?? 'false') == 'false') {
+            $option_logic->setService($service);
+            $option_logic->setPackageOptionConditionSets(
+                $this->PackageOptionConditionSets->getAll(
+                    [
+                        'package_id' => $pricing->package_id,
+                        'opition_ids' => $this->Form->collapseObjectArray(
+                            $this->PackageOptions->getAllByPackageId(
+                                $pricing->package_id,
+                                $pricing->term,
+                                $pricing->period,
+                                $pricing->currency
+                            ),
+                            'id',
+                            'id'
+                        )
+                    ],
+                    ['option_id']
+                )
+            );
+        }
+
+        // Create the invoice for the service change
+        $invoice_id = '';
+        if (empty($errors)
+            && !($errors = $option_logic->validate($data['configoptions']))
+            && $service_change
+            && $prorate
+            && $total > 0
+        ) {
+            $invoice_data = $this->makeInvoice($client, $service_change, $pricing->currency, true, $service->id);
+            $invoice_id = $invoice_data['invoice_id'];
+            $errors = $invoice_data['errors'];
+        }
+
+        if (empty($errors)) {
+            if ($queue_service_changes && $prorate && $total > 0) {
+                $result = $this->queueServiceChange($service->id, $invoice_id, $data);
+                $errors = $result['errors'];
+            } else {
+                // Update the service immediately when not being queued, prorated, or charging any amount
+                $this->Services->edit($service->id, $data);
+                $errors = $this->Services->errors();
+            }
+        }
+
+        // Issue a credit for the service change
+        $transaction_id = null;
+        if (empty($errors) && $prorate && $total < 0 && $allow_credit) {
+            $transaction_id = $this->createCredit($client->id, abs($total), $pricing->currency);
+        }
+
+        // Log the service change
+        if (empty($errors)) {
+            $this->Logs->addServiceChange([
+                'service_id' => $service->id,
+                'transactions' => ($transaction_id ? [$transaction_id] : []),
+                'old_service' => (array) $service,
+                'new_service' => (array) $this->Services->get($service->id)
+            ]);
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Processes the basic options section, updating the registrar module fields of the domain
+     *
+     * @param stdClass $service An object representing the domain service
+     * @param stdClass $package An object representing the package of the domain service
+     * @param stdClass $module An object representing the registrar module
+     * @param InputFields $fields The module fields of the domain service
+     * @return mixed An array of errors, or false otherwise
+     */
+    private function processModuleFields(stdClass $service, stdClass $package, stdClass $module, $fields)
+    {
+        // Set checkboxes
+        $checkboxes = ['use_module'];
+        foreach ($checkboxes as $checkbox) {
+            if (!isset($this->post[$checkbox])) {
+                $this->post[$checkbox] = 'false';
+            }
+        }
+
+        // Update package
+        if (isset($this->post['module']) && $module->id != $this->post['module'] && $service->status == 'pending') {
+            $tld = strstr($service->name ?? $this->post['domain'] ?? '', '.');
+            $package = $this->DomainsTlds->getTldPackageByModuleId(
+                $tld,
+                $this->post['module'],
+                Configure::get('Blesta.company_id')
+            );
+
+            // If a package doesn't exist for this TLD and the provided module, clone the default one
+            if (empty($package)) {
+                $this->DomainsTlds->duplicate($tld, $this->post['module']);
+                $package = $this->DomainsTlds->getTldPackageByModuleId(
+                    $tld,
+                    $this->post['module'],
+                    Configure::get('Blesta.company_id')
+                );
+            }
+
+            // Get the pricing from the amount of years
+            $pricing = $this->DomainsTlds->getPricing(
+                $package->id,
+                $service->package_pricing->term,
+                $service->package_pricing->currency
+            );
+            $this->post['pricing_id'] = $pricing->pricing_id;
+        }
+
+        // Update service fields
+        $allowed_fields = ['status', 'pricing_id', 'use_module'];
+        foreach ($fields->getFields() as $field) {
+            foreach ($field->fields as $subfield) {
+                if (str_contains($subfield->params['name'], '[')) {
+                    $parts = explode('[', $subfield->params['name'], 2);
+                    $subfield->params['name'] = $parts[0];
+                }
+
+                $allowed_fields[] = $subfield->params['name'];
+            }
+
+            if ($field->type !== 'label') {
+                $allowed_fields[] = $field->params['name'];
+            }
+        }
+
+        $params = array_intersect_key($this->post, array_flip($allowed_fields));
+        $this->Services->edit($service->id, $params);
+
+        if (($errors = $this->Services->errors())) {
+            return $errors;
+        }
+
+        // Services::edit only stores the service fields returned by the module, and registrar
+        // modules commonly return nothing from editService, so the submitted values have to be
+        // stored directly when the module is bypassed
+        if (($params['use_module'] ?? 'true') == 'false') {
+            $this->setServiceFields($service->id, $params);
+        }
+
+        return $this->Services->errors();
+    }
+
+    /**
+     * Stores the submitted values of the service fields the given service already has
+     *
+     * @param int $service_id The ID of the service whose fields to set
+     * @param array $vars The submitted service field values
+     */
+    private function setServiceFields($service_id, array $vars)
+    {
+        // Refetch the service so that any field the module may have set is not reverted
+        if (!($service = $this->Services->get($service_id))) {
+            return;
+        }
+
+        $fields = [];
+        foreach (($service->fields ?? []) as $field) {
+            if (isset($vars[$field->key])) {
+                $field->value = $vars[$field->key];
+            }
+
+            $fields[] = (array) $field;
+        }
+
+        if (!empty($fields)) {
+            $this->Services->setFields($service_id, $fields);
+        }
     }
 
     /**
@@ -973,9 +1482,34 @@ class AdminMain extends DomainsController
         }
 
         $years = $this->formatPricingOptions($package);
-        $this->outputAsJson(['pricing' => $years, 'package_id' => $package->id]);
+        $this->outputAsJson([
+            'pricing' => $years,
+            'pricing_ids' => $this->formatPricingIds($package),
+            'package_id' => $package->id
+        ]);
 
         return false;
+    }
+
+    /**
+     * Fetches a list of pricing IDs keyed the same way as the pricing options, so the configurable
+     * options of the selected term can be fetched
+     *
+     * @param stdClass $package An object representing the package
+     * @return array A key/value list of "{term}-{currency}" keys and their pricing ID
+     */
+    private function formatPricingIds(stdClass $package)
+    {
+        $pricing_ids = [];
+        foreach (($package->pricing ?? []) as $pricing) {
+            if ($pricing->period !== 'year') {
+                continue;
+            }
+
+            $pricing_ids[$pricing->term . '-' . $pricing->currency] = $pricing->id;
+        }
+
+        return $pricing_ids;
     }
 
     /**
@@ -1321,20 +1855,35 @@ class AdminMain extends DomainsController
      * @param string|null $method The method being called (i.e. the tab action, optional)
      * @param int|null $plugin_id The ID of the plugin being called (optional)
      */
-    private function getServiceTabs(stdClass $service, stdClass $package, $module, $method = null, $plugin_id = null)
-    {
-        // Get tabs
-        $tabs = [
-            [
-                'name' => Language::_('AdminClients.editservice.tab_basic', true),
-                'attributes' => [
-                    'href' => $this->base_uri . 'plugin/domains/admin_main/edit/' . $service->client_id . '/' . $service->id . '/',
-                    'class' => 'ajax'
-                ],
-                // Default to this basic tab as being the current one
-                'current' => ($method === null && $plugin_id === null)
-            ]
+    private function getServiceTabs(
+        stdClass $service,
+        stdClass $package,
+        $module,
+        $method = null,
+        $plugin_id = null,
+        $tab = null
+    ) {
+        // Each tab of the domain management page and its language
+        $page_tabs = [
+            'domain' => Language::_('AdminMain.edit.tab_domain', true),
+            'options' => Language::_('AdminMain.edit.tab_options', true),
+            'basic' => Language::_('AdminClients.editservice.tab_basic', true)
         ];
+
+        $tabs = [];
+        foreach ($this->getEditTabs($service) as $page_tab) {
+            $tabs[] = [
+                'name' => $page_tabs[$page_tab],
+                'attributes' => [
+                    // These tabs are not loaded over AJAX because the widget injects the response
+                    // with innerHTML, which would not run the inline scripts the page relies on
+                    'href' => $this->base_uri . 'plugin/domains/admin_main/edit/' . $service->client_id . '/'
+                        . $service->id . '/' . ($page_tab === 'domain' ? '' : $page_tab . '/')
+                ],
+                // Default to the domain tab as being the current one
+                'current' => ($method === null && $plugin_id === null && $page_tab === ($tab ?? 'domain'))
+            ];
+        }
 
         // Set tabs only if the service has not been canceled
         if ($service->status != 'canceled') {
