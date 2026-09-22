@@ -153,7 +153,7 @@
                 'lang' => 'ClientMain.manage.button_renew'
             ],
             'domain_auto_renewal' => [
-                'enabled' => (($service->status ?? null) == 'active'),
+                'enabled' => (($client_cancel_service ?? null) && in_array(($clients_cancel_options ?? null), ['end_of_term', 'both']) && ($service->status ?? null) == 'active'),
                 'icon' => 'fas fa-arrow-circle-right fa-fw',
                 'button' => 'btn-light',
                 'lang' => 'ClientMain.manage.button_auto_renewal',

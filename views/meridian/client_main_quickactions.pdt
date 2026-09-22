@@ -30,7 +30,7 @@
                 'attributes' => ['data-bs-toggle' => 'modal', 'data-bs-target' => '#config_options_modal']
             ],
             'domain_auto_renewal' => [
-                'enabled' => $is_active,
+                'enabled' => (($client_cancel_service ?? null) && in_array(($clients_cancel_options ?? null), ['end_of_term', 'both']) && $is_active),
                 'icon' => 'bi bi-arrow-repeat',
                 'lang' => 'ClientMain.manage.button_auto_renewal',
                 'modal' => 'autorenewal'

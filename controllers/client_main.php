@@ -28,6 +28,24 @@ class ClientMain extends DomainsController
         $this->uses(['Clients']);
         $this->client = $this->Clients->get($this->Session->read('blesta_client_id'), true);
 
+        // Only active clients may manage their domains, the same as in ClientController
+        if (!$this->client || $this->client->status != 'active') {
+            $this->Session->clear();
+
+            if ($this->isAjax()) {
+                header($this->server_protocol . ' 403 Forbidden');
+                exit();
+            }
+
+            $this->flashMessage(
+                'error',
+                Language::_('AppController.!error.client_unauthorized_access', true),
+                null,
+                false
+            );
+            $this->redirect($this->base_uri);
+        }
+
         // The domain management views reuse the core service language and partials
         Language::loadLang('client_services', null, ROOTWEBDIR . 'language' . DS);
 
@@ -235,42 +253,6 @@ class ClientMain extends DomainsController
         // Determine which domain features the registrar makes available
         $capabilities = $this->getDomainCapabilities($module, $package);
 
-        // Set the domain specific data
-        $service->registration_date = $this->DomainsDomains->getRegistrationDate($service->id);
-        $service->expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
-        $service->nameservers = $this->DomainsDomains->getNameservers($service->id);
-        $service->auto_renewal = (empty($service->date_canceled) ? 'on' : 'off');
-        $service->renewal_price = $this->Services->getRenewalPrice($service->id);
-
-        // The registrar lock and the WHOIS summary are shown on the page, so they are fetched
-        // here. Any error the registrar reports is left unhandled on purpose, so that an
-        // unreachable registrar does not stop the rest of the page from rendering
-        $registrar_lock = null;
-        $domain_contacts = [];
-        if ($capabilities['lock'] || $capabilities['contacts']) {
-            $domain_name = $this->getDomainName(compact('service', 'module'));
-
-            if ($capabilities['lock']) {
-                $registrar_lock = (bool)$this->ModuleManager->moduleRpc(
-                    $module->getModule()->id,
-                    'getDomainIsLocked',
-                    [$domain_name, $service->module_row_id],
-                    $service->module_row_id
-                );
-            }
-
-            if ($capabilities['contacts']) {
-                $domain_contacts = $this->formatDomainContacts(
-                    $this->ModuleManager->moduleRpc(
-                        $module->getModule()->id,
-                        'getDomainContacts',
-                        [$domain_name, $service->module_row_id],
-                        $service->module_row_id
-                    )
-                );
-            }
-        }
-
         // Fetch the content the module renders on the default tab
         $partial_tab_view = $this->processModuleTab(
             $module,
@@ -287,11 +269,7 @@ class ClientMain extends DomainsController
         $this->buildTabs($service, $package, $module);
         $this->structure->set('page_title', Language::_('ClientMain.manage.page_title', true, $service->name));
 
-        $this->setDomainView($service, $package, $module, $capabilities, [
-            'registrar_lock' => $registrar_lock,
-            'registrant' => $this->getRegistrantContact($domain_contacts),
-            'id_protection' => $this->serviceOptionEnabled($service, 'id_protection')
-        ]);
+        $this->setDomainDetails($service, $package, $module, $capabilities);
 
         if ($this->isAjax()) {
             return $this->renderAjaxWidgetIfAsync(false);
@@ -299,11 +277,74 @@ class ClientMain extends DomainsController
     }
 
     /**
+     * Fetches the domain specific data and sets the view variables and partials shared by the
+     * domain management and tab pages
+     *
+     * @param stdClass $service An stdClass object representing the domain service
+     * @param stdClass $package An stdClass object representing the TLD package
+     * @param Module $module An instance of the registrar module used by the service
+     * @param array $capabilities A key/value list of the features the registrar makes available
+     */
+    private function setDomainDetails(stdClass $service, stdClass $package, $module, array $capabilities)
+    {
+        // Set the domain specific data
+        $service->registration_date = $this->DomainsDomains->getRegistrationDate($service->id);
+        $service->expiration_date = $this->DomainsDomains->getExpirationDate($service->id);
+        $service->nameservers = $this->DomainsDomains->getNameservers($service->id);
+        $service->auto_renewal = (empty($service->date_canceled) ? 'on' : 'off');
+        $service->renewal_price = $this->Services->getRenewalPrice($service->id);
+
+        // The registrar lock and the WHOIS summary are shown on the page, so they are fetched
+        // here and cached like the name servers. Any error the registrar reports is left unhandled
+        // on purpose, so that an unreachable registrar does not stop the rest of the page from rendering
+        $registrar_lock = null;
+        $domain_contacts = [];
+        $module_id = $module->getModule()->id;
+        if ($capabilities['lock']) {
+            $registrar_lock = $this->getCachedRegistrarValue(
+                'registrar_lock',
+                $service->id,
+                function () use ($service, $module, $module_id) {
+                    return (bool)$this->ModuleManager->moduleRpc(
+                        $module_id,
+                        'getDomainIsLocked',
+                        [$this->getDomainName(compact('service', 'module')), $service->module_row_id],
+                        $service->module_row_id
+                    );
+                }
+            );
+        }
+
+        if ($capabilities['contacts']) {
+            $domain_contacts = $this->getCachedRegistrarValue(
+                'contacts',
+                $service->id,
+                function () use ($service, $module, $module_id) {
+                    return $this->formatDomainContacts(
+                        $this->ModuleManager->moduleRpc(
+                            $module_id,
+                            'getDomainContacts',
+                            [$this->getDomainName(compact('service', 'module')), $service->module_row_id],
+                            $service->module_row_id
+                        )
+                    );
+                }
+            );
+        }
+
+        $this->setDomainView($service, $package, $module, $capabilities, [
+            'registrar_lock' => $registrar_lock,
+            'registrant' => $this->getRegistrantContact($domain_contacts),
+            'id_protection' => $this->serviceOptionEnabled($service, 'id_protection')
+        ]);
+    }
+
+    /**
      * Renders a module or plugin service tab
      */
     public function tab()
     {
-        $this->uses(['Domains.DomainsDomains', 'ModuleManager', 'Packages', 'Services']);
+        $this->uses(['Domains.DomainsDomains', 'Coupons', 'Invoices', 'ModuleManager', 'Packages', 'Services']);
 
         // Ensure we have a domain service belonging to this client
         if (!isset($this->get[0])
@@ -348,6 +389,18 @@ class ClientMain extends DomainsController
         // Set sidebar tabs
         $this->buildTabs($service, $package, $module, $method, $plugin_id);
 
+        // Meridian keeps the hero and quick actions of the management page around the tab
+        if ($this->layout == 'meridian') {
+            $module->setModuleRow($module->getModuleRow($service->module_row_id));
+
+            $service->parent = null;
+            if (!empty($service->parent_service_id)) {
+                $service->parent = $this->Services->get($service->parent_service_id);
+            }
+
+            $this->setDomainDetails($service, $package, $module, $this->getDomainCapabilities($module, $package));
+        }
+
         $this->set('tab_view', $tab_view);
         $this->set('service', $service);
         $this->set('package', $package);
@@ -364,11 +417,22 @@ class ClientMain extends DomainsController
     {
         $domain = $this->getManagedDomain();
 
+        // Auto-renewal schedules or removes a cancellation, so it follows the client cancellation rules
+        if (!$this->clientCanToggleAutoRenewal()) {
+            if ($this->isAjax()) {
+                exit();
+            }
+            $this->redirect($this->plugin_uri . 'manage/' . $domain['service']->id . '/');
+        }
+
         if (!empty($this->post)) {
             $this->saveDomainSection('auto_renewal', $domain);
         }
 
+        $this->uses(['Invoices']);
+
         $this->set('service', $domain['service']);
+        $this->set('past_due_invoices', $this->Invoices->getAllWithService($domain['service']->id, null, 'past_due'));
         $this->set('vars', (object)['auto_renewal' => (empty($domain['service']->date_canceled) ? 'on' : 'off')]);
 
         return $this->renderModal('client_main_autorenewal');
@@ -564,6 +628,68 @@ class ClientMain extends DomainsController
     }
 
     /**
+     * Determines whether the client may change a domain's auto-renewal, which schedules or removes an
+     * end of term cancellation
+     *
+     * @return bool True if the client may change auto-renewal, false otherwise
+     */
+    private function clientCanToggleAutoRenewal()
+    {
+        return ($this->client->settings['clients_cancel_services'] ?? null) == 'true'
+            && in_array(($this->client->settings['clients_cancel_options'] ?? 'both'), ['end_of_term', 'both']);
+    }
+
+    /**
+     * Fetches a registrar value for the given domain from the cache, or from the registrar when it is not
+     * cached. The value is only cached when the registrar reports no errors
+     *
+     * @param string $key The name of the cached value
+     * @param int $service_id The ID of the domain service
+     * @param callable $fetch A function that fetches the value from the registrar
+     * @return mixed The value
+     */
+    private function getCachedRegistrarValue($key, $service_id, callable $fetch)
+    {
+        $cache_path = Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS;
+
+        if (($cache = Cache::fetchCache($key . '_' . $service_id, $cache_path))) {
+            return safe_unserialize(base64_decode($cache));
+        }
+
+        $value = $fetch();
+
+        if (!$this->ModuleManager->errors() && Configure::get('Caching.on') && is_writable(CACHEDIR)) {
+            try {
+                Cache::writeCache(
+                    $key . '_' . $service_id,
+                    base64_encode(serialize($value)),
+                    strtotime(Configure::get('Blesta.cache_length')) - time(),
+                    $cache_path
+                );
+            } catch (\Throwable $e) {
+                // Write to cache failed, so disable caching
+                Configure::set('Caching.on', false);
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * Discards a cached registrar value for the given domain
+     *
+     * @param string $key The name of the cached value
+     * @param int $service_id The ID of the domain service
+     */
+    private function clearRegistrarCache($key, $service_id)
+    {
+        Cache::clearCache(
+            $key . '_' . $service_id,
+            Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'domains' . DS
+        );
+    }
+
+    /**
      * Fetches the domain name of the given domain from its registrar
      *
      * @param array $domain An array of domain data
@@ -659,10 +785,7 @@ class ClientMain extends DomainsController
                 ($package->meta->epp_code ?? '0') == '1'
                 && $module instanceof RegistrarModule
                 && $module->supportsFeature('epp_code')
-                && (
-                    $this->registrarSupports($module, 'sendEppEmail')
-                    || $this->registrarSupports($module, 'updateEppCode')
-                )
+                && $this->registrarSupports($module, 'sendEppEmail')
             ),
             'nameservers' => $this->registrarSupports($module, 'setDomainNameservers')
         ];
@@ -683,7 +806,25 @@ class ClientMain extends DomainsController
 
         switch ($section) {
             case 'auto_renewal':
+                $this->uses(['Invoices', 'Users']);
+
+                // Verify that the client's password is correct
+                $user = $this->Users->get($this->Session->read('blesta_id'));
+                $username = ($user ? $user->username : '');
+
+                if (!$this->Users->auth($username, ['password' => ($this->post['password'] ?? null)])) {
+                    return ['password' => ['mismatch' => Language::_('ClientServices.!error.password_mismatch', true)]];
+                }
+
                 if (($this->post['auto_renewal'] ?? null) == 'off') {
+                    if (!empty($this->Invoices->getAllWithService($service->id, null, 'past_due'))) {
+                        return [
+                            'auto_renewal' => [
+                                'past_due' => Language::_('ClientMain.!error.auto_renewal_past_due', true)
+                            ]
+                        ];
+                    }
+
                     $this->Services->cancel($service->id, ['date_canceled' => 'end_of_term']);
                 } else {
                     $this->Services->unCancel($service->id);
@@ -734,7 +875,13 @@ class ClientMain extends DomainsController
                     $service->module_row_id
                 );
 
-                return $this->ModuleManager->errors();
+                if (($errors = $this->ModuleManager->errors())) {
+                    return $errors;
+                }
+
+                $this->clearRegistrarCache('registrar_lock', $service->id);
+
+                return false;
             case 'contacts':
                 if (!$capabilities['contacts']) {
                     return ['section' => ['unsupported' => Language::_('ClientMain.!error.unsupported', true)]];
@@ -753,7 +900,13 @@ class ClientMain extends DomainsController
                     $service->module_row_id
                 );
 
-                return $this->ModuleManager->errors();
+                if (($errors = $this->ModuleManager->errors())) {
+                    return $errors;
+                }
+
+                $this->clearRegistrarCache('contacts', $service->id);
+
+                return false;
             case 'epp':
                 if (!$capabilities['epp']) {
                     return ['section' => ['unsupported' => Language::_('ClientMain.!error.unsupported', true)]];
@@ -1228,7 +1381,7 @@ class ClientMain extends DomainsController
         $package = $this->Packages->get($service->package->id);
 
         // Only yearly terms may be used to renew a domain
-        [$terms, $years] = $this->getYearTerms($package);
+        [$terms, $years] = $this->getYearTerms($package, $service);
 
         if (empty($terms)) {
             if ($this->isAjax()) {
@@ -1423,13 +1576,14 @@ class ClientMain extends DomainsController
     }
 
     /**
-     * Fetches the yearly terms available to the given package
+     * Fetches the yearly terms available to the given package, priced as the domain would be renewed
      *
      * @param stdClass $package An stdClass object representing the TLD package
+     * @param stdClass $service An stdClass object representing the domain service
      * @return array An array containing a key/value list of pricing IDs and their term language,
      *  and a key/value list of pricing IDs and the number of years they represent
      */
-    private function getYearTerms(stdClass $package)
+    private function getYearTerms(stdClass $package, stdClass $service)
     {
         $terms = [];
         $years = [];
@@ -1439,11 +1593,22 @@ class ClientMain extends DomainsController
                 continue;
             }
 
+            // The service's override price is billed only when renewing for its current term
+            $amount = ($pricing->price_renews ?? 0);
+            $currency = $pricing->currency;
+            if ($service->pricing_id == $pricing->id
+                && !empty($service->override_price)
+                && !empty($service->override_currency)
+            ) {
+                $amount = $service->override_price;
+                $currency = $service->override_currency;
+            }
+
             $terms[$pricing->id] = Language::_(
                 'ClientMain.renew.term' . ($pricing->term == 1 ? '' : 's'),
                 true,
                 $pricing->term,
-                $this->CurrencyFormat->format($pricing->price_renews, $pricing->currency)
+                $this->CurrencyFormat->format($amount, $currency)
             );
             $years[$pricing->id] = $pricing->term;
         }

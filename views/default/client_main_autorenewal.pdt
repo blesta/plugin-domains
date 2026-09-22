@@ -10,18 +10,31 @@
         </div>
         <div class="modal-body">
             <div class="alert alert-info"><?php $this->_('ClientMain.manage.text_auto_renewal_info');?></div>
+            <?php
+            if (!empty($past_due_invoices)) {
+            ?>
+            <div class="alert alert-warning"><?php $this->_('ClientMain.manage.text_auto_renewal_past_due');?></div>
+            <?php
+            }
+            ?>
             <div class="form-group">
                 <?php
                 $this->Form->label($this->_('ClientMain.manage.field_auto_renewal', true), 'auto_renewal');
                 $this->Form->fieldSelect(
                     'auto_renewal',
-                    [
-                        'on' => $this->_('ClientMain.manage.text_auto_renewal_on', true),
-                        'off' => $this->_('ClientMain.manage.text_auto_renewal_off', true)
-                    ],
+                    array_merge(
+                        ['on' => $this->_('ClientMain.manage.text_auto_renewal_on', true)],
+                        empty($past_due_invoices) ? ['off' => $this->_('ClientMain.manage.text_auto_renewal_off', true)] : []
+                    ),
                     ($vars->auto_renewal ?? 'on'),
                     ['id' => 'auto_renewal', 'class' => 'form-control']
                 );
+                ?>
+            </div>
+            <div class="form-group">
+                <?php
+                $this->Form->label($this->_('ClientServices.cancel.field_password', true), 'password');
+                $this->Form->fieldPassword('password', ['id' => 'password', 'class' => 'form-control']);
                 ?>
             </div>
         </div>

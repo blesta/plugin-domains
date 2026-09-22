@@ -1,4 +1,8 @@
 <?php /** @var View $this **/ ?>
+        <div id="recentTrackData" data-recent-type="domain" data-recent-id="<?php echo $this->Html->safe($service->id ?? null);?>" data-recent-label="<?php echo $this->Html->safe(!empty($service->name) ? $service->name : ($package->name ?? ''));?>" hidden></div>
+        <div class="col-12">
+            <?php echo ($service_hero ?? null);?>
+        </div>
         <div class="col-lg-8">
             <?php
             echo ($message ?? null);
@@ -12,5 +16,7 @@
             ?>
         </div>
         <div class="col-lg-4">
+            <?php echo ($quick_actions ?? null);?>
             <?php echo ($tabs ?? null);?>
         </div>
+        <?php echo ($config_options_modal ?? null);?>

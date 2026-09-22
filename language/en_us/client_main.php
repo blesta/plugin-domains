@@ -78,6 +78,7 @@ $lang['ClientMain.manage.text_date_to_cancel'] = 'This domain is scheduled to be
 $lang['ClientMain.manage.text_auto_renewal_on'] = 'Enabled';
 $lang['ClientMain.manage.text_auto_renewal_off'] = 'Disabled';
 $lang['ClientMain.manage.text_auto_renewal_info'] = 'When auto-renewal is disabled the domain will not be renewed and will be canceled at the end of its term.';
+$lang['ClientMain.manage.text_auto_renewal_past_due'] = 'Auto-renewal cannot be disabled while this domain has past due invoices.';
 $lang['ClientMain.manage.text_locked'] = 'Locked';
 $lang['ClientMain.manage.text_unlocked'] = 'Unlocked';
 $lang['ClientMain.manage.text_nameservers_info'] = 'Name servers control which DNS servers are authoritative for this domain. Leave a field blank to remove it.';
@@ -128,3 +129,4 @@ $lang['ClientMain.!success.domain_renewed'] = 'The domain was successfully queue
 
 $lang['ClientMain.!error.invalid_section'] = 'The requested action is not valid.';
 $lang['ClientMain.!error.unsupported'] = 'The registrar does not support this action.';
+$lang['ClientMain.!error.auto_renewal_past_due'] = 'Auto-renewal cannot be disabled while this domain has past due invoices.';

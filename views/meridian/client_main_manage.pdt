@@ -1,5 +1,5 @@
 <?php /** @var View $this **/ ?>
-        <div id="recentTrackData" data-recent-type="service" data-recent-id="<?php echo $this->Html->safe($service->id ?? null);?>" data-recent-label="<?php echo $this->Html->safe(!empty($service->name) ? $service->name : ($package->name ?? ''));?>" hidden></div>
+        <div id="recentTrackData" data-recent-type="domain" data-recent-id="<?php echo $this->Html->safe($service->id ?? null);?>" data-recent-label="<?php echo $this->Html->safe(!empty($service->name) ? $service->name : ($package->name ?? ''));?>" hidden></div>
         <div class="col-12">
             <?php echo ($service_hero ?? null);?>
         </div>
