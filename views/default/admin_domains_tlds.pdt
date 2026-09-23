@@ -29,8 +29,8 @@ if (!($render_section ?? null)) {
 // Configure link buttons for the widget
 $link_buttons = [
     [
-        'name' => $this->_('AdminDomains.tlds.categorylink_tldsadd', true),
-        'icon' => 'bi bi-plus-lg me-1',
+        'name' => null,
+        'icon' => 'bi bi-plus-lg',
         'attributes' => [
             'id' => 'add_tld',
             'href' => '#',
@@ -65,39 +65,39 @@ $this->Widget->create(
                     <th style="width: 200px;"><?php $this->_('AdminDomains.tlds.heading_tld'); ?></th>
                     <th class="text-center">
                         <?php $this->_('AdminDomains.tlds.heading_dns_management'); ?>
-                        <button type="button" class="btn btn-link btn-sm p-0 ms-1"
-                                data-bs-toggle="popover"
-                                data-bs-placement="top"
-                                data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_dns_management', true)); ?>">
-                            <i class="bi bi-info-circle text-secondary"></i>
-                        </button>
+                        <a href="javascript:;">
+                            <i class="bi bi-info-circle text-secondary"
+                            data-bs-toggle="popover"
+                            data-bs-placement="top"
+                            data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_dns_management', true)); ?>"></i>
+                        </a>
                     </th>
                     <th class="text-center">
                         <?php $this->_('AdminDomains.tlds.heading_email_forwarding'); ?>
-                        <button type="button" class="btn btn-link btn-sm p-0 ms-1"
+                        <a href="javascript:;">
+                            <i class="bi bi-info-circle text-secondary"
                                 data-bs-toggle="popover"
                                 data-bs-placement="top"
-                                data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_email_forwarding', true)); ?>">
-                            <i class="bi bi-info-circle text-secondary"></i>
-                        </button>
+                                data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_email_forwarding', true)); ?>"></i>
+                        </a>
                     </th>
                     <th class="text-center">
                         <?php $this->_('AdminDomains.tlds.heading_id_protection'); ?>
-                        <button type="button" class="btn btn-link btn-sm p-0 ms-1"
-                                data-bs-toggle="popover"
-                                data-bs-placement="top"
-                                data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_id_protection', true)); ?>">
-                            <i class="bi bi-info-circle text-secondary"></i>
-                        </button>
+                        <a href="javascript:;">
+                            <i class="bi bi-info-circle text-secondary"
+                            data-bs-toggle="popover"
+                            data-bs-placement="top"
+                            data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_id_protection', true)); ?>"></i>
+                        </a>
                     </th>
                     <th class="text-center">
                         <?php $this->_('AdminDomains.tlds.heading_epp_code'); ?>
-                        <button type="button" class="btn btn-link btn-sm p-0 ms-1"
-                                data-bs-toggle="popover"
-                                data-bs-placement="top"
-                                data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_epp_code', true)); ?>">
-                            <i class="bi bi-info-circle text-secondary"></i>
-                        </button>
+                        <a href="javascript:;">
+                            <i class="bi bi-info-circle text-secondary"
+                            data-bs-toggle="popover"
+                            data-bs-placement="top"
+                            data-bs-content="<?php echo $this->Html->safe($this->_('AdminDomains.tlds.tooltip_epp_code', true)); ?>"></i>
+                        </a>
                     </th>
                     <th><?php $this->_('AdminDomains.tlds.heading_module'); ?></th>
                     <th style="width: 100px;"><?php $this->_('AdminDomains.tlds.heading_options'); ?></th>
