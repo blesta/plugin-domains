@@ -1,0 +1,50 @@
+<?php /** @var View $this **/ ?>
+        <?php
+        // Name servers are edited in place, so the card is only shown when the registrar
+        // supports changing them and the domain is active
+        if (!($capabilities['nameservers'] ?? false) || ($service->status ?? null) !== 'active') {
+            return;
+        }
+
+        $nameservers = (array)($service->nameservers ?? []);
+        ?>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title"><?php $this->_('ClientMain.manage.heading_nameservers');?></h5>
+            </div>
+            <div class="card-body">
+                <?php
+                $this->Form->create($plugin_uri . 'nameservers/' . ($service->id ?? null) . '/', ['id' => 'domain_nameservers']);
+                ?>
+                <div class="row g-3">
+                    <?php
+                    for ($i = 0; $i < 5; $i++) {
+                    ?>
+                    <div class="col-md-6">
+                        <?php
+                        $this->Form->label($this->_('ClientMain.manage.field_nameserver', true, $i + 1), 'nameserver_' . $i, ['class' => 'form-label']);
+                        $this->Form->fieldText(
+                            'nameservers[]',
+                            ($nameservers[$i] ?? null),
+                            [
+                                'id' => 'nameserver_' . $i,
+                                'class' => 'form-control',
+                                'placeholder' => ($i > 1 ? $this->_('ClientMain.manage.text_optional', true) : '')
+                            ]
+                        );
+                        ?>
+                    </div>
+                    <?php
+                    }
+                    ?>
+                </div>
+                <div class="mt-3 text-end">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-check-lg me-1"></i><?php $this->_('ClientMain.manage.field_nameservers_submit');?>
+                    </button>
+                </div>
+                <?php
+                $this->Form->end();
+                ?>
+            </div>
+        </div>

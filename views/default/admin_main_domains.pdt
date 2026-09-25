@@ -122,7 +122,7 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
             </td>
             <?php
             if (in_array(($status ?? null), ['active', 'suspended'])) {
-                $icon = empty($domains[$i]->date_canceled) ? 'bi-check-circle' : 'bi-calendar-x text-warning';
+                $icon = empty($domains[$i]->date_canceled) ? 'bi-check-circle text-success' : 'bi-calendar-x text-warning';
                 ?>
             <td class="text-center"><i class="bi <?php (print (isset($icon) ? $this->Html->safe($icon) : null));?>"></i></td>
                 <?php
