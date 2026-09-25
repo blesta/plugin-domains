@@ -79,6 +79,7 @@ class TldSync
             foreach ($tlds_pricing as &$pricing) {
                 $pricing = array_intersect_key($pricing, array_flip($currencies));
             }
+            unset($pricing);
 
             // Filter the prices by the given TLDs
             $tlds_pricing = array_intersect_key($tlds_pricing, array_flip($list_tlds));
@@ -142,7 +143,7 @@ class TldSync
                         $tld_rounding,
                         $currency
                     );
-                    $prices['enabled_transfer'] = true;
+                    $prices['enabled_transfer'] = !is_null($prices['transfer']);
                 } else {
                     $prices['transfer'] = null;
                     $prices['enabled_transfer'] = false;
@@ -167,16 +168,18 @@ class TldSync
      * @param int $markup The percentage of markup to add
      * @param string $rounding The nearest decimal to round up the final price
      * @param string $currency The currency of the given price
-     * @return float The total amount of the price plus the markup
+     * @return float|null The total amount of the price plus the markup, null if no price was given
      */
     private function markup($price, $markup, $rounding = null, $currency = null)
     {
-        if ($price == 0) {
+        // No price given, a price of 0 is a valid free price
+        if (!is_numeric($price)) {
             return null;
         }
 
+        // Free prices are not rounded up
         $final_price = number_format($price * (((int)$markup / 100.00) + 1), 4, '.', '');
-        if (!is_null($rounding) && is_numeric($rounding)) {
+        if (!is_null($rounding) && is_numeric($rounding) && $final_price != 0) {
             $subtracted_rounding_price = $final_price - (float) $rounding;
             $floored_price = floor($subtracted_rounding_price);
             $final_price = $floored_price + (float) $rounding + ($subtracted_rounding_price == $floored_price ? 0 : 1);
