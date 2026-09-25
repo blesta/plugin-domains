@@ -708,7 +708,7 @@ $this->Widget->create(
                 var transfer = row.querySelector('input.pricing-transfer');
 
                 if (renew && parseFloat(renew.value) === 0) renew.value = this.value;
-                if (transfer && parseFloat(transfer.value) === 0) transfer.value = this.value;
+                if (transfer && transfer.value === '') transfer.value = this.value;
             });
         });
 

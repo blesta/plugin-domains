@@ -124,6 +124,7 @@ $lang['AdminDomains.configuration.field_override_price'] = 'Lock in domain price
 $lang['AdminDomains.configuration.field_sync_price_markup'] = 'Price Markup (%)';
 $lang['AdminDomains.configuration.field_sync_renewal_markup'] = 'Renewal Price Markup (%)';
 $lang['AdminDomains.configuration.field_sync_transfer_markup'] = 'Transfer Price Markup (%)';
+$lang['AdminDomains.configuration.field_allow_zero_transfer'] = 'Treat a Transfer Price of 0 as Free';
 $lang['AdminDomains.configuration.field_enable_rounding'] = 'Enable Rounding';
 $lang['AdminDomains.configuration.field_markup_rounding'] = 'Round to Next';
 $lang['AdminDomains.configuration.field_automatic_sync'] = 'Enable Automated Synchronization';
@@ -147,6 +148,7 @@ $lang['AdminDomains.configuration.tooltip_taxable'] = 'Apply configured taxes to
 $lang['AdminDomains.configuration.tooltip_sync_price_markup'] = 'Percentage markup applied to domain registration prices.';
 $lang['AdminDomains.configuration.tooltip_sync_renewal_markup'] = 'Percentage markup applied to domain renewal prices.';
 $lang['AdminDomains.configuration.tooltip_sync_transfer_markup'] = 'Percentage markup applied to domain transfer prices.';
+$lang['AdminDomains.configuration.tooltip_allow_zero_transfer'] = 'When enabled, a transfer price of 0 means the domain can be transferred for free. When disabled, a transfer price of 0 means the domain cannot be transferred. A blank transfer price always means the domain cannot be transferred.';
 $lang['AdminDomains.configuration.tooltip_enable_rounding'] = 'Round prices to the nearest specified amount.';
 
 // New headings

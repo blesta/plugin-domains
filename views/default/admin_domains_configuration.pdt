@@ -269,6 +269,19 @@ $this->Form->create(null, ['id' => 'configuration', 'class' => 'disable-on-submi
                     <div class="col-12">
                         <div class="form-check">
                             <?php
+                            $this->Form->fieldCheckbox('domains_allow_zero_transfer', '1', (($vars['domains_allow_zero_transfer'] ?? 0) == 1), ['id' => 'allow_zero_transfer', 'class' => 'form-check-input']);
+                            $this->Form->label($this->_('AdminDomains.configuration.field_allow_zero_transfer', true), 'allow_zero_transfer', ['class' => 'form-check-label']);
+                            ?>
+                        </div>
+                        <small class="form-text text-muted">
+                            <span class="tooltip"><i class="bi bi-question-circle-fill"></i><div><?php $this->_('AdminDomains.configuration.tooltip_allow_zero_transfer');?></div></span>
+                            <?php $this->_('AdminDomains.configuration.tooltip_allow_zero_transfer'); ?>
+                        </small>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            <?php
                             $this->Form->fieldCheckbox('domains_enable_rounding', '1', (($vars['domains_enable_rounding'] ?? 0) == 1), ['id' => 'enable_rounding', 'class' => 'form-check-input']);
                             $this->Form->label($this->_('AdminDomains.configuration.field_enable_rounding', true), 'enable_rounding', ['class' => 'form-check-label']);
                             ?>

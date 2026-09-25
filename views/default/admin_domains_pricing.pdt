@@ -139,7 +139,7 @@ $this->Form->create(
                                                 ?>
                                             </div>
                                             <?php
-                                            $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_transfer]', $this->CurrencyFormat->format(($package_pricing->price_transfer ?? 0), $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision]), array_merge(['class' => 'form-control pricing-transfer', 'type' => 'number', 'step' => '0.01', 'min' => '0'], $disabled));
+                                            $this->Form->fieldText('pricing[' . $package_pricing->term . '][' . $currency->code . '][price_transfer]', (is_null($package_pricing->price_transfer ?? null) ? '' : $this->CurrencyFormat->format($package_pricing->price_transfer, $package_pricing->currency, ['prefix' => false,'suffix' => false,'with_separator' => false,'code' => false,'decimals' => $currency->precision])), array_merge(['class' => 'form-control pricing-transfer', 'type' => 'number', 'step' => '0.01', 'min' => '0'], $disabled));
                                             ?>
                                         </div>
                                     </td>
