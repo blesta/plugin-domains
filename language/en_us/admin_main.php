@@ -14,6 +14,7 @@ $lang['AdminMain.!success.queue_sync'] = 'The selected domains have been queued 
 
 $lang['AdminMain.!success.domain_register'] = 'The domain has been registered successfully!';
 $lang['AdminMain.!success.domain_transfer'] = 'The domain has been transferred successfully!';
+$lang['AdminMain.!success.domain_existing'] = 'The existing domain has been added successfully!';
 $lang['AdminMain.!success.domain_add'] = 'The domain has been added successfully!';
 $lang['AdminMain.!success.service_edited'] = 'The domain has been updated successfully!';
 
@@ -85,6 +86,7 @@ $lang['AdminMain.add.field_transfer'] = 'Transfer';
 $lang['AdminMain.add.field_register'] = 'Register';
 $lang['AdminMain.add.field_add'] = 'Add Domain';
 $lang['AdminMain.add.field_lookup'] = 'Check Availability';
+$lang['AdminMain.add.field_existing'] = 'Add Existing';
 $lang['AdminMain.add.field_submit'] = 'Continue';
 $lang['AdminMain.add.field_invoice_method'] = 'Invoice Method';
 $lang['AdminMain.add.field_invoice_method_create'] = 'Create New Invoice';
@@ -94,7 +96,10 @@ $lang['AdminMain.add.field_years'] = 'Years';
 $lang['AdminMain.add.field_status'] = 'Status';
 $lang['AdminMain.add.field_module'] = 'Registrar Module';
 $lang['AdminMain.add.field_use_module'] = 'Provision the domain using the registrar module when activated';
+$lang['AdminMain.add.text_use_module_existing'] = 'The domain is already registered, so it will be recorded in Blesta without contacting the registrar.';
 $lang['AdminMain.add.field_notify_order'] = 'Send order confirmation email when activated';
+
+$lang['AdminMain.add.text_existing'] = 'Use Add Existing to record a domain that is already registered, without checking availability or contacting the registrar.';
 
 $lang['AdminMain.add.title_search_results'] = 'Search Results';
 $lang['AdminMain.add.title_basic_options'] = 'Basic Options';
@@ -152,6 +157,7 @@ $lang['AdminMain.add_confirmation.field_edit'] = 'Edit';
 
 $lang['AdminMain.add_confirmation.type_register'] = 'Registration';
 $lang['AdminMain.add_confirmation.type_transfer'] = 'Transfer';
+$lang['AdminMain.add_confirmation.type_existing'] = 'Existing Domain';
 
 $lang['AdminMain.add_confirmation.description'] = 'Description';
 $lang['AdminMain.add_confirmation.qty'] = 'Quantity';

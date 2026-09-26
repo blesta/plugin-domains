@@ -24,7 +24,11 @@
                 <button class="btn btn-secondary" type="submit" name="transfer" id="btnTransfer">
                     <i class="bi bi-arrow-right-circle"></i> <?php $this->_('AdminMain.add.field_transfer');?>
                 </button>
+                <button class="btn btn-outline-secondary" type="submit" name="existing" id="btnExisting">
+                    <i class="bi bi-box-arrow-in-down"></i> <?php $this->_('AdminMain.add.field_existing');?>
+                </button>
             </div>
+            <div class="form-text"><?php $this->_('AdminMain.add.text_existing');?></div>
         </div>
     </div>
 
