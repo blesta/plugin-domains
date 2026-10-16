@@ -54,7 +54,7 @@ $lang['AdminMain.index.option_parent'] = 'Parent';
 $lang['AdminMain.index.option_manage'] = 'Manage';
 $lang['AdminMain.index.option_delete'] = 'Delete';
 $lang['AdminMain.index.confirm_delete'] = 'Are you sure you want to delete this service?';
-$lang['AdminMain.index.no_results'] = 'There are no services with this status.';
+$lang['AdminMain.index.no_results'] = 'There are no domains with this status.';
 
 $lang['AdminMain.index.text_never'] = 'Never';
 

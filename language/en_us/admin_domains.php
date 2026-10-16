@@ -62,7 +62,7 @@ $lang['AdminDomains.browse.option_delete'] = 'Delete';
 $lang['AdminDomains.browse.option_parent'] = 'Parent';
 $lang['AdminDomains.browse.option_manage'] = 'Manage';
 $lang['AdminDomains.browse.confirm_delete'] = 'Are you sure you want to delete this domain service?';
-$lang['AdminDomains.browse.text_none'] = 'There are no registered domains.';
+$lang['AdminDomains.browse.text_none'] = 'There are no domains with this status.';
 $lang['AdminDomains.browse.text_on'] = 'On';
 $lang['AdminDomains.browse.text_off'] = 'Off';
 
