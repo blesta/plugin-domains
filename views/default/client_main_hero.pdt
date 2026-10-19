@@ -1,0 +1,2 @@
+<?php /** @var View $this **/ ?>
+<?php // The hero is only rendered by the modern client templates ?>

@@ -1,0 +1,17 @@
+<?php /** @var View $this **/ ?>
+            <div class="list-group">
+                <?php
+                foreach (($tabs ?? []) as $tab) {
+                    $attributes = ($tab['attributes'] ?? []);
+                    $attributes['class'] = 'list-group-item list-group-item-action' . (isset($attributes['class']) ? ' ' . $attributes['class'] : '');
+                    if (($tab['current'] ?? null)) {
+                        $attributes['class'] .= ' active';
+                    }
+                ?>
+                <a<?php echo $this->Html->buildAttributes($attributes);?>>
+                    <i class="<?php echo (isset($tab['icon']) ? $this->Html->safe($tab['icon']) : null);?> fa-fw"></i> <?php echo (isset($tab['name']) ? $this->Html->safe($tab['name']) : null);?>
+                </a>
+                <?php
+                }
+                ?>
+            </div>

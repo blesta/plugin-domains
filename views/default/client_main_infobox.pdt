@@ -1,0 +1,299 @@
+<?php /** @var View $this **/ ?>
+        <div class="panel-pad">
+            <div class="row">
+                <div class="col-md-6 col-border service-info">
+                    <label><?php $this->_('ClientMain.manage.heading_domain');?></label>
+                    <h4><?php echo (isset($service->name) ? $this->Html->safe($service->name) : null);?></h4>
+                    <label><?php $this->_('ClientMain.manage.heading_registration_date');?></label>
+                    <h4><?php echo (empty($service->registration_date) ? $this->_('ClientMain.manage.text_never', true) : $this->Date->cast($service->registration_date));?></h4>
+                    <label><?php $this->_('ClientMain.manage.heading_expiration_date');?></label>
+                    <h4><?php echo (empty($service->expiration_date) ? $this->_('ClientMain.manage.text_never', true) : $this->Date->cast($service->expiration_date));?></h4>
+                    <?php
+                    if (!empty($service->nameservers)) {
+                    ?>
+                    <label><?php $this->_('ClientMain.manage.heading_nameservers');?></label>
+                    <h4><?php echo $this->Html->safe(implode(', ', (array)$service->nameservers));?></h4>
+                    <?php
+                    }
+                    ?>
+                    <label><?php $this->_('ClientMain.manage.heading_package_term');?></label>
+                    <?php
+                    if (($service->package_pricing->period ?? null) == 'onetime') {
+                        $package_term = ($periods[$service->package_pricing->period] ?? null);
+                    } else {
+                        $term = ($service->package_pricing->term ?? null);
+                        $package_term = $this->Html->concat(
+                            ' ',
+                            $term,
+                            ($term == 1
+                                ? ($periods[$service->package_pricing->period] ?? null)
+                                : ($periods[$service->package_pricing->period . '_plural'] ?? null))
+                        );
+                    }
+                    ?>
+                    <h4><?php echo $this->Html->safe($package_term);?></h4>
+                </div>
+                <div class="col-md-6 service-info">
+                    <label><?php $this->_('ClientServices.index.heading_status');?></label>
+                    <?php
+                    $status_class = (in_array(($service->status ?? null), ['suspended', 'canceled'])
+                        ? 'danger'
+                        : (($service->status ?? null) == 'active' ? 'success' : 'warning')
+                    );
+                    ?>
+                    <h4>
+                        <div class="badge badge-<?php echo $this->Html->safe($status_class);?>">
+                            <?php $this->_('ClientServices.manage.button_' . $this->Html->safe($service->status ?? null));?>
+                        </div>
+                    </h4>
+
+                    <label><?php $this->_('ClientMain.manage.heading_auto_renewal');?></label>
+                    <h4>
+                        <div class="badge badge-<?php echo (($service->auto_renewal ?? null) == 'on' ? 'success' : 'secondary');?>">
+                            <?php $this->_('ClientMain.manage.text_auto_renewal_' . (($service->auto_renewal ?? null) == 'on' ? 'on' : 'off'));?>
+                        </div>
+                    </h4>
+
+                    <label><?php $this->_('ClientServices.manage.heading_date_renews');?></label>
+                    <h4>
+                        <?php
+                        echo (empty($service->date_paid_through)
+                            ? (empty($service->date_renews)
+                                ? $this->_('ClientMain.manage.text_never', true)
+                                : $this->Date->cast($service->date_renews))
+                            : $this->Date->cast($service->date_paid_through));
+                        ?>
+                    </h4>
+                    <label><?php $this->_('ClientServices.manage.heading_date_next_invoice');?></label>
+                    <h4>
+                        <?php
+                        echo (($next_invoice_date ?? false)
+                            ? $this->Date->cast($next_invoice_date)
+                            : $this->_('ClientMain.manage.text_never', true));
+                        ?>
+                    </h4>
+                    <label><?php $this->_('ClientServices.manage.heading_price' . (($service->package_pricing->period ?? null) == 'onetime' ? '_onetime' : ''));?></label>
+                    <h4>
+                        <?php
+                        $currency = ($service->override_currency ?? ($service->package_pricing->currency ?? null));
+                        if (($service->package_pricing->period ?? null) == 'onetime') {
+                            echo $this->CurrencyFormat->format(($service->override_price ?? ($service->package_pricing->price ?? null)), $currency);
+                        } else {
+                            echo $this->CurrencyFormat->format(($service->renewal_price ?? null), $currency);
+                        }
+                        ?>
+                    </h4>
+                    <?php
+                    // Display the coupon that should apply when the domain renews
+                    if (($recurring_coupon ?? null)) {
+                    ?>
+                    <label><?php $this->_('ClientServices.manage.heading_recurring_coupon');?></label>
+                    <h4>
+                        <?php
+                        if (($recurring_coupon->recurring_amount->type ?? null) == 'percent') {
+                            $this->_('ClientServices.manage.text_coupon_percent', false, $this->Html->safe($recurring_coupon->code ?? null), $this->CurrencyFormat->cast(($recurring_coupon->recurring_amount->amount ?? null), ($recurring_coupon->recurring_amount->currency ?? null)));
+                        } else {
+                            $this->_('ClientServices.manage.text_coupon_amount', false, $this->Html->safe($recurring_coupon->code ?? null), $this->CurrencyFormat->format(($recurring_coupon->recurring_amount->amount ?? null), ($recurring_coupon->recurring_amount->currency ?? null)));
+                        }
+                        ?>
+                    </h4>
+                    <?php
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+        <?php
+        // Display the Configurable Options section
+        if (!empty($service->options)) {
+        ?>
+        <hr />
+        <h4><?php $this->_('ClientServices.manage.heading_config_options');?></h4>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <tbody>
+                    <?php
+                    $currency_options = ['decimals' => 4, 'significant_decimals' => true];
+                    foreach ($service->options as $option) {
+                        $is_user_defined_value = in_array(($option->option_type ?? null), ['text', 'textarea', 'password']);
+                        $display_name = ($is_user_defined_value ? ($option->value ?? null) : ($option->option_value_name ?? null));
+                    ?>
+                    <tr>
+                        <td><strong><?php echo (isset($option->option_label) ? $this->Html->safe($option->option_label) : null);?></strong></td>
+                        <td><?php echo nl2br(isset($display_name) ? $this->Html->safe($display_name) : '');?></td>
+                        <td>
+                            <?php
+                            // Hide pricing if disable_pricing is enabled
+                            if (($option->option_disable_pricing ?? 0) != 1) {
+                                $formatted_option_price = $this->CurrencyFormat->format(($option->option_pricing_price_renews ?? $option->option_pricing_price), ($option->option_pricing_currency ?? null), $currency_options);
+                                if (($option->qty ?? false)) {
+                                    $this->_('ClientServices.manage.text_price', false, $this->CurrencyFormat->truncateDecimal(($option->qty ?? 1), 0), $formatted_option_price);
+                                } else {
+                                    echo $formatted_option_price;
+                                }
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+        }
+
+        // Set button options
+        $buttons = [
+            'renew_domain' => [
+                'enabled' => (($client_renew_service ?? null) && ($service->status ?? null) == 'active' && empty($service->date_canceled) && !($queued_service_change ?? null)),
+                'icon' => 'fas fa-retweet fa-fw',
+                'button' => 'btn-light',
+                'lang' => 'ClientMain.manage.button_renew'
+            ],
+            'domain_auto_renewal' => [
+                'enabled' => (($client_cancel_service ?? null) && in_array(($clients_cancel_options ?? null), ['end_of_term', 'both']) && ($service->status ?? null) == 'active'),
+                'icon' => 'fas fa-arrow-circle-right fa-fw',
+                'button' => 'btn-light',
+                'lang' => 'ClientMain.manage.button_auto_renewal',
+                'modal' => 'autorenewal'
+            ],
+            'domain_nameservers' => [
+                'enabled' => (($capabilities['nameservers'] ?? false) && ($service->status ?? null) == 'active'),
+                'icon' => 'fas fa-server fa-fw',
+                'button' => 'btn-light',
+                'lang' => 'ClientMain.manage.button_nameservers',
+                'modal' => 'nameservers'
+            ],
+            'domain_registrar_lock' => [
+                'enabled' => (($capabilities['lock'] ?? false) && ($service->status ?? null) == 'active'),
+                'icon' => 'fas fa-lock fa-fw',
+                'button' => 'btn-light',
+                'lang' => 'ClientMain.manage.button_registrar_lock',
+                'modal' => 'registrarlock'
+            ],
+            'domain_contacts' => [
+                'enabled' => (($capabilities['contacts'] ?? false) && ($service->status ?? null) == 'active'),
+                'icon' => 'fas fa-address-card fa-fw',
+                'button' => 'btn-light',
+                'lang' => 'ClientMain.manage.button_contacts',
+                'modal' => 'contacts'
+            ],
+            'domain_epp' => [
+                'enabled' => (($capabilities['epp'] ?? false) && ($service->status ?? null) == 'active'),
+                'icon' => 'fas fa-key fa-fw',
+                'button' => 'btn-light',
+                'lang' => 'ClientMain.manage.button_epp_code',
+                'modal' => 'eppcode'
+            ],
+            'change_service_package' => [
+                'enabled' => (($client_change_service_package ?? null) && ($service->status ?? null) == 'active' && empty($service->date_canceled) && !($queued_service_change ?? null)),
+                'icon' => 'fas fa-random fa-fw',
+                'button' => 'btn-light',
+                'lang' => 'ClientServices.manage.button_change_service_package',
+                'link' => $plugin_uri . 'upgrade/' . ($service->id ?? null) . '/'
+            ],
+            'change_service_term' => [
+                'enabled' => (($client_change_service_term ?? null) && !empty($alternate_service_terms) && ($service->status ?? null) == 'active' && empty($service->date_canceled) && !($queued_service_change ?? null)),
+                'icon' => 'fas fa-edit fa-fw',
+                'button' => 'btn-light',
+                'lang' => 'ClientServices.manage.button_change_service_term',
+                'link' => $plugin_uri . 'changeterm/' . ($service->id ?? null) . '/'
+            ],
+            'change_configurable_options' => [
+                'enabled' => (($available_config_options ?? null) && !($queued_service_change ?? null) && ($service->status ?? null) == 'active'),
+                'icon' => 'fas fa-edit fa-fw',
+                'button' => 'btn-light',
+                'lang' => 'ClientServices.manage.button_config_options',
+                'link' => $plugin_uri . 'manageoptions/' . ($service->id ?? null) . '/'
+            ],
+            'manage_parent' => [
+                'enabled' => (!empty($service->parent) && ($service->parent->status ?? null) == 'active' && ($service->status ?? null) == 'active'),
+                'icon' => 'fas fa-cog fa-fw',
+                'button' => 'btn-light',
+                'lang' => 'ClientServices.manage.button_manage_parent',
+                'link' => $this->base_uri . 'services/manage/' . ($service->parent->id ?? null) . '/'
+            ],
+            'cancel_domain' => [
+                'enabled' => (($client_cancel_service ?? null) && !in_array(($service->status ?? null), ['canceled', 'suspended']) && !empty($clients_cancel_options)),
+                'icon' => 'fas fa-ban fa-fw',
+                'button' => 'btn-danger',
+                'lang' => 'ClientMain.manage.button_cancel'
+            ]
+        ];
+
+        $show_options = false;
+        foreach ($buttons as $button) {
+            if ($button['enabled']) {
+                $show_options = true;
+                break;
+            }
+        }
+
+        // Display the Options section
+        if ($show_options) {
+        ?>
+        <hr />
+        <h4><?php $this->_('ClientServices.manage.heading_options');?></h4>
+            <?php
+            // Separate buttons into rows of 3
+            $i = 0;
+            $row_closed = true;
+            foreach ($buttons as $key => $button) {
+                if (!$button['enabled']) {
+                    continue;
+                }
+
+                if ($i % 3 == 0) {
+                    $row_closed = false;
+            ?>
+        <div class="row<?php echo ($i > 0 ? ' mt-2' : '');?>">
+                <?php
+                }
+                ?>
+            <div class="col-md-4">
+                <a href="<?php echo (isset($button['link']) ? $this->Html->safe($button['link']) : '#');?>" class="btn btn-med btn-block <?php echo $this->Html->concat(' ', $this->Html->safe($button['button']), $this->Html->safe($key));?>">
+                    <i class="<?php echo $this->Html->safe($button['icon']);?>"></i> <?php $this->_($button['lang']);?>
+                </a>
+            </div>
+                <?php
+                if ($i % 3 == 2) {
+                    $row_closed = true;
+                ?>
+        </div>
+                <?php
+                }
+
+                $i++;
+            }
+
+            if (!$row_closed) {
+            ?>
+        </div>
+            <?php
+            }
+            ?>
+        <?php
+        }
+        ?>
+
+<?php
+$modals = ['renew_domain' => 'renew', 'cancel_domain' => 'cancel'];
+foreach ($buttons as $key => $button) {
+    if ($button['enabled'] && !empty($button['modal'])) {
+        $modals[$key] = $button['modal'];
+    }
+}
+?>
+<script type="text/javascript">
+    $(document).ready(function() {
+        <?php
+        foreach ($modals as $key => $uri) {
+        ?>
+        $("a.<?php echo $this->Html->safe($key);?>").blestaModal({url: "<?php echo $this->Html->safe($plugin_uri . $uri . '/' . ($service->id ?? null) . '/');?>"});
+        <?php
+        }
+        ?>
+    });
+</script>

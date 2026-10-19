@@ -1,0 +1,83 @@
+        <div class="col-md-3">
+            <?php echo (isset($tabs) ? $tabs : null);?>
+        </div>
+        <div class="col-md-9">
+            <?php echo (isset($message) ? $message : null);?>
+
+            <?php
+            $this->WidgetClient->clear();
+            $this->WidgetClient->create($this->_('ClientServices.addaddon.boxtitle_addons', true, (isset($package->name) ? $package->name : null), (isset($service->name) ? $service->name : null)), ['id' => 'client_add_addon'], (isset($render_section) ? $render_section : null));
+            $this->WidgetClient->startBody();
+            $this->Form->create(null, ['id' => 'change_addon', 'method' => 'GET', 'class' => 'disable-on-submit']);
+            $this->Form->fieldHidden('package_group_id', '', ['id' => 'package_group_id']);
+            $this->Form->fieldHidden('pricing_id', '', ['id' => 'pricing_id']);
+            $this->Form->fieldHidden('parent_service_id', (isset($service->id) ? $service->id : null), ['id' => 'parent_service_id']);
+            ?>
+            <h4><?php $this->_('ClientServices.addaddon.header_add', false, (isset($module->name) ? $module->name : null));?></h4>
+            <div class="form-group">
+                <?php
+                $this->Form->fieldSelect('addon', (isset($addons) ? $addons : null), (isset($vars->addon) ? $vars->addon : null), ['id' => 'addons', 'class' => 'form-control']);
+                ?>
+            </div>
+            <?php
+            $this->Form->end();
+            $this->Form->create(null, ['class' => 'disable-on-submit']);
+            $this->Form->fieldHidden('use_module', 'true');
+            ?>
+            <hr />
+            <div id="addon_options">
+                <?php echo (isset($addon_options) ? $addon_options : null);?>
+            </div>
+            <div id="addon_totals"></div>
+            <div class="float-right">
+                <button type="submit" class="btn btn-light btn-sm" <?php echo (isset($limit_reached) ? $limit_reached : null) ? 'disabled="disabled"' : '';?>><i class="fas fa-plus-circle"></i> <?php $this->_('ClientServices.addaddon.submit_add');?></button>
+            </div>
+            <?php
+            $this->Form->end();
+            $this->WidgetClient->endBody();
+            $this->WidgetClient->end();
+            ?>
+        </div>
+<?php
+$this->Javascript->setInline("
+    $(document).ready(function() {
+        $('#addons').change(function() {
+            setAddAddonFields();
+            $('#change_addon').submit();
+        });
+
+        updateTotals();
+        $('#addon_options').on('change', 'input, select', function() {
+            updateTotals();
+        });
+
+        // Check whether any sliders have changed
+        $('#addon_options').on('slideStop', 'input[data-type=\'quantity\']', function() {
+            updateTotals();
+        });
+
+        function updateTotals() {
+            setAddAddonFields();
+            var params = $('#pricing_id, #addon_options [name^=\"configoptions\"], #change_addon input[name=_csrf_token], #parent_service_id').serialize();
+
+            $(this).blestaRequest('POST', '" . $this->Html->safe($plugin_uri . 'updatetotals/') . "', params, function(data) {
+                    $('#addon_totals').html(data);
+                },
+                null,
+                {dataType: 'json'}
+            );
+        }
+
+        function setAddAddonFields() {
+            var addon_fields = $('#addons').val().split('_');
+            if (addon_fields[0]) {
+                $('#package_group_id').val((addon_fields[0].length > 0 ? addon_fields[0] : ''));
+            }
+
+            if (addon_fields[1]) {
+                $('#pricing_id').val((addon_fields[1].length > 0 ? addon_fields[1] : ''));
+            }
+        }
+    });
+");
+?>

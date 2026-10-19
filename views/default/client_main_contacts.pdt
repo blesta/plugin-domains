@@ -1,0 +1,76 @@
+<?php /** @var View $this **/ ?>
+    <?php
+    $contact_fields = [
+        'first_name', 'last_name', 'email', 'phone', 'address1', 'address2',
+        'city', 'state', 'zip', 'country'
+    ];
+    $this->Form->create(null, ['id' => 'domain_contacts']);
+    ?>
+        <div class="modal-header">
+            <h5 class="global_modal_title"><?php $this->_('ClientMain.manage.heading_contacts');?></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <?php
+            if (empty($domain_contacts)) {
+            ?>
+            <div class="alert alert-info"><?php $this->_('ClientMain.manage.text_no_contacts');?></div>
+            <?php
+            } else {
+                foreach ($domain_contacts as $type => $contact) {
+            ?>
+            <h5><?php echo $this->Html->safe(ucwords(str_replace('_', ' ', (string)$type)));?></h5>
+            <?php
+                    // The registrar identifies each contact by its external ID, and may hold
+                    // fields of its own that must survive the round trip
+                    $this->Form->fieldHidden('contacts[' . $type . '][external_id]', ($contact['external_id'] ?? $type));
+
+                    foreach ($contact as $field => $value) {
+                        if ($field === 'external_id' || in_array($field, $contact_fields) || !is_scalar($value)) {
+                            continue;
+                        }
+
+                        $this->Form->fieldHidden('contacts[' . $type . '][' . $field . ']', $value);
+                    }
+            ?>
+            <div class="row">
+                <?php
+                foreach ($contact_fields as $field) {
+                    if (!array_key_exists($field, $contact)) {
+                        continue;
+                    }
+                ?>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <?php
+                        $this->Form->label($this->_('ClientMain.manage.field_contact_' . $field, true), $type . '_' . $field);
+                        $this->Form->fieldText(
+                            'contacts[' . $type . '][' . $field . ']',
+                            $contact[$field],
+                            ['id' => $this->Html->safe($type . '_' . $field), 'class' => 'form-control']
+                        );
+                        ?>
+                    </div>
+                </div>
+                <?php
+                }
+                ?>
+            </div>
+            <?php
+                }
+            }
+            ?>
+        </div>
+        <div class="modal-footer">
+            <?php
+            $this->Form->fieldButton('cancel', $this->_('ClientMain.manage.field_modal_cancel', true), ['class' => 'btn btn-light', 'data-dismiss' => 'modal']);
+            if (!empty($domain_contacts)) {
+                $this->Form->fieldButton('submit', $this->_('ClientMain.manage.field_submit', true), ['class' => 'btn btn-primary', 'type' => 'submit']);
+            }
+            ?>
+        </div>
+    <?php
+    $this->Form->end();
+    ?>

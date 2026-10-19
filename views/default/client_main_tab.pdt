@@ -1,0 +1,16 @@
+<?php /** @var View $this **/ ?>
+        <div class="col-md-3">
+            <?php echo ($tabs ?? null);?>
+        </div>
+        <div class="col-md-9">
+            <?php
+            echo ($message ?? null);
+
+            $this->WidgetClient->clear();
+            $this->WidgetClient->create($this->_('ClientMain.manage.boxtitle_manage', true, ($service->name ?? null)), ['id' => 'client_main_tab'], ($render_section ?? null));
+            $this->WidgetClient->startBody();
+            echo ($tab_view ?? null);
+            $this->WidgetClient->endBody();
+            $this->WidgetClient->end();
+            ?>
+        </div>

@@ -1,0 +1,33 @@
+<?php /** @var View $this **/ ?>
+            <?php
+            // Hide the Tools card when the domain has no tabs
+            if (!empty($tabs)) {
+            ?>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title"><?php $this->_('ClientServices.manage.heading_tools');?></h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <?php
+                        foreach ($tabs as $tab) {
+                            $attributes = ($tab['attributes'] ?? []);
+                            $class_string = trim(preg_replace('/\bajax\b/', '', $attributes['class'] ?? ''));
+                            $attributes['class'] = 'action-tile' . ($class_string !== '' ? ' ' . $class_string : '');
+                            if (($tab['current'] ?? null)) {
+                                $attributes['class'] .= ' active';
+                            }
+                        ?>
+                        <a<?php echo $this->Html->buildAttributes($attributes);?>>
+                            <i class="<?php echo $this->Html->safe($tab['icon'] ?? '');?>"></i>
+                            <?php echo (isset($tab['name']) ? $this->Html->safe($tab['name']) : null);?>
+                        </a>
+                        <?php
+                        }
+                        ?>
+                    </div>
+                </div>
+            </div>
+            <?php
+            }
+            ?>

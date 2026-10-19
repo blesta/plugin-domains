@@ -1,0 +1,92 @@
+<?php /** @var View $this **/ ?>
+        <div class="col-lg-8">
+            <?php echo ($message ?? null);?>
+
+            <?php
+            $this->WidgetClient->clear();
+            $this->WidgetClient->create($this->_('ClientServices.addaddon.boxtitle_addons', true, ($package->name ?? null), ($service->name ?? null)), ['id' => 'client_add_addon'], ($render_section ?? null));
+            $this->WidgetClient->startBody();
+            $this->Form->create(null, ['id' => 'change_addon', 'method' => 'GET', 'class' => 'disable-on-submit']);
+            $this->Form->fieldHidden('package_group_id', '', ['id' => 'package_group_id']);
+            $this->Form->fieldHidden('pricing_id', '', ['id' => 'pricing_id']);
+            $this->Form->fieldHidden('parent_service_id', ($service->id ?? null), ['id' => 'parent_service_id']);
+            ?>
+            <h6 class="profile-section-heading"><i class="bi bi-plus-circle me-2"></i><?php $this->_('ClientServices.addaddon.header_add', false, ($module->name ?? null));?></h6>
+            <div class="mb-3">
+                <?php $this->Form->fieldSelect('addon', ($addons ?? null), ($vars->addon ?? null), ['id' => 'addons', 'class' => 'form-select']);?>
+            </div>
+            <?php
+            $this->Form->end();
+            $this->Form->create(null, ['class' => 'disable-on-submit']);
+            $this->Form->fieldHidden('use_module', 'true');
+            ?>
+            <div id="addon_options">
+                <?php echo ($addon_options ?? null);?>
+            </div>
+            <div id="addon_totals"></div>
+            <div class="mt-4 text-end">
+                <button type="submit" class="btn btn-primary"<?php echo ($limit_reached ?? null) ? ' disabled="disabled"' : '';?>><i class="bi bi-plus-circle me-1"></i><?php $this->_('ClientServices.addaddon.submit_add');?></button>
+            </div>
+            <?php
+            $this->Form->end();
+            $this->WidgetClient->endBody();
+            $this->WidgetClient->end();
+            ?>
+        </div>
+        <div class="col-lg-4">
+            <?php echo ($tabs ?? null);?>
+        </div>
+<?php
+$this->Javascript->setInline('
+    document.addEventListener("DOMContentLoaded", function() {
+        var addons = document.getElementById("addons");
+        var addon_options = document.getElementById("addon_options");
+        var addon_totals = document.getElementById("addon_totals");
+        var change_addon = document.getElementById("change_addon");
+
+        function setAddAddonFields() {
+            var addon_fields = addons.value.split("_");
+            if (addon_fields[0]) {
+                document.getElementById("package_group_id").value = addon_fields[0];
+            }
+            if (addon_fields[1]) {
+                document.getElementById("pricing_id").value = addon_fields[1];
+            }
+        }
+
+        function updateTotals() {
+            setAddAddonFields();
+            var params = new URLSearchParams();
+            var fields = [document.getElementById("pricing_id"), document.getElementById("parent_service_id")];
+            change_addon.querySelectorAll("input[name=_csrf_token]").forEach(function(field) { fields.push(field); });
+            addon_options.querySelectorAll("[name^=configoptions]").forEach(function(field) { fields.push(field); });
+            fields.forEach(function(field) {
+                if (!field || ((field.type == "checkbox" || field.type == "radio") && !field.checked)) {
+                    return;
+                }
+                params.append(field.name, field.value);
+            });
+
+            blesta.request(addons, "POST", "' . $this->Html->safe($plugin_uri . 'updatetotals/', true) . '", params, function(data) {
+                addon_totals.innerHTML = data;
+            },
+            null,
+            {dataType: "json"});
+        }
+
+        if (addons) {
+            addons.addEventListener("change", function() {
+                setAddAddonFields();
+                change_addon.submit();
+            });
+        }
+
+        updateTotals();
+        addon_options.addEventListener("change", function(e) {
+            if (e.target.matches("input, select")) {
+                updateTotals();
+            }
+        });
+    });
+');
+?>

@@ -1,0 +1,48 @@
+<?php /** @var View $this **/ ?>
+        <div class="col-md-3">
+            <?php echo ($tabs ?? null);?>
+        </div>
+        <div class="col-md-9">
+            <?php echo ($message ?? null);?>
+
+            <?php
+            if (!empty($unpaid_invoices) && is_array($unpaid_invoices)) {
+                $num_invoices = count($unpaid_invoices);
+                ?>
+                <div class="alert alert-warning">
+                    <p><?php $this->_('ClientServices.!warning.invoices_manage_options');?></p>
+                    <p><a id="upgrade_pay_invoices" class="btn btn-warning" href="<?php echo ($num_invoices == 1 ? $this->base_uri . 'pay/method/' . ($unpaid_invoices[0]->id ?? null) : '#');?>"><i class="fas fa-exclamation-triangle fa-fw"></i> <?php $this->_('ClientServices.upgrade.btn_make_payment');?></a></p>
+                </div>
+                <?php
+            }
+
+            $this->WidgetClient->clear();
+            $this->WidgetClient->create($this->_('ClientServices.manageoptions.boxtitle_options', true, ($package->name ?? null), ($service->name ?? null)), ['id' => 'client_manage_options'], ($render_section ?? null));
+            $this->WidgetClient->startBody();
+            $this->Form->create(null, ['class' => 'disable-on-submit']);
+            $this->Form->fieldHidden('_submit', 'true');
+
+            echo ($package_options ?? null);
+
+            if (($available_options ?? null)) {
+            ?>
+            <div class="float-right">
+                <a href="<?php echo $this->Html->safe($plugin_uri . 'manage/' . ($service->id ?? null) . '/');?>" class="btn btn-danger">
+                    <i class="fas fa-ban fa-fw"></i> <?php $this->_('ClientServices.manageoptions.cancel');?>
+                </a>
+                <?php
+                if (empty($unpaid_invoices)) {
+                ?>
+                <button type="submit" class="btn btn-light"><i class="fas fa-arrow-circle-right"></i> <?php $this->_('ClientServices.manageoptions.review');?></button>
+                <?php
+                }
+                ?>
+            </div>
+            <?php
+            }
+
+            $this->Form->end();
+            $this->WidgetClient->endBody();
+            $this->WidgetClient->end();
+            ?>
+        </div>

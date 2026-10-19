@@ -62,7 +62,7 @@
                         </div>
                         <div class="widget-item-actions">
                             <span class="status-badge <?php echo $this->Html->safe($badge_class);?>"><?php echo $this->Html->safe($badge_label);?></span>
-                            <a href="<?php echo $this->Html->safe($this->client_uri . 'services/manage/' . ($domains[$i]->id ?? null) . '/');?>" class="btn btn-outline-secondary btn-sm"><?php $this->_('ClientMain.index.option_manage');?></a>
+                            <a href="<?php echo $this->Html->safe($plugin_uri . 'manage/' . ($domains[$i]->id ?? null) . '/');?>" class="btn btn-outline-secondary btn-sm"><?php $this->_('ClientMain.index.option_manage');?></a>
                             <i class="bi bi-chevron-down expand-caret"></i>
                         </div>
                     </div>
@@ -193,7 +193,7 @@
                                     }
                                     ?>
                                 <td class="text-end">
-                                    <a href="<?php echo $this->Html->safe($this->client_uri . 'services/manage/' . ($domains[$i]->id ?? null) . '/');?>" class="btn btn-sm btn-outline-secondary">
+                                    <a href="<?php echo $this->Html->safe($plugin_uri . 'manage/' . ($domains[$i]->id ?? null) . '/');?>" class="btn btn-sm btn-outline-secondary">
                                         <i class="bi bi-gear me-1"></i><?php $this->_('ClientMain.index.option_manage');?>
                                     </a>
                                 </td>

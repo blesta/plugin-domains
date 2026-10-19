@@ -1,0 +1,37 @@
+<?php /** @var View $this **/ ?>
+    <?php
+    $nameservers = (array)($vars->nameservers ?? []);
+    $this->Form->create(null, ['id' => 'domain_nameservers']);
+    ?>
+        <div class="modal-header">
+            <h5 class="global_modal_title"><?php $this->_('ClientMain.manage.heading_nameservers');?></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-info"><?php $this->_('ClientMain.manage.text_nameservers_info');?></div>
+            <?php
+            for ($i = 0; $i < 5; $i++) {
+            ?>
+            <div class="mb-3">
+                <?php
+                $this->Form->label($this->_('ClientMain.manage.field_nameserver', true, $i + 1), 'nameserver_' . $i, ['class' => 'form-label']);
+                $this->Form->fieldText(
+                    'nameservers[]',
+                    ($nameservers[$i] ?? null),
+                    ['id' => 'nameserver_' . $i, 'class' => 'form-control']
+                );
+                ?>
+            </div>
+            <?php
+            }
+            ?>
+        </div>
+        <div class="modal-footer">
+            <?php
+            $this->Form->fieldButton('cancel', $this->_('ClientMain.manage.field_modal_cancel', true), ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']);
+            $this->Form->fieldButton('submit', $this->_('ClientMain.manage.field_submit', true), ['class' => 'btn btn-primary', 'type' => 'submit']);
+            ?>
+        </div>
+    <?php
+    $this->Form->end();
+    ?>

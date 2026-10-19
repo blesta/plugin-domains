@@ -1,0 +1,34 @@
+<?php /** @var View $this **/ ?>
+        <div id="recentTrackData" data-recent-type="domain" data-recent-id="<?php echo $this->Html->safe($service->id ?? null);?>" data-recent-label="<?php echo $this->Html->safe(!empty($service->name) ? $service->name : ($package->name ?? ''));?>" hidden></div>
+        <div class="col-12">
+            <?php echo ($service_hero ?? null);?>
+        </div>
+        <div class="col-lg-8">
+            <?php
+            echo ($message ?? null);
+
+            $this->WidgetClient->clear();
+            $this->WidgetClient->create($this->_('ClientMain.manage.heading_domain_details', true), ['id' => 'client_main_manage'], ($render_section ?? null));
+            $this->WidgetClient->startBody();
+
+            echo ($service_infobox ?? null);
+
+            if (isset($partial_tab_view)) {
+                ?>
+                <hr>
+                <?php
+            }
+            echo ($partial_tab_view ?? null);
+
+            $this->WidgetClient->endBody();
+            $this->WidgetClient->end();
+
+            echo ($nameservers_card ?? null);
+            echo ($whois_card ?? null);
+            ?>
+        </div>
+        <div class="col-lg-4">
+            <?php echo ($quick_actions ?? null);?>
+            <?php echo ($tabs ?? null);?>
+        </div>
+        <?php echo ($config_options_modal ?? null);?>

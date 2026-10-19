@@ -1,0 +1,97 @@
+<?php /** @var View $this **/ ?>
+        <div class="col-lg-8">
+            <?php echo ($message ?? null);?>
+
+            <?php
+            // Map the service status to a badge style
+            $status_badges = [
+                'active' => 'status-active',
+                'suspended' => 'status-suspended',
+                'canceled' => 'status-cancelled'
+            ];
+
+            $this->WidgetClient->clear();
+
+            if (($client_can_create_addons ?? null)) {
+                $link_buttons = [
+                    [
+                        'name' => $this->_('ClientServices.addons.create_addon', true),
+                        'icon' => 'bi bi-plus',
+                        'attributes' => ['href' => $this->Html->safe($plugin_uri . 'addaddon/' . ($service->id ?? null) . '/'), 'class' => 'btn btn-sm btn-primary']
+                    ]
+                ];
+                $this->WidgetClient->setLinkButtons($link_buttons);
+            }
+
+            $this->WidgetClient->create($this->_('ClientServices.addons.boxtitle_addons', true, ($package->name ?? null), ($service->name ?? null)), ['id' => 'client_addons'], ($render_section ?? null));
+            $this->WidgetClient->startBody(true, 'p-0');
+
+            if (($services ?? false) && (($num_services = count($services)) > 0)) {
+            ?>
+            <div class="table-responsive">
+                <table class="table table-modern table-hover" id="addons">
+                    <thead>
+                        <tr>
+                            <th><?php $this->_('ClientServices.index.heading_package');?></th>
+                            <th><?php $this->_('ClientServices.index.heading_label');?></th>
+                            <th><?php $this->_('ClientServices.index.heading_term');?></th>
+                            <th><?php $this->_('ClientServices.index.heading_status');?></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        for ($i = 0; $i < $num_services; $i++) {
+                            $service_status = ($services[$i]->status ?? null);
+                        ?>
+                        <tr>
+                            <td class="fw-semibold"><?php echo (isset($services[$i]->package->name) ? $this->Html->safe($services[$i]->package->name) : null);?></td>
+                            <td><?php echo (isset($services[$i]->name) ? $this->Html->safe($services[$i]->name) : null);?></td>
+                            <td>
+                                <?php
+                                if (($services[$i]->package_pricing->period ?? null) == 'onetime') {
+                                    echo (isset($periods[$services[$i]->package_pricing->period]) ? $this->Html->safe($periods[$services[$i]->package_pricing->period]) : null);
+                                } else {
+                                    $term = (isset($services[$i]->package_pricing->term) ? $this->Html->safe($services[$i]->package_pricing->term) : null);
+                                    echo $this->Html->safe($this->Html->concat(' ', $term, ($term == 1 ? ($periods[$services[$i]->package_pricing->period] ?? null) : ($periods[$services[$i]->package_pricing->period . '_plural'] ?? null))));
+                                }
+                                ?>
+                            </td>
+                            <td><span class="status-badge <?php echo $this->Html->safe($status_badges[$service_status] ?? 'status-pending');?>"><?php echo (isset($statuses[$service_status]) ? $this->Html->safe($statuses[$service_status]) : null);?></span></td>
+                            <td class="text-end">
+                                <?php
+                                if ($services[$i]->status != 'canceled') {
+                                ?>
+                                <a href="<?php echo $this->base_uri . 'services/manage/' . ($services[$i]->id ?? null) . '/';?>" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-gear me-1"></i><?php $this->_('ClientServices.index.option_manage');?>
+                                </a>
+                                <?php
+                                }
+                                ?>
+                            </td>
+                        </tr>
+                        <?php
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php
+            } else {
+            ?>
+            <div class="empty-state">
+                <i class="bi bi-plus-square empty-state-icon"></i>
+                <div class="empty-state-text">
+                    <?php $this->_('ClientServices.addons.no_results');?>
+                </div>
+            </div>
+            <?php
+            }
+
+            $this->WidgetClient->endBody();
+            $this->WidgetClient->end();
+            ?>
+        </div>
+        <div class="col-lg-4">
+            <?php echo ($tabs ?? null);?>
+        </div>

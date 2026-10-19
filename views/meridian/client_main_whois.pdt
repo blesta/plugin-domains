@@ -1,0 +1,55 @@
+<?php /** @var View $this **/ ?>
+        <?php
+        // The WHOIS summary is built from the registrant the registrar reports
+        $registrant = (array)($registrant ?? []);
+        if (empty($registrant)) {
+            return;
+        }
+
+        $registrant_name = trim(($registrant['first_name'] ?? '') . ' ' . ($registrant['last_name'] ?? ''));
+        ?>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title"><?php $this->_('ClientMain.manage.heading_whois');?></h5>
+            </div>
+            <div class="card-body">
+                <div class="service-detail-grid">
+                    <?php
+                    if ($registrant_name !== '') {
+                    ?>
+                    <div class="service-detail-item">
+                        <div class="detail-label"><?php $this->_('ClientMain.manage.heading_registrant');?></div>
+                        <div class="detail-value"><?php echo $this->Html->safe($registrant_name);?></div>
+                    </div>
+                    <?php
+                    }
+
+                    if (!empty($registrant['organization'])) {
+                    ?>
+                    <div class="service-detail-item">
+                        <div class="detail-label"><?php $this->_('ClientMain.manage.heading_organization');?></div>
+                        <div class="detail-value"><?php echo $this->Html->safe($registrant['organization']);?></div>
+                    </div>
+                    <?php
+                    }
+
+                    if (!empty($registrant['email'])) {
+                    ?>
+                    <div class="service-detail-item">
+                        <div class="detail-label"><?php $this->_('ClientMain.manage.heading_email');?></div>
+                        <div class="detail-value"><?php echo $this->Html->safe($registrant['email']);?></div>
+                    </div>
+                    <?php
+                    }
+                    ?>
+                    <div class="service-detail-item">
+                        <div class="detail-label"><?php $this->_('ClientMain.manage.heading_id_protection');?></div>
+                        <div class="detail-value">
+                            <span class="status-badge <?php echo (($id_protection ?? false) ? 'status-active' : 'status-cancelled');?>">
+                                <?php $this->_('ClientMain.manage.text_id_protection_' . (($id_protection ?? false) ? 'enabled' : 'disabled'));?>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>

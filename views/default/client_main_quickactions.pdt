@@ -1,0 +1,2 @@
+<?php /** @var View $this **/ ?>
+<?php // Quick actions are only rendered by the modern client templates; this template keeps them in the info box ?>

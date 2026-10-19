@@ -1,0 +1,84 @@
+        <div class="col-md-3">
+            <?php echo (isset($tabs) ? $tabs : null);?>
+        </div>
+        <div class="col-md-9">
+            <?php echo (isset($message) ? $message : null);?>
+
+            <?php
+            $this->WidgetClient->clear();
+
+            if ((isset($client_can_create_addons) ? $client_can_create_addons : null)) {
+                $link_buttons = [
+                    ['name' => $this->_('ClientServices.addons.create_addon', true), 'attributes' => ['href' => $this->Html->safe($plugin_uri . 'addaddon/' . (isset($service->id) ? $service->id : null) . '/')]]
+                ];
+                $this->WidgetClient->setLinkButtons($link_buttons);
+            }
+
+            $this->WidgetClient->create($this->_('ClientServices.addons.boxtitle_addons', true, (isset($package->name) ? $package->name : null), (isset($service->name) ? $service->name : null)), ['id' => 'client_addons'], (isset($render_section) ? $render_section : null));
+            $this->WidgetClient->startBody();
+
+            if ((isset($services) ? $services : false) && (($num_services = count($services)) > 0)) {
+            ?>
+            <div class="table-responsive">
+                <table class="table table-curved table-striped" id="addons">
+                    <thead>
+                        <tr>
+                            <th><?php $this->_('ClientServices.index.heading_package');?></th>
+                            <th><?php $this->_('ClientServices.index.heading_label');?></th>
+                            <th><?php $this->_('ClientServices.index.heading_term');?></th>
+                            <th><?php $this->_('ClientServices.index.heading_status');?></th>
+                            <th><?php $this->_('ClientServices.index.heading_options');?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        for ($i = 0; $i < $num_services; $i++) {
+                            $service_status = (isset($services[$i]->status) ? $services[$i]->status : null);
+                        ?>
+                        <tr>
+                            <td><?php (print (isset($services[$i]->package->name) ? $this->Html->safe($services[$i]->package->name) : null));?></td>
+                            <td><?php (print (isset($services[$i]->name) ? $this->Html->safe($services[$i]->name) : null));?></td>
+                            <td>
+                                <?php
+                                if ((isset($services[$i]->package_pricing->period) ? $services[$i]->package_pricing->period : null) == 'onetime') {
+                                    (print (isset($periods[$services[$i]->package_pricing->period]) ? $this->Html->safe($periods[$services[$i]->package_pricing->period]) : null));
+                                } else {
+                                    $term = (isset($services[$i]->package_pricing->term) ? $this->Html->safe($services[$i]->package_pricing->term) : null);
+                                    echo $this->Html->safe($this->Html->concat(' ', $term, ($term == 1 ? (isset($periods[$services[$i]->package_pricing->period]) ? $periods[$services[$i]->package_pricing->period] : null) : (isset($periods[$services[$i]->package_pricing->period . '_plural']) ? $periods[$services[$i]->package_pricing->period . '_plural'] : null))));
+                                }
+                                ?>
+                            </td>
+                            <td><?php echo (isset($statuses[$service_status]) ? $this->Html->safe($statuses[$service_status]) : null);?></td>
+                            <td>
+                                <?php
+                                if ($services[$i]->status != 'canceled') {
+                                ?>
+                                <div class="btn-group">
+                                    <a href="<?php echo $this->base_uri . 'services/manage/' . (isset($services[$i]->id) ? $this->Html->safe($services[$i]->id) : null) . '/';?>" class="btn btn-sm btn-light">
+                                        <i class="fas fa-cog fa-fw"></i> <?php $this->_('ClientServices.index.option_manage');?>
+                                    </a>
+                                </div>
+                                <?php
+                                }
+                                ?>
+                            </td>
+                        </tr>
+                        <?php
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php
+            } else {
+            ?>
+            <div class="alert alert-info">
+                <p><?php $this->_('ClientServices.addons.no_results');?></p>
+            </div>
+            <?php
+            }
+
+            $this->WidgetClient->endBody();
+            $this->WidgetClient->end();
+            ?>
+        </div>

@@ -102,7 +102,7 @@
                                     ?>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="<?php echo $this->Html->safe($this->client_uri . 'services/manage/' . ($domains[$i]->id ?? null) . '/');?>" class="btn btn-xs btn-light">
+                                        <a href="<?php echo $this->Html->safe($plugin_uri . 'manage/' . ($domains[$i]->id ?? null) . '/');?>" class="btn btn-xs btn-light">
                                             <i class="fas fa-cog fa-fw"></i>  <?php $this->_('ClientMain.index.option_manage');?>
                                         </a>
                                     </div>

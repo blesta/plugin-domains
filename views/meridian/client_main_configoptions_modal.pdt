@@ -1,0 +1,43 @@
+<?php /** @var View $this **/ ?>
+        <div class="modal fade" id="config_options_modal" tabindex="-1" aria-labelledby="config_options_modal_label" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <?php
+                    $this->Form->create($plugin_uri . 'manageoptions/' . ($service->id ?? null) . '/', ['class' => 'disable-on-submit']);
+                    $this->Form->fieldHidden('_submit', 'true');
+                    ?>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="config_options_modal_label"><?php $this->_('ClientServices.manage.heading_config_options');?></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <?php
+                        if (!empty($unpaid_invoices) && is_array($unpaid_invoices)) {
+                            $num_invoices = count($unpaid_invoices);
+                        ?>
+                        <div class="alert alert-warning">
+                            <p><?php $this->_('ClientServices.!warning.invoices_manage_options');?></p>
+                            <p class="mb-0"><a class="btn btn-warning btn-sm" href="<?php echo ($num_invoices == 1 ? $this->Html->safe($this->base_uri . 'pay/method/' . ($unpaid_invoices[0]->id ?? null)) : $this->Html->safe($this->base_uri . 'pay/'));?>"><i class="bi bi-exclamation-triangle me-1"></i><?php $this->_('ClientServices.upgrade.btn_make_payment');?></a></p>
+                        </div>
+                        <?php
+                        }
+
+                        echo ($package_options ?? null);
+                        ?>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><?php $this->_('ClientMain.manage.field_modal_cancel');?></button>
+                        <?php
+                        if (empty($unpaid_invoices)) {
+                        ?>
+                        <button type="submit" class="btn btn-primary"><?php $this->_('ClientServices.manageoptions.review');?> <i class="bi bi-arrow-right ms-1"></i></button>
+                        <?php
+                        }
+                        ?>
+                    </div>
+                    <?php
+                    $this->Form->end();
+                    ?>
+                </div>
+            </div>
+        </div>
