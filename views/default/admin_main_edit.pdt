@@ -597,9 +597,12 @@ $this->Widget->end();
             var self = this;
 
             fetch(url, {
+                method: 'POST',
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: '_csrf_token=<?php echo $this->Form->getCsrfToken();?>'
             })
             .then(response => response.json())
             .then(data => {
@@ -640,9 +643,12 @@ $this->Widget->end();
             checkbox.disabled = true;
 
             fetch(url, {
+                method: 'POST',
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: '_csrf_token=<?php echo $this->Form->getCsrfToken();?>'
             })
             .then(response => response.json())
             .then(data => {
