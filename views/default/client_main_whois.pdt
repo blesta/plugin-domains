@@ -1,0 +1,2 @@
+<?php /** @var View $this **/ ?>
+<?php // The WHOIS summary card is only rendered by the modern client templates ?>

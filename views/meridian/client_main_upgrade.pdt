@@ -1,0 +1,129 @@
+<?php /** @var View $this **/ ?>
+    <div class="col-lg-8">
+        <?php echo ($message ?? null);?>
+
+        <?php
+        if (!empty($unpaid_invoices) && is_array($unpaid_invoices)) {
+            $num_invoices = count($unpaid_invoices);
+        ?>
+        <div class="alert alert-warning">
+            <p><?php $this->_('ClientServices.!warning.invoices_upgrade_package');?></p>
+            <p class="mb-0"><a id="upgrade_pay_invoices" class="btn btn-warning" href="<?php echo ($num_invoices == 1 ? $this->base_uri . 'pay/method/' . ($unpaid_invoices[0]->id ?? null) : '#');?>"><i class="bi bi-exclamation-triangle me-1"></i><?php $this->_('ClientServices.upgrade.btn_make_payment');?></a></p>
+        </div>
+        <?php
+        }
+
+        $this->WidgetClient->clear();
+        $this->WidgetClient->create($this->_('ClientServices.upgrade.boxtitle', true, ($service->package->name ?? null), ($service->name ?? null)), ['id' => 'client_upgrade_service'], ($render_section ?? null));
+        $this->WidgetClient->startBody();
+        $this->Form->create(null, ['id' => 'upgrade_service', 'class' => 'disable-on-submit']);
+        ?>
+
+        <div class="mb-3">
+            <p><?php $this->_('ClientServices.upgrade.text_prorate');?></p>
+            <?php $this->Form->label($this->_('ClientServices.upgrade.field_current_package', true), null, ['class' => 'form-label']);?>
+            <p class="form-control-plaintext"><?php echo (isset($current_term) ? $this->Html->safe($current_term) : null);?></p>
+        </div>
+        <div class="mb-3">
+            <?php
+            $this->Form->label($this->_('ClientServices.upgrade.field_pricing_id', true), 'pricing_id', ['class' => 'form-label']);
+            $this->Form->fieldSelect('pricing_id', ($terms ?? null), '', ['id' => 'pricing_id', 'class' => 'form-select']);
+            ?>
+        </div>
+
+        <div id="package_options" class="mb-3"></div>
+
+        <div class="mt-4 text-end">
+            <a href="<?php echo $this->Html->safe($plugin_uri . 'manage/' . ($service->id ?? null) . '/');?>" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i><?php $this->_('ClientServices.upgrade.field_cancel');?>
+            </a>
+            <?php
+            if (empty($unpaid_invoices)) {
+            ?>
+            <button type="submit" class="btn btn-primary"><?php $this->_('ClientServices.upgrade.field_submit');?> <i class="bi bi-arrow-right ms-1"></i></button>
+            <?php
+            }
+            ?>
+        </div>
+        <?php
+        $this->Form->end();
+        $this->WidgetClient->endBody();
+        $this->WidgetClient->end();
+        ?>
+    </div>
+    <div class="col-lg-4">
+        <?php echo ($tabs ?? null);?>
+    </div>
+    <?php
+    // Make a payment
+    if (!empty($unpaid_invoices) && isset($num_invoices) && $num_invoices > 1) {
+        $currency = $unpaid_invoices[0]->currency;
+
+        $this->Form->create($this->base_uri . 'pay/index/' . ($currency ?? null), ['id' => 'upgrade_make_payment']);
+
+        foreach ($unpaid_invoices as $invoice) {
+            // Must all be in the same currency
+            if ($invoice->currency != $currency) {
+                continue;
+            }
+
+            $this->Form->fieldHidden('invoice_id[]', ($invoice->id ?? null));
+            $this->Form->fieldHidden('applyamount[' . ($invoice->id ?? null) . ']', $this->CurrencyFormat->format(($invoice->due ?? 0), $currency, ['prefix' => false, 'suffix' => false, 'with_separator' => false, 'code' => false]));
+        }
+
+        $this->Form->end();
+
+        $this->Javascript->setInline('
+            document.addEventListener("DOMContentLoaded", function() {
+                var pay_invoices = document.getElementById("upgrade_pay_invoices");
+                if (pay_invoices) {
+                    pay_invoices.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        document.getElementById("upgrade_make_payment").submit();
+                    });
+                }
+            });
+        ');
+    }
+    ?>
+
+<?php
+$this->Javascript->setInline('
+    document.addEventListener("DOMContentLoaded", function() {
+        var pricing_id = document.getElementById("pricing_id");
+        var package_options = document.getElementById("package_options");
+
+        if (pricing_id) {
+            pricing_id.addEventListener("change", function() {
+                if (!pricing_id.value) {
+                    package_options.innerHTML = "";
+                    return;
+                }
+
+                var form = document.getElementById("upgrade_service");
+                var params = new URLSearchParams();
+                form.querySelectorAll("[name^=configoptions]").forEach(function(field) {
+                    params.append(field.name, field.value);
+                });
+
+                blesta.request(pricing_id, "GET", "' . $this->Html->safe($plugin_uri . 'packageoptions/' . ($service->id ?? null) . '/', true) . '" + pricing_id.value + "?" + params.toString(), null, function(data) {
+                    if (data) {
+                        if (data.hasOwnProperty("html")) {
+                            package_options.innerHTML = data.html;
+                        }
+
+                        if (data.hasOwnProperty("limit_reached")) {
+                            document.querySelectorAll("#upgrade_service button[type=submit]").forEach(function(button) {
+                                button.disabled = data.limit_reached;
+                            });
+                        }
+                    }
+                    blesta.bindServiceOptionSlider(package_options);
+                },
+                null,
+                {dataType: "json"});
+            });
+        }
+    });
+');
+?>

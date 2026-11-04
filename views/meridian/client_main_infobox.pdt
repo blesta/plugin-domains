@@ -1,0 +1,152 @@
+<?php /** @var View $this **/ ?>
+        <?php
+        // Map the service status to a badge style
+        $status_badges = [
+            'active' => 'status-active',
+            'suspended' => 'status-suspended',
+            'canceled' => 'status-cancelled'
+        ];
+
+        // Set the package term
+        if (($service->package_pricing->period ?? null) == 'onetime') {
+            $package_term = ($periods[$service->package_pricing->period] ?? null);
+        } else {
+            $term = ($service->package_pricing->term ?? null);
+            $package_term = $this->Html->concat(
+                ' ',
+                $term,
+                ($term == 1
+                    ? ($periods[$service->package_pricing->period] ?? null)
+                    : ($periods[$service->package_pricing->period . '_plural'] ?? null))
+            );
+        }
+
+        $currency = ($service->override_currency ?? ($service->package_pricing->currency ?? null));
+        ?>
+        <div class="service-detail-grid">
+            <div class="service-detail-item">
+                <div class="detail-label"><?php $this->_('ClientMain.manage.heading_domain');?></div>
+                <div class="detail-value"><?php echo (isset($service->name) ? $this->Html->safe($service->name) : null);?></div>
+            </div>
+            <div class="service-detail-item">
+                <div class="detail-label"><?php $this->_('ClientServices.index.heading_status');?></div>
+                <div class="detail-value">
+                    <span class="status-badge <?php echo $this->Html->safe($status_badges[$service->status ?? null] ?? 'status-pending');?>">
+                        <?php $this->_('ClientServices.manage.button_' . ($service->status ?? null));?>
+                    </span>
+                </div>
+            </div>
+            <div class="service-detail-item">
+                <div class="detail-label"><?php $this->_('ClientMain.manage.heading_registration_date');?></div>
+                <div class="detail-value"><?php echo (empty($service->registration_date) ? $this->_('ClientMain.manage.text_never', true) : $this->Date->cast($service->registration_date));?></div>
+            </div>
+            <div class="service-detail-item">
+                <div class="detail-label"><?php $this->_('ClientMain.manage.heading_expiration_date');?></div>
+                <div class="detail-value"><?php echo (empty($service->expiration_date) ? $this->_('ClientMain.manage.text_never', true) : $this->Date->cast($service->expiration_date));?></div>
+            </div>
+            <div class="service-detail-item">
+                <div class="detail-label"><?php $this->_('ClientServices.manage.heading_package_term');?></div>
+                <div class="detail-value"><?php echo $this->Html->safe($package_term);?></div>
+            </div>
+            <div class="service-detail-item">
+                <div class="detail-label"><?php $this->_('ClientMain.manage.heading_recurring_amount');?></div>
+                <div class="detail-value">
+                    <?php
+                    if (($service->package_pricing->period ?? null) == 'onetime') {
+                        echo $this->CurrencyFormat->format(($service->override_price ?? ($service->package_pricing->price ?? null)), $currency);
+                    } else {
+                        echo $this->CurrencyFormat->format(($service->renewal_price ?? null), $currency);
+                    }
+                    ?>
+                </div>
+            </div>
+            <div class="service-detail-item">
+                <div class="detail-label"><?php $this->_('ClientMain.manage.heading_auto_renewal');?></div>
+                <div class="detail-value">
+                    <span class="status-badge <?php echo (($service->auto_renewal ?? null) == 'on' ? 'status-active' : 'status-cancelled');?>">
+                        <?php $this->_('ClientMain.manage.text_auto_renewal_' . (($service->auto_renewal ?? null) == 'on' ? 'on' : 'off'));?>
+                    </span>
+                </div>
+            </div>
+            <div class="service-detail-item">
+                <div class="detail-label"><?php $this->_('ClientServices.manage.heading_date_renews');?></div>
+                <div class="detail-value">
+                    <?php
+                    echo (empty($service->date_paid_through)
+                        ? (empty($service->date_renews)
+                            ? $this->_('ClientMain.manage.text_never', true)
+                            : $this->Date->cast($service->date_renews))
+                        : $this->Date->cast($service->date_paid_through));
+                    ?>
+                </div>
+            </div>
+            <div class="service-detail-item">
+                <div class="detail-label"><?php $this->_('ClientServices.manage.heading_date_next_invoice');?></div>
+                <div class="detail-value">
+                    <?php
+                    echo (($next_invoice_date ?? false)
+                        ? $this->Date->cast($next_invoice_date)
+                        : $this->_('ClientMain.manage.text_never', true));
+                    ?>
+                </div>
+            </div>
+            <?php
+            // Display the coupon that should apply when the domain renews
+            if (($recurring_coupon ?? null)) {
+            ?>
+            <div class="service-detail-item">
+                <div class="detail-label"><?php $this->_('ClientServices.manage.heading_recurring_coupon');?></div>
+                <div class="detail-value">
+                    <?php
+                    if (($recurring_coupon->recurring_amount->type ?? null) == 'percent') {
+                        $this->_('ClientServices.manage.text_coupon_percent', false, $this->Html->safe($recurring_coupon->code ?? null), $this->CurrencyFormat->cast(($recurring_coupon->recurring_amount->amount ?? null), ($recurring_coupon->recurring_amount->currency ?? null)));
+                    } else {
+                        $this->_('ClientServices.manage.text_coupon_amount', false, $this->Html->safe($recurring_coupon->code ?? null), $this->CurrencyFormat->format(($recurring_coupon->recurring_amount->amount ?? null), ($recurring_coupon->recurring_amount->currency ?? null)));
+                    }
+                    ?>
+                </div>
+            </div>
+            <?php
+            }
+            ?>
+        </div>
+        <?php
+        // Display the Configurable Options section
+        if (!empty($service->options)) {
+        ?>
+        <h6 class="profile-section-heading mt-4"><i class="bi bi-sliders me-2"></i><?php $this->_('ClientServices.manage.heading_config_options');?></h6>
+        <div class="table-responsive">
+            <table class="table table-modern">
+                <tbody>
+                    <?php
+                    $currency_options = ['decimals' => 4, 'significant_decimals' => true];
+                    foreach ($service->options as $option) {
+                        $is_user_defined_value = in_array(($option->option_type ?? null), ['text', 'textarea', 'password']);
+                        $display_name = ($is_user_defined_value ? ($option->value ?? null) : ($option->option_value_name ?? null));
+                    ?>
+                    <tr>
+                        <td class="fw-semibold"><?php echo (isset($option->option_label) ? $this->Html->safe($option->option_label) : null);?></td>
+                        <td><?php echo nl2br(isset($display_name) ? $this->Html->safe($display_name) : '');?></td>
+                        <td>
+                            <?php
+                            // Hide pricing if disable_pricing is enabled
+                            if (($option->option_disable_pricing ?? 0) != 1) {
+                                $formatted_option_price = $this->CurrencyFormat->format(($option->option_pricing_price_renews ?? $option->option_pricing_price), ($option->option_pricing_currency ?? null), $currency_options);
+                                if (($option->qty ?? false)) {
+                                    $this->_('ClientServices.manage.text_price', false, $this->CurrencyFormat->truncateDecimal(($option->qty ?? 1), 0), $formatted_option_price);
+                                } else {
+                                    echo $formatted_option_price;
+                                }
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+        }
+        ?>

@@ -1,0 +1,34 @@
+<?php /** @var View $this **/ ?>
+    <?php
+    $this->Form->create(null, ['id' => 'domain_registrar_lock']);
+    ?>
+        <div class="modal-header">
+            <h5 class="global_modal_title"><?php $this->_('ClientMain.manage.heading_registrar_lock');?></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-info"><?php $this->_('ClientMain.manage.text_registrar_lock_info');?></div>
+            <div class="mb-3">
+                <?php
+                $this->Form->label($this->_('ClientMain.manage.field_registrar_lock', true), 'registrar_lock', ['class' => 'form-label']);
+                $this->Form->fieldSelect(
+                    'registrar_lock',
+                    [
+                        'on' => $this->_('ClientMain.manage.text_locked', true),
+                        'off' => $this->_('ClientMain.manage.text_unlocked', true)
+                    ],
+                    ($vars->registrar_lock ?? 'off'),
+                    ['id' => 'registrar_lock', 'class' => 'form-select']
+                );
+                ?>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <?php
+            $this->Form->fieldButton('cancel', $this->_('ClientMain.manage.field_modal_cancel', true), ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']);
+            $this->Form->fieldButton('submit', $this->_('ClientMain.manage.field_submit', true), ['class' => 'btn btn-primary', 'type' => 'submit']);
+            ?>
+        </div>
+    <?php
+    $this->Form->end();
+    ?>

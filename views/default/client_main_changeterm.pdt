@@ -1,0 +1,79 @@
+<?php /** @var View $this **/ ?>
+    <div class="col-md-3">
+        <?php echo ($tabs ?? null);?>
+    </div>
+    <div class="col-md-9">
+        <?php echo ($message ?? null);?>
+
+        <?php
+        if (!empty($unpaid_invoices) && is_array($unpaid_invoices)) {
+            $num_invoices = count($unpaid_invoices);
+            ?>
+            <div class="alert alert-warning">
+                <p><?php $this->_('ClientServices.!warning.invoices_change_term');?></p>
+                <p><a id="upgrade_pay_invoices" class="btn btn-warning" href="<?php echo ($num_invoices == 1 ? $this->base_uri . 'pay/method/' . ($unpaid_invoices[0]->id ?? null) : '#');?>"><i class="fas fa-exclamation-triangle fa-fw"></i> <?php $this->_('ClientServices.upgrade.btn_make_payment');?></a></p>
+            </div>
+            <?php
+        }
+
+        $this->WidgetClient->clear();
+        $this->WidgetClient->create($this->_('ClientServices.change_term.boxtitle', true, ($package->name ?? null), ($service->name ?? null)), ['id' => 'client_change_term'], ($render_section ?? null));
+        $this->WidgetClient->startBody();
+        $this->Form->create(null, ['id' => 'change_service_term', 'class' => 'disable-on-submit']);
+        ?>
+
+        <div class="form-group">
+            <?php $this->Form->label($this->_('ClientServices.change_term.field_current_term', true));?>
+            <p><?php echo (isset($current_term) ? $this->Html->safe($current_term) : null);?></p>
+        </div>
+        <div class="form-group">
+            <?php
+            $this->Form->label($this->_('ClientServices.change_term.field_pricing_id', true), 'pricing_id');
+            $this->Form->fieldSelect('pricing_id', ($terms ?? []), '', ['id' => 'pricing_id', 'class' => 'form-control']);
+            ?>
+        </div>
+
+        <div id="package_options" class="mb-2"></div>
+
+        <div class="float-right">
+            <a href="<?php echo $this->Html->safe($plugin_uri . 'manage/' . ($service->id ?? null) . '/');?>" class="btn btn-danger">
+                <i class="fas fa-ban fa-fw"></i> <?php $this->_('ClientServices.change_term.cancel');?>
+            </a>
+            <?php
+            if (empty($unpaid_invoices)) {
+            ?>
+            <button type="submit" class="btn btn-light"><i class="fas fa-arrow-circle-right"></i> <?php $this->_('ClientServices.change_term.review');?></button>
+            <?php
+            }
+            ?>
+        </div>
+        <?php
+        $this->Form->end();
+        $this->WidgetClient->endBody();
+        $this->WidgetClient->end();
+        ?>
+    </div>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#pricing_id').change(function() {
+            packageOptions();
+        });
+
+        function packageOptions() {
+            var pricing_id = $('#pricing_id').val();
+            if (pricing_id) {
+                var params = $('[name^="configoptions"]', $('#change_service_term')).serialize();
+                $(this).blestaRequest('GET', '<?php echo $this->Html->safe($plugin_uri . 'packageoptions/' . ($service->id ?? null) . '/');?>' + pricing_id, params, function(data) {
+                    if (data && data.hasOwnProperty('html')) {
+                        $('#package_options').html(data.html);
+                    }
+                    $(this).blestaBindServiceOptionSlider();
+                },
+                null,
+                {dataType: 'json'});
+            } else {
+                $('#package_options').html('');
+            }
+        }
+    });
+</script>
