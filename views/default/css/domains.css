@@ -9,7 +9,8 @@
 }
 
 /* Hide checkboxes but keep them functional */
-.tld-import-grid input[type="checkbox"] {
+.tld-import-grid input[type="checkbox"],
+.tld-select-all input[type="checkbox"] {
     position: absolute;
     opacity: 0;
     pointer-events: none;
@@ -30,6 +31,10 @@
     text-align: center;
     font-size: 0.875rem;
     min-height: 45px;
+}
+
+.tld-select-all .tld-import-card {
+    min-width: 110px;
 }
 
 .tld-import-card:hover {
