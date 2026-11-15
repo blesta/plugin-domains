@@ -37,7 +37,11 @@ class ClientMain extends DomainsController
         // Set filters from post input
         $post_filters = [];
         if (isset($this->post['filters'])) {
-            $post_filters = $this->post['filters'];
+            // Only allow the filters available on the filter form
+            $post_filters = array_filter(
+                array_intersect_key((array) $this->post['filters'], array_flip(['package_name', 'service_meta'])),
+                'is_scalar'
+            );
             unset($this->post['filters']);
 
             foreach ($post_filters as $filter => $value) {
@@ -53,10 +57,11 @@ class ClientMain extends DomainsController
         $sort = ($this->get['sort'] ?? 'date_added');
         $order = ($this->get['order'] ?? 'desc');
 
-        $domains_filters = array_merge([
+        // Set the filters for the domains list
+        $domains_filters = array_merge($post_filters, [
             'client_id' => $this->client->id,
             'status' => $status
-        ], $post_filters);
+        ]);
 
         $services = $this->DomainsDomains->getList($domains_filters, $page, [$sort => $order]);
         $total_results = $this->DomainsDomains->getListCount($domains_filters);
