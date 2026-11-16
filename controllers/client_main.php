@@ -35,20 +35,23 @@ class ClientMain extends DomainsController
         $this->action = 'index';
 
         // Set filters from post input
+        $filter_options = [
+            'language' => Configure::get('Blesta.language'),
+            'company_id' => Configure::get('Blesta.company_id')
+        ];
         $post_filters = [];
         if (isset($this->post['filters'])) {
-            // Only allow the filters available on the filter form
+            // Only allow the non-empty values of the filters available on the filter form
             $post_filters = array_filter(
-                array_intersect_key((array) $this->post['filters'], array_flip(['package_name', 'service_meta'])),
-                'is_scalar'
+                array_intersect_key(
+                    (array) $this->post['filters'],
+                    array_flip($this->getFilterKeys($this->getFilters($filter_options)))
+                ),
+                function ($value) {
+                    return is_scalar($value) && !empty($value);
+                }
             );
             unset($this->post['filters']);
-
-            foreach ($post_filters as $filter => $value) {
-                if (empty($value)) {
-                    unset($post_filters[$filter]);
-                }
-            }
         }
 
         // Get domains
@@ -81,16 +84,7 @@ class ClientMain extends DomainsController
         }
 
         // Set the input field filters for the widget
-        $this->set(
-            'filters',
-            $this->getFilters(
-                [
-                    'language' => Configure::get('Blesta.language'),
-                    'company_id' => Configure::get('Blesta.company_id')
-                ],
-                $post_filters
-            )
-        );
+        $this->set('filters', $this->getFilters($filter_options, $post_filters));
 
         $this->set('filter_vars', $post_filters);
         $this->set('periods', $periods);

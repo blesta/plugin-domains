@@ -282,4 +282,26 @@ class DomainsController extends AppController
 
         return $errors;
     }
+
+    /**
+     * Gets the keys of the filters that can be submitted from the given filter form, i.e. the "key" of
+     * every field named "filters[key]"
+     *
+     * @param InputFields $fields The filter form fields
+     * @return array A list of filter keys
+     */
+    protected function getFilterKeys($fields)
+    {
+        $keys = [];
+        foreach ($fields->getFields() as $field) {
+            // Labels have their input fields attached to them
+            foreach (array_merge([$field], (array) ($field->fields ?? [])) as $input) {
+                if (preg_match('/^filters\[([^\]]+)\]/', (string) ($input->params['name'] ?? ''), $match)) {
+                    $keys[$match[1]] = $match[1];
+                }
+            }
+        }
+
+        return array_values($keys);
+    }
 }
