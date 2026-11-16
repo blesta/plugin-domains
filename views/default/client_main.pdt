@@ -17,6 +17,9 @@
             $this->WidgetClient->setLinks($links);
             $this->WidgetClient->setFilters(($filters ?? null), $this->Html->safe($this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/' . (isset($status) ? $this->Html->safe($status) : null)), !empty($filter_vars));
             $this->WidgetClient->setAjaxFiltering();
+            if (($action ?? 'index') !== 'widget') {
+                $this->WidgetClient->setAsTitle();
+            }
             $this->WidgetClient->create($this->_('ClientMain.index.boxtitle_domains', true), ['id' => 'client_domains'], ($render_section ?? null));
             $this->WidgetClient->startBody();
             $this->WidgetClient->buildFilters();

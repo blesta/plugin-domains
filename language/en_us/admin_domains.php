@@ -376,6 +376,7 @@ $lang['AdminDomains.import.text_configuration'] = 'Configure Settings';
 $lang['AdminDomains.import.text_year'] = '%1$s Year'; // %1$s is the number of years
 $lang['AdminDomains.import.text_years'] = '%1$s Years'; // %1$s is the number of years
 $lang['AdminDomains.import.text_terms_notice'] = 'At least one term must be selected.';
+$lang['AdminDomains.import.text_select_all'] = 'Select All';
 
 
 $lang['AdminDomains.getDays.same_day'] = 'Same Day';

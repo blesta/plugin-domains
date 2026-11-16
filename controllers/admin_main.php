@@ -1336,51 +1336,72 @@ class AdminMain extends DomainsController
             ]
         ];
 
-        // Set tabs only if the service has not been canceled
-        if ($service->status != 'canceled') {
-            $module_tabs = $this->ModuleManager->moduleRpc(
-                $module->id,
-                'getAdminServiceTabs',
-                [$service]
-            );
+        // Retrieve the module tabs
+        $module_instance = $this->ModuleManager->initModule($module->id);
+        $module_tabs = ($module_instance ? $this->getAvailableAdminServiceTabs($module_instance, $service) : []);
 
-            // Set each of the module tabs
-            foreach ($module_tabs ?? [] as $action => $name) {
+        // Set each of the module tabs
+        foreach ($module_tabs as $action => $name) {
+            $tabs[] = [
+                'name' => $name,
+                'attributes' => [
+                    'href' => $this->base_uri . 'plugin/domains/admin_main/tab/' . $service->client_id . '/'
+                        . $service->id . '/' . $action . '/',
+                    'class' => 'ajax'
+                ],
+                'current' => ($plugin_id === null && strtolower($action) === strtolower($method ?? ''))
+            ];
+        }
+
+        // Retrieve the plugin tabs
+        foreach ($package->plugins as $plug) {
+            // Skip the plugin if it is not available
+            if (!($plugin = $this->getPlugin($plug->plugin_id))) {
+                continue;
+            }
+
+            foreach ($this->getAvailableAdminServiceTabs($plugin, $service) as $action => $tab) {
+                $attributes = [
+                    'href' => (!empty($tab['href'])
+                        ? $tab['href']
+                        : $this->base_uri . 'plugin/domains/admin_main/tab/' . $service->client_id . '/'
+                        . $service->id . '/' . $plug->plugin_id . '/' . $action . '/'
+                    ),
+                    'class' => 'ajax'
+                ];
+
                 $tabs[] = [
-                    'name' => $name,
-                    'attributes' => [
-                        'href' => $this->base_uri . 'plugin/domains/admin_main/tab/' . $service->client_id . '/'
-                            . $service->id . '/' . $action . '/',
-                        'class' => 'ajax'
-                    ],
-                    'current' => ($plugin_id === null && strtolower($action) === strtolower($method ?? ''))
+                    'name' => $tab['name'],
+                    'attributes' => $attributes,
+                    'current' => ($plug->plugin_id == $plugin_id && strtolower($action) === strtolower($method ?? ''))
                 ];
             }
+        }
 
-            // Retrieve the plugin tabs
-            foreach ($package->plugins as $plug) {
-                // Skip the plugin if it is not available
-                if (!($plugin = $this->getPlugin($plug->plugin_id))) {
-                    continue;
-                }
+        return $tabs;
+    }
 
-                foreach ($plugin->getAdminServiceTabs($service) as $action => $tab) {
-                    $attributes = [
-                        'href' => (!empty($tab['href'])
-                            ? $tab['href']
-                            : $this->base_uri . 'plugin/domains/admin_main/tab/' . $service->client_id . '/'
-                            . $service->id . '/' . $plug->plugin_id . '/' . $action . '/'
-                        ),
-                        'class' => 'ajax'
-                    ];
+    /**
+     * Retrieves the admin service tabs of a module or plugin available for the given service.
+     * Canceled services only receive the tabs the extension declares via getAdminCanceledServiceTabs()
+     *
+     * @param Module|Plugin $extension The module or plugin instance
+     * @param stdClass $service An stdClass object representing the service
+     * @return array An array of available tabs keyed by method
+     */
+    private function getAvailableAdminServiceTabs($extension, stdClass $service)
+    {
+        $tabs = (array) $extension->getAdminServiceTabs($service);
 
-                    $tabs[] = [
-                        'name' => $tab['name'],
-                        'attributes' => $attributes,
-                        'current' => ($plug->plugin_id == $plugin_id && strtolower($action) === strtolower($method ?? ''))
-                    ];
-                }
-            }
+        if ($service->status == 'canceled' && method_exists($extension, 'getAdminCanceledServiceTabs')) {
+            $allowed = array_map('strtolower', (array) $extension->getAdminCanceledServiceTabs($service));
+            $tabs = array_filter(
+                $tabs,
+                function ($method) use ($allowed) {
+                    return in_array(strtolower($method), $allowed, true);
+                },
+                ARRAY_FILTER_USE_KEY
+            );
         }
 
         return $tabs;
@@ -1400,7 +1421,7 @@ class AdminMain extends DomainsController
         $content = '';
 
         // Get tabs
-        $admin_tabs = $module->getAdminServiceTabs($service);
+        $admin_tabs = $this->getAvailableAdminServiceTabs($module, $service);
         $valid_method = array_key_exists(strtolower($method), array_change_key_case($admin_tabs, CASE_LOWER));
 
         // Load/process the tab request
@@ -1435,7 +1456,7 @@ class AdminMain extends DomainsController
             $plugin->base_uri = $this->base_uri;
 
             // Get tabs
-            $admin_tabs = $plugin->getAdminServiceTabs($service);
+            $admin_tabs = $this->getAvailableAdminServiceTabs($plugin, $service);
             $valid_method = array_key_exists(strtolower($method), array_change_key_case($admin_tabs, CASE_LOWER));
 
             // Retrieve the plugin tab content

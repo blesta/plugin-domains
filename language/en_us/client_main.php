@@ -4,11 +4,15 @@ $lang['ClientMain.index.page_title'] = 'Domains';
 // Index
 $lang['ClientMain.index.page_title'] = 'Client #%1$s Domains'; // %1$s is the client ID number
 $lang['ClientMain.index.boxtitle_domains'] = 'Domains';
+$lang['ClientMain.index.boxtitle_registered_domains'] = 'Registered Domains';
+$lang['ClientMain.index.link_viewall'] = 'View all';
 $lang['ClientMain.index.category_active'] = 'Active';
 $lang['ClientMain.index.category_pending'] = 'Pending';
 $lang['ClientMain.index.category_suspended'] = 'Suspended';
 $lang['ClientMain.index.category_deleted'] = 'Deleted';
 $lang['ClientMain.index.heading_addons'] = 'Add-ons';
+$lang['ClientMain.index.heading_package'] = 'Package';
+$lang['ClientMain.index.heading_label'] = 'Label';
 $lang['ClientMain.index.heading_status'] = 'Status';
 $lang['ClientMain.index.heading_domain'] = 'Domain';
 $lang['ClientMain.index.heading_term'] = 'Term';
@@ -21,6 +25,7 @@ $lang['ClientMain.index.heading_options'] = 'Actions';
 $lang['ClientMain.index.option_manage'] = 'Manage';
 $lang['ClientMain.index.recurring_term'] = '%1$s %2$s @ %3$s'; // %1$s is the service term length (number), %2$s is the service period, %3$s is the formatted service renewal price
 $lang['ClientMain.index.text_never'] = 'Never';
+$lang['ClientMain.index.text_renews'] = 'Renews %1$s'; // %1$s is the formatted domain renewal date
 $lang['ClientMain.index.no_results'] = 'You have no %1$s Domains.'; // %1$s is the language for the domains category type (e.g. Active, Pending)
 
 // Service info

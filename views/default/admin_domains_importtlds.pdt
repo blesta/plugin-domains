@@ -71,7 +71,13 @@ $this->Widget->create(
 
     <!-- TLDs Section -->
     <div id="module_tlds" style="display: none;">
-        <h6 class="form-section-header"><?php echo $this->_('AdminDomains.import.title_tlds', true);?></h6>
+        <h6 class="form-section-header d-flex align-items-center justify-content-between">
+            <?php echo $this->_('AdminDomains.import.title_tlds', true);?>
+            <span class="tld-select-all fw-normal">
+                <input type="checkbox" id="select_all_tlds">
+                <label class="tld-import-card" for="select_all_tlds"><?php $this->_('AdminDomains.import.text_select_all');?></label>
+            </span>
+        </h6>
         <div class="tld-import-grid" id="tld_grid">
             <!-- TLDs will be loaded here via AJAX -->
             <div class="text-center w-100">
@@ -121,8 +127,21 @@ $this->Form->end();
             });
         }
 
-        // Select all TLDs - removed from UI to match mockup
-        // Functionality kept in case needed in future
+        // Select all TLDs
+        const selectAll = document.getElementById('select_all_tlds');
+        const tldGrid = document.getElementById('tld_grid');
+        if (selectAll && tldGrid) {
+            selectAll.addEventListener('change', function() {
+                tldGrid.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(cb => cb.checked = selectAll.checked);
+            });
+
+            // Keep select all in sync with individual TLDs
+            tldGrid.addEventListener('change', function() {
+                const enabled = tldGrid.querySelectorAll('input[type="checkbox"]:not(:disabled)');
+                selectAll.checked = enabled.length > 0
+                    && tldGrid.querySelectorAll('input[type="checkbox"]:not(:disabled):checked').length === enabled.length;
+            });
+        }
 
         // Force at least one term
         const termCheckboxes = document.querySelectorAll('#module_terms input[type="checkbox"]');
@@ -245,6 +264,12 @@ $this->Form->end();
 
         if (importButton) {
             importButton.disabled = false;
+        }
+
+        // Reset select all
+        const selectAll = document.getElementById('select_all_tlds');
+        if (selectAll) {
+            selectAll.checked = false;
         }
 
         // Show loading state

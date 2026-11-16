@@ -1936,8 +1936,10 @@ class DomainsPlugin extends Plugin implements ExampleDataProviderInterface
                 'level' => 'client',
                 'callback' => ['this', 'getDomainCount'],
                 'callback_type' => 'value',
-                'background' => '#fff',
+                'text_color' => '#ffffff',
+                'background' => '#138655',
                 'background_type' => 'color',
+                'icon' => 'bi bi-globe',
                 'label' => 'DomainsPlugin.card_client.getDomainCount',
                 'link' => 'plugin/domains/client_main/',
                 'enabled' => 1
