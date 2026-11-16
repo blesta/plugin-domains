@@ -2,7 +2,7 @@
         if (($domain->cancellation_reason ?? null)) {
             ?>
         <div class="alert alert-danger mb-2">
-            <p><?php $this->_('ClientMain.serviceinfo.cancellation_reason', false, $domain->cancellation_reason);?></p>
+            <p><?php $this->_('ClientMain.serviceinfo.cancellation_reason', false, $this->Html->safe($domain->cancellation_reason));?></p>
         </div>
             <?php
         }
