@@ -66,7 +66,12 @@ class ClientMain extends DomainsController
             'status' => $status
         ]);
 
-        $services = $this->DomainsDomains->getList($domains_filters, $page, [$sort => $order]);
+        // The domain name is the service name, which must be qualified to not clash with the package name
+        $services = $this->DomainsDomains->getList(
+            $domains_filters,
+            $page,
+            [($sort == 'name' ? 'services.name' : $sort) => $order]
+        );
         $total_results = $this->DomainsDomains->getListCount($domains_filters);
 
         // Set the number of services of each type, not including children

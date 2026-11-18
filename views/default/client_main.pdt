@@ -30,7 +30,7 @@
                     <table class="table table-curved table-striped-alt table-hover" id="domains">
                         <thead>
                             <tr>
-                                <th><?php $this->_('ClientMain.index.heading_domain');?></th>
+                                <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/' . ($status ?? null) . '/?sort=name&order=' . ($sort == 'name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'name' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_domain');?></a></th>
                                 <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/' . ($status ?? null) . '/?sort=term&order=' . ($sort == 'term' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'term' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_term');?></a></th>
                                 <th><?php $this->_('ClientMain.index.heading_registration_date');?></th>
                                 <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/client_main/' . ($action ?? 'index') . '/' . ($status ?? null) . '/?sort=date_renews&order=' . ($sort == 'date_renews' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_renews' ? ' ' . $order : '');?>"><?php $this->_('ClientMain.index.heading_renewal_date');?></a></th>

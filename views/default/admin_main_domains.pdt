@@ -54,7 +54,11 @@ if (($domains ?? false) && ($num_domains = count($domains)) > 0) {
                 <?php
             }
             ?>
-            <th><?php $this->_('AdminMain.index.heading_domain');?></th>
+            <th>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=name&order=' . ($sort == 'name' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'name' ? ' ' . $order : '');?>">
+                    <?php $this->_('AdminMain.index.heading_domain');?>
+                </a>
+            </th>
             <th>
                 <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/domains/admin_main/domains/' . (isset($client->id) ? $this->Html->safe($client->id) : null) . '/' . (isset($status) ? $this->Html->safe($status) : null) . '/?sort=term&order=' . ($sort == 'term' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'term' ? ' ' . $order : '');?>">
                     <?php $this->_('AdminMain.index.heading_term');?>
