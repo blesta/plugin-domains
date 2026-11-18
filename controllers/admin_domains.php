@@ -1224,6 +1224,14 @@ class AdminDomains extends DomainsController
 
         $to_package = $this->Packages->get($to_package_id);
         $package_group_id = $to_package->groups[0]->id;
+
+        // Check the source package TLDs longest first so each service only matches its most specific TLD,
+        // e.g. example.org.uk belongs to .org.uk, not .uk
+        $from_tlds = (array) ($this->Packages->get($from_package_id)->meta->tlds ?? []);
+        usort($from_tlds, function ($a, $b) {
+            return strlen($b) - strlen($a);
+        });
+
         $migrated_services = 0;
         foreach ($services as $service) {
             // Find the correct pricing to which to move
@@ -1251,7 +1259,16 @@ class AdminDomains extends DomainsController
                 break;
             }
 
-            if (str_ends_with(strtolower($service->name), $tld)) {
+            $service_name = strtolower($service->name);
+            $service_tld = $tld;
+            foreach ($from_tlds as $from_tld) {
+                if (str_ends_with($service_name, $from_tld)) {
+                    $service_tld = $from_tld;
+                    break;
+                }
+            }
+
+            if (str_ends_with($service_name, $tld) && $service_tld == $tld) {
                 $migrated_services++;
                 $this->Services->edit(
                     $service->id,
